@@ -3,4 +3,5 @@ project(Spark)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Spark main.cpp)
+add_executable(Spark main.cpp
+        spark/Types.hpp)
