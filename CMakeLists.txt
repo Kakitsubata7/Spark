@@ -16,4 +16,12 @@ add_executable(Spark
         Spark/Types/Object.hpp
         Spark/Types/String.hpp
         Spark/Types/Table.hpp
-        Spark/Types/Type.hpp)
+        Spark/Types/Type.hpp
+        Spark/Executor.cpp
+        Spark/Executor.hpp
+        Spark/VM.cpp
+        Spark/VM.hpp
+        Spark/Thread.cpp
+        Spark/Thread.hpp
+        Spark/VirtualThread.cpp
+        Spark/VirtualThread.hpp)
