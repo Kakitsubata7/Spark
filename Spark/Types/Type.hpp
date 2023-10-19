@@ -14,8 +14,9 @@ namespace Spark {
         Array = 0x06,
         Table = 0x07,
         Object = 0x08,
-        Coroutine = 0x09,
-        Thread = 0x0A
+        Function = 0x09,
+        Coroutine = 0x0A,
+        Thread = 0x0B
     };
 
     static_assert(sizeof(Type) == 8, R"(The size of type "Spark::Type" should to be exactly 8 bytes.)");
