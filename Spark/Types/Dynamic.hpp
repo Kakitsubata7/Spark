@@ -2,16 +2,21 @@
 
 #include "Array.hpp"
 #include "Boolean.hpp"
+#include "Coroutine.hpp"
 #include "Float.hpp"
+#include "Function.hpp"
 #include "Integer.hpp"
 #include "Object.hpp"
 #include "String.hpp"
 #include "Table.hpp"
+#include "Thread.hpp"
 #include "Type.hpp"
 
 namespace Spark {
 
     class Dynamic {
+
+        /* ===== Fields ===== */
 
     public:
         Type type;
@@ -24,15 +29,69 @@ namespace Spark {
             Array arrayValue;
             Table tableValue;
             Object objectValue;
+            Function functionValue;
+            Coroutine coroutineValue;
+            Thread threadValue;
             void* pointerValue;
         };
 
-        Dynamic() {
-            type = Type::None;
-            integerValue = 0;
-            pointerValue = nullptr;
+
+
+        /* ===== Constructors ===== */
+
+    public:
+        Dynamic() : type(Type::None) {
+            integerValue = {};
+            pointerValue = {};
         }
 
+        explicit Dynamic(Type type) : type(type) {
+            typeValue = {};
+            integerValue = {};
+            floatValue = {};
+            booleanValue = {};
+            stringValue = {};
+            arrayValue = {};
+            tableValue = {};
+            objectValue = {};
+            functionValue = {};
+            coroutineValue = {};
+            threadValue = {};
+        }
+
+        template <typename T>
+        Dynamic(Type type, T value) = delete;
+
+        template <>
+        Dynamic(Type type, Type value) : Dynamic(type) {
+            typeValue = value;
+        }
+
+        template <>
+        Dynamic(Type type, Integer value) : Dynamic(type) {
+            integerValue = value;
+        }
+
+        template <>
+        Dynamic(Type type, Float value) : Dynamic(type) {
+            floatValue = value;
+        }
+
+        template <>
+        Dynamic(Type type, Boolean value) : Dynamic(type) {
+            booleanValue = value;
+        }
+
+        template <>
+        Dynamic(Type type, String value) : Dynamic(type) {
+            stringValue = value;
+        }
+
+
+
+        /* ===== Destructor ===== */
+
+    public:
         ~Dynamic() {
             switch (type) {
                 case Type::String:
