@@ -2,7 +2,7 @@
 
 namespace Spark {
 
-    class Thread {
+    class NativeThread {
 
     };
 

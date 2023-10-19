@@ -1,4 +1,4 @@
-#include "Thread.hpp"
+#include "NativeThread.hpp"
 
 namespace Spark {
 
