@@ -24,4 +24,5 @@ add_executable(Spark
         Spark/Thread.cpp
         Spark/Thread.hpp
         Spark/VirtualThread.cpp
-        Spark/VirtualThread.hpp)
+        Spark/VirtualThread.hpp
+        Spark/Types/Array.cpp)
