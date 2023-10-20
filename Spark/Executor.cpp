@@ -4,6 +4,20 @@
 
 namespace Spark {
 
+    /* ===== Operations ===== */
+
+    template <>
+    void Executor::push(const Dynamic& value) {
+
+    }
+
+    template <>
+    void Executor::push(int value) {
+
+    }
+
+
+
     /* ===== Execution ===== */
 
     bool Executor::execute() {

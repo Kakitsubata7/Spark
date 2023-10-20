@@ -59,32 +59,20 @@ namespace Spark {
             threadValue = {};
         }
 
-        template <typename T>
-        Dynamic(Type type, T value) = delete;
-
-        template <>
         Dynamic(Type type, Type value) : Dynamic(type) {
             typeValue = value;
         }
 
-        template <>
         Dynamic(Type type, Integer value) : Dynamic(type) {
             integerValue = value;
         }
 
-        template <>
         Dynamic(Type type, Float value) : Dynamic(type) {
             floatValue = value;
         }
 
-        template <>
         Dynamic(Type type, Boolean value) : Dynamic(type) {
             booleanValue = value;
-        }
-
-        template <>
-        Dynamic(Type type, String value) : Dynamic(type) {
-            stringValue = value;
         }
 
 
@@ -115,7 +103,35 @@ namespace Spark {
             }
         }
 
+
+
+        /* ===== Copying ===== */
+
+    public:
+        Dynamic(const Dynamic& other) : type(other.type) {
+            integerValue = other.integerValue;
+            pointerValue = other.pointerValue;
+        }
+
+        Dynamic& operator=(const Dynamic& other) {
+
+            // Self-assignment protection
+            if (this == &other)
+                return *this;
+
+            // Shallow copy values
+            type = other.type;
+            integerValue = other.integerValue;
+            pointerValue = other.pointerValue;
+
+            return *this;
+        }
+
     };
+
+
+
+    /* ===== Static Assert ===== */
 
     namespace {
         struct SystemSize {

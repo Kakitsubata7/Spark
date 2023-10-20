@@ -1,6 +1,11 @@
 #include <iostream>
 
+#include "Spark.hpp"
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+
+    Spark::Object obj;
+    std::cout << obj.toString() << std::endl;
+
     return 0;
 }

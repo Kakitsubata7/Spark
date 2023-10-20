@@ -12,6 +12,8 @@ namespace Spark {
         /* ===== Constructors ===== */
 
     public:
+        String() : String("") { }
+
         explicit String(char c) : strPtr(std::make_unique<std::string>(1, c)) { }
 
         explicit String(const char* str) : strPtr(std::make_unique<std::string>(str)) { }

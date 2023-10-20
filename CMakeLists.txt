@@ -28,4 +28,5 @@ add_executable(Spark
         Spark/VM.cpp
         Spark/VM.hpp
         main.cpp
-        Spark.hpp)
+        Spark.hpp
+        Spark/Types/Object.cpp)

@@ -29,9 +29,7 @@ namespace Spark {
 
     public:
         template <typename T>
-        void push(Type type, T value) {
-
-        }
+        void push(T value);
 
 
 
