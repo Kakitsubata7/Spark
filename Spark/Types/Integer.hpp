@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <ostream>
 
+#include "../SparkException.hpp"
+
 namespace Spark {
 
     struct Integer {
@@ -75,11 +77,14 @@ namespace Spark {
 
         constexpr Integer operator/(const Integer other) const {
             if (other.value == 0)
-                throw std::runtime_error("Division by zero.");
+                // TODO: Consider to throw C++ exception or custom Spark exception type
+                throw SparkException("Division by zero.");
             return {value / other.value};
         }
 
         constexpr Integer operator%(const Integer other) const {
+            if (other.value == 0)
+                throw SparkException("Division by zero.");
             return {value % other.value};
         }
 
