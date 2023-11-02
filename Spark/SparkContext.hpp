@@ -1,29 +1,20 @@
 #pragma once
 
-#include "Types.hpp"
-
 namespace Spark {
 
-    class Spark {
+    class SparkContext {
 
         /* ===== Constructors ===== */
 
     public:
-        Spark();
+        SparkContext();
 
 
 
         /* ===== Destructor ===== */
 
     public:
-        ~Spark();
-
-
-
-        /* ===== Operations ===== */
-
-    public:
-        Object makeObject();
+        ~SparkContext();
 
     };
 

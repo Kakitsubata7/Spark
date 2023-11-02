@@ -1,5 +1,6 @@
-#include "VM.hpp"
+#include "SparkContext.hpp"
 
 namespace Spark {
+
 
 } // Spark
