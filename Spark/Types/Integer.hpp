@@ -100,6 +100,34 @@ namespace Spark {
             return {value ^ other.value};
         }
 
+        constexpr Integer operator~() const {
+            return {~value};
+        }
+
+        constexpr bool operator==(const Integer other) const {
+            return value == other.value;
+        }
+
+        constexpr bool operator!=(const Integer other) const {
+            return value != other.value;
+        }
+
+        constexpr bool operator<(const Integer other) const {
+            return value < other.value;
+        }
+
+        constexpr bool operator>(const Integer other) const {
+            return value > other.value;
+        }
+
+        constexpr bool operator<=(const Integer other) const {
+            return value <= other.value;
+        }
+
+        constexpr bool operator>=(const Integer other) const {
+            return value >= other.value;
+        }
+
         friend std::ostream& operator<<(std::ostream& os, const Integer integer) {
             os << integer.value;
             return os;
