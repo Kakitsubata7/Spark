@@ -17,7 +17,6 @@ add_executable(Spark
         Spark/GC/GC.hpp
         Spark/SparkException.hpp
         Spark/Types/Float.hpp
-        Spark/Types/String.cpp
         Spark/Types/String.hpp
         Spark/Types/Type.hpp
 )

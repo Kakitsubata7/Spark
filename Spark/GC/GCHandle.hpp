@@ -7,7 +7,6 @@ namespace Spark {
 
     template <typename T>
     class GCHandle {
-        static_assert(isSparkReferenceType<T>, "Spark::GCHandle can only be created with Spark reference types.");
 
         /* ===== Constructors ===== */
 

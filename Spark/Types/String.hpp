@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 
+#include "../GC/GCHandle.hpp"
 #include "Integer.hpp"
 
 namespace Spark {
@@ -12,6 +13,7 @@ namespace Spark {
         /* ===== Data ===== */
 
     private:
+        //GCHandle<std::string> str;
         std::string str;
 
 
