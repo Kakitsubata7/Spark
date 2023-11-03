@@ -1,5 +1,10 @@
 #pragma once
 
+#include <string>
+#include <utility>
+
+#include "Integer.hpp"
+
 namespace Spark {
 
     class String {
@@ -7,19 +12,49 @@ namespace Spark {
         /* ===== Data ===== */
 
     private:
-        const char* buffer;
+        std::string str;
 
 
 
         /* ===== Constructors ===== */
 
     public:
-        String(const char* str) {
-            buffer
+        String(const char* str) : str(str) { }
+        String(std::string str) : str(std::move(str)) { }
+        String() : String("") { }
+
+
+
+        /* ===== Copying ===== */
+
+    public:
+        String(const String& other) : str(other.str) { }
+
+        String& operator=(const String& other) {
+
+            // Prevent self-assignment
+            if (this != &other)
+                str = other.str;
+
+            return *this;
         }
 
-        String(const String& str) {
 
+
+        /* ===== Operations ===== */
+
+    public:
+        Integer length() {
+            return Integer(str.size());
+        }
+
+
+
+        /* ===== Operators ===== */
+
+    public:
+        String operator+(const String& other) const {
+            return {str + other.str};
         }
 
     };

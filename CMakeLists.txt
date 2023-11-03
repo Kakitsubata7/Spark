@@ -19,4 +19,5 @@ add_executable(Spark
         Spark/Types/Float.hpp
         Spark/Types/String.cpp
         Spark/Types/String.hpp
+        Spark/Types/Type.hpp
 )

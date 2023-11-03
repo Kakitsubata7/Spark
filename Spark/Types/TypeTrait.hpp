@@ -13,7 +13,15 @@ namespace Spark {
     template <>
     inline constexpr bool isSparkType<Float> = true;
 
+    template <>
+    inline constexpr bool isSparkType<String> = true;
+
+
+
     template <typename T>
     inline constexpr bool isSparkReferenceType = false;
+
+    template <>
+    inline constexpr bool isSparkReferenceType<String> = true;
 
 } // Spark
