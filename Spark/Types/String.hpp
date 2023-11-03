@@ -3,7 +3,6 @@
 #include <string>
 #include <utility>
 
-#include "../GC/GCHandle.hpp"
 #include "Integer.hpp"
 
 namespace Spark {

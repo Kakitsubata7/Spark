@@ -1,44 +1,40 @@
 #pragma once
 
-#include "../Types/TypeTrait.hpp"
-#include "GC.hpp"
+#include "GCNode.hpp"
 
 namespace Spark {
 
-    template <typename T>
     class GCHandle {
 
-        /* ===== Constructors ===== */
+    private:
+        GCNode* node;
 
     public:
-        GCHandle(const T& value, GC& gc);
-        explicit GCHandle(GC& gc);
-
-
-
-        /* ===== Destructor ===== */
-
-    public:
-        ~GCHandle();
-
-
-
-        /* ===== Copying ===== */
-
-    public:
-        GCHandle() {
-
+        explicit GCHandle(GCNode* node) : node(node) {
+            node->increase();
         }
 
+    public:
+        ~GCHandle() {
+            node->decrease();
+        }
 
+    public:
+        GCHandle(const GCHandle& other) : node(other.node) {
+            node->increase();
+        }
 
-        /* ===== Metadata ===== */
+        GCHandle& operator=(const GCHandle& other) {
 
-    private:
-        GC& gc;
+            // Prevent self-assignment
+            if (this != &other) {
+                node = other.node;
+                node->increase();
+            }
+
+            return *this;
+        }
 
     };
 
 } // Spark
-
-#include "GCHandle.tpp"
