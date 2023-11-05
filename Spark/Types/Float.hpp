@@ -34,6 +34,23 @@ namespace Spark {
         /* ===== Operators ===== */
 
     public:
+        constexpr Float operator+(const Float other) const {
+            return {value + other.value};
+        }
+
+        constexpr Float operator-(const Float other) const {
+            return {value - other.value};
+        }
+
+        constexpr Float operator*(const Float other) const {
+            return {value * other.value};
+        }
+
+        constexpr Float operator/(const Float other) const {
+            // TODO: Check for division by zero
+            return {value / other.value};
+        }
+
         friend std::ostream& operator<<(std::ostream& os, const Float f) {
             os << f.value;
             return os;
