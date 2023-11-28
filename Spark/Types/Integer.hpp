@@ -22,19 +22,19 @@ namespace Spark {
 
     public:
         constexpr Integer() : value(0) { }
-        constexpr Integer(char value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(unsigned char value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(short value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(unsigned short value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(int value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(unsigned int value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(long value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(unsigned long value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(long long value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(unsigned long long value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(float value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(double value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(long double value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const char value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const unsigned char value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const short value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const unsigned short value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const int value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const unsigned int value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const long value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const unsigned long value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const long long value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const unsigned long long value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const float value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const double value) : value(static_cast<int64_t>(value)) { }
+        constexpr Integer(const long double value) : value(static_cast<int64_t>(value)) { }
 
 
 
