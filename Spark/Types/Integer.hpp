@@ -38,6 +38,25 @@ namespace Spark {
 
 
 
+        /* ===== Conversion Operators ===== */
+
+    public:
+        constexpr operator char() const { return static_cast<char>(value); }
+        constexpr operator unsigned char() const { return static_cast<unsigned char>(value); }
+        constexpr operator short() const { return static_cast<short>(value); }
+        constexpr operator unsigned short() const { return static_cast<unsigned short>(value); }
+        constexpr operator int() const { return static_cast<int>(value); }
+        constexpr operator unsigned int() const { return static_cast<unsigned int>(value); }
+        constexpr operator long() const { return static_cast<long>(value); }
+        constexpr operator unsigned long() const { return static_cast<unsigned long>(value); }
+        constexpr operator long long() const { return static_cast<long long>(value); }
+        constexpr operator unsigned long long() const { return static_cast<unsigned long long>(value); }
+        constexpr operator float() const { return static_cast<float>(value); }
+        constexpr operator double() const { return static_cast<double>(value); }
+        constexpr operator long double() const { return static_cast<long double>(value); }
+
+
+
         /* ===== Operators ===== */
 
     public:
