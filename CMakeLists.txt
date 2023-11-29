@@ -18,4 +18,7 @@ add_executable(Spark
         Spark/GC/GC.hpp
         Spark/GC/GCNode.hpp
         Spark/GC/GCHandle.hpp
+        Spark/Types/Value.hpp
+        Spark/Types/Boolean.hpp
+        Spark/Types/Boolean.hpp
 )
