@@ -56,13 +56,13 @@ namespace Spark {
         }
 
         constexpr const Integer operator++(int) {
-            Integer temp = *this;
+            const Integer temp = *this;
             value++;
             return temp;
         }
 
         constexpr const Integer operator--(int) {
-            Integer temp = *this;
+            const Integer temp = *this;
             value--;
             return temp;
         }
