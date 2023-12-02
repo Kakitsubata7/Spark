@@ -9,7 +9,7 @@ struct Boolean {
     /* ===== Data ===== */
 
 private:
-    constexpr uint8_t value;
+    const uint8_t value;
 
 
 
@@ -33,14 +33,6 @@ public:
 
 public:
     constexpr Boolean operator !() const { return !value; }
-
-
-
-    /* ===== Constants ===== */
-
-public:
-    static constexpr Boolean TRUE = 1;
-    static constexpr Boolean FALSE = 0;
 
 };
 
