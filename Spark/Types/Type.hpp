@@ -3,54 +3,80 @@
 
 namespace Spark {
 
+enum class Types : uint8_t {
+    None,
+    Type,
+    Integer,
+    Float,
+    Boolean,
+    String,
+    Object,
+    Array,
+    Table
+};
+
 struct Type {
 
     /* ===== Data ===== */
 
-public:
-    enum class TypeEnum : uint8_t {
-        None,
-        Type,
-        Integer,
-        Float,
-        Boolean,
-        String,
-        Object,
-        Array,
-        Table
-    };
-
 private:
-    constexpr TypeEnum value;
+    const Types value;
 
 
 
     /* ===== Constructors ===== */
 
 public:
-    constexpr Type() : value(TypeEnum::None) { }
-    constexpr Type(const TypeEnum type) : value(type) { }
+    constexpr Type() : value(Types::None) { }
+    constexpr Type(const Types type) : value(type) { }
 
 
 
     /* ===== Conversion Operators ===== */
 
 public:
-    constexpr operator TypeEnum() const { return value; }
+    constexpr operator Types() const { return value; }
 
+    friend std::ostream& operator<<(std::ostream& os, const Type type) {
+        switch (type.value) {
+            case Types::None:
+                os << "None";
+                break;
 
+            case Types::Type:
+                os << "Type";
+                break;
 
-    /* ===== Constants ===== */
+            case Types::Integer:
+                os << "Integer";
+                break;
 
-public:
-    static constexpr Type None = TypeEnum::None;
-    static constexpr Type Integer = TypeEnum::Integer;
-    static constexpr Type Float = TypeEnum::Float;
-    static constexpr Type Boolean = TypeEnum::Boolean;
-    static constexpr Type String = TypeEnum::String;
-    static constexpr Type Object = TypeEnum::Object;
-    static constexpr Type Array = TypeEnum::Array;
-    static constexpr Type Table = TypeEnum::Table;
+            case Types::Float:
+                os << "Float";
+                break;
+
+            case Types::Boolean:
+                os << "Boolean";
+                break;
+
+            case Types::String:
+                os << "String";
+                break;
+
+            case Types::Object:
+                os << "Object";
+                break;
+
+            case Types::Array:
+                os << "Array";
+                break;
+
+            case Types::Table:
+                os << "Table";
+                break;
+        }
+        return os;
+    }
 
 };
 
