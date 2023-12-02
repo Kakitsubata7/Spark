@@ -19,7 +19,7 @@ private:
         Integer integerValue;
         Float floatValue;
         Boolean booleanValue;
-        void* pointerValue;
+        void* pointerValue{};
     };
 
 
@@ -27,7 +27,7 @@ private:
     /* ===== Constructors ===== */
 
 public:
-    Value() : type(Type::TypeEnum::None), isConstant(false) {
+    Value() : type(Types::None), isConstant(false) {
         integerValue = 0;
         pointerValue = nullptr;
     }
