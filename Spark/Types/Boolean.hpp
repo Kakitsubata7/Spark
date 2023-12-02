@@ -9,7 +9,7 @@ struct Boolean {
     /* ===== Data ===== */
 
 private:
-    const uint8_t value;
+    uint8_t value;
 
 
 
@@ -22,17 +22,22 @@ public:
 
 
 
+    /* ===== Operators ===== */
+
+public:
+    constexpr Boolean& operator=(const bool b) {
+        value = b ? 1 : 0;
+        return *this;
+    }
+
+    constexpr Boolean operator !() const { return !value; }
+
+
+
     /* ===== Conversion Operators ===== */
 
 public:
     constexpr operator bool() const { return value != 0; }
-
-
-
-    /* ===== Operators ===== */
-
-public:
-    constexpr Boolean operator !() const { return !value; }
 
 };
 
