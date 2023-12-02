@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "google-explicit-constructor"
 #pragma once
 
 #include <cstdint>
@@ -155,5 +153,3 @@ namespace Spark {
     };
 
 } // Spark
-
-#pragma clang diagnostic pop
