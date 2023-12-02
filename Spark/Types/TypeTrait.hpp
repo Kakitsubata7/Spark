@@ -1,6 +1,11 @@
 #pragma once
 
-#include "../Types.hpp"
+#include "Boolean.hpp"
+#include "Float.hpp"
+#include "Integer.hpp"
+#include "Pointer.hpp"
+#include "String.hpp"
+#include "Type.hpp"
 
 namespace Spark {
 
@@ -18,6 +23,9 @@ namespace Spark {
 
     template <>
     inline constexpr bool isSparkType<Boolean> = true;
+
+    template <>
+    inline constexpr bool isSparkType<Pointer> = true;
 
     template <>
     inline constexpr bool isSparkType<String> = true;
