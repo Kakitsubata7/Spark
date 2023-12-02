@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 namespace Spark {
 
@@ -22,6 +23,13 @@ public:
 
 
 
+    /* ===== Conversion Operators ===== */
+
+public:
+    constexpr operator bool() const { return value != 0; }
+
+
+
     /* ===== Operators ===== */
 
 public:
@@ -32,12 +40,10 @@ public:
 
     constexpr Boolean operator !() const { return !value; }
 
-
-
-    /* ===== Conversion Operators ===== */
-
-public:
-    constexpr operator bool() const { return value != 0; }
+    friend std::ostream& operator<<(std::ostream& os, const Boolean boolean) {
+        os << (boolean.value != 0 ? "true" : "false");
+        return os;
+    }
 
 };
 
