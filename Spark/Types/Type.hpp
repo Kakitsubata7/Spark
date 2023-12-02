@@ -20,7 +20,7 @@ struct Type {
     /* ===== Data ===== */
 
 private:
-    const Types value;
+    Types value;
 
 
 
@@ -29,6 +29,16 @@ private:
 public:
     constexpr Type() : value(Types::None) { }
     constexpr Type(const Types type) : value(type) { }
+
+
+
+    /* ===== Operators ===== */
+
+public:
+    constexpr Type& operator=(const Types type) {
+        value = type;
+        return *this;
+    }
 
 
 
