@@ -9,6 +9,7 @@ enum class Types : uint8_t {
     Integer,
     Float,
     Boolean,
+    Pointer,
     String,
     Object,
     Array,
