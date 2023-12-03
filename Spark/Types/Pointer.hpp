@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <iomanip>
+
 namespace Spark {
 
 struct Pointer {
@@ -34,7 +37,11 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Pointer pointer) {
-        os << pointer.value;
+        os << "0x"
+           << std::hex
+           << std::setw(2 * sizeof(void*))
+           << std::setfill('0')
+           << reinterpret_cast<uintptr_t>(pointer.value);
         return os;
     }
 
