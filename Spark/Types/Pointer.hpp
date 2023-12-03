@@ -11,14 +11,25 @@ private:
 
 
 
-    /* ===== Constructors ===== */
+    /* ===== Constructor ===== */
 
 public:
-    Pointer(void* value = nullptr) : value(value) { }
+    constexpr Pointer(void* value = nullptr) : value(value) { }
 
 
 
     /* ===== Operators ===== */
+
+public:
+    constexpr Pointer& operator=(const Pointer pointer) {
+        value = pointer.value;
+        return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Pointer pointer) {
+        os << pointer.value;
+        return os;
+    }
 
 };
 
