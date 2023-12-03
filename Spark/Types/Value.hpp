@@ -33,10 +33,10 @@ public:
     /* ===== Constructors ===== */
 
 private:
-    constexpr Value() : type(Types::None), isConst(false), pointerValue({}) { }
+    Value() : type(Types::None), isConst(false), pointerValue({}) { }
 
 public:
-    constexpr Value(const Value& value) : type(value.type), isConst(value.isConst), pointerValue({}) {
+    Value(const Value& value) : type(value.type), isConst(value.isConst) {
         *this = value;
     }
 
@@ -66,7 +66,7 @@ public:
     /* ===== Operators ===== */
 
 public:
-    constexpr Value& operator=(const Value& value) {
+    Value& operator=(const Value& value) {
         type = value.type;
         isConst = value.isConst;
         switch (value.type) {
