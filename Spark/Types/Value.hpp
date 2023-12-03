@@ -14,8 +14,8 @@ class Value {
     /* ===== Data ===== */
 
 private:
-    Type type;
-    Boolean isConst;
+    Type _type;
+    Boolean _isConstant;
     union {
         Type typeValue;
         Integer integerValue;
@@ -26,17 +26,20 @@ private:
 
 public:
     [[nodiscard]]
-    constexpr Boolean isConstant() const { return isConst; }
+    constexpr Type type() const { return _type; }
+
+    [[nodiscard]]
+    constexpr Boolean isConstant() const { return _isConstant; }
 
 
 
     /* ===== Constructors ===== */
 
 private:
-    Value() : type(Types::None), isConst(false), pointerValue({}) { }
+    Value() : _type(Types::None), _isConstant(false), pointerValue({}) { }
 
 public:
-    Value(const Value& value) : type(value.type), isConst(value.isConst) {
+    Value(const Value& value) : _type(value._type), _isConstant(value._isConstant) {
         *this = value;
     }
 
@@ -67,9 +70,9 @@ public:
 
 public:
     Value& operator=(const Value& value) {
-        type = value.type;
-        isConst = value.isConst;
-        switch (value.type) {
+        _type = value._type;
+        _isConstant = value._isConstant;
+        switch (value._type) {
             case Types::Type:
                 typeValue = value.typeValue;
                 break;
@@ -98,8 +101,53 @@ public:
         return *this;
     }
 
+    Value& operator=(const Type type) {
+        if (_isConstant)
+            throw std::runtime_error("Value is constant so it cannot be reassigned.");
+
+        this->_type = Types::Type;
+        typeValue = type;
+        return *this;
+    }
+
+    Value& operator=(const Integer integer) {
+        if (_isConstant)
+            throw std::runtime_error("Value is constant so it cannot be reassigned.");
+
+        _type = Types::Integer;
+        integerValue = integer;
+        return *this;
+    }
+
+    Value& operator=(const Float f) {
+        if (_isConstant)
+            throw std::runtime_error("Value is constant so it cannot be reassigned.");
+
+        _type = Types::Float;
+        floatValue = f;
+        return *this;
+    }
+
+    Value& operator=(const Boolean boolean) {
+        if (_isConstant)
+            throw std::runtime_error("Value is constant so it cannot be reassigned.");
+
+        _type = Types::Boolean;
+        booleanValue = boolean;
+        return *this;
+    }
+
+    Value& operator=(const Pointer pointer) {
+        if (_isConstant)
+            throw std::runtime_error("Value is constant so it cannot be reassigned.");
+
+        _type = Types::Pointer;
+        pointerValue = pointer;
+        return *this;
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Value& value) {
-        switch (value.type) {
+        switch (value._type) {
             case Types::None:
                 // TODO: Implement
                 break;
