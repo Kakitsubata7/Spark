@@ -26,20 +26,17 @@ private:
 
 public:
     [[nodiscard]]
-    Boolean isConstant() const { return isConst; }
+    constexpr Boolean isConstant() const { return isConst; }
 
 
 
     /* ===== Constructors ===== */
 
 private:
-    Value() : type(Types::None), isConst(false) {
-        integerValue = 0;
-        pointerValue = nullptr;
-    }
+    constexpr Value() : type(Types::None), isConst(false), pointerValue({}) { }
 
 public:
-    Value(const Value& value) {
+    constexpr Value(const Value& value) : type(value.type), isConst(value.isConst), pointerValue({}) {
         *this = value;
     }
 
@@ -59,6 +56,10 @@ public:
 
     template <typename T>
     static const Value makeConstant();
+
+
+
+    /* ===== Conversion Operators ===== */
 
 
 
