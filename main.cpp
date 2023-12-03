@@ -9,9 +9,9 @@ using namespace Spark;
 
 int main() {
 
-    GCNode node(std::string(""));
-    std::cout << node.getReferenceCount() << std::endl;
-    std::cout << std::boolalpha << node.tryReclaim() << std::endl;
+    Value value = Value::makeConstant<Integer>(1);
+    std::cout << value.isConstant() << std::endl;
+    std::cout << value << std::endl;
 
     return 0;
 }
