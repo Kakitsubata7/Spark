@@ -31,6 +31,14 @@ namespace Spark {
 
 
 
+        /* ===== Conversion Operators ===== */
+
+    public:
+        constexpr operator double() const { return static_cast<double>(value); }
+        constexpr operator float() const { return static_cast<float>(value); }
+
+
+
         /* ===== Operators ===== */
 
     public:
