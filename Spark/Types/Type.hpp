@@ -52,39 +52,43 @@ public:
         switch (type.value) {
             case Types::None:
                 os << "None";
-            break;
+                break;
 
             case Types::Type:
                 os << "Type";
-            break;
+                break;
 
             case Types::Integer:
                 os << "Integer";
-            break;
+                break;
 
             case Types::Float:
                 os << "Float";
-            break;
+                break;
 
             case Types::Boolean:
                 os << "Boolean";
-            break;
+                break;
+
+            case Types::Pointer:
+                os << "Pointer";
+                break;
 
             case Types::String:
                 os << "String";
-            break;
+                break;
 
             case Types::Object:
                 os << "Object";
-            break;
+                break;
 
             case Types::Array:
                 os << "Array";
-            break;
+                break;
 
             case Types::Table:
                 os << "Table";
-            break;
+                break;
         }
         return os;
     }
