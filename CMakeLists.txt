@@ -21,4 +21,6 @@ add_executable(Spark
         Spark/Types/Value.hpp
         Spark/Types/Boolean.hpp
         Spark/Types/Boolean.hpp
+        Spark/Types/Value.cpp
+        Spark/Types/Pointer.hpp
 )
