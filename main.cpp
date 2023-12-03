@@ -9,9 +9,12 @@ using namespace Spark;
 
 int main() {
 
-    Value value = Value::makeConstant<Integer>(1);
-    std::cout << value.isConstant() << std::endl;
-    std::cout << value << std::endl;
+    Value value = Value::make<Integer>(1);
+    value = Pointer(&value);
+
+    std::cout << "Type: " << value.type() << std::endl;
+    std::cout << "Is Constant: " << value.isConstant() << std::endl;
+    std::cout << "Value: " << value << std::endl;
 
     return 0;
 }
