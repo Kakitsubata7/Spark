@@ -18,6 +18,13 @@ public:
 
 
 
+    /* ===== Conversion Operator ===== */
+
+public:
+    constexpr operator void*() const { return value; }
+
+
+
     /* ===== Operators ===== */
 
 public:
