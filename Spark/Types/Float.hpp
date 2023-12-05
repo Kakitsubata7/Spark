@@ -1,6 +1,10 @@
 #pragma once
 
+#include <ostream>
+
 namespace Spark {
+
+    struct Integer;
 
     struct Float {
 
@@ -14,6 +18,8 @@ namespace Spark {
         /* ===== Constructors ===== */
 
     public:
+        constexpr Float(Integer integer);
+
         explicit constexpr Float(const char value) : value(static_cast<double>(value)) { }
         explicit constexpr Float(const unsigned char value) : value(static_cast<double>(value)) { }
         constexpr Float(const short value) : value(static_cast<double>(value)) { }
@@ -33,6 +39,8 @@ namespace Spark {
         /* ===== Conversion Operators ===== */
 
     public:
+        constexpr operator Integer() const;
+
         constexpr operator float() const { return static_cast<float>(value); }
         constexpr operator double() const { return static_cast<double>(value); }
         constexpr operator long double() const { return static_cast<long double>(value); }
@@ -72,3 +80,13 @@ namespace Spark {
     };
 
 } // Spark
+
+#include "Integer.hpp"
+
+namespace Spark {
+
+    constexpr Float::Float(Integer integer) : value(static_cast<double>(integer)) { }
+
+    constexpr Float::operator Integer() const { return {static_cast<double>(value)}; }
+
+}
