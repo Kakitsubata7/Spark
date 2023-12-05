@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <ostream>
 
-#include "../SparkException.hpp"
-
 namespace Spark {
 
     struct Integer {
@@ -19,9 +17,8 @@ namespace Spark {
         /* ===== Constructors ===== */
 
     public:
-        constexpr Integer() : value(0) { }
-        constexpr Integer(const char value) : value(static_cast<int64_t>(value)) { }
-        constexpr Integer(const unsigned char value) : value(static_cast<int64_t>(value)) { }
+        explicit constexpr Integer(const char value) : value(static_cast<int64_t>(value)) { }
+        explicit constexpr Integer(const unsigned char value) : value(static_cast<int64_t>(value)) { }
         constexpr Integer(const short value) : value(static_cast<int64_t>(value)) { }
         constexpr Integer(const unsigned short value) : value(static_cast<int64_t>(value)) { }
         constexpr Integer(const int value) : value(static_cast<int64_t>(value)) { }
@@ -39,8 +36,8 @@ namespace Spark {
         /* ===== Conversion Operators ===== */
 
     public:
-        constexpr operator char() const { return static_cast<char>(value); }
-        constexpr operator unsigned char() const { return static_cast<unsigned char>(value); }
+        explicit constexpr operator char() const { return static_cast<char>(value); }
+        explicit constexpr operator unsigned char() const { return static_cast<unsigned char>(value); }
         constexpr operator short() const { return static_cast<short>(value); }
         constexpr operator unsigned short() const { return static_cast<unsigned short>(value); }
         constexpr operator int() const { return static_cast<int>(value); }
