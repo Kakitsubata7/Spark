@@ -11,7 +11,6 @@ add_executable(Spark
         Spark/Types/TypeTrait.hpp
         Spark/Types.hpp
         Spark/Types/Integer.hpp
-        Spark/SparkException.hpp
         Spark/Types/Float.hpp
         Spark/Types/String.hpp
         Spark/Types/Type.hpp
