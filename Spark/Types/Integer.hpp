@@ -56,6 +56,11 @@ namespace Spark {
         /* ===== Operators ===== */
 
     public:
+        constexpr Integer& operator=(const Integer other) {
+            value = other.value;
+            return *this;
+        }
+
         constexpr Integer operator+(const Integer other) const {
             return {value + other.value};
         }
