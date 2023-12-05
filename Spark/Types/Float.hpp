@@ -42,6 +42,11 @@ namespace Spark {
         /* ===== Operators ===== */
 
     public:
+        constexpr Float& operator=(const Float other) {
+            value = other.value;
+            return *this;
+        }
+
         constexpr Float operator+(const Float other) const {
             return {value + other.value};
         }
