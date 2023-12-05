@@ -41,7 +41,8 @@ public:
            << std::hex
            << std::setw(2 * sizeof(void*))
            << std::setfill('0')
-           << reinterpret_cast<uintptr_t>(pointer.value);
+           << reinterpret_cast<uintptr_t>(pointer.value)
+           << std::dec;
         return os;
     }
 
