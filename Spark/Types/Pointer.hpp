@@ -31,8 +31,8 @@ public:
     /* ===== Operators ===== */
 
 public:
-    constexpr Pointer& operator=(const Pointer pointer) {
-        value = pointer.value;
+    constexpr Pointer& operator=(const Pointer other) {
+        value = other.value;
         return *this;
     }
 
