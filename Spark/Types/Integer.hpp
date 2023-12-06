@@ -58,11 +58,6 @@ public:
     /* ===== Operators ===== */
 
 public:
-    constexpr Integer& operator=(const Integer other) {
-        value = other.value;
-        return *this;
-    }
-
     template <typename T>
     typename std::enable_if<std::is_same<T, short>::value ||
                             std::is_same<T, unsigned short>::value ||
@@ -72,12 +67,24 @@ public:
                             std::is_same<T, unsigned long>::value ||
                             std::is_same<T, long long>::value ||
                             std::is_same<T, unsigned long long>::value, Integer>::type
-    operator+(const T other) const {
+    constexpr operator+(const T other) const {
         return Integer{value + static_cast<int64_t>(other)};
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, float>::value ||
+                            std::is_same<T, double>::value ||
+                            std::is_same<T, long double>::value, Float>::type
+    constexpr operator+(const T other) const {
+        return {value + other};
     }
 
     constexpr Integer operator+(const Integer other) const {
         return {value + other.value};
+    }
+
+    constexpr Float operator+(const Float other) const {
+        return {static_cast<double>(value) + other.value()};
     }
 
     constexpr Integer& operator++() {
