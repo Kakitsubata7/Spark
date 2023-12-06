@@ -23,7 +23,6 @@ public:
 
 public:
     constexpr Float() : _value(0.0) { }
-    constexpr Float(Integer integer);
     constexpr Float(const char value) = delete;
     constexpr Float(const unsigned char value) = delete;
     constexpr Float(const short value) : _value(static_cast<double>(value)) { }
@@ -37,6 +36,7 @@ public:
     constexpr Float(const float value) : _value(static_cast<double>(value)) { }
     constexpr Float(const double value) : _value(static_cast<double>(value)) { }
     constexpr Float(const long double value) : _value(static_cast<double>(value)) { }
+    constexpr Float(Integer integer);
 
 
 
