@@ -11,39 +11,41 @@ namespace Spark {
         /* ===== Data ===== */
 
     private:
-        double value;
+        double _value;
+
+    public:
+        [[nodiscard]]
+        constexpr double value() const { return _value; }
 
 
 
         /* ===== Constructors ===== */
 
     public:
+        constexpr Float() : _value(0.0) { }
         constexpr Float(Integer integer);
-
-        explicit constexpr Float(const char value) : value(static_cast<double>(value)) { }
-        explicit constexpr Float(const unsigned char value) : value(static_cast<double>(value)) { }
-        constexpr Float(const short value) : value(static_cast<double>(value)) { }
-        constexpr Float(const unsigned short value) : value(static_cast<double>(value)) { }
-        constexpr Float(const int value) : value(static_cast<double>(value)) { }
-        constexpr Float(const unsigned int value) : value(static_cast<double>(value)) { }
-        constexpr Float(const long value) : value(static_cast<double>(value)) { }
-        constexpr Float(const unsigned long value) : value(static_cast<double>(value)) { }
-        constexpr Float(const long long value) : value(static_cast<double>(value)) { }
-        constexpr Float(const unsigned long long value) : value(static_cast<double>(value)) { }
-        constexpr Float(const float value) : value(static_cast<double>(value)) { }
-        constexpr Float(const double value) : value(static_cast<double>(value)) { }
-        constexpr Float(const long double value) : value(static_cast<double>(value)) { }
+        constexpr Float(const char value) = delete;
+        constexpr Float(const unsigned char value) = delete;
+        constexpr Float(const short value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const unsigned short value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const int value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const unsigned int value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const long value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const unsigned long value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const long long value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const unsigned long long value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const float value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const double value) : _value(static_cast<double>(value)) { }
+        constexpr Float(const long double value) : _value(static_cast<double>(value)) { }
 
 
 
         /* ===== Conversion Operators ===== */
 
     public:
-        constexpr operator Integer() const;
-
-        constexpr operator float() const { return static_cast<float>(value); }
-        constexpr operator double() const { return static_cast<double>(value); }
-        constexpr operator long double() const { return static_cast<long double>(value); }
+        explicit constexpr operator float() const { return static_cast<float>(_value); }
+        explicit constexpr operator double() const { return static_cast<double>(_value); }
+        explicit constexpr operator long double() const { return static_cast<long double>(_value); }
 
 
 
@@ -51,29 +53,29 @@ namespace Spark {
 
     public:
         constexpr Float& operator=(const Float other) {
-            value = other.value;
+            _value = other._value;
             return *this;
         }
 
         constexpr Float operator+(const Float other) const {
-            return {value + other.value};
+            return {_value + other._value};
         }
 
         constexpr Float operator-(const Float other) const {
-            return {value - other.value};
+            return {_value - other._value};
         }
 
         constexpr Float operator*(const Float other) const {
-            return {value * other.value};
+            return {_value * other._value};
         }
 
         constexpr Float operator/(const Float other) const {
             // TODO: Check for division by zero
-            return {value / other.value};
+            return {_value / other._value};
         }
 
         friend std::ostream& operator<<(std::ostream& os, const Float f) {
-            os << f.value;
+            os << f._value;
             return os;
         }
 
@@ -85,8 +87,8 @@ namespace Spark {
 
 namespace Spark {
 
-    constexpr Float::Float(Integer integer) : value(static_cast<double>(integer)) { }
+    constexpr Float::Float(Integer integer) : _value(static_cast<double>(integer)) { }
 
-    constexpr Float::operator Integer() const { return {static_cast<double>(value)}; }
+    constexpr Float::operator Integer() const { return {static_cast<double>(_value)}; }
 
 }
