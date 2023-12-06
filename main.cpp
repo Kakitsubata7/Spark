@@ -17,10 +17,8 @@ int main() {
     std::cout << "Value: " << value << std::endl;
 
     Integer i = Integer(12);
-    Float f = Float(0.2) + i;
-    Integer i2 = f;
+    i = i + 3;
     std::cout << i << std::endl;
-    std::cout << f << std::endl;
 
     return 0;
 }
