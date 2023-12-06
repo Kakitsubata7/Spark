@@ -4,7 +4,7 @@ namespace Spark {
 
     /* ===== Factory Methods ===== */
 
-    template<>
+    template <>
     Value Value::make<Type>(const Type value) {
         Value result;
         result._type = Types::Type;
@@ -13,7 +13,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Integer>(const Integer value) {
         Value result;
         result._type = Types::Integer;
@@ -22,7 +22,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Float>(const Float value) {
         Value result;
         result._type = Types::Float;
@@ -31,7 +31,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Boolean>(const Boolean value) {
         Value result;
         result._type = Types::Boolean;
@@ -40,7 +40,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Pointer>(const Pointer value) {
         Value result;
         result._type = Types::Pointer;
@@ -49,7 +49,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Type>() {
         Value result;
         result._type = Types::Type;
@@ -58,7 +58,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Integer>() {
         Value result;
         result._type = Types::Integer;
@@ -67,7 +67,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Float>() {
         Value result;
         result._type = Types::Float;
@@ -76,7 +76,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Boolean>() {
         Value result;
         result._type = Types::Boolean;
@@ -85,7 +85,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     Value Value::make<Pointer>() {
         Value result;
         result._type = Types::Pointer;
@@ -94,7 +94,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Type>(const Type value) {
         Value result;
         result._type = Types::Type;
@@ -103,7 +103,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Integer>(const Integer value) {
         Value result;
         result._type = Types::Integer;
@@ -112,7 +112,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Float>(const Float value) {
         Value result;
         result._type = Types::Float;
@@ -121,7 +121,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Boolean>(const Boolean value) {
         Value result;
         result._type = Types::Boolean;
@@ -130,7 +130,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Pointer>(const Pointer value) {
         Value result;
         result._type = Types::Pointer;
@@ -139,7 +139,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Type>() {
         Value result;
         result._type = Types::Type;
@@ -148,7 +148,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Integer>() {
         Value result;
         result._type = Types::Integer;
@@ -157,7 +157,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Float>() {
         Value result;
         result._type = Types::Float;
@@ -166,7 +166,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Boolean>() {
         Value result;
         result._type = Types::Boolean;
@@ -175,7 +175,7 @@ namespace Spark {
         return result;
     }
 
-    template<>
+    template <>
     const Value Value::makeConstant<Pointer>() {
         Value result;
         result._type = Types::Pointer;
@@ -184,5 +184,4 @@ namespace Spark {
         return result;
     }
 
-}
-
+} // Spark
