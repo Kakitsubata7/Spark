@@ -65,6 +65,38 @@ namespace Spark {
             return {value + other.value};
         }
 
+        constexpr Integer operator+(const short value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const unsigned short value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const int value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const unsigned int value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const long value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const unsigned long value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const long long value) const {
+            return {this->value + value};
+        }
+
+        constexpr Integer operator+(const unsigned long long value) const {
+            return {this->value + value};
+        }
+
         constexpr Integer& operator++() {
             value++;
             return *this;
