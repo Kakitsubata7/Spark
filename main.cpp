@@ -16,9 +16,10 @@ int main() {
     std::cout << "Is Constant: " << value.isConstant() << std::endl;
     std::cout << "Value: " << value << std::endl;
 
-    Integer i = Integer(12);
-    i = i + 3;
-    std::cout << i << std::endl;
+    Float a = 1;
+    Integer b = a;
+    Float c = b;
+    std::cout << c << std::endl;
 
     return 0;
 }
