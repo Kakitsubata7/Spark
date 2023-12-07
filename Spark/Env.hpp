@@ -2,6 +2,8 @@
 
 namespace Spark {
 
-    using Float = double;
+class Env {
+
+};
 
 } // Spark
