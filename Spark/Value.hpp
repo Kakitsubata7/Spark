@@ -89,6 +89,13 @@ private:
     inline static constexpr bool is_type_v = std::is_same_v<Type, T>;
 
     template <typename T>
+    inline static constexpr bool is_spark_type_v = is_integer_v<T> ||
+                                                   is_float_v<T> ||
+                                                   is_boolean_v<T> ||
+                                                   is_pointer_v<T> ||
+                                                   is_type_v<T>;
+
+    template <typename T>
     using IntegerValue = typename std::enable_if_t<is_integer_v<T>, Value>;
 
     template <typename T>
@@ -108,54 +115,39 @@ private:
     /* ===== Factory Methods ===== */
 
 private:
-    template <typename T>
-    [[nodiscard]]
-    inline static IntegerValue<T> construct(T value, bool isConstant) {
-        Value result;
-        result._type = Type::Integer;
-        result._isConstant = isConstant;
-        result.integerValue = static_cast<Int64>(value);
-        return result;
+    template <typename T, typename std::enable_if_t<is_integer_v<T>, int> = 0>
+    inline static void construct(Value& value, T integer, bool isConstant) {
+        value._type = Type::Integer;
+        value._isConstant = isConstant;
+        value.integerValue = static_cast<Int64>(integer);
     }
 
-    template <typename T>
-    [[nodiscard]]
-    inline static FloatValue<T> construct(T value, bool isConstant) {
-        Value result;
-        result._type = Type::Float;
-        result._isConstant = isConstant;
-        result.floatValue = static_cast<Float64>(value);
-        return result;
+    template <typename T, typename std::enable_if_t<is_float_v<T>, int> = 0>
+    inline static void construct(Value& value, T f, bool isConstant) {
+        value._type = Type::Float;
+        value._isConstant = isConstant;
+        value.floatValue = static_cast<Float64>(f);
     }
 
-    template <typename T>
-    [[nodiscard]]
-    inline static BooleanValue<T> construct(T value, bool isConstant) {
-        Value result;
-        result._type = Type::Boolean;
-        result._isConstant = isConstant;
-        result.booleanValue = static_cast<Bool8>(value);
-        return result;
+    template <typename T, typename std::enable_if_t<is_boolean_v<T>, int> = 0>
+    inline static void construct(Value& value, T boolean, bool isConstant) {
+        value._type = Type::Boolean;
+        value._isConstant = isConstant;
+        value.booleanValue = static_cast<Bool8>(boolean);
     }
 
-    template <typename T>
-    [[nodiscard]]
-    inline static PointerValue<T> construct(T value, bool isConstant) {
-        Value result;
-        result._type = Type::Pointer;
-        result._isConstant = isConstant;
-        result.pointerValue = static_cast<void*>(value);
-        return result;
+    template <typename T, typename std::enable_if_t<is_pointer_v<T>, int> = 0>
+    inline static void construct(Value& value, T pointer, bool isConstant) {
+        value._type = Type::Pointer;
+        value._isConstant = isConstant;
+        value.pointerValue = static_cast<void*>(pointer);
     }
 
-    template <typename T>
-    [[nodiscard]]
-    inline static TypeValue<T> construct(T value, bool isConstant) {
-        Value result;
-        result._type = Type::Type;
-        result._isConstant = isConstant;
-        result.typeValue = static_cast<Type>(value);
-        return result;
+    template <typename T, typename std::enable_if_t<is_type_v<T>, int> = 0>
+    inline static void construct(Value& value, T type, bool isConstant) {
+        value._type = Type::Type;
+        value._isConstant = isConstant;
+        value.typeValue = static_cast<Type>(type);
     }
 
 public:
@@ -171,62 +163,93 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    static IntegerValue<T> make(T value = 0) {
-        return construct<T>(value, false);
+    static IntegerValue<T> make(T integer = 0) {
+        Value value;
+        construct<T>(value, integer, false);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static const IntegerValue<T> makeConstant(T value = 0) {
-        return construct<T>(value, true);
+    static const IntegerValue<T> makeConstant(T integer = 0) {
+        Value value;
+        construct<T>(value, integer, true);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static FloatValue<T> make(T value = 0.0) {
-        return construct<T>(value, false);
+    static FloatValue<T> make(T f = 0.0) {
+        Value value;
+        construct<T>(value, f, false);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static const FloatValue<T> makeConstant(T value = 0.0) {
-        return construct<T>(value, true);
+    static const FloatValue<T> makeConstant(T f = 0.0) {
+        Value value;
+        construct<T>(value, f, true);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static BooleanValue<T> make(T value = false) {
-        return construct<T>(value, false);
+    static BooleanValue<T> make(T boolean = false) {
+        Value value;
+        construct<T>(value, boolean, false);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static const BooleanValue<T> makeConstant(T value = false) {
-        return construct<T>(value, true);
+    static const BooleanValue<T> makeConstant(T boolean = false) {
+        Value value;
+        construct<T>(value, boolean, true);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static PointerValue<T> make(T value = nullptr) {
-        return construct<T>(value, false);
+    static PointerValue<T> make(T pointer = nullptr) {
+        Value value;
+        construct<T>(value, pointer, false);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static const PointerValue<T> makeConstant(T value = nullptr) {
-        return construct<T>(value, true);
+    static const PointerValue<T> makeConstant(T pointer = nullptr) {
+        Value value;
+        construct<T>(value, pointer, true);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static TypeValue<T> make(T value = nullptr) {
-        return construct<T>(value, false);
+    static TypeValue<T> make(T type = Type::Nil) {
+        Value value;
+        construct<T>(value, type, false);
+        return value;
     }
 
     template <typename T>
     [[nodiscard]]
-    static const TypeValue<T> makeConstant(T value = nullptr) {
-        return construct<T>(value, true);
+    static const TypeValue<T> makeConstant(T type = Type::Nil) {
+        Value value;
+        construct<T>(value, type, true);
+        return value;
+    }
+
+
+
+    /* ===== Assignment Operators ===== */
+
+public:
+    template <typename T, typename std::enable_if<is_spark_type_v<T>, int>::type = 0>
+    Value& operator=(const T value) {
+        construct<T>(*this, value, _isConstant);
+        return *this;
     }
 
 
