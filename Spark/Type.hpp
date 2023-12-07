@@ -16,7 +16,9 @@ namespace Spark {
         Set,
         Map,
         Object,
-        Function
+        Function,
+        Thread,
+        Promise
     };
 
 } // Spark
