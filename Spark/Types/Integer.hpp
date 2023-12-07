@@ -7,6 +7,8 @@
 
 namespace Spark {
 
+struct Float;
+
 struct Integer {
 
     /* ===== Data ===== */
@@ -37,6 +39,7 @@ public:
     constexpr Integer(const float value) : _value(static_cast<int64_t>(value)) { }
     constexpr Integer(const double value) : _value(static_cast<int64_t>(value)) { }
     constexpr Integer(const long double value) : _value(static_cast<int64_t>(value)) { }
+    constexpr Integer(Float f);
 
 
 
@@ -182,3 +185,5 @@ public:
 };
 
 } // Spark
+
+#include "Integer.inl"
