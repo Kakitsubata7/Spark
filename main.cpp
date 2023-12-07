@@ -1,5 +1,8 @@
 #include <iostream>
-#include <string>
+
+#include "Spark/Value.hpp"
+
+using namespace Spark;
 
 int main() {
 
