@@ -6,8 +6,10 @@ using namespace Spark;
 
 int main() {
 
-    Value value = Value::make<bool>(true);
-    std::cout << value << std::endl;
+    Value value = Value::makeNil();
+    std::cout << "Type: " << value.type() << std::endl;
+    std::cout << "Is constant: " << std::boolalpha << value.isConstant() << std::endl;
+    std::cout << "Value: " << value << std::endl;
 
     return 0;
 }
