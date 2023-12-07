@@ -13,4 +13,5 @@ add_executable(Spark
         Spark/Bool8.hpp
         Spark/Int64.hpp
         Spark/Float64.hpp
+        Spark/Type.cpp
 )
