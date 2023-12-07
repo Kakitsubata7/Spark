@@ -99,25 +99,25 @@ public:
         return *this;
     }
 
-    constexpr Integer& operator--() {
-        _value--;
-        return *this;
-    }
-
     constexpr const Integer operator++(int) {
         const Integer temp = *this;
         _value++;
         return temp;
     }
 
+    constexpr Integer operator-(const Integer other) const {
+        return {_value - other._value};
+    }
+
+    constexpr Integer& operator--() {
+        _value--;
+        return *this;
+    }
+
     constexpr const Integer operator--(int) {
         const Integer temp = *this;
         _value--;
         return temp;
-    }
-
-    constexpr Integer operator-(const Integer other) const {
-        return {_value - other._value};
     }
 
     constexpr Integer operator*(const Integer other) const {
