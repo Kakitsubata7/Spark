@@ -6,10 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(Spark
         main.cpp
         Spark.hpp
-        Spark/Types/Integer.hpp
-        Spark/Types/Float.hpp
-        Spark/Types/Type.hpp
-        Spark/Types/Boolean.hpp
-        Spark/Types/Boolean.hpp
+        Spark/Value.hpp
         Spark/Env.hpp
+        Spark/Type.hpp
+        Spark/GC/GCPtr.hpp
 )
