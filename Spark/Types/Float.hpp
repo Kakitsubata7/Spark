@@ -43,6 +43,16 @@ public:
     /* ===== Conversion Operators ===== */
 
 public:
+    explicit constexpr operator char() const { return static_cast<char>(_value); }
+    explicit constexpr operator unsigned char() const { return static_cast<unsigned char>(_value); }
+    explicit constexpr operator short() const { return static_cast<short>(_value); }
+    explicit constexpr operator unsigned short() const { return static_cast<unsigned short>(_value); }
+    explicit constexpr operator int() const { return static_cast<int>(_value); }
+    explicit constexpr operator unsigned int() const { return static_cast<unsigned int>(_value); }
+    explicit constexpr operator long() const { return static_cast<long>(_value); }
+    explicit constexpr operator unsigned long() const { return static_cast<unsigned long>(_value); }
+    explicit constexpr operator long long() const { return static_cast<long long>(_value); }
+    explicit constexpr operator unsigned long long() const { return static_cast<unsigned long long>(_value); }
     explicit constexpr operator float() const { return static_cast<float>(_value); }
     explicit constexpr operator double() const { return static_cast<double>(_value); }
     explicit constexpr operator long double() const { return static_cast<long double>(_value); }
@@ -83,12 +93,4 @@ public:
 
 } // Spark
 
-#include "Integer.hpp"
-
-namespace Spark {
-
-    constexpr Float::Float(Integer integer) : _value(static_cast<double>(integer)) { }
-
-    constexpr Float::operator Integer() const { return {static_cast<double>(_value)}; }
-
-}
+#include "Float.inl"
