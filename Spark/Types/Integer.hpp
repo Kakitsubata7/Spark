@@ -75,7 +75,7 @@ public:
                             std::is_same<T, long long>::value ||
                             std::is_same<T, unsigned long long>::value, Integer>::type
     constexpr operator+(const T other) const {
-        return Integer{_value + static_cast<int64_t>(other)};
+        return {_value + static_cast<int64_t>(other)};
     }
 
     template <typename T>
@@ -105,6 +105,11 @@ public:
         return temp;
     }
 
+    constexpr Integer& operator+=(Integer rhs) {
+        _value += rhs._value;
+        return *this;
+    }
+
     constexpr Integer operator-(const Integer other) const {
         return {_value - other._value};
     }
@@ -118,6 +123,11 @@ public:
         const Integer temp = *this;
         _value--;
         return temp;
+    }
+
+    constexpr Integer& operator-=(Integer rhs) {
+        _value -= rhs._value;
+        return *this;
     }
 
     constexpr Integer operator*(const Integer other) const {
