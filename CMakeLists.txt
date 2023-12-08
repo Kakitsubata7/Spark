@@ -14,4 +14,5 @@ add_executable(Spark
         Spark/Int64.hpp
         Spark/Float64.hpp
         Spark/Type.cpp
+        Spark/GC/GCNode.hpp
 )
