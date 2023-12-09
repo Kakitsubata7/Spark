@@ -151,16 +151,6 @@ private:
     }
 
 public:
-    [[nodiscard]]
-    constexpr static Value makeNil() {
-        return Value(false);
-    }
-
-    [[nodiscard]]
-    constexpr static Value makeConstantNil() {
-        return Value(true);
-    }
-
     template <typename T>
     [[nodiscard]]
     static IntegerValue<T> make(T integer = 0) {
