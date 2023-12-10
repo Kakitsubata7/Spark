@@ -10,54 +10,29 @@ class GCPtr {
     /* ===== Data ===== */
 
 private:
-    struct Data {
-    public:
-        size_t count;
-        GCNode<T>* node;
-
-        explicit Data(size_t count = 0, GCNode<T>* node = nullptr) : count(count), node(node) { }
-    };
-
-    Data* data;
+    T* dataPtr;
+    GCNode* nodePtr;
 
 public:
     [[nodiscard]]
-    constexpr size_t count() const { return data->count; }
+    constexpr T* getDataPtr() { return dataPtr; }
+
+    [[nodiscard]]
+    constexpr GCNode* getNodePtr() { return nodePtr; }
+
+    [[nodiscard]]
+    constexpr size_t referenceCount() { return nodePtr->getRefCount(); }
 
 
 
     /* ===== Constructor ===== */
 
-private:
-    explicit GCPtr(const T& value) : data(new Data(1, new GCNode<T>(value))) { }
-
-
-
-    /* ===== Factory Methods ===== */
-
 public:
-    template <typename... Args>
-    [[nodiscard]]
-    static GCPtr<T> make(Args&&... args) {
-        return GCPtr<T>(T(std::forward<Args>(args)...));
+    explicit GCPtr(const T& value)  {
+        dataPtr = new T();
+        *dataPtr = value;
+        nodePtr = new GCNode(1);
     }
-
-
-
-    /* ===== Copy Assignment Operator ===== */
-
-public:
-//    GCPtr& operator=(const GCPtr& other) {
-//        if (this != &other) {
-//            release();  // Release current resource
-//            ptr = other.ptr;
-//            refCount = other.refCount;
-//            if (refCount) {
-//                ++(*refCount);  // Increment ref count of new resource
-//            }
-//        }
-//        return *this;
-//    }
 
 
 
@@ -65,7 +40,11 @@ public:
 
 public:
     T& operator*() {
-        return data->node->data();
+        return *dataPtr;
+    }
+
+    T* operator->() {
+        return dataPtr;
     }
 
 };

@@ -1,28 +1,47 @@
 #pragma once
 
+#include <unordered_set>
+
 namespace Spark {
 
-template <typename T>
 class GCNode {
 
     /* ===== Data ===== */
 
 private:
-    T _data;
+    size_t refCount = 0;
+    std::unordered_set<GCNode*> referencedNodeSet;
 
 public:
     [[nodiscard]]
-    constexpr T& data() { return _data; }
-
-    [[nodiscard]]
-    constexpr const T& data() const { return _data; }
+    constexpr size_t getRefCount() const { return refCount; }
 
 
 
-    /* ===== Constructors ===== */
+    /* ===== Constructor & Destructor ===== */
 
 public:
-    explicit GCNode(const T& value = T()) : _data(value) { }
+    explicit GCNode(size_t initialRefCount) : refCount(initialRefCount) { }
+
+    ~GCNode() {
+        for (GCNode* node : referencedNodeSet)
+            dereference(node);
+    }
+
+
+
+    /* ===== Reference & Deference ===== */
+
+public:
+    void reference(GCNode* target) {
+        target->refCount++;
+        referencedNodeSet.insert(target);
+    }
+
+    void dereference(GCNode* target) {
+        target->refCount--;
+        referencedNodeSet.erase(target);
+    }
 
 };
 
