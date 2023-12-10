@@ -1,52 +1,57 @@
 #pragma once
 
-#include "GCNode.hpp"
-
 namespace Spark {
+
+class GCNode;
 
 template <typename T>
 class GCPtr {
 
+    /* ===== Friend Class ===== */
+
+    friend class GC;
+
+
+
     /* ===== Data ===== */
 
 private:
-    T* dataPtr;
     GCNode* nodePtr;
 
 public:
     [[nodiscard]]
-    constexpr T* getDataPtr() { return dataPtr; }
-
-    [[nodiscard]]
-    constexpr GCNode* getNodePtr() { return nodePtr; }
-
-    [[nodiscard]]
-    constexpr size_t referenceCount() { return nodePtr->getRefCount(); }
+    size_t referenceCount() const;
 
 
 
-    /* ===== Constructor ===== */
+    /* ===== Constructor & Destructor ===== */
+
+private:
+    explicit GCPtr(GCNode* nodePtr);
 
 public:
-    explicit GCPtr(const T& value)  {
-        dataPtr = new T();
-        *dataPtr = value;
-        nodePtr = new GCNode(1);
-    }
+    ~GCPtr();
+
+
+
+    /* ===== Copying ===== */
+
+public:
+    GCPtr(const GCPtr<T>& other);
+
+    GCPtr<T>& operator=(const GCPtr<T>& other);
 
 
 
     /* ===== Operators ===== */
 
 public:
-    T& operator*() {
-        return *dataPtr;
-    }
+    T& operator*();
 
-    T* operator->() {
-        return dataPtr;
-    }
+    T* operator->();
 
 };
 
 } // Spark
+
+#include "GCPtr.tpp"

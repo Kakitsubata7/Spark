@@ -1,46 +1,65 @@
 #pragma once
 
 #include <unordered_set>
+#include <iostream>
+
+#include "GCPtr.hpp"
 
 namespace Spark {
 
+class GC;
+
 class GCNode {
+
+    /* ===== Friend Classes ===== */
+
+    friend class GC;
+    template <typename> friend class GCPtr;
+
+
 
     /* ===== Data ===== */
 
 private:
-    size_t refCount = 0;
-    std::unordered_set<GCNode*> referencedNodeSet;
-
-public:
-    [[nodiscard]]
-    constexpr size_t getRefCount() const { return refCount; }
+    size_t referenceCount;
+    GC* gcPtr;
+    void* dataPtr;
+    void (*destructorPtr)(void*);
+    std::unordered_set<GCNode*> nodeReferencingSet;
 
 
 
     /* ===== Constructor & Destructor ===== */
 
-public:
-    explicit GCNode(size_t initialRefCount) : refCount(initialRefCount) { }
+private:
+    explicit GCNode(size_t initialRefCount,
+                    GC* gcPtr,
+                    void* dataPtr,
+                    void (*destructorPtr)(void*)) : referenceCount(initialRefCount),
+                                                    gcPtr(gcPtr),
+                                                    dataPtr(dataPtr),
+                                                    destructorPtr(destructorPtr) { }
 
     ~GCNode() {
-        for (GCNode* node : referencedNodeSet)
-            dereference(node);
+        destructorPtr(dataPtr);
+        ::operator delete(dataPtr);
     }
 
 
 
-    /* ===== Reference & Deference ===== */
+    /* ===== Operations ===== */
 
-public:
+private:
+    void collect();
+
     void reference(GCNode* target) {
-        target->refCount++;
-        referencedNodeSet.insert(target);
+        nodeReferencingSet.insert(target);
+        target->referenceCount++;
     }
 
     void dereference(GCNode* target) {
-        target->refCount--;
-        referencedNodeSet.erase(target);
+        nodeReferencingSet.erase(target);
+        target->referenceCount--;
     }
 
 };

@@ -16,4 +16,6 @@ add_executable(Spark
         Spark/Type.cpp
         Spark/GC/GCNode.hpp
         Spark/GC/GC.hpp
+        Spark/GC/GCPtr.tpp
+        Spark/GC/GCNode.cpp
 )
