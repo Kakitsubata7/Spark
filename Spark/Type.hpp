@@ -12,6 +12,7 @@ enum class Type : uint8_t {
     Boolean,
     Pointer,
     Type,
+    Box,
     String,
     Array,
     Set,
@@ -22,6 +23,6 @@ enum class Type : uint8_t {
     Promise
 };
 
-std::ostream& operator<<(std::ostream& os, const Type type);
+std::ostream& operator<<(std::ostream& os, Type type);
 
 } // Spark
