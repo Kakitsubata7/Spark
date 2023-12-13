@@ -45,7 +45,26 @@ public:
     constexpr Type type() const { return _type; }
 
     [[nodiscard]]
-    constexpr Bool8 isConstant() const { return _isConstant; }
+    constexpr bool isConstant() const { return _isConstant; }
+
+    [[nodiscard]]
+    constexpr bool isReferenceType() const {
+        switch (_type) {
+            case Type::Box:
+            case Type::String:
+            case Type::Array:
+            case Type::Set:
+            case Type::Map:
+            case Type::Object:
+            case Type::Function:
+            case Type::Thread:
+            case Type::Promise:
+                return true;
+
+            default:
+                return false;
+        }
+    }
 
 
 
@@ -56,6 +75,15 @@ public:
 
 private:
     explicit constexpr Value(bool isConstant) : _type(Type::Nil), _isConstant(isConstant), pointerValue(nullptr) { }
+
+
+
+    /* ===== Destructor ===== */
+
+public:
+    ~Value() {
+        // TODO: Implement
+    }
 
 
 
