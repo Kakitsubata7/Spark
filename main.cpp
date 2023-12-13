@@ -2,6 +2,11 @@
 
 #include "Spark/GC/GC.hpp"
 #include "Spark/GC/GCPtr.hpp"
+#include "Spark/Bool8.hpp"
+#include "Spark/Float64.hpp"
+#include "Spark/Int64.hpp"
+#include "Spark/Type.hpp"
+#include "Spark/Value.hpp"
 
 using namespace Spark;
 
@@ -15,7 +20,7 @@ int main() {
 
     GC gc;
 
-    GCPtr<int> p = gc.make<int>(3);
+    GCPtr<Int64> p = gc.make<Int64>(3);
 
     std::cout << "Value: " << *p << std::endl;
     std::cout << "Ref count: " << p.referenceCount() << std::endl;
