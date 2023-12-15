@@ -3,6 +3,8 @@ project(Spark)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_compile_options(-Wall -Wextra -Werror)
+
 add_executable(Spark
         main.cpp
         Spark.hpp
@@ -16,6 +18,5 @@ add_executable(Spark
         Spark/Type.cpp
         Spark/GC/GCNode.hpp
         Spark/GC/GC.hpp
-        Spark/GC/GCPtr.tpp
         Spark/GC/GCNode.cpp
 )

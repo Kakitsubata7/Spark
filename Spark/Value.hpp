@@ -308,6 +308,9 @@ public:
                 break;
 
             // TODO: Implement
+            case Type::Box:
+                break;
+
             case Type::String:
                 break;
 

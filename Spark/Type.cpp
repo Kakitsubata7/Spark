@@ -28,6 +28,10 @@ namespace Spark {
                 os << "Type";
                 break;
 
+            case Type::Box:
+                os << "Box";
+                break;
+
             case Type::String:
                 os << "String";
                 break;

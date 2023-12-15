@@ -3,8 +3,6 @@
 #include <unordered_set>
 #include <iostream>
 
-#include "GCPtr.hpp"
-
 namespace Spark {
 
 class GC;

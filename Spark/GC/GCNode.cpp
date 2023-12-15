@@ -1,7 +1,5 @@
 #include "GCNode.hpp"
 
-#include <iostream> // TODO: Delete this line
-
 #include "GC.hpp"
 
 namespace Spark {
