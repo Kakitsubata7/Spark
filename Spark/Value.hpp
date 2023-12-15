@@ -31,6 +31,7 @@ private:
         Bool8 booleanValue;
         void* pointerValue;
         Type typeValue;
+        GCPtr<Value> boxPtr;
         GCPtr<std::string> stringPtr;
         GCPtr<std::vector<Value>> arrayPtr;
         GCPtr<std::unordered_set<Value>> setPtr;
@@ -82,7 +83,42 @@ private:
 
 public:
     ~Value() {
-        // TODO: Implement
+        switch (_type) {
+            case Type::Box:
+                boxPtr.~GCPtr<Value>();
+                break;
+
+            case Type::String:
+                stringPtr.~GCPtr<std::string>();
+                break;
+
+            case Type::Array:
+                arrayPtr.~GCPtr<std::vector<Value>>();
+                break;
+
+            case Type::Set:
+                setPtr.~GCPtr<std::unordered_set<Value>>();
+                break;
+
+            case Type::Map:
+                mapPtr.~GCPtr<std::unordered_map<Value, Value>>();
+                break;
+
+            case Type::Object:
+                objectPtr.~GCPtr<std::unordered_map<std::string, Value>>();
+                break;
+
+            case Type::Thread:
+                threadPtr.~GCPtr<void*>();
+                break;
+
+            case Type::Promise:
+                promisePtr.~GCPtr<void*>();
+                break;
+
+            default:
+                break;
+        }
     }
 
 
