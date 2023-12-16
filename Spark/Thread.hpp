@@ -83,6 +83,11 @@ public:
         throw std::runtime_error("Not implemented.");
     }
 
+    void execute() {
+        // TODO: Implement
+        throw std::runtime_error("Not implemented.");
+    }
+
 };
 
 } // Spark
