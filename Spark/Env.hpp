@@ -1,9 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <stdexcept>
+#include <unordered_set>
 
+#include "Config.hpp"
 #include "GC/GC.hpp"
+#include "Thread.hpp"
 #include "Value.hpp"
 
 namespace Spark {
@@ -13,60 +17,21 @@ class Env {
     /* ===== Constructors ===== */
 
 public:
-    Env(size_t stackCapacity, size_t maxStackCapacity) : maxStackCapacity(maxStackCapacity) {
-        stackBuffer = new Value[stackCapacity];
-        stackPointer = basePointer = stackBuffer;
+    Env(size_t mainThreadStackCapacity, size_t mainThreadMaxStackCapacity) {
+        mainThread = Thread(mainThreadStackCapacity, mainThreadMaxStackCapacity);
     }
 
-    explicit Env(size_t stackCapacity) : Env(stackCapacity, stackCapacity) { }
+    explicit Env(size_t mainThreadStackCapacity) : Env(mainThreadStackCapacity, mainThreadStackCapacity) { }
 
-    Env() : Env(256, 4096) { }
-
-
-
-    /* ===== Destructor ===== */
-
-public:
-    ~Env() {
-        delete stackBuffer;
-    }
-
-
-
-    /* ===== Stack ==== */
-
-private:
-    Value* stackBuffer;
-    size_t maxStackCapacity;
-
-public:
-    void push(const Value& value) {
-        // TODO: Implement
-        throw std::runtime_error("Not implemented.");
-    }
-
-    Value top() {
-        // TODO: Implement
-        throw std::runtime_error("Not implemented.");
-    }
-
-    void pop() {
-        // TODO: Implement
-        throw std::runtime_error("Not implemented.");
-    }
-
-
-
-    /* ===== Registers ===== */
-
-private:
-    Value* stackPointer;
-    Value* basePointer;
-    std::byte* programCounter = nullptr;
+    Env() : Env(DEFAULT_STACK_CAPACITY, DEFAULT_MAX_STACK_CAPACITY) { }
 
 
 
     /* ===== Threads ===== */
+
+private:
+    Thread mainThread;
+    std::unordered_set<std::unique_ptr<Thread>> threadSet;
 
 
 
