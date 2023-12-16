@@ -72,6 +72,7 @@ public:
         throw std::runtime_error("Not implemented.");
     }
 
+    [[nodiscard]]
     Value top() const {
         // TODO: Implement
         throw std::runtime_error("Not implemented.");
