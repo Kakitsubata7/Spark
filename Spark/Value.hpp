@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Bool8.hpp"
+#include "Exception.hpp"
 #include "Float64.hpp"
 #include "GC/GCPtr.hpp"
 #include "Int64.hpp"
@@ -37,6 +38,7 @@ private:
         GCPtr<std::unordered_map<Value, Value>> mapPtr;
         GCPtr<std::unordered_map<std::string, Value>> objectPtr;
         GCPtr<void*> functionPtr;
+        GCPtr<Exception> exceptionPtr;
         GCPtr<void*> threadPtr;
         GCPtr<void*> promisePtr;
     };
@@ -55,6 +57,7 @@ public:
             case Type::Map:
             case Type::Object:
             case Type::Function:
+            case Type::Exception:
             case Type::Thread:
             case Type::Promise:
                 return true;
@@ -227,47 +230,52 @@ public:
 
             case Type::Box:
                 boxPtr = other.boxPtr;
-                other.boxPtr = nullptr;
+                other.boxPtr.invalidate();
                 break;
 
             case Type::String:
                 stringPtr = other.stringPtr;
-                other.stringPtr = nullptr;
+                other.stringPtr.invalidate();
                 break;
 
             case Type::Array:
                 arrayPtr = other.arrayPtr;
-                other.arrayPtr = nullptr;
+                other.arrayPtr.invalidate();
                 break;
 
             case Type::Set:
                 setPtr = other.setPtr;
-                other.setPtr = nullptr;
+                other.setPtr.invalidate();
                 break;
 
             case Type::Map:
                 mapPtr = other.mapPtr;
-                other.mapPtr = nullptr;
+                other.mapPtr.invalidate();
                 break;
 
             case Type::Object:
                 objectPtr = other.objectPtr;
-                other.objectPtr = nullptr;
+                other.objectPtr.invalidate();
                 break;
 
             case Type::Function:
                 functionPtr = other.functionPtr;
-                other.functionPtr = nullptr;
+                other.functionPtr.invalidate();
+                break;
+
+            case Type::Exception:
+                exceptionPtr = other.exceptionPtr;
+                other.exceptionPtr.invalidate();
                 break;
 
             case Type::Thread:
                 threadPtr = other.threadPtr;
-                other.threadPtr = nullptr;
+                other.threadPtr.invalidate();
                 break;
 
             case Type::Promise:
                 promisePtr = other.promisePtr;
-                other.promisePtr = nullptr;
+                other.promisePtr.invalidate();
                 break;
 
             default:
@@ -459,13 +467,15 @@ public:
                 os << value.typeValue;
                 break;
 
-            // TODO: Implement
             case Type::Box:
+                os << *(value.boxPtr);
                 break;
 
             case Type::String:
+                os << *(value.stringPtr);
                 break;
 
+            // TODO: Implement
             case Type::Array:
                 break;
 
@@ -479,6 +489,10 @@ public:
                 break;
 
             case Type::Function:
+                break;
+
+            case Type::Exception:
+                os << *(value.exceptionPtr);
                 break;
 
             case Type::Thread:

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -30,6 +31,15 @@ private:
         std::string exceptionType;
     }* data;
 
+public:
+    const std::string& message() const {
+        return data->message;
+    }
+
+    const std::string exceptionType() const {
+        return data->exceptionType;
+    }
+
 
 
     /* ===== What ===== */
@@ -38,6 +48,16 @@ public:
     [[nodiscard]]
     const char* what() const {
         return data->message.c_str();
+    }
+
+
+
+    /* ===== Operator ===== */
+
+public:
+    friend std::ostream& operator<<(std::ostream& os, const Exception& exception) {
+        os << exception.exceptionType() << ": " << exception.message();
+        return os;
     }
 
 };

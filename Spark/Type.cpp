@@ -56,6 +56,10 @@ namespace Spark {
                 os << "Function";
                 break;
 
+            case Type::Exception:
+                os << "Exception";
+                break;
+
             case Type::Thread:
                 os << "Thread";
                 break;
