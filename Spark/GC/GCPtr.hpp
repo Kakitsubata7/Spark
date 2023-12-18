@@ -60,6 +60,9 @@ public:
     /* ===== Operators ===== */
 
 public:
+    /**
+     * Invalidate the GCPtr<T> instance.
+     */
     GCPtr<T>& operator=(const std::nullptr_t null) {
         this->~GCPtr<T>();
         nodePtr = null;
