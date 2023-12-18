@@ -19,6 +19,7 @@ enum class Type : uint8_t {
     Map,
     Object,
     Function,
+    Exception,
     Thread,
     Promise
 };
