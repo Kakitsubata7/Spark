@@ -36,6 +36,7 @@ private:
         GCPtr<std::unordered_set<Value>> setPtr;
         GCPtr<std::unordered_map<Value, Value>> mapPtr;
         GCPtr<std::unordered_map<std::string, Value>> objectPtr;
+        GCPtr<void*> functionPtr;
         GCPtr<void*> threadPtr;
         GCPtr<void*> promisePtr;
     };
@@ -99,6 +100,10 @@ public:
 
             case Type::Object:
                 objectPtr.~GCPtr<std::unordered_map<std::string, Value>>();
+                break;
+
+            case Type::Function:
+                functionPtr.~GCPtr<void*>();
                 break;
 
             case Type::Thread:
@@ -177,7 +182,7 @@ private:
                 break;
 
             case Type::Function:
-                // TODO: Implement
+                functionPtr = other.functionPtr;
                 break;
 
             case Type::Thread:
@@ -251,7 +256,8 @@ public:
                 break;
 
             case Type::Function:
-                // TODO: Implement
+                functionPtr = other.functionPtr;
+                other.functionPtr = nullptr;
                 break;
 
             case Type::Thread:
