@@ -23,7 +23,6 @@ class Value {
 
 private:
     Type _type;
-    Bool8 _isConstant;
 
     union {
         Int64 integerValue;
@@ -44,9 +43,6 @@ private:
 public:
     [[nodiscard]]
     constexpr Type type() const { return _type; }
-
-    [[nodiscard]]
-    constexpr bool isConstant() const { return _isConstant; }
 
     [[nodiscard]]
     constexpr bool isReferenceType() const {
@@ -72,10 +68,7 @@ public:
     /* ===== Constructor ===== */
 
 public:
-    constexpr Value() : Value(false) { }
-
-private:
-    explicit constexpr Value(bool isConstant) : _type(Type::Nil), _isConstant(isConstant), pointerValue(nullptr) { }
+    explicit constexpr Value() : _type(Type::Nil), pointerValue(nullptr) { }
 
 
 
@@ -119,6 +112,168 @@ public:
             default:
                 break;
         }
+    }
+
+
+
+    /* ===== Copying ===== */
+
+public:
+    Value(const Value& other) : _type(other._type) {
+        copyFrom(other);
+    }
+
+    Value& operator=(const Value& other) {
+        if (this != &other)
+            copyFrom(other);
+        return *this;
+    }
+
+private:
+    void copyFrom(const Value& other) {
+        switch (_type) {
+            case Type::Integer:
+                integerValue = other.integerValue;
+                break;
+
+            case Type::Float:
+                floatValue = other.floatValue;
+                break;
+
+            case Type::Boolean:
+                booleanValue = other.booleanValue;
+                break;
+
+            case Type::Pointer:
+                pointerValue = other.pointerValue;
+                break;
+
+            case Type::Type:
+                typeValue = other.typeValue;
+                break;
+
+            case Type::Box:
+                boxPtr = other.boxPtr;
+                break;
+
+            case Type::String:
+                stringPtr = other.stringPtr;
+                break;
+
+            case Type::Array:
+                arrayPtr = other.arrayPtr;
+                break;
+
+            case Type::Set:
+                setPtr = other.setPtr;
+                break;
+
+            case Type::Map:
+                mapPtr = other.mapPtr;
+                break;
+
+            case Type::Object:
+                objectPtr = other.objectPtr;
+                break;
+
+            case Type::Function:
+                // TODO: Implement
+                break;
+
+            case Type::Thread:
+                threadPtr = other.threadPtr;
+                break;
+
+            case Type::Promise:
+                promisePtr = other.promisePtr;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
+
+    /* ===== Move Semantics ===== */
+
+public:
+    Value(Value&& other) noexcept : _type(other._type) {
+        switch (_type) {
+            case Type::Integer:
+                integerValue = other.integerValue;
+                break;
+
+            case Type::Float:
+                floatValue = other.floatValue;
+                break;
+
+            case Type::Boolean:
+                booleanValue = other.booleanValue;
+                break;
+
+            case Type::Pointer:
+                pointerValue = other.pointerValue;
+                break;
+
+            case Type::Type:
+                typeValue = other.typeValue;
+                break;
+
+            case Type::Box:
+                boxPtr = other.boxPtr;
+                other.boxPtr = nullptr;
+                break;
+
+            case Type::String:
+                stringPtr = other.stringPtr;
+                other.stringPtr = nullptr;
+                break;
+
+            case Type::Array:
+                arrayPtr = other.arrayPtr;
+                other.arrayPtr = nullptr;
+                break;
+
+            case Type::Set:
+                setPtr = other.setPtr;
+                other.setPtr = nullptr;
+                break;
+
+            case Type::Map:
+                mapPtr = other.mapPtr;
+                other.mapPtr = nullptr;
+                break;
+
+            case Type::Object:
+                objectPtr = other.objectPtr;
+                other.objectPtr = nullptr;
+                break;
+
+            case Type::Function:
+                // TODO: Implement
+                break;
+
+            case Type::Thread:
+                threadPtr = other.threadPtr;
+                other.threadPtr = nullptr;
+                break;
+
+            case Type::Promise:
+                promisePtr = other.promisePtr;
+                other.promisePtr = nullptr;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    Value& operator=(Value&& other) noexcept {
+        if (this != &other) {
+
+        }
+        return *this;
     }
 
 
@@ -180,37 +335,32 @@ private:
 
 private:
     template <typename T, typename std::enable_if_t<is_integer_v<T>, int> = 0>
-    inline static void construct(Value& value, T integer, bool isConstant) {
+    inline static void construct(Value& value, T integer) {
         value._type = Type::Integer;
-        value._isConstant = isConstant;
         value.integerValue = static_cast<Int64>(integer);
     }
 
     template <typename T, typename std::enable_if_t<is_float_v<T>, int> = 0>
-    inline static void construct(Value& value, T f, bool isConstant) {
+    inline static void construct(Value& value, T f) {
         value._type = Type::Float;
-        value._isConstant = isConstant;
         value.floatValue = static_cast<Float64>(f);
     }
 
     template <typename T, typename std::enable_if_t<is_boolean_v<T>, int> = 0>
-    inline static void construct(Value& value, T boolean, bool isConstant) {
+    inline static void construct(Value& value, T boolean) {
         value._type = Type::Boolean;
-        value._isConstant = isConstant;
         value.booleanValue = static_cast<Bool8>(boolean);
     }
 
     template <typename T, typename std::enable_if_t<is_pointer_v<T>, int> = 0>
-    inline static void construct(Value& value, T pointer, bool isConstant) {
+    inline static void construct(Value& value, T pointer) {
         value._type = Type::Pointer;
-        value._isConstant = isConstant;
         value.pointerValue = static_cast<void*>(pointer);
     }
 
     template <typename T, typename std::enable_if_t<is_type_v<T>, int> = 0>
-    inline static void construct(Value& value, T type, bool isConstant) {
+    inline static void construct(Value& value, T type) {
         value._type = Type::Type;
-        value._isConstant = isConstant;
         value.typeValue = static_cast<Type>(type);
     }
 
@@ -225,25 +375,9 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    static const IntegerValue<T> makeConstant(T integer = 0) {
-        Value value;
-        construct<T>(value, integer, true);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
     static FloatValue<T> make(T f = 0.0) {
         Value value;
         construct<T>(value, f, false);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
-    static const FloatValue<T> makeConstant(T f = 0.0) {
-        Value value;
-        construct<T>(value, f, true);
         return value;
     }
 
@@ -257,25 +391,9 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    static const BooleanValue<T> makeConstant(T boolean = false) {
-        Value value;
-        construct<T>(value, boolean, true);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
     static PointerValue<T> make(T pointer = nullptr) {
         Value value;
         construct<T>(value, pointer, false);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
-    static const PointerValue<T> makeConstant(T pointer = nullptr) {
-        Value value;
-        construct<T>(value, pointer, true);
         return value;
     }
 
@@ -287,22 +405,14 @@ public:
         return value;
     }
 
-    template <typename T>
-    [[nodiscard]]
-    static const TypeValue<T> makeConstant(T type = Type::Nil) {
-        Value value;
-        construct<T>(value, type, true);
-        return value;
-    }
 
 
-
-    /* ===== Assignment Operators ===== */
+    /* ===== Assignment Operator ===== */
 
 public:
     template <typename T, typename std::enable_if<is_spark_type_v<T>, int>::type = 0>
     Value& operator=(const T value) {
-        construct<T>(*this, value, _isConstant);
+        construct<T>(*this, value);
         return *this;
     }
 

@@ -60,6 +60,12 @@ public:
     /* ===== Operators ===== */
 
 public:
+    GCPtr<T>& operator=(const std::nullptr_t null) {
+        this->~GCPtr<T>();
+        nodePtr = null;
+        return *this;
+    }
+
     T& operator*() {
         return *(reinterpret_cast<T*>(nodePtr->dataPtr));
     }
