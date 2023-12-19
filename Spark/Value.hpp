@@ -207,6 +207,19 @@ private:
 
 public:
     Value(Value&& other) noexcept : _type(other._type) {
+        moveFrom(std::move(other));
+    }
+
+    Value& operator=(Value&& other) noexcept {
+        if (this != &other) {
+            _type = other._type;
+            moveFrom(std::move(other));
+        }
+        return *this;
+    }
+
+private:
+    void moveFrom(Value&& other) noexcept {
         switch (_type) {
             case Type::Integer:
                 integerValue = other.integerValue;
@@ -281,13 +294,6 @@ public:
             default:
                 break;
         }
-    }
-
-    Value& operator=(Value&& other) noexcept {
-        if (this != &other) {
-
-        }
-        return *this;
     }
 
 
