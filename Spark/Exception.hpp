@@ -32,10 +32,12 @@ private:
     }* data;
 
 public:
+    [[nodiscard]]
     const std::string& message() const {
         return data->message;
     }
 
+    [[nodiscard]]
     const std::string exceptionType() const {
         return data->exceptionType;
     }
