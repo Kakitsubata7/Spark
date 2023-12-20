@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iomanip>
 #include <ostream>
 
 #include "GCNode.hpp"
@@ -74,9 +75,15 @@ public:
         return reinterpret_cast<T*>(nodePtr->dataPtr);
     }
 
-// TODO: Implement to return a hex integer of the GCPtr<T>
-//    friend std::ostream& operator<<(std::ostream& os, const GCPtr<T>& ptr) {
-//    }
+    friend std::ostream& operator<<(std::ostream& os, const GCPtr<T>& ptr) {
+        os << "0x"
+           << std::hex
+           << std::setw(sizeof(void*) * 2)
+           << std::setfill('0')
+           << reinterpret_cast<uintptr_t>(ptr.nodePtr)
+           << std::dec;
+        return os;
+    }
 
 
 
