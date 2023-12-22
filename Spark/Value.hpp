@@ -481,20 +481,54 @@ public:
                 os << *(value.stringPtr);
                 break;
 
-            // TODO: Implement
-            case Type::Array:
+            case Type::Array: {
+                os << '[';
+                GCPtr<std::vector<Value>> arrayPtr = value.arrayPtr;
+                size_t size = value.arrayPtr->size();
+                for (size_t i = 0; i < size; i++) {
+                    os << arrayPtr->operator[](i);
+                    if (i < size - 1)
+                        os << ", ";
+                }
+                os << ']';
+            }
                 break;
 
-            case Type::Set:
+            case Type::Set: {
+                os << '{';
+                GCPtr<std::unordered_set<Value>> setPtr = value.setPtr;
+                for (auto it = setPtr->begin(); it != setPtr->end(); ) {
+                    os << *it;
+                    if (++it != setPtr->end())
+                        os << ", ";
+                }
+                os << '}';
+            }
                 break;
 
-            case Type::Map:
+            case Type::Map: {
+                os << '{';
+                GCPtr<std::unordered_map<Value, Value>> mapPtr = value.mapPtr;
+                for (auto it = mapPtr->begin(); it != mapPtr->end(); ) {
+                    os << it->first << ": " << it->second;
+                    if (++it != mapPtr->end()) {
+                        os << ", ";
+                    }
+                }
+                os << '}';
+            }
                 break;
 
             case Type::Object:
+                os << "<Object: "
+                   << value.objectPtr
+                   << '>';
                 break;
 
             case Type::Function:
+                os << "<Function: "
+                   << value.functionPtr
+                   << '>';
                 break;
 
             case Type::Exception:
@@ -502,9 +536,15 @@ public:
                 break;
 
             case Type::Thread:
+                os << "<Thread: "
+                   << value.threadPtr
+                   << '>';
                 break;
 
             case Type::Promise:
+                os << "<Promise: "
+                   << value.threadPtr
+                   << '>';
                 break;
         }
         return os;
