@@ -75,6 +75,10 @@ public:
         return reinterpret_cast<T*>(nodePtr->dataPtr);
     }
 
+    const T* operator->() const {
+        return reinterpret_cast<const T*>(nodePtr->dataPtr);
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const GCPtr<T>& ptr) {
         os << "0x"
            << std::hex
