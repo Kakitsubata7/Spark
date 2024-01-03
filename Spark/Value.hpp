@@ -334,94 +334,49 @@ private:
                                                    is_pointer_v<T> ||
                                                    is_type_v<T>;
 
-    template <typename T>
-    using IntegerValue = typename std::enable_if_t<is_integer_v<T>, Value>;
-
-    template <typename T>
-    using FloatValue = typename std::enable_if_t<is_float_v<T>, Value>;
-
-    template <typename T>
-    using BooleanValue = typename std::enable_if_t<is_boolean_v<T>, Value>;
-
-    template <typename T>
-    using PointerValue = typename std::enable_if_t<is_pointer_v<T>, Value>;
-
-    template <typename T>
-    using TypeValue = typename std::enable_if_t<is_type_v<T>, Value>;
-
 
 
     /* ===== Factory Methods ===== */
 
-private:
-    template <typename T, typename std::enable_if_t<is_integer_v<T>, int> = 0>
-    inline static void construct(Value& value, T integer) {
+public:
+    [[nodiscard]]
+    static Value makeNil() {
+        Value value;
+        value._type = Type::Nil;
+        return value;
+    }
+
+    template <typename T, typename std::enable_if<is_integer_v<T>, int>::type = 0>
+    [[nodiscard]]
+    static Value makeInteger(T integer = 0) {
+        Value value;
         value._type = Type::Integer;
         value.integerValue = static_cast<Int64>(integer);
+        return value;
     }
 
-    template <typename T, typename std::enable_if_t<is_float_v<T>, int> = 0>
-    inline static void construct(Value& value, T f) {
+    template <typename T, typename std::enable_if<is_float_v<T>, int>::type = 0>
+    [[nodiscard]]
+    static Value makeFloat(T f = 0.0) {
+        Value value;
         value._type = Type::Float;
-        value.floatValue = static_cast<Float64>(f);
-    }
-
-    template <typename T, typename std::enable_if_t<is_boolean_v<T>, int> = 0>
-    inline static void construct(Value& value, T boolean) {
-        value._type = Type::Boolean;
-        value.booleanValue = static_cast<Bool8>(boolean);
-    }
-
-    template <typename T, typename std::enable_if_t<is_pointer_v<T>, int> = 0>
-    inline static void construct(Value& value, T pointer) {
-        value._type = Type::Pointer;
-        value.pointerValue = static_cast<void*>(pointer);
-    }
-
-    template <typename T, typename std::enable_if_t<is_type_v<T>, int> = 0>
-    inline static void construct(Value& value, T type) {
-        value._type = Type::Type;
-        value.typeValue = static_cast<Type>(type);
-    }
-
-public:
-    template <typename T>
-    [[nodiscard]]
-    static IntegerValue<T> make(T integer = 0) {
-        Value value;
-        construct<T>(value, integer, false);
+        value.integerValue = static_cast<Float64>(f);
         return value;
     }
 
-    template <typename T>
     [[nodiscard]]
-    static FloatValue<T> make(T f = 0.0) {
+    static Value makeString(GC& gc, const char* str = "") {
         Value value;
-        construct<T>(value, f, false);
+        value._type = Type::String;
+        value.stringPtr = gc.make<std::string>(str);
         return value;
     }
 
-    template <typename T>
     [[nodiscard]]
-    static BooleanValue<T> make(T boolean = false) {
+    static Value makeString(GC& gc, const std::string& str) {
         Value value;
-        construct<T>(value, boolean, false);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
-    static PointerValue<T> make(T pointer = nullptr) {
-        Value value;
-        construct<T>(value, pointer, false);
-        return value;
-    }
-
-    template <typename T>
-    [[nodiscard]]
-    static TypeValue<T> make(T type = Type::Nil) {
-        Value value;
-        construct<T>(value, type, false);
+        value._type = Type::String;
+        value.stringPtr = gc.make<std::string>(str);
         return value;
     }
 
@@ -430,9 +385,10 @@ public:
     /* ===== Assignment Operator ===== */
 
 public:
-    template <typename T, typename std::enable_if<is_spark_type_v<T>, int>::type = 0>
-    Value& operator=(const T value) {
-        construct<T>(*this, value);
+    template <typename T, typename std::enable_if<is_integer_v<T>, int>::type = 0>
+    Value& operator=(const T integer) {
+        this->_type = Type::Integer;
+        this->integerValue = static_cast<Int64>(integer);
         return *this;
     }
 

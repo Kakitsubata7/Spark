@@ -19,5 +19,9 @@ int main() {
 //    std::cout << "Value: " << *p << std::endl;
 //    std::cout << "Ref count: " << p.referenceCount() << std::endl;
 
+    Value v = Value::makeInteger(1);
+    v = 2;
+    std::cout << v << std::endl;
+
     return 0;
 }
