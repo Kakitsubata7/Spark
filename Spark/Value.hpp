@@ -399,6 +399,15 @@ public:
         return *this;
     }
 
+    template <typename T, typename std::enable_if<is_boolean_v<T>, int>::type = 0>
+    Value& operator=(const T boolean) {
+        this->_type = Type::Boolean;
+        this->booleanValue = static_cast<Bool8>(boolean);
+        return *this;
+    }
+
+    
+
 
 
     /* ===== Operators ===== */
