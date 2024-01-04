@@ -392,6 +392,13 @@ public:
         return *this;
     }
 
+    template <typename T, typename std::enable_if<is_float_v<T>, int>::type = 0>
+    Value& operator=(const T f) {
+        this->_type = Type::Float;
+        this->floatValue = static_cast<Float64>(f);
+        return *this;
+    }
+
 
 
     /* ===== Operators ===== */
