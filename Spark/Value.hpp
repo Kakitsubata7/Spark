@@ -373,6 +373,15 @@ public:
         return value;
     }
 
+    template <typename T, typename std::enable_if<is_pointer_v<T>, int>::type = 0>
+    [[nodiscard]]
+    static Value makePointer(T pointer = nullptr) {
+        Value value;
+        value._type = Type::Pointer;
+        value.pointerValue = static_cast<void*>(pointer);
+        return value;
+    }
+
     [[nodiscard]]
     static Value makeString(GC& gc, const char* str = "") {
         Value value;
