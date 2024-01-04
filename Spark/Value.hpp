@@ -128,12 +128,16 @@ public:
 
 public:
     Value(const Value& other) : _type(other._type) {
+        _type = other._type;
         copyFrom(other);
     }
 
     Value& operator=(const Value& other) {
-        if (this != &other)
+        if (this != &other) {
+            dereferenceCheck();
+            _type = other._type;
             copyFrom(other);
+        }
         return *this;
     }
 
@@ -201,6 +205,52 @@ private:
         }
     }
 
+    /**
+     * Make sure the reference of an object is released.
+     */
+    void dereferenceCheck() {
+        switch (_type) {
+            case Type::Box:
+                boxPtr.~GCPtr<Value>();
+                break;
+
+            case Type::String:
+                stringPtr.~GCPtr<std::string>();
+                break;
+
+            case Type::Array:
+                arrayPtr.~GCPtr<std::vector<Value>>();
+                break;
+
+            case Type::Set:
+                setPtr.~GCPtr<std::unordered_set<Value>>();
+                break;
+
+            case Type::Map:
+                mapPtr.~GCPtr<std::unordered_map<Value, Value>>();
+                break;
+
+            case Type::Object:
+                objectPtr.~GCPtr<std::unordered_map<std::string, Value>>();
+                break;
+
+            case Type::Function:
+                functionPtr.~GCPtr<void*>();
+                break;
+
+            case Type::Thread:
+                threadPtr.~GCPtr<void*>();
+                break;
+
+            case Type::Promise:
+                promisePtr.~GCPtr<void*>();
+                break;
+
+            default:
+                break;
+        }
+    }
+
 
 
     /* ===== Move Semantics ===== */
@@ -212,6 +262,7 @@ public:
 
     Value& operator=(Value&& other) noexcept {
         if (this != &other) {
+            dereferenceCheck();
             _type = other._type;
             moveFrom(std::move(other));
         }
@@ -429,6 +480,7 @@ public:
 public:
     template <typename T, typename std::enable_if<is_integer_v<T>, int>::type = 0>
     Value& operator=(const T integer) {
+        dereferenceCheck();
         this->_type = Type::Integer;
         this->integerValue = static_cast<Int64>(integer);
         return *this;
@@ -436,6 +488,7 @@ public:
 
     template <typename T, typename std::enable_if<is_float_v<T>, int>::type = 0>
     Value& operator=(const T f) {
+        dereferenceCheck();
         this->_type = Type::Float;
         this->floatValue = static_cast<Float64>(f);
         return *this;
@@ -443,6 +496,7 @@ public:
 
     template <typename T, typename std::enable_if<is_boolean_v<T>, int>::type = 0>
     Value& operator=(const T boolean) {
+        dereferenceCheck();
         this->_type = Type::Boolean;
         this->booleanValue = static_cast<Bool8>(boolean);
         return *this;
@@ -450,12 +504,14 @@ public:
 
     template <typename T, typename std::enable_if<is_pointer_v<T>, int>::type = 0>
     Value& operator=(const T pointer) {
+        dereferenceCheck();
         this->_type = Type::Pointer;
         this->pointerValue = static_cast<void*>(pointer);
         return *this;
     }
 
     Value& operator=(const Type type) {
+        dereferenceCheck();
         this->_type = Type::Type;
         this->typeValue = type;
         return *this;
