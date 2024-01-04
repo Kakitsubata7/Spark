@@ -406,6 +406,14 @@ public:
         return value;
     }
 
+    [[nodiscard]]
+    static Value makeBox(GC& gc, const Value& boxedValue) {
+        Value value;
+        value._type = Type::Box;
+        value.boxPtr = gc.make<Value>(boxedValue);
+        return value;
+    }
+
 
 
     /* ===== Assignment Operator ===== */
