@@ -414,6 +414,14 @@ public:
         return value;
     }
 
+    [[nodiscard]]
+    static Value makeArray(GC& gc) {
+        Value value;
+        value._type = Type::Array;
+        value.arrayPtr = gc.make<std::vector<Value>>();
+        return value;
+    }
+
 
 
     /* ===== Assignment Operator ===== */
