@@ -439,6 +439,12 @@ public:
         return *this;
     }
 
+    Value& operator=(const Type type) {
+        this->_type = Type::Type;
+        this->typeValue = type;
+        return *this;
+    }
+
 
 
     /* ===== Operators ===== */
