@@ -360,7 +360,16 @@ public:
     static Value makeFloat(T f = 0.0) {
         Value value;
         value._type = Type::Float;
-        value.integerValue = static_cast<Float64>(f);
+        value.floatValue = static_cast<Float64>(f);
+        return value;
+    }
+
+    template <typename T, typename std::enable_if<is_boolean_v<T>, int>::type = 0>
+    [[nodiscard]]
+    static Value makeBoolean(T boolean = false) {
+        Value value;
+        value._type = Type::Boolean;
+        value.booleanValue = static_cast<Bool8>(boolean);
         return value;
     }
 
@@ -406,7 +415,7 @@ public:
         return *this;
     }
 
-    
+
 
 
 
