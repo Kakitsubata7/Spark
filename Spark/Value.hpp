@@ -391,6 +391,14 @@ public:
     }
 
     [[nodiscard]]
+    static Value makeBox(GC& gc, const Value& boxedValue) {
+        Value value;
+        value._type = Type::Box;
+        value.boxPtr = gc.make<Value>(boxedValue);
+        return value;
+    }
+
+    [[nodiscard]]
     static Value makeString(GC& gc, const char* str = "") {
         Value value;
         value._type = Type::String;
@@ -403,14 +411,6 @@ public:
         Value value;
         value._type = Type::String;
         value.stringPtr = gc.make<std::string>(str);
-        return value;
-    }
-
-    [[nodiscard]]
-    static Value makeBox(GC& gc, const Value& boxedValue) {
-        Value value;
-        value._type = Type::Box;
-        value.boxPtr = gc.make<Value>(boxedValue);
         return value;
     }
 
