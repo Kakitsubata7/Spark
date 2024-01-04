@@ -383,6 +383,14 @@ public:
     }
 
     [[nodiscard]]
+    static Value makeType(Type type = Type::Nil) {
+        Value value;
+        value._type = Type::Type;
+        value.typeValue = type;
+        return value;
+    }
+
+    [[nodiscard]]
     static Value makeString(GC& gc, const char* str = "") {
         Value value;
         value._type = Type::String;
