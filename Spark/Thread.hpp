@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
+#include <sstream>
 #include <stdexcept>
 
 #include "Config.hpp"
@@ -114,8 +116,25 @@ public:
     }
 
     void execute() {
-        // TODO: Implement
-        throw std::runtime_error("Not implemented.");
+        if (programCounter == nullptr)
+            throw std::runtime_error("The program counter is null.");
+
+        Opcode opcode = *programCounter;
+        switch (opcode) {
+            case Opcode::Halt:
+                return;
+
+            default: {
+                std::ostringstream ss;
+                ss << "Invalid opcode: 0x"
+                   << std::hex
+                   << std::setw(2)
+                   << std::setfill('0')
+                   << static_cast<uint8_t>(opcode);
+                throw std::runtime_error(ss.str());
+            }
+                break;
+        }
     }
 
 };
