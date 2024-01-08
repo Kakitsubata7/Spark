@@ -43,7 +43,7 @@ private:
     size_t _stackCapacity;
     size_t _maxStackCapacity;
 
-    size_t _stackLength;
+    size_t _stackLength = 0;
 
 public:
     [[nodiscard]]
