@@ -120,6 +120,7 @@ public:
             throw std::runtime_error("The program counter is null.");
 
         Opcode opcode = *programCounter;
+        programCounter++;
         switch (opcode) {
             case Opcode::Halt:
                 return;
