@@ -103,8 +103,14 @@ public:
     }
 
     void pop() {
-        // TODO: Implement
-        throw std::runtime_error("Not implemented.");
+        if (_stackLength == 0)
+            throw Exception("Stack underflow.", "StackUnderflowException");
+
+        // Update the stack pointer to pop the value
+        stackPointer--;
+
+        // Update the stack length
+        _stackLength--;
     }
 
     void execute() {
