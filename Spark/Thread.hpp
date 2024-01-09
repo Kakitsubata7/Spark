@@ -146,6 +146,13 @@ public:
             }
                 break;
 
+            case Opcode::PushFloat: {
+                Float64* p = reinterpret_cast<Float64*>(programCounter);
+                push(Value::makeFloat(*p));
+                programCounter = reinterpret_cast<Opcode*>(p + 1);
+            }
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
