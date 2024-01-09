@@ -139,6 +139,13 @@ public:
                 push(Value::makeNil());
                 break;
 
+            case Opcode::PushInteger: {
+                Int64* p = reinterpret_cast<Int64*>(programCounter);
+                push(Value::makeInteger(*p));
+                programCounter = reinterpret_cast<Opcode*>(p + 1);
+            }
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
