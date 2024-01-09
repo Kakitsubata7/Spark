@@ -160,6 +160,13 @@ public:
             }
                 break;
 
+            case Opcode::PushType: {
+                Type* p = reinterpret_cast<Type*>(programCounter);
+                push(Value::makeType(*p));
+                programCounter = reinterpret_cast<Opcode*>(p + 1);
+            }
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
