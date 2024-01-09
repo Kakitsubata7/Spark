@@ -8,7 +8,7 @@ namespace Spark {
 
         Halt,
 
-        Push,
+        PushNil,
         Pop,
 
         Add,
