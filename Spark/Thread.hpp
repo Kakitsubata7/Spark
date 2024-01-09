@@ -167,6 +167,10 @@ public:
             }
                 break;
 
+            case Opcode::Pop:
+                pop();
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
@@ -176,7 +180,6 @@ public:
                    << static_cast<unsigned int>(opcode);
                 throw std::runtime_error(ss.str());
             }
-                break;
         }
     }
 
