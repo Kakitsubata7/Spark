@@ -153,6 +153,13 @@ public:
             }
                 break;
 
+            case Opcode::PushBoolean: {
+                Bool8* p = reinterpret_cast<Bool8*>(programCounter);
+                push(Value::makeBoolean(*p));
+                programCounter = reinterpret_cast<Opcode*>(p + 1);
+            }
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
