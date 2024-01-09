@@ -7,6 +7,7 @@
 #include "Spark/Int64.hpp"
 #include "Spark/Type.hpp"
 #include "Spark/Value.hpp"
+#include "Spark/Thread.hpp"
 
 using namespace Spark;
 
@@ -19,9 +20,15 @@ int main() {
 //    std::cout << "Value: " << *p << std::endl;
 //    std::cout << "Ref count: " << p.referenceCount() << std::endl;
 
-    Value v = Value::makeInteger(1);
-    v = 2;
-    std::cout << v << std::endl;
+//    Value v = Value::makeInteger(1);
+//    v = 2;
+//    std::cout << v << std::endl;
+
+    Thread th;
+    th.push(Value::makeNil());
+    th.push(Value::makeInteger(1));
+    th.push(Value::makeBoolean(true));
+    std::cout << th.stackToString() << std::endl;
 
     return 0;
 }

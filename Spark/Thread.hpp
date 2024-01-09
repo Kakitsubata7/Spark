@@ -72,6 +72,16 @@ private:
     Value* basePointer;
     Opcode* programCounter = nullptr;
 
+public:
+    [[nodiscard]]
+    constexpr Opcode* getProgramCounter() const {
+        return programCounter;
+    }
+
+    constexpr void setProgramCounter(Opcode* programCounter) {
+        this->programCounter = programCounter;
+    }
+
 
 
     /* ===== Operations ===== */
@@ -125,17 +135,35 @@ public:
             case Opcode::Halt:
                 return;
 
+            case Opcode::PushNil:
+                push(Value::makeNil());
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
                    << std::hex
                    << std::setw(2)
                    << std::setfill('0')
-                   << static_cast<uint8_t>(opcode);
+                   << static_cast<unsigned int>(opcode);
                 throw std::runtime_error(ss.str());
             }
                 break;
         }
+    }
+
+    [[nodiscard]]
+    std::string stackToString() const {
+        std::ostringstream ss;
+        ss << '[';
+        const size_t count = _stackLength / sizeof(Value);
+        for (size_t i = 0; i < count; i++) {
+            ss << stackBuffer[i];
+            if (i != (count - 1))
+                ss << ", ";
+        }
+        ss << ']';
+        return ss.str();
     }
 
 };
