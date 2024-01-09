@@ -9,6 +9,10 @@ namespace Spark {
         Halt,
 
         PushNil,
+        PushInteger,
+        PushFloat,
+        PushBoolean,
+        PushType,
         Pop,
 
         Add,
