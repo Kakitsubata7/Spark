@@ -27,7 +27,10 @@ int main() {
     Thread th;
     th.push(Value::makeNil());
     th.push(Value::makeInteger(1));
+    th.push(Value::makeFloat(3.25f));
     th.push(Value::makeBoolean(true));
+    th.push(Value::makeType(Type::Box));
+    th.push(Value::makePointer(nullptr));
     std::cout << th.stackToString() << std::endl;
 
     return 0;
