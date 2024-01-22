@@ -1,3 +1,5 @@
 #include "Compiler.hpp"
 
-namespace
+namespace Spark {
+
+} // Spark
