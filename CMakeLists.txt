@@ -23,4 +23,6 @@ add_executable(Spark
         Spark/Thread.hpp
         Spark/Config.hpp
         Spark/Exception.hpp
+        Spark/Compilation/Compiler.hpp
+        Spark/Compilation/Compiler.cpp
 )
