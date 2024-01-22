@@ -4,35 +4,35 @@
 
 namespace Spark {
 
-    enum class Opcode : uint8_t {
+enum class Opcode : uint8_t {
 
-        Halt,
+    Halt,
 
-        PushNil,
-        PushInteger,
-        PushFloat,
-        PushBoolean,
-        PushType,
-        Pop,
+    PushNil,
+    PushInteger,
+    PushFloat,
+    PushBoolean,
+    PushType,
+    Pop,
 
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        Modulus,
-        BitwiseComplement,
-        BitwiseAnd,
-        BitwiseOr,
-        BitwiseXor,
-        BitwiseLeftShift,
-        BitwiseRightShift,
-        LogicalNot,
-        LogicalAnd,
-        LogicalOr,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulus,
+    BitwiseComplement,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    BitwiseLeftShift,
+    BitwiseRightShift,
+    LogicalNot,
+    LogicalAnd,
+    LogicalOr,
 
-        Call,
-        Return,
+    Call,
+    Return,
 
-    };
+};
 
 } // Spark
