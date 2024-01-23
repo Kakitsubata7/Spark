@@ -25,4 +25,6 @@ add_executable(Spark
         Spark/Exception.hpp
         Spark/Compilation/Compiler.hpp
         Spark/Compilation/Compiler.cpp
+        Spark/Compilation/Lexer.hpp
+        Spark/Compilation/Lexer.cpp
 )

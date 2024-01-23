@@ -5,4 +5,5 @@ namespace Spark {
 class Compiler {
 
 };
+
 } // Spark
