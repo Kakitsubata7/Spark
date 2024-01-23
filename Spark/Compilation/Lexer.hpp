@@ -33,6 +33,7 @@ private:
 
 public:
     void append(char c, const std::optional<char>& next);
+    void append(const std::string& str);
 
     [[nodiscard]]
     std::vector<std::string> getTokens() const {

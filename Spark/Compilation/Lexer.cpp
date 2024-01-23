@@ -43,4 +43,11 @@ namespace Spark {
         }
     }
 
+    void Lexer::append(const std::string& str) {
+        size_t lastIndex = str.length() - 1;
+        for (size_t i = 0; i < lastIndex; i++)
+            append(str[i], str[i + 1]);
+        append(str[lastIndex]);
+    }
+
 } // Spark
