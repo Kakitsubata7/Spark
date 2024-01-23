@@ -16,6 +16,13 @@ private:
 public:
     Compiler() = default;
 
+
+
+    /* ===== Operations ===== */
+
+public:
+    void Compile();
+
 };
 
 } // Spark
