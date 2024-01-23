@@ -32,13 +32,13 @@ namespace Spark {
 
         // Check if current is a keyword
         if (isKeyword(current)) {
-            // TODO: Add the identifier as a keyword token
+            tokens.push_back(current);
             current.clear();
         }
 
         // Check for the end of current
         if (next.has_value() && isspace(next.value())) {
-            // TODO: Add current as an identifier token
+            tokens.push_back(current);
             current.clear();
         }
     }

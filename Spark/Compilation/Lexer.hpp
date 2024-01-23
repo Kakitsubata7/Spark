@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace Spark {
 
@@ -21,6 +22,8 @@ public:
 private:
     std::string current;
 
+    std::vector<std::string> tokens;
+
     bool isLineCommenting = false;
     bool isGroupCommenting = false;
 
@@ -31,6 +34,10 @@ private:
 public:
     void append(char c, const std::optional<char>& next);
 
+    [[nodiscard]]
+    std::vector<std::string> getTokens() const {
+        return tokens;
+    }
 
 
     /* ===== Checks ===== */
