@@ -27,12 +27,17 @@ private:
     bool isLineCommenting = false;
     bool isGroupCommenting = false;
 
+    bool shouldSkipNextCharacter = false;
+
 
 
     /* ===== Operations ====== */
 
-public:
+private:
     void append(char c, const std::optional<char>& next);
+    void append(char* p);
+
+public:
     void append(const std::string& str);
 
     [[nodiscard]]

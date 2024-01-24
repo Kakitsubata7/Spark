@@ -8,6 +8,32 @@ namespace Spark {
 
     void Lexer::append(const char c, const std::optional<char>& next = std::nullopt) {
 
+        //
+        if (shouldSkipNextCharacter) {
+            shouldSkipNextCharacter = false;
+            return;
+        }
+
+        // Skip if line commenting
+        if (isLineCommenting) {
+
+            // Check for newlines
+            if (c == '\r' || c == '\n') {
+                isLineCommenting = false;
+                return;
+            }
+        }
+
+        // Skip if group commenting
+        if (isGroupCommenting) {
+
+            // Check for '*/'
+            if (c == '*' && next.has_value() && next.value() == '/') {
+                isGroupCommenting = false;
+                return;
+            }
+        }
+
         // Ignore empty space characters for identifiers
         if (isspace(c))
             return;
@@ -30,6 +56,10 @@ namespace Spark {
         // Append the character to current
         current += c;
 
+        if (next.has_value()) {
+
+        }
+
         // Check if current is a keyword
         if (isKeyword(current)) {
             tokens.push_back(current);
@@ -37,9 +67,28 @@ namespace Spark {
         }
 
         // Check for the end of current
-        if (next.has_value() && isspace(next.value())) {
+        if (isspace(next.value())) {
             tokens.push_back(current);
             current.clear();
+        }
+    }
+
+    void Lexer::append(char* p) {
+
+        char c = *p;
+        if (c == '\0')
+            return;
+
+        // Skip if it's line commenting
+        if (isLineCommenting) {
+
+            // Check for newlines
+            if (c == '\n') {
+                isLineCommenting = false;
+                return;
+            } else if (c == '\r') {
+
+            }
         }
     }
 
