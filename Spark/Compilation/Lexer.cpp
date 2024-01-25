@@ -114,7 +114,27 @@ namespace Spark {
                     // Move the pointer after the checked characters
                     p += 2;
 
-                    // TODO: Skip until encountering a null character or a group comment ending
+                    // Skip until encountering a null character or a group comment ending
+                    while (true) {
+
+                        c = *p;
+
+                        // Terminate when encountering a null character
+                        if (c == '\0')
+                            break; // Terminate this while loop, so it will go to the next iteration of the main loop
+
+                        // Stop commenting when encountering the ending sequence
+                        if (c == '*') {
+                            next = *(p + 1);
+                            if (next == '/') {
+                                p += 2; // Skip the '*/' sequence
+                                break;
+                            }
+                        }
+
+                        // Move the pointer to the next character
+                        p++;
+                    }
 
                     continue;
                 }
