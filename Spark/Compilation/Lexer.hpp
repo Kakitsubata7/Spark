@@ -12,6 +12,6 @@ namespace Lexer {
 
     std::vector<std::string> lex(const std::string& str);
 
-};
+}
 
 } // Spark
