@@ -2,101 +2,170 @@
 
 #include <cctype>
 
+#include <iostream>
+
 namespace Spark {
 
     /* ===== Operations ===== */
 
-    void Lexer::append(const char c, const std::optional<char>& next = std::nullopt) {
+    static bool isKeyword(const std::string& str) {
 
-        //
-        if (shouldSkipNextCharacter) {
-            shouldSkipNextCharacter = false;
-            return;
-        }
+        static const std::unordered_set<std::string> keywordSet = {
+            "function",
+            "if", "else",
+            "for", "while", "do"
+        };
 
-        // Skip if line commenting
-        if (isLineCommenting) {
+        return keywordSet.find(str) != keywordSet.end();
+    }
 
-            // Check for newlines
-            if (c == '\r' || c == '\n') {
-                isLineCommenting = false;
-                return;
+    static bool isOperator(const std::string& str) {
+
+        static const std::unordered_set<std::string> operatorSet = {
+            ".", "?", ":",
+            "+", "-", "*", "/", "%",
+            "=", "+=", "-=", "*=", "/=", "%=",
+            "!", "&", "|", "^", "&&", "||", "<<", ">>",
+            "==", "!=", "<", ">", "<=", ">=",
+        };
+
+        return operatorSet.find(str) != operatorSet.end();
+    }
+
+    static bool isSeparator(char c) {
+
+        static const std::unordered_set<char> separatorSet = {
+            ',', ';', '(', ')', '[', ']', '{', '}',
+        };
+
+        return separatorSet.find(c) != separatorSet.end();
+    }
+
+    static std::vector<std::string> lexHelper(const char* p) {
+
+        // Make sure the pointer is not null
+        if (p == nullptr)
+            throw std::runtime_error("Null pointer.");
+
+        std::vector<std::string> tokens;
+        std::string current;
+
+        while (*p != '\0') {
+
+            char c = *p;
+
+            // Terminate when encountering a null character
+            if (c == '\0')
+                break;
+
+            // Ignore space characters
+            if (isspace(c)) {
+                p++;
+                continue;
             }
-        }
 
-        // Skip if group commenting
-        if (isGroupCommenting) {
+            // Check for comment beginnings
+            if (c == '/') {
+                char next = *(p + 1);
 
-            // Check for '*/'
-            if (c == '*' && next.has_value() && next.value() == '/') {
-                isGroupCommenting = false;
-                return;
+                // Check for line comment beginning
+                if (next == '/') {
+
+                    // Move the pointer after the checked characters
+                    p += 2;
+
+                    // Skip until encountering a null character or a newline
+                    while (true) {
+
+                        c = *p;
+
+                        // Terminate when encountering a null character
+                        if (c == '\0')
+                            break; // Terminate this while loop, so it will go to the next iteration of the main loop
+
+                        // Stop commenting when encountering any newline representation
+                        if (c == '\n') {
+                            // LF
+                            p++; // Skip this '\n' character
+                            break;
+                        }
+                        if (c == '\r') {
+                            // Check for CRLF
+                            next = *(p + 1);
+                            if (next == '\n') {
+                                p += 2; // Skip the '\r\n' sequence
+                                break;
+                            }
+
+                            // CR
+                            p++; // Skip the '\r' character
+                            break;
+                        }
+
+                        // Move the pointer to the next character
+                        p++;
+                    }
+
+                    continue;
+                }
+                // Check for group comment beginning
+                else if (next == '*') {
+
+                    // Move the pointer after the checked characters
+                    p += 2;
+
+                    // TODO: Skip until encountering a null character or a group comment ending
+
+                    continue;
+                }
             }
-        }
 
-        // Ignore empty space characters for identifiers
-        if (isspace(c))
-            return;
+            // Append the character to current
+            current += c;
 
-        // Check for comment beginnings
-        if (c == '/' && next.has_value()) {
+            // Move the pointer to the next character
+            p++;
 
-            // Check for line comment beginning
-            if (next.value() == '/') {
-                isLineCommenting = true;
-                return;
+            // Check if the current character is a separator
+            if (current.size() == 1 && isSeparator(c)) {
+                tokens.emplace_back(1, c);
+                current.clear();
+                continue;
             }
-            // Check for group comment beginning
-            else if (next.value() == '*') {
-                isGroupCommenting = true;
-                return;
+
+            // Check if current is an operator
+            if (isOperator(current)) {
+                tokens.push_back(current);
+                current.clear();
+                continue;
             }
-        }
 
-        // Append the character to current
-        current += c;
+            // Get the next character
+            char next = *p;
 
-        if (next.has_value()) {
+            // Go to the next iteration if the next character is NOT a separator
+            if (!isspace(next) && !isSeparator(next) && !isOperator(std::string(1, next)))
+                continue;
 
-        }
+            // Check if current is a keyword
+            if (isKeyword(current)) {
+                tokens.push_back(current);
+                current.clear();
+                continue;
+            }
 
-        // Check if current is a keyword
-        if (isKeyword(current)) {
+            // Add current as an identifier
             tokens.push_back(current);
             current.clear();
         }
 
-        // Check for the end of current
-        if (isspace(next.value())) {
+        if (!current.empty())
             tokens.push_back(current);
-            current.clear();
-        }
+        return tokens;
     }
 
-    void Lexer::append(char* p) {
-
-        char c = *p;
-        if (c == '\0')
-            return;
-
-        // Skip if it's line commenting
-        if (isLineCommenting) {
-
-            // Check for newlines
-            if (c == '\n') {
-                isLineCommenting = false;
-                return;
-            } else if (c == '\r') {
-
-            }
-        }
-    }
-
-    void Lexer::append(const std::string& str) {
-        size_t lastIndex = str.length() - 1;
-        for (size_t i = 0; i < lastIndex; i++)
-            append(str[i], str[i + 1]);
-        append(str[lastIndex]);
+    std::vector<std::string> Lexer::lex(const std::string& str) {
+        return lexHelper(str.c_str());
     }
 
 } // Spark

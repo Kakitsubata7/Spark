@@ -8,57 +8,9 @@
 
 namespace Spark {
 
-class Lexer {
+namespace Lexer {
 
-    /* ===== Constructor ===== */
-
-public:
-    Lexer() = default;
-
-
-
-    /* ===== Data ===== */
-
-private:
-    std::string current;
-
-    std::vector<std::string> tokens;
-
-    bool isLineCommenting = false;
-    bool isGroupCommenting = false;
-
-    bool shouldSkipNextCharacter = false;
-
-
-
-    /* ===== Operations ====== */
-
-private:
-    void append(char c, const std::optional<char>& next);
-    void append(char* p);
-
-public:
-    void append(const std::string& str);
-
-    [[nodiscard]]
-    std::vector<std::string> getTokens() const {
-        return tokens;
-    }
-
-
-    /* ===== Checks ===== */
-
-private:
-    static bool isKeyword(const std::string& str) {
-
-        static const std::unordered_set<std::string> keywordSet = {
-            "function",
-            "if", "else",
-            "for", "while", "do"
-        };
-
-        return keywordSet.find(str) != keywordSet.end();
-    }
+    std::vector<std::string> lex(const std::string& str);
 
 };
 

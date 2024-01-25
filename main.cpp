@@ -34,11 +34,10 @@ int main() {
 //    th.push(Value::makePointer(nullptr));
 //    std::cout << th.stackToString() << std::endl;
 
-    Lexer lexer;
-    lexer.append("abc def ghi");
-    std::vector<std::string> tokens = lexer.getTokens();
+    std::vector<std::string> tokens = Lexer::lex("abc=def+ghi; // comment");
+    std::cout << "count: " << tokens.size() << std::endl;
     for (const std::string& token : tokens)
-        std::cout << token << std::endl;
+        std::cout << '\'' << token << '\'' << std::endl;
 
     return 0;
 }
