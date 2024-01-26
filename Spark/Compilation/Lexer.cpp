@@ -11,6 +11,7 @@ namespace Spark {
     static bool isKeyword(const std::string& str) {
 
         static const std::unordered_set<std::string> keywordSet = {
+            "let",
             "function",
             "if", "else",
             "for", "while", "do",
@@ -26,6 +27,7 @@ namespace Spark {
             ".", "?", ":",
             "+", "-", "*", "/", "%",
             "=", "+=", "-=", "*=", "/=", "%=",
+            "++", "--",
             "!", "&", "|", "^", "&&", "||", "<<", ">>",
             "==", "!=", "<", ">", "<=", ">=",
         };
