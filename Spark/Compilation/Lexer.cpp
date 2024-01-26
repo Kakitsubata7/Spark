@@ -1,6 +1,8 @@
 #include "Lexer.hpp"
 
 #include <cctype>
+#include <sstream>
+#include <stdexcept>
 
 #include <iostream>
 
@@ -42,6 +44,35 @@ namespace Spark {
         };
 
         return separatorSet.find(c) != separatorSet.end();
+    }
+
+    static bool isIdentifier(const std::string& str) {
+
+        // An empty string is not an identifier
+        size_t len = str.length();
+        if (len == 0)
+            return false;
+
+        // The first character cannot be a digit
+        char firstChar = str[0];
+        if (!isalpha(firstChar) && firstChar != '_')
+            return false;
+
+        // The rest can be an alphabet, digit, or an underscore
+        for (size_t i = 1; i < len; i++) {
+            char c = str[i];
+            if (!isalpha(c) && !isdigit(c) && c != '_')
+                return false;
+        }
+        return true;
+    }
+
+    static void throwIfInvalidIdentifier(const std::string& str) {
+        if (!isIdentifier(str)) {
+            std::ostringstream oss;
+            oss << "Invalid identifier: " << '\'' << str << '\'';
+            throw std::runtime_error(oss.str());
+        }
     }
 
     static std::vector<std::string> lexHelper(const char* p) {
@@ -178,12 +209,15 @@ namespace Spark {
             }
 
             // Add current as an identifier
+            throwIfInvalidIdentifier(current);
             tokens.push_back(current);
             current.clear();
         }
 
-        if (!current.empty())
+        if (!current.empty()) {
+            throwIfInvalidIdentifier(current);
             tokens.push_back(current);
+        }
         return tokens;
     }
 
