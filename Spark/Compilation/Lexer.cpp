@@ -13,7 +13,8 @@ namespace Spark {
         static const std::unordered_set<std::string> keywordSet = {
             "function",
             "if", "else",
-            "for", "while", "do"
+            "for", "while", "do",
+            "switch", "case"
         };
 
         return keywordSet.find(str) != keywordSet.end();
