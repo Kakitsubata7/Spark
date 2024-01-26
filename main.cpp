@@ -35,7 +35,7 @@ int main() {
 //    std::cout << th.stackToString() << std::endl;
 
     const char* code = R"(
-abc=/* group comment */def+ghi; // line comment
+a+=1;
 )";
     std::vector<std::string> tokens = Lexer::lex(code);
     std::cout << "count: " << tokens.size() << std::endl;
