@@ -46,6 +46,13 @@ namespace Spark {
         return separatorSet.find(c) != separatorSet.end();
     }
 
+    static bool isNumber(const std::string& str) {
+        std::istringstream iss(str);
+        double value;
+        iss >> value;
+        return iss.eof() && !iss.fail();
+    }
+
     static bool isIdentifier(const std::string& str) {
 
         // An empty string is not an identifier
@@ -203,6 +210,13 @@ namespace Spark {
 
             // Check if current is a keyword
             if (isKeyword(current)) {
+                tokens.push_back(current);
+                current.clear();
+                continue;
+            }
+
+            // Try adding current as a numerical literal
+            if (isNumber(current)) {
                 tokens.push_back(current);
                 current.clear();
                 continue;
