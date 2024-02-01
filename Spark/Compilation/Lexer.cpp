@@ -196,6 +196,17 @@ namespace Spark {
 
             // Check if current is an operator
             if (isOperator(current)) {
+
+                char next = *p;
+                while (next != '\0') {
+                    if (isOperator(current + next)) {
+                        current += next;
+                        p++;
+                        next = *p;
+                    } else
+                        break;
+                }
+
                 tokens.push_back(current);
                 current.clear();
                 continue;
