@@ -46,17 +46,6 @@ namespace Spark {
         return separatorSet.find(c) != separatorSet.end();
     }
 
-    static bool isNumber(const std::string& str) {
-        if (str.empty())
-            return false;
-        if (str.back() == '.')
-            return false;
-        std::istringstream iss(str);
-        double value;
-        iss >> value;
-        return iss.eof() && !iss.fail();
-    }
-
     static bool isIdentifier(const std::string& str) {
 
         // An empty string is not an identifier
@@ -87,7 +76,7 @@ namespace Spark {
     }
 
     static std::vector<std::string> lexHelper(const char* p) {
-        
+
         // Make sure the pointer is not null
         if (p == nullptr)
             throw std::runtime_error("Null pointer.");
@@ -198,9 +187,33 @@ namespace Spark {
                 continue;
             }
 
+            // Check if current is a numerical literal
+            if (isnumber(c) || c == '.') {
+                bool dot = (c == '.');
+                char next = *p;
+                while (next != '\0') {
+                    if (isnumber(next)) {
+                        current += next;
+                        p++;
+                        next = *p;
+                        continue;
+                    } else if (!dot && next == '.') {
+                        current += next;
+                        dot = true;
+                        p++;
+                        next = *p;
+                        continue;
+                    }
+                    break;
+                }
+
+                tokens.push_back(current);
+                current.clear();
+                continue;
+            }
+
             // Check if current is an operator
             if (isOperator(current)) {
-
                 char next = *p;
                 while (next != '\0') {
                     if (isOperator(current + next)) {
@@ -225,13 +238,6 @@ namespace Spark {
 
             // Check if current is a keyword
             if (isKeyword(current)) {
-                tokens.push_back(current);
-                current.clear();
-                continue;
-            }
-
-            // Try adding current as a numerical literal
-            if (isNumber(current)) {
                 tokens.push_back(current);
                 current.clear();
                 continue;
