@@ -47,6 +47,10 @@ namespace Spark {
     }
 
     static bool isNumber(const std::string& str) {
+        if (str.empty())
+            return false;
+        if (str.back() == '.')
+            return false;
         std::istringstream iss(str);
         double value;
         iss >> value;
@@ -83,7 +87,7 @@ namespace Spark {
     }
 
     static std::vector<std::string> lexHelper(const char* p) {
-
+        
         // Make sure the pointer is not null
         if (p == nullptr)
             throw std::runtime_error("Null pointer.");
