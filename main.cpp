@@ -35,7 +35,7 @@ int main() {
 //    std::cout << th.stackToString() << std::endl;
 
     const char* code = R"(
-a+=12.345;
+str="ab c";
 )";
     std::vector<std::string> tokens = Lexer::lex(code);
     std::cout << "count: " << tokens.size() << std::endl;
