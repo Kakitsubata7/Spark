@@ -188,9 +188,8 @@ namespace Spark {
                     c = *p;
 
                     // Terminate when encountering a null character
-                    if (c == '\0') {
-                        throw std::runtime_error("Invalid string.");
-                    }
+                    if (c == '\0')
+                        throw std::runtime_error("Incomplete string.");
 
                     if (c == '"') {
                         str += '"';
@@ -224,7 +223,7 @@ namespace Spark {
 
                     // Terminate when encountering a null character
                     if (c == '\0')
-                        throw std::runtime_error("Invalid string.");
+                        throw std::runtime_error("Incomplete string.");
 
                     if (c == '\'') {
                         str += '\'';
