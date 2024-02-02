@@ -174,6 +174,76 @@ namespace Spark {
                 }
             }
 
+            // Check for double-quote string beginning
+            if (c == '"') {
+
+                std::string str = "\"";
+
+                // Skip the beginning double quote
+                p++;
+
+                // Skip until encountering a null character or a double quote
+                while (true) {
+
+                    c = *p;
+
+                    // Terminate when encountering a null character
+                    if (c == '\0') {
+                        throw std::runtime_error("Invalid string.");
+                    }
+
+                    if (c == '"') {
+                        str += '"';
+                        p++; // Skip this double quote character
+                        break;
+                    }
+
+                    // Append the character to the string
+                    str += c;
+
+                    // Move the pointer to the next character
+                    p++;
+                }
+
+                tokens.push_back(str);
+
+                continue;
+            }
+            // Check for single-quote string beginning
+            else if (c == '\'') {
+
+                std::string str = "'";
+
+                // Skip the beginning single quote
+                p++;
+
+                // Skip until encountering a null character or a single quote
+                while (true) {
+
+                    c = *p;
+
+                    // Terminate when encountering a null character
+                    if (c == '\0')
+                        throw std::runtime_error("Invalid string.");
+
+                    if (c == '\'') {
+                        str += '\'';
+                        p++; // Skip this single quote character
+                        break;
+                    }
+
+                    // Append the character to the string
+                    str += c;
+
+                    // Move the pointer to the next character
+                    p++;
+                }
+
+                tokens.push_back(str);
+
+                continue;
+            }
+
             // Append the character to current
             current += c;
 
