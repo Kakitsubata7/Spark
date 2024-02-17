@@ -257,11 +257,11 @@ namespace Spark {
             }
 
             // Check if current is a numerical literal
-            if (isnumber(c) || c == '.') {
+            if (isdigit(c) || c == '.') {
                 bool dot = (c == '.');
                 char next = *p;
                 while (next != '\0') {
-                    if (isnumber(next)) {
+                    if (isdigit(next)) {
                         current += next;
                         p++;
                         next = *p;
