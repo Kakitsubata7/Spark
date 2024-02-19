@@ -9,5 +9,6 @@ add_compile_options(-ansi -Wall -Wextra -Werror)
 
 add_executable(Spark
         main.c
-        spark/spk_bool8.h
+        spark/bool.h
+        spark/int.h
 )
