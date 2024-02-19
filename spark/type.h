@@ -15,5 +15,7 @@ typedef uint8_t spk_type_t;
 #define SPK_TYPE_SET    0x07
 #define SPK_TYPE_MAP    0x08
 #define SPK_TYPE_OBJECT 0x09
+#define SPK_TYPE_THREAD 0x0A
+#define SPK_TYPE_TASK   0x0B
 
 #endif /* SPARK_TYPE_H */
