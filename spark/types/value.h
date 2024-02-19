@@ -1,5 +1,5 @@
-#ifndef SPARK_VALUE_H
-#define SPARK_VALUE_H
+#ifndef SPARK_TYPES_VALUE_H
+#define SPARK_TYPES_VALUE_H
 
 #include "bool.h"
 #include "float.h"
@@ -23,4 +23,4 @@ typedef struct {
 
 } spk_value_t;
 
-#endif /* SPARK_VALUE_H */
+#endif /* SPARK_TYPES_VALUE_H */

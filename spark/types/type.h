@@ -1,5 +1,5 @@
-#ifndef SPARK_TYPE_H
-#define SPARK_TYPE_H
+#ifndef SPARK_TYPES_TYPE_H
+#define SPARK_TYPES_TYPE_H
 
 #include <stdint.h>
 
@@ -18,4 +18,4 @@ typedef uint8_t spk_type_t;
 #define SPK_TYPE_THREAD 0x0A
 #define SPK_TYPE_TASK   0x0B
 
-#endif /* SPARK_TYPE_H */
+#endif /* SPARK_TYPES_TYPE_H */

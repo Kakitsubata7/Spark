@@ -1,5 +1,5 @@
-#ifndef SPARK_ARRAY_H
-#define SPARK_ARRAY_H
+#ifndef SPARK_TYPES_ARRAY_H
+#define SPARK_TYPES_ARRAY_H
 
 typedef struct {
 
@@ -7,4 +7,4 @@ typedef struct {
 
 } spk_array_t;
 
-#endif /* SPARK_ARRAY_H */
+#endif /* SPARK_TYPES_ARRAY_H */
