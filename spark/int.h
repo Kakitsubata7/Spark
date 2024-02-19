@@ -1,5 +1,5 @@
-#ifndef SPK_INT64_H
-#define SPK_INT64_H
+#ifndef SPARK_INT64_H
+#define SPARK_INT64_H
 
 #include <stdint.h>
 
@@ -8,4 +8,4 @@ typedef int64_t spk_int_t;
 #define SPK_INT_MAX INT64_MAX
 #define SPK_INT_MIN INT64_MIN
 
-#endif /* SPK_INT64_H */
+#endif /* SPARK_INT64_H */
