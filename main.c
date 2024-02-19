@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "spark/bool.h"
+#include "spark/types/bool.h"
 
 int main(void) {
 

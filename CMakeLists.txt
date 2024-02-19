@@ -9,8 +9,8 @@ add_compile_options(-ansi -Wall -Wextra -Werror)
 
 add_executable(Spark
         main.c
-        spark/bool.h
-        spark/int.h
-        spark/float.h
-        spark/type.h
+        spark/types/bool.h
+        spark/types/int.h
+        spark/types/float.h
+        spark/types/type.h
 )
