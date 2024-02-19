@@ -1,30 +1,13 @@
 cmake_minimum_required(VERSION 3.26)
 project(Spark)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
-add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-ansi -Wall -Wextra -Werror)
 
 add_executable(Spark
-        main.cpp
-        Spark.hpp
-        Spark/Value.hpp
-        Spark/Env.hpp
-        Spark/Type.hpp
-        Spark/GC/GCPtr.hpp
-        Spark/Bool8.hpp
-        Spark/Int64.hpp
-        Spark/Float64.hpp
-        Spark/Type.cpp
-        Spark/GC/GCNode.hpp
-        Spark/GC/GC.hpp
-        Spark/GC/GCNode.cpp
-        Spark/Opcode.hpp
-        Spark/Thread.hpp
-        Spark/Config.hpp
-        Spark/Exception.hpp
-        Spark/Compilation/Compiler.hpp
-        Spark/Compilation/Compiler.cpp
-        Spark/Compilation/Lexer.hpp
-        Spark/Compilation/Lexer.cpp
+        main.c
+        main.c
 )
