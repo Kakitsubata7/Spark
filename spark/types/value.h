@@ -8,7 +8,7 @@
 
 typedef struct spk_array_t spk_array_t;
 
-typedef struct {
+typedef struct spk_array_t {
 
     spk_type_t type;
 
