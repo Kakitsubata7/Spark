@@ -15,6 +15,7 @@ typedef struct {
         spk_float_t float_v;
         spk_bool_t bool_v;
         spk_type_t type_v;
+        void* ptr_v;
     };
 
 } spk_value_t;
