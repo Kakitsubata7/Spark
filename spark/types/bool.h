@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef uint8_t spk_bool8_t;
+typedef uint8_t spk_bool_t;
 
 #define SPK_TRUE 1
 #define SPK_FALSE 0

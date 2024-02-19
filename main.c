@@ -5,7 +5,7 @@
 
 int main(void) {
 
-    spk_bool8_t bool = SPK_TRUE;
+    spk_bool_t bool = SPK_TRUE;
 
     if (bool)
         printf("Hello world!"); /* Comment */
