@@ -11,4 +11,5 @@ add_executable(Spark
         main.c
         spark/bool.h
         spark/int.h
+        spark/float.h
 )
