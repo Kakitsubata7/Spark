@@ -13,4 +13,5 @@ add_executable(Spark
         spark/types/int.h
         spark/types/float.h
         spark/types/type.h
+        spark/types/value.h
 )
