@@ -6,6 +6,8 @@
 #include "int.h"
 #include "type.h"
 
+typedef struct spk_array_t spk_array_t;
+
 typedef struct {
 
     spk_type_t type;
@@ -16,6 +18,7 @@ typedef struct {
         spk_bool_t bool_v;
         spk_type_t type_v;
         void* ptr_v;
+        spk_array_t* array_p;
     };
 
 } spk_value_t;
