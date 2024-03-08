@@ -15,4 +15,7 @@ add_executable(Spark
         Spark/API.cpp
         Spark/Env.hpp
         Spark/Thread.hpp
+        Spark/GC/GC.hpp
+        Spark/GC/GCNode.hpp
+        Spark/Types/Value.hpp
 )

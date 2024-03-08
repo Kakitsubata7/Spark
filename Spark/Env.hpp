@@ -1,5 +1,10 @@
 #pragma once
 
+#include <unordered_set>
+
+#include "GC/GC.hpp"
+#include "Thread.hpp"
+
 #ifdef __cplusplus
 
 namespace Spark {
@@ -7,14 +12,20 @@ namespace Spark {
 class Env {
 
     /* ===== Threads ===== */
-private:
 
+private:
+    std::unordered_set<Thread*> threadSet;
+
+
+    
+    /* ===== GC ===== */
+
+private:
+    GC gc;
 
 };
 
 #else
-
-struct Env
 
 #endif
 
