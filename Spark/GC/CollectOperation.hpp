@@ -1,6 +1,8 @@
 #pragma once
 
+#include <queue>
 #include <unordered_set>
+#include <vector>
 
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
@@ -12,8 +14,9 @@ class CollectOperation : public GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    CollectOperation() {
-
+    explicit CollectOperation(const std::vector<GCNode*>& entryNodes) {
+        for (GCNode* entryNode : entryNodes)
+            queue.push(entryNode);
     }
 
 
@@ -21,14 +24,18 @@ public:
     /* ===== Operation ===== */
 
 private:
+    std::queue<GCNode*> queue;
     std::unordered_set<GCNode*> visited;
 
 public:
     bool step() override {
 
+        GCNode* entryNode = queue.front();
+        queue.pop();
 
 
-        return true;
+
+        return queue.empty();
     }
 
 };

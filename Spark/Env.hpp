@@ -11,6 +11,15 @@ namespace Spark {
 
 class Env {
 
+    /* ===== Constructor & Destructor ===== */
+
+public:
+    Env();
+
+    ~Env();
+
+
+
     /* ===== Threads ===== */
 
 private:
