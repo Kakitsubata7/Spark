@@ -18,4 +18,7 @@ add_executable(Spark
         Spark/GC/GC.hpp
         Spark/GC/GCNode.hpp
         Spark/Types/Value.hpp
+        spark/GC/GC.cpp
+        spark/GC/GCOperation.hpp
+        spark/GC/CollectOperation.hpp
 )
