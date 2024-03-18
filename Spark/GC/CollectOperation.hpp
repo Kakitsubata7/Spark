@@ -1,5 +1,6 @@
 #pragma once
 
+#include <forward_list>
 #include <queue>
 #include <unordered_set>
 #include <vector>
@@ -9,7 +10,7 @@
 
 namespace Spark {
 
-class CollectOperation : public GCOperation {
+class CollectOperation : private GCOperation {
 
     /* ===== Constructor ===== */
 
@@ -26,16 +27,31 @@ public:
 private:
     std::queue<GCNode*> queue;
     std::unordered_set<GCNode*> visited;
+    std::forward_list<GCNode*> const* currentList = nullptr;
+    std::forward_list<GCNode*>::const_iterator currentIterator;
 
 public:
     bool step() override {
+        if (currentList != nullptr) {
+            // If every node is traversed, the operation is complete
+            if (queue.empty())
+                return true;
 
-        GCNode* entryNode = queue.front();
-        queue.pop();
+            // Get the iterator of a node and start traversing it
+            currentList = &(queue.front()->getNeighbors());
+            currentIterator = currentList->cbegin();
+            queue.pop();
+        }
 
+        if (currentIterator != currentList->cend()) {
+            GCNode* node = *currentIterator;
+            if (visited.find(node) != visited.end())
+                queue.push(node);
 
+            currentIterator++;
+        }
 
-        return queue.empty();
+        return false;
     }
 
 };

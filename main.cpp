@@ -1,11 +1,15 @@
 #include <cstdlib>
 #include <iostream>
+#include "Spark/GC/CollectOperation.hpp"
+using namespace Spark;
 
 int main() {
 
-    int i = 10;
-    auto lambda = [i](int a) { return i + a; };
-    std::cout << "Size of the lambda: " << sizeof(lambda) << " bytes\n";
+    CollectOperation op = CollectOperation({
+
+    });
+
+    while (!op.step()) { }
 
     return EXIT_SUCCESS;
 }
