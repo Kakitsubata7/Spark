@@ -1,31 +1,49 @@
 #pragma once
 
-#include <forward_list>
+#include <list>
 
 namespace Spark {
+
+class GC;
 
 class GCNode {
 
     /* ===== Data ===== */
 
 private:
-    long referenceCount = 0;
-    std::forward_list<GCNode*> neighbors;
+    GC* gcPtr;
+    void* dataPtr;
+    void (*destructorPtr)(void*);
+
+    long _referenceCount = 0;
+    std::list<GCNode*> _neighbors;
 
 public:
     [[nodiscard]]
-    constexpr const std::forward_list<GCNode*>& getNeighbors() const {
-        return neighbors;
+    constexpr long referenceCount() const {
+        return _referenceCount;
+    }
+
+    [[nodiscard]]
+    constexpr const std::list<GCNode*>& neighbors() const {
+        return _neighbors;
     }
 
     bool isMarked = false;
 
 
 
-    /* ===== Constructor ===== */
+    /* ===== Constructor & Destructor ===== */
 
 public:
-    GCNode() = default;
+    GCNode(GC* gcPtr, void* dataPtr, void (*destructorPtr)(void*)) : gcPtr(gcPtr),
+                                                                     dataPtr(dataPtr),
+                                                                     destructorPtr(destructorPtr) { }
+
+    ~GCNode() {
+        destructorPtr(dataPtr);
+        ::operator delete(dataPtr);
+    }
 
 };
 

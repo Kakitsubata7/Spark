@@ -11,14 +11,16 @@
 
 namespace Spark {
 
-class CollectOperation : private GCOperation {
+class Value;
+
+class CollectOperation : public GCOperation {
 
     /* ===== Constructor ===== */
 
 public:
-    CollectOperation(const std::forward_list<GCNode*>& allNodes, const std::vector<GCNode*>& entryNodes) {
-        for (GCNode* entryNode : entryNodes)
-            queue.push(entryNode);
+    CollectOperation(const std::forward_list<GCNode*>& allNodes,
+                     const Value const* stackBuffer, size_t stackLength) : allNodeIterator(allNodes.cbegin()) {
+        
     }
 
 
@@ -26,15 +28,41 @@ public:
     /* ===== Operation ===== */
 
 private:
+    enum class Process {
+        Scanning,
+        Marking,
+        Sweeping
+    };
+
+    Process process = Process::Scanning;
+
     const std::forward_list<GCNode*>::const_iterator allNodeIterator;
+
+    const Value const* stackBuffer;
+    const size_t stackLength;
+
     std::queue<GCNode*> queue;
     std::unordered_set<GCNode*> visited;
     std::forward_list<GCNode*> const* currentList = nullptr;
     std::forward_list<GCNode*>::const_iterator currentIterator;
-    bool finishedMarking = false;
 
 public:
     bool step() override {
+
+        switch (process) {
+            case Process::Scanning: {
+                break;
+            }
+
+            case Process::Marking: {
+                break;
+            }
+
+            case Process::Sweeping: {
+                break;
+            }
+        }
+
         if (finishedMarking) {
             /* Sweeping */
 
@@ -50,7 +78,7 @@ public:
             }
 
             // Get the iterator of a node and start traversing it
-            currentList = &(queue.front()->getNeighbors());
+            currentList = &(queue.front()->neighbors());
             currentIterator = currentList->cbegin();
             queue.pop();
         }

@@ -4,25 +4,30 @@
 
 namespace Spark {
 
+    /* ===== Destructor ===== */
+
+    GC::~GC() {
+        for (GCNode* nodePtr : allNodeList)
+            delete nodePtr;
+    }
+
+
+
     /* ===== Operations ===== */
 
-void GC::step() {
-    if (operationQueue.empty())
-        return;
+    void GC::step() {
+        if (operationQueue.empty())
+            return;
 
-    const GCOperation& operation = operationQueue.front();
+        std::unique_ptr<GCOperation> operation = operationQueue.front();
+        operation->step();
+        operationQueue.pop();
+    }
 
-    operationQueue.pop();
-}
-
-void GC::collect(Value* stackBuffer, size_t stackLength) {
-    // Scan the stack for entry nodes
-    // Value* stack = new Value[stackLength];
-    // std::memcpy(stack, stackBuffer, stackLength * sizeof(Value));
-}
-
-GCNode* allocate() {
-    GCNode* node = new GCNode();
-}
+    void GC::collect(Value* stackBuffer, size_t stackLength) {
+        // Scan the stack to find entry nodes
+        // Value* stack = new Value[stackLength];
+        // std::memcpy(stack, stackBuffer, stackLength * sizeof(Value));
+    }
 
 } // Spark
