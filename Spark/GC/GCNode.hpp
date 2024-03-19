@@ -18,6 +18,8 @@ public:
         return neighbors;
     }
 
+    bool isMarked = false;
+
 
 
     /* ===== Constructor ===== */

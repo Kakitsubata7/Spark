@@ -25,4 +25,5 @@ add_executable(Spark
         spark/GC/DereferenceOperation.hpp
         spark/GC/AllocateOperation.hpp
         spark/Types/Type.hpp
+        Spark/GC/GCPtr.hpp
 )

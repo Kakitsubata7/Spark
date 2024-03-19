@@ -16,8 +16,7 @@ class CollectOperation : private GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    CollectOperation(const std::forward_list<GCNode*>& allNodes, const std::vector<GCNode*>& entryNodes)
-        : allNodes(allNodes) {
+    CollectOperation(const std::forward_list<GCNode*>& allNodes, const std::vector<GCNode*>& entryNodes) {
         for (GCNode* entryNode : entryNodes)
             queue.push(entryNode);
     }
@@ -27,7 +26,7 @@ public:
     /* ===== Operation ===== */
 
 private:
-    const std::forward_list<GCNode*>& allNodes;
+    const std::forward_list<GCNode*>::const_iterator allNodeIterator;
     std::queue<GCNode*> queue;
     std::unordered_set<GCNode*> visited;
     std::forward_list<GCNode*> const* currentList = nullptr;
@@ -37,11 +36,12 @@ private:
 public:
     bool step() override {
         if (finishedMarking) {
-
+            /* Sweeping */
 
             return true;
         }
 
+        /* Marking */
         if (currentList != nullptr) {
             // If every node is traversed, the operation is complete
             if (queue.empty()) {
@@ -57,9 +57,8 @@ public:
 
         if (currentIterator != currentList->cend()) {
             GCNode* node = *currentIterator;
-            if (visited.find(node) != visited.end())
+            if (!node->isMarked)
                 queue.push(node);
-
             currentIterator++;
         }
 

@@ -27,7 +27,7 @@ private:
 
 
 
-    /* ===== Operation ===== */
+    /* ===== Operations ===== */
 
 private:
     std::queue<GCOperation> operationQueue;
@@ -36,6 +36,8 @@ private:
 
 public:
     void collect(Value* stackBuffer, size_t stackLength);
+
+    GCNode* allocate();
 
 };
 

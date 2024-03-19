@@ -9,16 +9,7 @@ namespace Spark {
 
 class Value {
 
-public:
-    Type type;
-
-    union {
-        Int intValue;
-        Float floatValue;
-        Bool boolValue;
-        void* ptrValue;
-        Type typeValue;
-    };
+    /* ===== Constructor, Factory Methods & Destructor ===== */
 
 public:
     Value() {
@@ -26,6 +17,57 @@ public:
         ptrValue = {};
         intValue = {};
     }
+
+    static Value makeNil() {
+        Value self;
+        self.type = Type::Nil;
+        return self;
+    }
+
+    static Value makeInt(Int value) {
+        Value self;
+        self.type = Type::Integer;
+        self.intValue = value;
+        return self;
+    }
+
+    static Value makeFloat(Float value) {
+        Value self;
+        self.type = Type::Float;
+        self.floatValue = value;
+        return self;
+    }
+
+    static Value makeBool(Bool value) {
+        Value self;
+        self.type = Type::Boolean;
+        self.boolValue = value;
+        return self;
+    }
+
+    static Value makeType(Type value) {
+        Value self;
+        self.type = Type::Type;
+        self.typeValue = value;
+        return self;
+    }
+
+    ~Value() = default;
+
+
+
+    /* ===== Data ===== */
+
+public:
+    Type type;
+
+    union {
+        Int intValue{};
+        Float floatValue;
+        Bool boolValue;
+        void* ptrValue;
+        Type typeValue;
+    };
 
 };
 
