@@ -4,6 +4,7 @@
 #include <queue>
 #include <string>
 
+#include "../Types/Value.hpp"
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
 
@@ -34,7 +35,7 @@ private:
     void step();
 
 public:
-    void collect();
+    void collect(Value* stackBuffer, size_t stackLength);
 
 };
 

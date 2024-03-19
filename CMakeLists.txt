@@ -24,4 +24,5 @@ add_executable(Spark
         spark/GC/ReferenceOperation.hpp
         spark/GC/DereferenceOperation.hpp
         spark/GC/AllocateOperation.hpp
+        spark/Types/Type.hpp
 )
