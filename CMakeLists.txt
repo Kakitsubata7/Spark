@@ -21,4 +21,7 @@ add_executable(Spark
         spark/GC/GC.cpp
         spark/GC/GCOperation.hpp
         spark/GC/CollectOperation.hpp
+        spark/GC/ReferenceOperation.hpp
+        spark/GC/DereferenceOperation.hpp
+        spark/GC/AllocateOperation.hpp
 )

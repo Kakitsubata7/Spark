@@ -5,9 +5,7 @@ using namespace Spark;
 
 int main() {
 
-    CollectOperation op = CollectOperation({
-
-    });
+    CollectOperation op = CollectOperation({}, {});
 
     while (!op.step()) { }
 
