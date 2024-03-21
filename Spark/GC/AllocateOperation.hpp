@@ -12,8 +12,8 @@ class AllocateOperation : public GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    AllocateOperation(GCNode* nodePtr, std::list<GCNode*>& allNodeList) : nodePtr(nodePtr),
-                                                                          allNodeList(allNodeList) { }
+    AllocateOperation(GCNode* nodePtr, std::unordered_set<GCNode*>& allNodeSet) : nodePtr(nodePtr),
+                                                                                  allNodeSet(allNodeSet) { }
 
 
 
@@ -21,11 +21,11 @@ public:
 
 private:
     GCNode* nodePtr;
-    std::list<GCNode*>& allNodeList;
+    std::unordered_set<GCNode*>& allNodeSet;
 
 public:
     bool step() override {
-        allNodeList.push_back(nodePtr);
+        allNodeSet.insert(nodePtr);
         return true;
     }
 

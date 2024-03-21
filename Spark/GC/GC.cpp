@@ -15,6 +15,8 @@ namespace Spark {
 
     /* ===== Operations ===== */
 
+    static std::unique_ptr<GCOperation> currentOperation;
+
     void GC::step() {
         if (operationQueue.empty())
             return;

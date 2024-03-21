@@ -14,8 +14,8 @@ class Value {
 public:
     Value() {
         type = Type::Nil;
-        ptrValue = {};
         intValue = {};
+        ptrValue = {};
     }
 
     static Value makeNil() {
@@ -68,6 +68,11 @@ public:
         void* ptrValue;
         Type typeValue;
     };
+
+    [[nodiscard]]
+    bool isReferenceType() const {
+        return false;
+    }
 
 };
 

@@ -16,10 +16,6 @@ private:
 
     /* ===== Constructor ===== */
 
-    GCPtr() {
-
-    }
-
 };
 
 } // Spark

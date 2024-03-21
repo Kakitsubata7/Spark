@@ -1,9 +1,9 @@
 #pragma once
 
-#include <list>
 #include <memory>
 #include <queue>
 #include <string>
+#include <unordered_set>
 
 #include "../Types/Value.hpp"
 #include "AllocateOperation.hpp"
@@ -34,7 +34,7 @@ private:
     /* ===== Data ===== */
 
 private:
-    std::list<GCNode*> allNodeList;
+    std::unordered_set<GCNode*> allNodeSet;
 
 
 
@@ -57,7 +57,7 @@ public:
         GCNode* nodePtr = new GCNode(this, dataPtr, destructorPtr);
 
         // Pend the allocation to the operation queue
-        operationQueue.emplace(std::make_unique<AllocateOperation>(nodePtr, allNodeList));
+        operationQueue.emplace(std::make_unique<AllocateOperation>(nodePtr, allNodeSet));
 
         return GCPtr<T>(nodePtr);
     }
