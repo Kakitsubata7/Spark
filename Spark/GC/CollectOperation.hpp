@@ -18,9 +18,22 @@ class CollectOperation : public GCOperation {
 
 public:
     CollectOperation(std::list<GCNode*>& allNodeList, const Value* stackBuffer, size_t stackLength)
-            : allNodeList(allNodeList), allNodeIterator(allNodeList.cbegin()), stackLength(stackLength) {
+        : allNodeList(allNodeList),
+          allNodeIterator(allNodeList.cbegin()),
+          stackLength(stackLength),
+          process(Process::Scanning) {
         this->stackBuffer = new Value[stackLength];
         std::memcpy(this->stackBuffer, stackBuffer, stackLength);
+    }
+
+    CollectOperation(std::list<GCNode*>& allNodeList, const std::vector<GCNode*>& entryNodes)
+        : allNodeList(allNodeList),
+          allNodeIterator(allNodeList.cbegin()),
+          stackBuffer(nullptr),
+          stackLength(0),
+          process(Process::Preprocessing) {
+        for (GCNode* node : entryNodes)
+            queue.push(node);
     }
 
 
@@ -29,22 +42,22 @@ public:
 
 private:
     enum class Process {
-        Preprocessing,  // Set every node as unmarked
         Scanning,       // Scan the stack for entry point nodes
+        Preprocessing,  // Set every node as unmarked
         Marking,        // Mark reachable nodes
         Sweeping        // Deallocate unreachable nodes
     };
 
-    Process process = Process::Scanning;
-
-    /* Preprocessing & Sweeping Fields */
-    std::list<GCNode*>& allNodeList;
-    std::list<GCNode*>::const_iterator allNodeIterator;
+    Process process;
 
     /* Scanning Fields */
     Value* stackBuffer;
     size_t stackIndex = 0;
     const size_t stackLength;
+
+    /* Preprocessing & Sweeping Fields */
+    std::list<GCNode*>& allNodeList;
+    std::list<GCNode*>::const_iterator allNodeIterator;
 
     /* Marking Fields */
     std::queue<GCNode*> queue;
@@ -53,19 +66,7 @@ private:
 
 public:
     bool step() override {
-
         switch (process) {
-            case Process::Preprocessing: {
-
-                if (allNodeIterator != allNodeList.cend()) {
-                    GCNode* node = *allNodeIterator;
-                    node->isMarked = false;
-                    allNodeIterator++;
-                }
-
-                return false;
-            }
-
             case Process::Scanning: {
 
                 Value* valuePtr = stackBuffer + stackIndex;
@@ -77,6 +78,18 @@ public:
                 stackIndex++;
 
                 if (stackIndex == stackLength)
+                    process = Process::Preprocessing;
+
+                return false;
+            }
+
+            case Process::Preprocessing: {
+
+                if (allNodeIterator != allNodeList.cend()) {
+                    GCNode* node = *allNodeIterator;
+                    node->isMarked = false;
+                    allNodeIterator++;
+                } else
                     process = Process::Marking;
 
                 return false;
@@ -117,7 +130,7 @@ public:
                     GCNode* node = *allNodeIterator;
 
                     // Delete and erase the GC node
-                    if (!node->isMarked || node->referenceCount() == 0) {
+                    if (!node->isMarked || node->referenceCount == 0) {
                         delete node;
                         allNodeIterator = allNodeList.erase(allNodeIterator);
                     }
