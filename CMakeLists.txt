@@ -26,5 +26,4 @@ add_executable(Spark
         spark/GC/AllocateOperation.hpp
         spark/Types/Type.hpp
         Spark/GC/GCPtr.hpp
-        spark/GC/IGC.hpp
 )
