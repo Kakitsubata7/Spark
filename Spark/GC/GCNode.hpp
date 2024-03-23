@@ -4,8 +4,6 @@
 
 namespace Spark {
 
-class GC;
-
 class GCNode {
 
     /* ===== Data ===== */
