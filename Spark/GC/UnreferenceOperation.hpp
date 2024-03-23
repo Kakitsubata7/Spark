@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <stdexcept>
 
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
@@ -21,11 +22,14 @@ private:
 public:
     bool step() override {
         if (neighborIterator == unreferencer->neighbors().cend())
-            return true;
+            throw std::runtime_error("Reference cannot be found in the GC node.");
 
         GCNode* node = *neighborIterator;
-        if (node == unreferencee)
+        if (node == unreferencee) {
+            unreferencee->referenceCount--;
             neighborIterator = unreferencer->neighbors().erase(neighborIterator);
+            return true;
+        }
         neighborIterator++;
         return false;
     }
