@@ -4,7 +4,6 @@
 #include <queue>
 #include <string>
 
-#include "../Types/Value.hpp"
 #include "AllocateOperation.hpp"
 #include "CollectOperation.hpp"
 #include "GCNode.hpp"
@@ -12,6 +11,8 @@
 #include "GCPtr.hpp"
 
 namespace Spark {
+
+class Value;
 
 class GC {
 
@@ -57,6 +58,9 @@ public:
         T* dataPtr = new T(std::forward<Args>(args)...);
         void (*destructorPtr)(void*) = [](void* obj) { static_cast<T*>(obj)->~T(); };
         GCNode* nodePtr = new GCNode(dataPtr, destructorPtr);
+
+        // Add the GC node
+        allNodeList.push_back(nodePtr);
 
         // Pend the allocation to the operation queue
         operationQueue.emplace(new AllocateOperation(nodePtr, allNodeList));
