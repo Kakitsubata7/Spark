@@ -88,7 +88,7 @@ public:
     }
 
     [[nodiscard]]
-    bool tryGetGCNode(GCNode*& out) {
+    bool tryGetGCNode(GCNode*& out) const {
         switch (type) {
             case Type::String:
                 out = stringPtr.node();
