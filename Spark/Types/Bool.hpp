@@ -4,7 +4,7 @@
 
 namespace Spark {
 
-struct Bool8 {
+struct Bool {
 
     /* ===== Data ===== */
 
@@ -16,8 +16,8 @@ private:
     /* ===== Constructors ===== */
 
 public:
-    constexpr Bool8() : value(0) { }
-    constexpr Bool8(bool b) : value(b ? 1 : 0) { }
+    constexpr Bool() : value(0) { }
+    constexpr Bool(bool b) : value(b ? 1 : 0) { }
 
 
 
@@ -31,7 +31,7 @@ public:
     /* ===== Assignment Operator ===== */
 
 public:
-    constexpr Bool8& operator=(bool b) {
+    constexpr Bool& operator=(bool b) {
         value = b;
         return *this;
     }
@@ -43,9 +43,9 @@ public:
 public:
     constexpr bool operator!() const { return !value; }
 
-    constexpr bool operator==(Bool8 other) const { return value == other.value; }
+    constexpr bool operator==(Bool other) const { return value == other.value; }
 
-    constexpr bool operator!=(Bool8 other) const { return value != other.value; }
+    constexpr bool operator!=(Bool other) const { return value != other.value; }
 
 };
 

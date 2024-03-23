@@ -2,6 +2,6 @@
 
 namespace Spark {
 
-    using Float64 = double;
+    using Float = double;
 
 } // Spark

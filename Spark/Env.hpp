@@ -1,45 +1,41 @@
 #pragma once
 
-#include <cstddef>
-#include <memory>
-#include <stdexcept>
 #include <unordered_set>
 
-#include "Config.hpp"
 #include "GC/GC.hpp"
 #include "Thread.hpp"
-#include "Value.hpp"
+
+#ifdef __cplusplus
 
 namespace Spark {
 
 class Env {
 
-    /* ===== Constructors ===== */
+    /* ===== Constructor & Destructor ===== */
 
 public:
-    Env(size_t mainThreadStackCapacity, size_t mainThreadMaxStackCapacity) {
-        mainThread = Thread(mainThreadStackCapacity, mainThreadMaxStackCapacity);
-    }
+    Env();
 
-    explicit Env(size_t mainThreadStackCapacity) : Env(mainThreadStackCapacity, mainThreadStackCapacity) { }
-
-    Env() : Env(DEFAULT_STACK_CAPACITY, DEFAULT_MAX_STACK_CAPACITY) { }
+    ~Env();
 
 
 
     /* ===== Threads ===== */
 
 private:
-    Thread mainThread;
-    std::unordered_set<std::unique_ptr<Thread>> threadSet;
+    std::unordered_set<Thread*> threadSet;
 
 
-
+    
     /* ===== GC ===== */
 
 private:
     GC gc;
 
 };
+
+#else
+
+#endif
 
 } // Spark

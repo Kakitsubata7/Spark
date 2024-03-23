@@ -1,65 +1,70 @@
 #pragma once
 
+#include <memory>
 #include <queue>
-#include <unordered_set>
+#include <string>
 
-#include "GCPtr.hpp"
+#include "AllocateOperation.hpp"
+#include "CollectOperation.hpp"
 #include "GCNode.hpp"
+#include "GCOperation.hpp"
+#include "GCPtr.hpp"
 
 namespace Spark {
 
+class Value;
+
 class GC {
 
-    /* ===== Friend Class ===== */
+    /* ===== Constructor & Destructor ===== */
 
-    friend class GCNode;
+public:
+    GC() = default;
+    ~GC();
+
+
+
+    /* ===== Rules ===== */
+
+private:
+    long updateInterval = 5;
+    long stepPerUpdate = 1;
 
 
 
     /* ===== Data ===== */
 
 private:
-    std::unordered_set<GCNode*> nodeTrackingSet;
-
-    std::queue<GCNode*> garbageNodeQueue;
+    std::list<GCNode*> allNodeList;
 
 
 
-    /* ===== Constructor ===== */
+    /* ===== Operations ===== */
 
-public:
-    GC() = default;
-
-
-
-    /* ===== Destructor ===== */
+private:
+    std::queue<GCOperation*> operationQueue;
 
 public:
-    ~GC() {
-        // Delete all tracking nodes
-        for (GCNode* nodePtr : nodeTrackingSet)
-            delete nodePtr;
+    void step();
 
-        // Delete all garbage nodes
-        while (!garbageNodeQueue.empty()) {
-            GCNode* nodePtr = garbageNodeQueue.front();
-            garbageNodeQueue.pop();
-            delete nodePtr;
-        }
+    void collect(Value* stackBuffer, size_t stackLength) {
+        operationQueue.emplace(new CollectOperation(allNodeList, stackBuffer, stackLength));
     }
 
-
-
-    /* ===== Factory Methods ===== */
-
-public:
     template <typename T, typename... Args>
     [[nodiscard]]
     GCPtr<T> make(Args&&... args) {
+        // Allocate the data and the GC node
         T* dataPtr = new T(std::forward<Args>(args)...);
         void (*destructorPtr)(void*) = [](void* obj) { static_cast<T*>(obj)->~T(); };
-        GCNode* nodePtr = new GCNode(1, this, dataPtr, destructorPtr);
-        nodeTrackingSet.insert(nodePtr);
+        GCNode* nodePtr = new GCNode(dataPtr, destructorPtr);
+
+        // Add the GC node
+        allNodeList.push_back(nodePtr);
+
+        // Pend the allocation to the operation queue
+        operationQueue.emplace(new AllocateOperation(nodePtr, allNodeList));
+
         return GCPtr<T>(nodePtr);
     }
 

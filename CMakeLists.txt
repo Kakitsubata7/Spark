@@ -3,28 +3,28 @@ project(Spark)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_options(-Wall -Wextra -Werror)
+# add_compile_options(-Wall -Wextra -Werror)
 
 add_executable(Spark
         main.cpp
-        Spark.hpp
-        Spark/Value.hpp
+        Spark/Types/Integer.hpp
+        Spark/Types/Float.hpp
+        Spark/Types/Bool.hpp
+        Spark/Types.hpp
+        Spark/API.hpp
+        Spark/API.cpp
         Spark/Env.hpp
-        Spark/Type.hpp
-        Spark/GC/GCPtr.hpp
-        Spark/Bool8.hpp
-        Spark/Int64.hpp
-        Spark/Float64.hpp
-        Spark/Type.cpp
-        Spark/GC/GCNode.hpp
-        Spark/GC/GC.hpp
-        Spark/GC/GCNode.cpp
-        Spark/Opcode.hpp
         Spark/Thread.hpp
-        Spark/Config.hpp
-        Spark/Exception.hpp
-        Spark/Compilation/Compiler.hpp
-        Spark/Compilation/Compiler.cpp
-        Spark/Compilation/Lexer.hpp
-        Spark/Compilation/Lexer.cpp
+        Spark/GC/GC.hpp
+        Spark/GC/GCNode.hpp
+        Spark/Types/Value.hpp
+        spark/GC/GC.cpp
+        spark/GC/GCOperation.hpp
+        spark/GC/CollectOperation.hpp
+        spark/GC/ReferenceOperation.hpp
+        spark/GC/DereferenceOperation.hpp
+        spark/GC/AllocateOperation.hpp
+        spark/Types/Type.hpp
+        Spark/GC/GCPtr.hpp
+        spark/Types/Value.cpp
 )

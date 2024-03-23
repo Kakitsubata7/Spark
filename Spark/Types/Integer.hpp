@@ -4,6 +4,6 @@
 
 namespace Spark {
 
-    using Int64 = int64_t;
+    using Int = int64_t;
 
 } // Spark
