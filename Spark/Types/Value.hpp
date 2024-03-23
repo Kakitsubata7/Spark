@@ -1,5 +1,12 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+#include "../GC/GCNode.hpp"
+#include "../GC/GCPtr.hpp"
 #include "Bool.hpp"
 #include "Float.hpp"
 #include "Integer.hpp"
@@ -67,11 +74,51 @@ public:
         Bool boolValue;
         void* ptrValue;
         Type typeValue;
+        GCPtr<std::string> stringPtr;
+        GCPtr<std::vector<Value>> arrayPtr;
+        GCPtr<std::unordered_set<Value>> setPtr;
+        GCPtr<std::unordered_map<Value, Value>> mapPtr;
+        GCPtr<std::unordered_map<std::string, Value>> objectPtr;
+        GCPtr<void*> threadPtr;
     };
 
     [[nodiscard]]
     bool isReferenceType() const {
         return static_cast<int>(type) > 0x04;
+    }
+
+    [[nodiscard]]
+    bool tryGetGCNode(GCNode*& out) {
+        switch (type) {
+            case Type::String:
+                out = stringPtr.getGCNode();
+                break;
+
+            case Type::Array:
+                out = arrayPtr.getGCNode();
+                break;
+
+            case Type::Set:
+                out = setPtr.getGCNode();
+                break;
+
+            case Type::Map:
+                out = mapPtr.getGCNode();
+                break;
+
+            case Type::Object:
+                out = objectPtr.getGCNode();
+                break;
+
+            case Type::Thread:
+                out = threadPtr.getGCNode();
+                break;
+
+            default:
+                return false;
+        }
+
+        return true;
     }
 
 };
