@@ -91,27 +91,27 @@ public:
     bool tryGetGCNode(GCNode*& out) {
         switch (type) {
             case Type::String:
-                out = stringPtr.getGCNode();
+                out = stringPtr.node();
                 break;
 
             case Type::Array:
-                out = arrayPtr.getGCNode();
+                out = arrayPtr.node();
                 break;
 
             case Type::Set:
-                out = setPtr.getGCNode();
+                out = setPtr.node();
                 break;
 
             case Type::Map:
-                out = mapPtr.getGCNode();
+                out = mapPtr.node();
                 break;
 
             case Type::Object:
-                out = objectPtr.getGCNode();
+                out = objectPtr.node();
                 break;
 
             case Type::Thread:
-                out = threadPtr.getGCNode();
+                out = threadPtr.node();
                 break;
 
             default:

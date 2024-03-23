@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "GCNode.hpp"
 
 namespace Spark {
@@ -10,17 +12,20 @@ class GCPtr {
     /* ===== Data ===== */
 
 private:
-    GCNode* node;
+    GCNode* _node;
 
 public:
     [[nodiscard]]
-    constexpr GCNode* getGCNode() const {
-        return node;
+    constexpr GCNode* node() const {
+        return _node;
     }
 
 
 
     /* ===== Constructor ===== */
+
+public:
+    explicit GCPtr(GCNode* node) : _node(node) { }
 
 };
 
