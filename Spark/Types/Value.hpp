@@ -14,6 +14,8 @@
 
 namespace Spark {
 
+class GC;
+
 class Value {
 
     /* ===== Constructor, Factory Methods & Destructor ===== */
@@ -25,39 +27,50 @@ public:
         ptrValue = {};
     }
 
+    [[nodiscard]]
     static Value makeNil() {
         Value self;
         self.type = Type::Nil;
         return self;
     }
 
-    static Value makeInt(Int value) {
+    [[nodiscard]]
+    static Value makeInt(Int value = 0) {
         Value self;
         self.type = Type::Integer;
         self.intValue = value;
         return self;
     }
 
-    static Value makeFloat(Float value) {
+    [[nodiscard]]
+    static Value makeFloat(Float value = 0.0) {
         Value self;
         self.type = Type::Float;
         self.floatValue = value;
         return self;
     }
 
-    static Value makeBool(Bool value) {
+    [[nodiscard]]
+    static Value makeBool(Bool value = false) {
         Value self;
         self.type = Type::Boolean;
         self.boolValue = value;
         return self;
     }
 
+    [[nodiscard]]
     static Value makeType(Type value) {
         Value self;
         self.type = Type::Type;
         self.typeValue = value;
         return self;
     }
+
+    [[nodiscard]]
+    static Value makeString(GC& gc, const std::string& value = "");
+
+    [[nodiscard]]
+    static Value makeArray(GC& gc, const std::vector<Value>& value = {});
 
     ~Value() = default;
 
