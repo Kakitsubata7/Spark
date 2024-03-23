@@ -22,7 +22,7 @@ add_executable(Spark
         spark/GC/GCOperation.hpp
         spark/GC/CollectOperation.hpp
         spark/GC/ReferenceOperation.hpp
-        spark/GC/DereferenceOperation.hpp
+        spark/GC/UnreferenceOperation.hpp
         spark/GC/AllocateOperation.hpp
         spark/Types/Type.hpp
         Spark/GC/GCPtr.hpp
