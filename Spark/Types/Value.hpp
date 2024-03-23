@@ -71,7 +71,7 @@ public:
 
     [[nodiscard]]
     bool isReferenceType() const {
-        return false;
+        return static_cast<int>(type) > 0x04;
     }
 
 };
