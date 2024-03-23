@@ -12,20 +12,20 @@ private:
     void* dataPtr;
     void (*destructorPtr)(void*);
 
-    long _referenceCount = 0;
     std::list<GCNode*> _neighbors;
 
 public:
-    [[nodiscard]]
-    constexpr long referenceCount() const {
-        return _referenceCount;
-    }
-
     [[nodiscard]]
     constexpr const std::list<GCNode*>& neighbors() const {
         return _neighbors;
     }
 
+    [[nodiscard]]
+    constexpr std::list<GCNode*>& neighbors() {
+        return _neighbors;
+    }
+
+    long referenceCount = 0;
     bool isMarked = false;
 
 
@@ -40,6 +40,14 @@ public:
         destructorPtr(dataPtr);
         ::operator delete(dataPtr);
     }
+
+
+
+    /* ===== Operations ===== */
+
+public:
+    void reference(GCNode* other) { }
+    void unreference(GCNode* other) { }
 
 };
 
