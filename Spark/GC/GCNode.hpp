@@ -11,7 +11,6 @@ class GCNode {
     /* ===== Data ===== */
 
 private:
-    GC* gcPtr;
     void* dataPtr;
     void (*destructorPtr)(void*);
 
@@ -36,9 +35,8 @@ public:
     /* ===== Constructor & Destructor ===== */
 
 public:
-    GCNode(GC* gcPtr, void* dataPtr, void (*destructorPtr)(void*)) : gcPtr(gcPtr),
-                                                                     dataPtr(dataPtr),
-                                                                     destructorPtr(destructorPtr) { }
+    GCNode(void* dataPtr, void (*destructorPtr)(void*)) : dataPtr(dataPtr),
+                                                          destructorPtr(destructorPtr) { }
 
     ~GCNode() {
         destructorPtr(dataPtr);
