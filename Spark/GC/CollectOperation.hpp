@@ -4,7 +4,6 @@
 #include <list>
 #include <memory>
 #include <queue>
-#include <unordered_set>
 #include <vector>
 
 #include "../Types/Value.hpp"
@@ -18,9 +17,8 @@ class CollectOperation : public GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    CollectOperation(const std::list<GCNode*>& allNodes,
-                     const Value* stackBuffer,
-                     size_t stackLength) : allNodeIterator(allNodes.cbegin()), stackLength(stackLength) {
+    CollectOperation(std::list<GCNode*>& allNodeList, const Value* stackBuffer, size_t stackLength)
+            : allNodeList(allNodeList), allNodeIterator(allNodeList.cbegin()), stackLength(stackLength) {
         this->stackBuffer = new Value[stackLength];
         std::memcpy(this->stackBuffer, stackBuffer, stackLength);
     }
@@ -39,14 +37,17 @@ private:
 
     Process process = Process::Scanning;
 
-    const std::list<GCNode*>::const_iterator allNodeIterator;
+    /* Preprocessing & Sweeping Fields */
+    std::list<GCNode*>& allNodeList;
+    std::list<GCNode*>::const_iterator allNodeIterator;
 
+    /* Scanning Fields */
     Value* stackBuffer;
     size_t stackIndex = 0;
     const size_t stackLength;
 
+    /* Marking Fields */
     std::queue<GCNode*> queue;
-    std::unordered_set<GCNode*> visited;
     std::list<GCNode*> const* currentList = nullptr;
     std::list<GCNode*>::const_iterator currentIterator;
 
@@ -56,15 +57,22 @@ public:
         switch (process) {
             case Process::Preprocessing: {
 
-
+                if (allNodeIterator != allNodeList.cend()) {
+                    GCNode* node = *allNodeIterator;
+                    node->isMarked = false;
+                    allNodeIterator++;
+                }
 
                 return false;
             }
 
             case Process::Scanning: {
 
-                if ((stackBuffer + stackIndex)->isReferenceType()) {
-                    // TODO: Push the GC node pointer to the queue
+                Value* valuePtr = stackBuffer + stackIndex;
+                GCNode* node;
+                if (valuePtr->tryGetGCNode(node)) {
+                    // Push the GC node pointer to the queue
+                    queue.push(node);
                 }
                 stackIndex++;
 
@@ -76,46 +84,51 @@ public:
 
             case Process::Marking: {
 
-                if (queue.empty()) {
-                    process = Process::Sweeping;
-                    return false;
+                if (currentList != nullptr) {
+                    // If every node is traversed, marking is complete
+                    if (queue.empty()) {
+                        process = Process::Sweeping;
+                        allNodeIterator = allNodeList.cbegin(); // Reset 'allNodeIterator' to the beginning
+                        return false;
+                    }
+
+                    // Get the iterator of a node and start traversing it
+                    currentList = &(queue.front()->neighbors());
+                    currentIterator = currentList->cbegin();
+                    queue.pop();
                 }
 
-
+                // Traverse the neighbors of the current node
+                if (currentIterator != currentList->cend()) {
+                    GCNode* node = *currentIterator;
+                    if (!node->isMarked) {
+                        node->isMarked = true;
+                        queue.push(node);
+                    }
+                    currentIterator++;
+                }
 
                 return false;
             }
 
             case Process::Sweeping: {
 
+                if (allNodeIterator != allNodeList.cend()) {
+                    GCNode* node = *allNodeIterator;
 
+                    // Delete and erase the GC node
+                    if (!node->isMarked || node->referenceCount() == 0) {
+                        delete node;
+                        allNodeIterator = allNodeList.erase(allNodeIterator);
+                    }
 
-                return false;
-            }
-        }
+                    allNodeIterator++;
+                    return false;
+                }
 
-        /* Marking */
-        if (currentList != nullptr) {
-            // If every node is traversed, the operation is complete
-            if (queue.empty()) {
-                finishedMarking = true;
                 return true;
             }
-
-            // Get the iterator of a node and start traversing it
-            currentList = &(queue.front()->neighbors());
-            currentIterator = currentList->cbegin();
-            queue.pop();
         }
-
-        if (currentIterator != currentList->cend()) {
-            GCNode* node = *currentIterator;
-            if (!node->isMarked)
-                queue.push(node);
-            currentIterator++;
-        }
-
-        return false;
     }
 
 };
