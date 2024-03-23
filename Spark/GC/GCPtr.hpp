@@ -10,7 +10,13 @@ class GCPtr {
     /* ===== Data ===== */
 
 private:
-    GCNode* nodePtr;
+    GCNode* node;
+
+public:
+    [[nodiscard]]
+    constexpr GCNode* getGCNode() const {
+        return node;
+    }
 
 
 
