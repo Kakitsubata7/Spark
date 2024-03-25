@@ -13,7 +13,7 @@ namespace Spark {
         }
 
         // Deallocate all GC nodes
-        for (GCNode* node : allNodeList)
+        for (GCNode* node : allNodeSet)
             delete node;
     }
 

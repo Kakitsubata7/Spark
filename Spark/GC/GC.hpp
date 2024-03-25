@@ -3,6 +3,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <unordered_set>
 
 #include "AllocateOperation.hpp"
 #include "CollectOperation.hpp"
@@ -35,7 +36,7 @@ private:
     /* ===== Data ===== */
 
 private:
-    std::list<GCNode*> allNodeList;
+    std::unordered_set<GCNode*> allNodeSet;
 
 
 
@@ -48,7 +49,7 @@ public:
     void step();
 
     void collect(Value* stackBuffer, size_t stackLength) {
-        operationQueue.emplace(new CollectOperation(allNodeList, stackBuffer, stackLength));
+        operationQueue.emplace(new CollectOperation(allNodeSet, stackBuffer, stackLength));
     }
 
     template <typename T, typename... Args>
@@ -60,10 +61,10 @@ public:
         GCNode* nodePtr = new GCNode(dataPtr, destructorPtr);
 
         // Add the GC node
-        allNodeList.push_back(nodePtr);
+        allNodeSet.insert(nodePtr);
 
         // Pend the allocation to the operation queue
-        operationQueue.emplace(new AllocateOperation(nodePtr, allNodeList));
+        operationQueue.emplace(new AllocateOperation(nodePtr, allNodeSet));
 
         return GCPtr<T>(nodePtr);
     }

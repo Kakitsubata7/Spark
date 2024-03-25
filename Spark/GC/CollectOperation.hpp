@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <queue>
+#include <unordered_set>
 #include <vector>
 
 #include "../Types/Value.hpp"
@@ -17,18 +18,18 @@ class CollectOperation : public GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    CollectOperation(std::list<GCNode*>& allNodeList, const Value* stackBuffer, size_t stackLength)
-        : allNodeList(allNodeList),
-          allNodeIterator(allNodeList.cbegin()),
+    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const Value* stackBuffer, size_t stackLength)
+        : allNodeSet(allNodeSet),
+          allNodeIterator(allNodeSet.cbegin()),
           stackLength(stackLength),
           process(Process::Scanning) {
         this->stackBuffer = new Value[stackLength];
         std::memcpy(this->stackBuffer, stackBuffer, stackLength);
     }
 
-    CollectOperation(std::list<GCNode*>& allNodeList, const std::vector<GCNode*>& entryNodes)
-        : allNodeList(allNodeList),
-          allNodeIterator(allNodeList.cbegin()),
+    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::vector<GCNode*>& entryNodes)
+        : allNodeSet(allNodeSet),
+          allNodeIterator(allNodeSet.cbegin()),
           stackBuffer(nullptr),
           stackLength(0),
           process(Process::Preprocessing) {
@@ -56,8 +57,8 @@ private:
     const size_t stackLength;
 
     /* Preprocessing & Sweeping Fields */
-    std::list<GCNode*>& allNodeList;
-    std::list<GCNode*>::const_iterator allNodeIterator;
+    std::unordered_set<GCNode*>& allNodeSet;
+    std::unordered_set<GCNode*>::const_iterator allNodeIterator;
 
     /* Marking Fields */
     std::queue<GCNode*> queue;
@@ -85,7 +86,7 @@ public:
 
             case Process::Preprocessing: {
 
-                if (allNodeIterator != allNodeList.cend()) {
+                if (allNodeIterator != allNodeSet.cend()) {
                     GCNode* node = *allNodeIterator;
                     node->isMarked = false;
                     allNodeIterator++;
@@ -101,7 +102,7 @@ public:
                     // If every node is traversed, marking is complete
                     if (queue.empty()) {
                         process = Process::Sweeping;
-                        allNodeIterator = allNodeList.cbegin(); // Reset 'allNodeIterator' to the beginning
+                        allNodeIterator = allNodeSet.cbegin(); // Reset 'allNodeIterator' to the beginning
                         return false;
                     }
 
@@ -126,13 +127,13 @@ public:
 
             case Process::Sweeping: {
 
-                if (allNodeIterator != allNodeList.cend()) {
+                if (allNodeIterator != allNodeSet.cend()) {
                     GCNode* node = *allNodeIterator;
 
                     // Delete and erase the GC node
                     if (!node->isMarked || node->referenceCount == 0) {
                         delete node;
-                        allNodeIterator = allNodeList.erase(allNodeIterator);
+                        allNodeIterator = allNodeSet.erase(allNodeIterator);
                     }
 
                     allNodeIterator++;

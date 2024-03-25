@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <unordered_set>
 
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
@@ -12,20 +12,20 @@ class AllocateOperation : public GCOperation {
     /* ===== Constructor ===== */
 
 public:
-    AllocateOperation(GCNode* nodePtr, std::list<GCNode*>& allNodes) : nodePtr(nodePtr),
-                                                                       allNodes(allNodes) { }
+    AllocateOperation(GCNode* node, std::unordered_set<GCNode*>& allNodeSet) : node(node),
+                                                                               allNodeSet(allNodeSet) { }
 
 
 
     /* ===== Operation ===== */
 
 private:
-    GCNode* nodePtr;
-    std::list<GCNode*>& allNodes;
+    GCNode* node;
+    std::unordered_set<GCNode*>& allNodeSet;
 
 public:
     bool step() override {
-        allNodes.push_back(nodePtr);
+        allNodeSet.insert(node);
         return true;
     }
 
