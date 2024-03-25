@@ -25,7 +25,7 @@ public:
         return _neighbors;
     }
 
-    bool isMarked = false;
+    bool isMarked = false; // Used for GC collection
 
     template <typename T>
     [[nodiscard]]
