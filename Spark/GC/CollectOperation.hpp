@@ -100,9 +100,7 @@ public:
 
             case Process::Marking: {
 
-                std::cout << "Marking" << std::endl;
-
-                if (currentList != nullptr) {
+                if (currentList == nullptr) {
                     // If every node is traversed, marking is complete
                     if (queue.empty()) {
                         process = Process::Sweeping;
@@ -111,7 +109,9 @@ public:
                     }
 
                     // Get the iterator of a node and start traversing it
-                    currentList = &(queue.front()->neighbors());
+                    GCNode* node = queue.front();
+                    node->isMarked = true;
+                    currentList = &(node->neighbors());
                     currentIterator = currentList->cbegin();
                     queue.pop();
                 }
@@ -119,10 +119,8 @@ public:
                 // Traverse the neighbors of the current node
                 if (currentIterator != currentList->cend()) {
                     GCNode* node = *currentIterator;
-                    if (!node->isMarked) {
-                        node->isMarked = true;
+                    if (!node->isMarked)
                         queue.push(node);
-                    }
                     currentIterator++;
                 } else
                     currentList = nullptr;
@@ -136,12 +134,12 @@ public:
                     GCNode* node = *allNodeIterator;
 
                     // Delete and erase the GC node
-                    if (!node->isMarked || node->referenceCount == 0) {
+                    if (!node->isMarked /*|| node->referenceCount == 0*/) {
                         delete node;
                         allNodeIterator = allNodeSet.erase(allNodeIterator);
-                    }
+                    } else
+                        allNodeIterator++;
 
-                    allNodeIterator++;
                     return false;
                 }
 

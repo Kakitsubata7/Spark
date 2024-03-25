@@ -27,21 +27,14 @@ int main() {
     std::vector<GCNode*> entryNodes = { a };
     CollectOperation op = CollectOperation(allNodeSet, entryNodes);
 
-    while (true) {
-        bool isFinished = op.step();
-        if (isFinished)
-            break;
-    }
+    while (!op.step()) { }
 
+    std::cout << "Collect finished" << std::endl;
+
+    std::cout << allNodeSet.size() << std::endl;
     for (GCNode* node : allNodeSet) {
         std::cout << node->getData<std::string>() << std::endl;
     }
-
-    delete a;
-    delete b;
-    delete c;
-    delete d;
-    delete e;
 
     return EXIT_SUCCESS;
 }
