@@ -56,9 +56,7 @@ public:
     [[nodiscard]]
     GCPtr<T> make(Args&&... args) {
         // Allocate the data and the GC node
-        T* dataPtr = new T(std::forward<Args>(args)...);
-        void (*destructorPtr)(void*) = [](void* obj) { static_cast<T*>(obj)->~T(); };
-        GCNode* nodePtr = new GCNode(dataPtr, destructorPtr);
+        GCNode* nodePtr = new GCNode(GCNode::make<T>(std::forward<Args>(args)...));
 
         // Add the GC node
         allNodeSet.insert(nodePtr);

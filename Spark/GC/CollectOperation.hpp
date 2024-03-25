@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <iostream> // TODO: Delete this include
+
 #include "../Types/Value.hpp"
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
@@ -98,6 +100,8 @@ public:
 
             case Process::Marking: {
 
+                std::cout << "Marking" << std::endl;
+
                 if (currentList != nullptr) {
                     // If every node is traversed, marking is complete
                     if (queue.empty()) {
@@ -120,7 +124,8 @@ public:
                         queue.push(node);
                     }
                     currentIterator++;
-                }
+                } else
+                    currentList = nullptr;
 
                 return false;
             }

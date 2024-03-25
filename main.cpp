@@ -14,7 +14,34 @@ using namespace Spark;
 
 int main() {
 
-    
+    GCNode* a = new GCNode(GCNode::make<std::string>("a"));
+    GCNode* b = new GCNode(GCNode::make<std::string>("b"));
+    GCNode* c = new GCNode(GCNode::make<std::string>("c"));
+    GCNode* d = new GCNode(GCNode::make<std::string>("d"));
+    GCNode* e = new GCNode(GCNode::make<std::string>("e"));
+
+    a->neighbors().push_back(b);
+    a->neighbors().push_back(c);
+
+    std::unordered_set<GCNode*> allNodeSet = { a, b, c, d, e };
+    std::vector<GCNode*> entryNodes = { a };
+    CollectOperation op = CollectOperation(allNodeSet, entryNodes);
+
+    while (true) {
+        bool isFinished = op.step();
+        if (isFinished)
+            break;
+    }
+
+    for (GCNode* node : allNodeSet) {
+        std::cout << node->getData<std::string>() << std::endl;
+    }
+
+    delete a;
+    delete b;
+    delete c;
+    delete d;
+    delete e;
 
     return EXIT_SUCCESS;
 }
