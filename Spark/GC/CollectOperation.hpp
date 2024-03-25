@@ -17,7 +17,7 @@ namespace Spark {
 
 class CollectOperation : public GCOperation {
 
-    /* ===== Constructor ===== */
+    /* ===== Constructor & Destructor ===== */
 
 public:
     CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const Value* stackBuffer, size_t stackLength)
@@ -37,6 +37,10 @@ public:
           process(Process::Preprocessing) {
         for (GCNode* node : entryNodes)
             queue.push(node);
+    }
+
+    ~CollectOperation() override {
+        delete stackBuffer;
     }
 
 
