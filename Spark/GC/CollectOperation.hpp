@@ -133,8 +133,8 @@ public:
                 if (allNodeIterator != allNodeSet.cend()) {
                     GCNode* node = *allNodeIterator;
 
-                    // Delete and erase the GC node
-                    if (!node->isMarked /*|| node->referenceCount == 0*/) {
+                    // Deallocate unmarked GC node
+                    if (!node->isMarked) {
                         delete node;
                         allNodeIterator = allNodeSet.erase(allNodeIterator);
                     } else
