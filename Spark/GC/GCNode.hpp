@@ -26,6 +26,7 @@ public:
     }
 
     bool isMarked = false; // Used for GC collection
+    long referenceCount = 0;
 
     template <typename T>
     [[nodiscard]]
