@@ -25,14 +25,6 @@ public:
 
 
 
-    /* ===== Rules ===== */
-
-private:
-    long updateInterval = 5;
-    long stepPerUpdate = 1;
-
-
-
     /* ===== Data ===== */
 
 private:
@@ -49,6 +41,7 @@ public:
     void step();
 
     void collect(Value* stackBuffer, size_t stackLength) {
+        // Pend the collection to the operation queue
         operationQueue.emplace(new CollectOperation(allNodeSet, stackBuffer, stackLength));
     }
 
