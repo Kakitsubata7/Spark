@@ -27,4 +27,5 @@ add_executable(Spark
         spark/Types/Type.hpp
         Spark/GC/GCPtr.hpp
         spark/Types/Value.cpp
+        Spark/GC/CollectOperation.cpp
 )
