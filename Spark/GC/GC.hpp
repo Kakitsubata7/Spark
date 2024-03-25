@@ -54,12 +54,9 @@ public:
 
     template <typename T, typename... Args>
     [[nodiscard]]
-    GCPtr<T> make(Args&&... args) {
+    GCPtr<T> allocate(Args&&... args) {
         // Allocate the data and the GC node
         GCNode* nodePtr = new GCNode(GCNode::make<T>(std::forward<Args>(args)...));
-
-        // Add the GC node
-        allNodeSet.insert(nodePtr);
 
         // Pend the allocation to the operation queue
         operationQueue.emplace(new AllocateOperation(nodePtr, allNodeSet));
