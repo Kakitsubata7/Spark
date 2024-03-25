@@ -16,7 +16,6 @@ private:
 
 public:
     bool step() override {
-        referencee->referenceCount++;
         referencer->neighbors().push_back(referencee);
         return true;
     }

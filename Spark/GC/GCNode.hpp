@@ -25,7 +25,6 @@ public:
         return _neighbors;
     }
 
-    long referenceCount = 0;
     bool isMarked = false;
 
     template <typename T>
