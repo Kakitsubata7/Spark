@@ -26,8 +26,7 @@ namespace Spark {
                 if (allNodeIterator != allNodeSet.cend()) {
                     GCNode* node = *allNodeIterator;
 
-                    // Deallocate node with no reference count
-                    // Entry nodes are ignored
+                    // Deallocate node with no reference count. Entry nodes are ignored
                     if (node->referenceCount == 0 && entryNodeMap.find(node) == entryNodeMap.cend()) {
                         delete node;
                         allNodeIterator = allNodeSet.erase(allNodeIterator);

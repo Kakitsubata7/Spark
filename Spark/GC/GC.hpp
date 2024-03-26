@@ -30,6 +30,9 @@ public:
 
 private:
     std::unordered_set<GCNode*> allNodeSet;
+//    std::unordered_set<GCNode*> youngNodeSet;
+//    std::unordered_set<GCNode*> survivorNodeSet;
+//    std::unordered_set<GCNode*> oldNodeSet;
     std::unordered_map<GCNode*, long> entryNodeMap;
 
 
