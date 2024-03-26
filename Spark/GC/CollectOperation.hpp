@@ -21,7 +21,6 @@ class CollectOperation : public GCOperation {
 public:
     CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::unordered_map<GCNode*, long>& entryNodeMap)
         : allNodeSet(allNodeSet),
-          allNodeIterator(allNodeSet.cbegin()),
           entryNodeMap(entryNodeMap),
           entryNodeIterator(entryNodeMap.cbegin()),
           process(Process::Entry) { }

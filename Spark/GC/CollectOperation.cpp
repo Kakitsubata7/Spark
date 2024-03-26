@@ -13,8 +13,10 @@ namespace Spark {
                     GCNode* node = pair.first;
                     queue.push(node);
                     entryNodeIterator++;
-                } else
+                } else {
                     process = Process::Preprocessing;
+                    allNodeIterator = allNodeSet.cbegin();
+                }
 
                 return false;
             }
@@ -25,7 +27,8 @@ namespace Spark {
                     GCNode* node = *allNodeIterator;
 
                     // Deallocate node with no reference count
-                    if (node->referenceCount == 0) {
+                    // Entry nodes are ignored
+                    if (node->referenceCount == 0 && entryNodeMap.find(node) == entryNodeMap.cend()) {
                         delete node;
                         allNodeIterator = allNodeSet.erase(allNodeIterator);
                     } else {
@@ -50,10 +53,10 @@ namespace Spark {
 
                     // Get the iterator of a node and start traversing it
                     GCNode* node = queue.front();
+                    queue.pop();
                     node->isMarked = true;
                     currentList = &(node->neighbors());
                     currentIterator = currentList->cbegin();
-                    queue.pop();
                 }
 
                 // Traverse the neighbors of the current node
