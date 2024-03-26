@@ -6,7 +6,6 @@
 #include "Spark/GC/GC.hpp"
 #include "Spark/GC/GCNode.hpp"
 #include "Spark/GC/GCOperation.hpp"
-#include "Spark/GC/GCPtr.hpp"
 #include "Spark/GC/ReferenceOperation.hpp"
 #include "Spark/GC/UnreferenceOperation.hpp"
 #include "Spark/Env.hpp"

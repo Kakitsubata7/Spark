@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "Config.hpp"
+#include "Types/Value.hpp"
 
 namespace Spark {
 
@@ -65,14 +66,26 @@ namespace Spark {
         if (programCounter == nullptr)
             return true;
 
-        Opcode opcode = *programCounter;
-        programCounter++;
+        Opcode opcode = fetch<Opcode>();
 
         switch (opcode) {
             case Opcode::Halt:
                 return true;
 
             case Opcode::PushNil:
+                push(Value::makeNil());
+                break;
+
+            case Opcode::PushInteger:
+                push(Value::makeInt(fetch<Int>()));
+                break;
+
+            case Opcode::PushFloat:
+                push(Value::makeFloat(fetch<Float>()));
+                break;
+
+            case Opcode::PushBoolean:
+                push(Value::makeBool(fetch<Bool>()));
                 break;
 
             default:
@@ -86,6 +99,23 @@ namespace Spark {
         }
 
         return false;
+    }
+
+    void Thread::push(const Value& value) {
+        stackLength++;
+        *stackPointer = value;
+        stackPointer++;
+    }
+
+    void Thread::pop(int count) {
+        for (int i = 0; i < count; i++) {
+            stackLength--;
+#ifdef NDEBUG
+            stackPointer--;
+#else
+
+#endif
+        }
     }
 
 } // Spark

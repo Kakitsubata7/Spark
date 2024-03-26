@@ -57,7 +57,18 @@ public:
     /* ===== Operations ===== */
 
 public:
+    template <typename T>
+    T fetch() {
+        T* pc = reinterpret_cast<T*>(programCounter);
+        T value = *pc;
+        programCounter = reinterpret_cast<Opcode*>(pc + 1);
+        return value;
+    }
+
     bool execute();
+
+    void push(const Value& value);
+    void pop(int count);
 
 };
 

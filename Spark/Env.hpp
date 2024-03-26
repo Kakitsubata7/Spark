@@ -12,9 +12,9 @@ class Env {
     /* ===== Constructor & Destructor ===== */
 
 public:
-    Env(size_t stackCapacity, size_t maxStackCapacity);
-    explicit Env(size_t stackCapacity);
-    Env();
+    Env(size_t stackCapacity, size_t maxStackCapacity, bool useConcurrentGC = false);
+    explicit Env(size_t stackCapacity, bool useConcurrentGC = false);
+    explicit Env(bool useConcurrentGC = false);
 
     ~Env();
 
@@ -32,6 +32,7 @@ private:
 
 private:
     GC gc;
+    bool useConcurrentGC;
 
 
 

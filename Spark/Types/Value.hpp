@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../GC/GCNode.hpp"
-#include "../GC/GCPtr.hpp"
 #include "Bool.hpp"
 #include "Float.hpp"
 #include "Integer.hpp"
@@ -87,51 +86,12 @@ public:
         Bool boolValue;
         void* ptrValue;
         Type typeValue;
-        GCPtr<std::string> stringPtr;
-        GCPtr<std::vector<Value>> arrayPtr;
-        GCPtr<std::unordered_set<Value>> setPtr;
-        GCPtr<std::unordered_map<Value, Value>> mapPtr;
-        GCPtr<std::unordered_map<std::string, Value>> objectPtr;
-        GCPtr<void*> threadPtr;
+        GCNode* nodePtr;
     };
 
     [[nodiscard]]
     bool isReferenceType() const {
         return static_cast<int>(type) > 0x04;
-    }
-
-    [[nodiscard]]
-    bool tryGetGCNode(GCNode*& out) const {
-        switch (type) {
-            case Type::String:
-                out = stringPtr.node();
-                break;
-
-            case Type::Array:
-                out = arrayPtr.node();
-                break;
-
-            case Type::Set:
-                out = setPtr.node();
-                break;
-
-            case Type::Map:
-                out = mapPtr.node();
-                break;
-
-            case Type::Object:
-                out = objectPtr.node();
-                break;
-
-            case Type::Thread:
-                out = threadPtr.node();
-                break;
-
-            default:
-                return false;
-        }
-
-        return true;
     }
 
 };
