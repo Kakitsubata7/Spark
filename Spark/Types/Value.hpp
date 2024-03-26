@@ -65,9 +65,15 @@ public:
         return self;
     }
 
+    /**
+     * Note: the returned value is not registered as an entry node in the GC.
+     */
     [[nodiscard]]
     static Value makeString(GC& gc, const std::string& value = "");
 
+    /**
+     * Note: the returned value is not registered as an entry node in the GC.
+     */
     [[nodiscard]]
     static Value makeArray(GC& gc, const std::vector<Value>& value = {});
 

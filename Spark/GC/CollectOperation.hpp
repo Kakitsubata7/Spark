@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <queue>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -18,11 +19,11 @@ class CollectOperation : public GCOperation {
     /* ===== Constructor & Destructor ===== */
 
 public:
-    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::unordered_set<GCNode*>& entryNodeSet)
+    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::unordered_map<GCNode*, long>& entryNodeMap)
         : allNodeSet(allNodeSet),
           allNodeIterator(allNodeSet.cbegin()),
-          entryNodeSet(entryNodeSet),
-          entryNodeIterator(entryNodeSet.cbegin()),
+          entryNodeMap(entryNodeMap),
+          entryNodeIterator(entryNodeMap.cbegin()),
           process(Process::Entry) { }
 
 
@@ -31,7 +32,7 @@ public:
 
 private:
     enum class Process {
-        Entry,          // Scan the stack for entry point nodes
+        Entry,          // Pushing entry point nodes to the queue
         Preprocessing,  // Set every node as unmarked, and deallocate nodes with no reference count
         Marking,        // Mark reachable nodes
         Sweeping        // Deallocate unreachable nodes
@@ -40,8 +41,8 @@ private:
     Process process;
 
     /* Entry */
-    const std::unordered_set<GCNode*>& entryNodeSet;
-    std::unordered_set<GCNode*>::const_iterator entryNodeIterator;
+    const std::unordered_map<GCNode*, long>& entryNodeMap;
+    std::unordered_map<GCNode*, long>::const_iterator entryNodeIterator;
 
     /* Preprocessing & Sweeping Fields */
     std::unordered_set<GCNode*>& allNodeSet;

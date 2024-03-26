@@ -1,13 +1,16 @@
 #include "CollectOperation.hpp"
 
+#include <iostream>
+
 namespace Spark {
 
     bool CollectOperation::step() {
         switch (process) {
             case Process::Entry: {
 
-                if (entryNodeIterator != entryNodeSet.cend()) {
-                    GCNode* node = *entryNodeIterator;
+                if (entryNodeIterator != entryNodeMap.cend()) {
+                    std::pair<GCNode*, long> pair = *entryNodeIterator;
+                    GCNode* node = pair.first;
                     queue.push(node);
                     entryNodeIterator++;
                 } else
