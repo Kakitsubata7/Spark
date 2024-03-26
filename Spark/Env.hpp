@@ -5,8 +5,6 @@
 #include "GC/GC.hpp"
 #include "Thread.hpp"
 
-#ifdef __cplusplus
-
 namespace Spark {
 
 class Env {
@@ -14,6 +12,8 @@ class Env {
     /* ===== Constructor & Destructor ===== */
 
 public:
+    Env(size_t stackCapacity, size_t maxStackCapacity);
+    explicit Env(size_t stackCapacity);
     Env();
 
     ~Env();
@@ -23,6 +23,7 @@ public:
     /* ===== Threads ===== */
 
 private:
+    Thread* mainThread;
     std::unordered_set<Thread*> threadSet;
 
 
@@ -32,10 +33,13 @@ private:
 private:
     GC gc;
 
+
+
+    /* ===== Operations ===== */
+
+public:
+    void run();
+
 };
-
-#else
-
-#endif
 
 } // Spark

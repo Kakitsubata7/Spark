@@ -28,4 +28,8 @@ add_executable(Spark
         Spark/GC/GCPtr.hpp
         spark/Types/Value.cpp
         Spark/GC/CollectOperation.cpp
+        Spark/Env.cpp
+        Spark/Opcode.hpp
+        Spark/Thread.cpp
+        Spark/Config.hpp
 )
