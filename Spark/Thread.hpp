@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "GC/GC.hpp"
 #include "Opcode.hpp"
 #include "Types/Value.hpp"
@@ -52,6 +54,14 @@ public:
     }
 
     void setMaxStackCapacity(size_t maxStackCapacity);
+
+    std::vector<Value> stackToVector() {
+        std::vector<Value> vec(stackLength);
+        Value* p = stackBuffer;
+        while (p <= stackPointer)
+            vec.push_back(*p);
+        return vec;
+    }
 
 
 

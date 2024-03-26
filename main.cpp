@@ -65,5 +65,9 @@ int main() {
     thread.programCounter = opcodes;
     while (!thread.execute()) { }
 
+    for (const Value& value : thread.stackToVector()) {
+        std::cout << value << std::endl;
+    }
+
     return EXIT_SUCCESS;
 }

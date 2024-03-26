@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -99,6 +100,13 @@ public:
     bool isReferenceType() const {
         return static_cast<int>(type) > 0x04;
     }
+
+
+
+    /* ===== Operators ===== */
+
+public:
+    friend std::ostream& operator<<(std::ostream& os, const Value& value);
 
 };
 

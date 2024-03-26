@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 
 namespace Spark {
 
@@ -17,5 +18,7 @@ enum class Type : uint8_t {
     Object  = 0x09,
     Thread  = 0x0A
 };
+
+std::ostream& operator<<(std::ostream& os, Type type);
 
 } // Spark

@@ -32,4 +32,5 @@ add_executable(Spark
         Spark/Opcode.hpp
         Spark/Thread.cpp
         Spark/Config.hpp
+        Spark/Types/Type.cpp
 )
