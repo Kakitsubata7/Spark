@@ -6,13 +6,13 @@ namespace Spark {
 
     /* ===== Constructor & Destructor ===== */
 
-    Env::Env(size_t stackCapacity, size_t maxStackCapacity, bool useConcurrentGC) : useConcurrentGC(useConcurrentGC) {
-        mainThread = new Thread(stackCapacity, maxStackCapacity);
+    Env::Env(size_t stackCapacity, size_t maxStackCapacity) {
+        mainThread = new Thread(stackCapacity, maxStackCapacity, gc);
     }
 
-    Env::Env(size_t stackCapacity, bool useConcurrentGC) : Env(stackCapacity, stackCapacity, useConcurrentGC) { }
+    Env::Env(size_t stackCapacity) : Env(stackCapacity, stackCapacity) { }
 
-    Env::Env(bool useConcurrentGC) : Env(Config::DEFAULT_STACK_CAPACITY, useConcurrentGC) { }
+    Env::Env() : Env(Config::DEFAULT_STACK_CAPACITY) { }
 
     Env::~Env() {
         // Deallocate threads

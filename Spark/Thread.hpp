@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GC/GC.hpp"
 #include "Opcode.hpp"
 #include "Types/Value.hpp"
 
@@ -10,9 +11,9 @@ class Thread {
     /* ===== Constructors & Destructor ===== */
 
 public:
-    Thread(size_t stackCapacity, size_t maxStackCapacity);
-    explicit Thread(size_t stackCapacity);
-    Thread();
+    Thread(size_t stackCapacity, size_t maxStackCapacity, GC& gc);
+    Thread(size_t stackCapacity, GC& gc);
+    explicit Thread(GC& gc);
 
     ~Thread();
 
@@ -51,6 +52,13 @@ public:
     }
 
     void setMaxStackCapacity(size_t maxStackCapacity);
+
+
+
+    /* ===== GC ===== */
+
+private:
+    GC& gc;
 
 
 

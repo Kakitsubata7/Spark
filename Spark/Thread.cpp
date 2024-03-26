@@ -12,18 +12,19 @@ namespace Spark {
 
     /* ===== Constructors & Destructor */
 
-    Thread::Thread(size_t stackCapacity, size_t maxStackCapacity)
+    Thread::Thread(size_t stackCapacity, size_t maxStackCapacity, GC& gc)
         : programCounter(nullptr),
           stackLength(0),
           stackCapacity(stackCapacity),
-          maxStackCapacity(maxStackCapacity) {
+          maxStackCapacity(maxStackCapacity),
+          gc(gc) {
         stackBuffer = new Value[stackCapacity];
         stackPointer = basePointer = stackBuffer;
     }
 
-    Thread::Thread(size_t stackCapacity) : Thread(stackCapacity, stackCapacity) { }
+    Thread::Thread(size_t stackCapacity, GC& gc) : Thread(stackCapacity, stackCapacity, gc) { }
 
-    Thread::Thread() : Thread(Config::DEFAULT_STACK_CAPACITY) { }
+    Thread::Thread(GC& gc) : Thread(Config::DEFAULT_STACK_CAPACITY, gc) { }
 
 
     Thread::~Thread() {
@@ -105,16 +106,28 @@ namespace Spark {
         stackLength++;
         *stackPointer = value;
         stackPointer++;
+
+        if (value.isReferenceType())
+            gc.registerEntryNode(value.nodePtr);
     }
 
     void Thread::pop(int count) {
         for (int i = 0; i < count; i++) {
-            stackLength--;
+            // Move stack pointer one value back
 #ifdef NDEBUG
             stackPointer--;
 #else
-
+            if ((stackPointer - 1) < basePointer)
+                throw std::runtime_error("Stack underflow.");
 #endif
+
+            // Decrease stack length
+            stackLength--;
+
+            // Unregister the node as an entry node if the popped value is a reference type
+            Value value = *stackPointer;
+            if (value.isReferenceType())
+                gc.unregisterEntryNode(value.nodePtr);
         }
     }
 
