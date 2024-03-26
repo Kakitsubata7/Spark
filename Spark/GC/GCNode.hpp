@@ -66,10 +66,18 @@ public:
 
 
     /* ===== Operations ===== */
+    /*
+     * TODO: Delete the following
+     */
 
 public:
-    void reference(GCNode* other) { }
-    void unreference(GCNode* other) { }
+    void reference(GCNode* other) {
+
+    }
+
+    void unreference(GCNode* other) {
+
+    }
 
 };
 

@@ -22,7 +22,7 @@ private:
 public:
     bool step() override {
         if (neighborIterator == unreferencer->neighbors().cend())
-            throw std::runtime_error("Reference cannot be found in the GC node.");
+            return true;
 
         GCNode* node = *neighborIterator;
         if (node == unreferencee) {

@@ -24,8 +24,15 @@ namespace Spark {
 
                 if (allNodeIterator != allNodeSet.cend()) {
                     GCNode* node = *allNodeIterator;
-                    node->isMarked = false;
-                    allNodeIterator++;
+
+                    // Deallocate node with no reference count
+                    if (node->referenceCount == 0) {
+                        delete node;
+                        allNodeIterator = allNodeSet.erase(allNodeIterator);
+                    } else {
+                        node->isMarked = false;
+                        allNodeIterator++;
+                    }
                 } else
                     process = Process::Marking;
 

@@ -7,8 +7,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <iostream> // TODO: Delete this include
-
 #include "../Types/Value.hpp"
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
@@ -50,7 +48,7 @@ public:
 private:
     enum class Process {
         Scanning,       // Scan the stack for entry point nodes
-        Preprocessing,  // Set every node as unmarked
+        Preprocessing,  // Set every node as unmarked, and deallocate nodes with no reference count
         Marking,        // Mark reachable nodes
         Sweeping        // Deallocate unreachable nodes
     };

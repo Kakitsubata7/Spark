@@ -20,8 +20,11 @@ int main() {
     GCNode* d = new GCNode(GCNode::make<std::string>("d"));
     GCNode* e = new GCNode(GCNode::make<std::string>("e"));
 
+    a->referenceCount++;
     a->neighbors().push_back(b); // 'a' references 'b'
+    b->referenceCount++;
     a->neighbors().push_back(c); // 'a' references 'c'
+    c->referenceCount++;
 
     std::unordered_set<GCNode*> allNodeSet = { a, b, c, d, e };
     std::vector<GCNode*> entryNodes = { a };
