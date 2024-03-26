@@ -27,6 +27,7 @@ public:
         GCNode* node = *neighborIterator;
         if (node == unreferencee) {
             neighborIterator = unreferencer->neighbors().erase(neighborIterator);
+            unreferencee->referenceCount--;
             return true;
         }
         neighborIterator++;

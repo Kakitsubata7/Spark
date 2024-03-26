@@ -26,6 +26,11 @@ int main() {
     a->neighbors().push_back(c); // 'a' references 'c'
     c->referenceCount++;
 
+    d->referenceCount++;
+    d->neighbors().push_back(e); // 'd' references 'e'
+    e->referenceCount++;
+    e->neighbors().push_back(d); // 'e' references 'd'
+
     std::unordered_set<GCNode*> allNodeSet = { a, b, c, d, e };
     std::vector<GCNode*> entryNodes = { a };
     CollectOperation op = CollectOperation(allNodeSet, entryNodes);
@@ -34,10 +39,9 @@ int main() {
 
     std::cout << "Collect finished" << std::endl;
 
-    std::cout << allNodeSet.size() << std::endl;
-    for (GCNode* node : allNodeSet) {
+    std::cout << "Nodes left: " << allNodeSet.size() << std::endl;
+    for (GCNode* node : allNodeSet)
         std::cout << node->getData<std::string>() << std::endl;
-    }
 
     return EXIT_SUCCESS;
 }
