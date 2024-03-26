@@ -29,6 +29,7 @@ public:
 
 private:
     std::unordered_set<GCNode*> allNodeSet;
+    std::unordered_set<GCNode*> entryNodeSet;
 
 
 
@@ -40,9 +41,9 @@ private:
 public:
     void step();
 
-    void collect(Value* stackBuffer, size_t stackLength) {
+    void collect() {
         // Pend the collection to the operation queue
-        operationQueue.emplace(new CollectOperation(allNodeSet, stackBuffer, stackLength));
+        operationQueue.emplace(new CollectOperation(allNodeSet, entryNodeSet));
     }
 
     template <typename T, typename... Args>

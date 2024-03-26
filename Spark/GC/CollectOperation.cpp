@@ -4,17 +4,13 @@ namespace Spark {
 
     bool CollectOperation::step() {
         switch (process) {
-            case Process::Scanning: {
+            case Process::Entry: {
 
-                Value* valuePtr = stackBuffer + stackIndex;
-                GCNode* node;
-                if (valuePtr->tryGetGCNode(node)) {
-                    // Push the GC node pointer to the queue
+                if (entryNodeIterator != entryNodeSet.cend()) {
+                    GCNode* node = *entryNodeIterator;
                     queue.push(node);
-                }
-                stackIndex++;
-
-                if (stackIndex == stackLength)
+                    entryNodeIterator++;
+                } else
                     process = Process::Preprocessing;
 
                 return false;

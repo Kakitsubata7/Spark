@@ -18,28 +18,12 @@ class CollectOperation : public GCOperation {
     /* ===== Constructor & Destructor ===== */
 
 public:
-    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const Value* stackBuffer, size_t stackLength)
+    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::unordered_set<GCNode*>& entryNodeSet)
         : allNodeSet(allNodeSet),
           allNodeIterator(allNodeSet.cbegin()),
-          stackLength(stackLength),
-          process(Process::Scanning) {
-        this->stackBuffer = new Value[stackLength];
-        std::memcpy(this->stackBuffer, stackBuffer, stackLength);
-    }
-
-    CollectOperation(std::unordered_set<GCNode*>& allNodeSet, const std::vector<GCNode*>& entryNodes)
-        : allNodeSet(allNodeSet),
-          allNodeIterator(allNodeSet.cbegin()),
-          stackBuffer(nullptr),
-          stackLength(0),
-          process(Process::Preprocessing) {
-        for (GCNode* node : entryNodes)
-            queue.push(node);
-    }
-
-    ~CollectOperation() override {
-        delete stackBuffer;
-    }
+          entryNodeSet(entryNodeSet),
+          entryNodeIterator(entryNodeSet.cbegin()),
+          process(Process::Entry) { }
 
 
 
@@ -47,7 +31,7 @@ public:
 
 private:
     enum class Process {
-        Scanning,       // Scan the stack for entry point nodes
+        Entry,          // Scan the stack for entry point nodes
         Preprocessing,  // Set every node as unmarked, and deallocate nodes with no reference count
         Marking,        // Mark reachable nodes
         Sweeping        // Deallocate unreachable nodes
@@ -55,10 +39,9 @@ private:
 
     Process process;
 
-    /* Scanning Fields */
-    Value* stackBuffer;
-    size_t stackIndex = 0;
-    const size_t stackLength;
+    /* Entry */
+    const std::unordered_set<GCNode*>& entryNodeSet;
+    std::unordered_set<GCNode*>::const_iterator entryNodeIterator;
 
     /* Preprocessing & Sweeping Fields */
     std::unordered_set<GCNode*>& allNodeSet;
