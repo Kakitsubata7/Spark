@@ -16,6 +16,9 @@ namespace Spark {
 
 class GC;
 
+/**
+ * The size of this type should be (8 bytes + pointer size + alignment); at least 16 bytes.
+ */
 class Value {
 
     /* ===== Constructor, Factory Methods & Destructor ===== */

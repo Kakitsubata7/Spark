@@ -5,6 +5,9 @@
 
 namespace Spark {
 
+/**
+ * The size of this type has to be 8 bits.
+ */
 enum class Type : uint8_t {
     Nil     = 0x00,
     Integer = 0x01,

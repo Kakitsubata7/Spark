@@ -4,6 +4,9 @@
 
 namespace Spark {
 
+/**
+ * This has to be a 8-bit boolean.
+ */
 struct Bool {
 
     /* ===== Data ===== */
