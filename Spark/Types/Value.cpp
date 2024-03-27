@@ -1,5 +1,7 @@
 #include "Value.hpp"
 
+#include <sstream>
+
 #include "../GC/GC.hpp"
 
 namespace Spark {
@@ -22,7 +24,7 @@ namespace Spark {
 
 
 
-    /* ===== Operator ===== */
+    /* ===== Operators ===== */
 
     std::ostream& operator<<(std::ostream& os, const Value& value) {
         switch (value.type) {
@@ -55,6 +57,49 @@ namespace Spark {
                 break;
         }
         return os;
+    }
+
+    Value Value::operator+(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeInt(intValue + other.intValue);
+
+                    case Type::Float:
+                        return makeFloat(static_cast<Float>(intValue) + other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeFloat(floatValue + static_cast<Float>(other.intValue));
+
+                    case Type::Float:
+                        return makeFloat(floatValue + other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::String: {
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        std::ostringstream ss;
+        ss << "Unsupported addition between " << type << " and " << other.type << ".";
+        throw std::runtime_error(ss.str());
     }
 
 } // Spark

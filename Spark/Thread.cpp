@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <iostream>
+#include <iostream> // TODO: Remove this include
 
 #include "Config.hpp"
 #include "Types/Value.hpp"
@@ -95,6 +95,13 @@ namespace Spark {
                 push(Value::makeString(gc, fetchString(fetch<Int>())));
                 break;
 
+            case Opcode::Add: {
+                const Value& a = popGet();
+                const Value& b = popGet();
+                push(a + b);
+                break;
+            }
+
             case Opcode::Pop:
                 pop(1);
                 break;
@@ -143,23 +150,54 @@ namespace Spark {
             gc.registerEntryNode(value.nodePtr);
     }
 
-    void Thread::pop(Int count) {
-        for (int i = 0; i < count; i++) {
-            // Move stack pointer one value back
+    void Thread::pop() {
+        // Move stack pointer one value back
 #ifndef NDEBUG
-            if ((stackPointer - 1) < basePointer)
-                throw std::runtime_error("Stack underflow.");
+        if ((stackPointer - 1) < basePointer)
+            throw std::runtime_error("Stack underflow.");
 #endif
-            stackPointer--;
+        stackPointer--;
 
-            // Decrease stack length
-            stackLength--;
+        // Decrease stack length
+        stackLength--;
 
-            // Unregister the node as an entry node if the popped value is a reference type
-            Value value = *stackPointer;
-            if (value.isReferenceType())
-                gc.unregisterEntryNode(value.nodePtr);
-        }
+        // Unregister the node as an entry node if the popped value is a reference type
+        const Value& value = *stackPointer;
+        if (value.isReferenceType())
+            gc.unregisterEntryNode(value.nodePtr);
+    }
+
+    void Thread::pop(Int count) {
+        for (int i = 0; i < count; i++)
+            pop();
+    }
+
+    Value Thread::popGet() {
+        // Move stack pointer one value back
+#ifndef NDEBUG
+        if ((stackPointer - 1) < basePointer)
+            throw std::runtime_error("Stack underflow.");
+#endif
+        stackPointer--;
+
+        // Decrease stack length
+        stackLength--;
+
+        // Unregister the node as an entry node if the popped value is a reference type
+        const Value& value = *stackPointer;
+        if (value.isReferenceType())
+            gc.unregisterEntryNode(value.nodePtr);
+
+        return value;
+    }
+
+    Value& Thread::top() {
+        Value* p = stackPointer - 1;
+#ifndef NDEBUG
+        if (p < basePointer)
+            throw std::runtime_error("Stack underflow.");
+#endif
+        return *p;
     }
 
 } // Spark

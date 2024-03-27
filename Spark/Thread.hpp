@@ -100,7 +100,10 @@ public:
     bool execute();
 
     void push(const Value& value);
+    void pop();
     void pop(Int count);
+    Value popGet();
+    [[nodiscard]] Value& top();
 
 };
 

@@ -101,7 +101,7 @@ public:
 
     [[nodiscard]]
     bool isReferenceType() const {
-        return static_cast<int>(type) > 0x04;
+        return static_cast<int>(type) > static_cast<int>(Type::Type);
     }
 
 
@@ -110,6 +110,8 @@ public:
 
 public:
     friend std::ostream& operator<<(std::ostream& os, const Value& value);
+
+    Value operator+(const Value& other) const;
 
 };
 

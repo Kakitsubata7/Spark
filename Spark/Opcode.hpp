@@ -16,6 +16,15 @@ enum class Opcode : uint8_t {
 
     Pop,
 
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulus,
+
+    PushField,
+    SetField,
+
 };
 
 } // Spark
