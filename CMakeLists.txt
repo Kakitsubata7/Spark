@@ -33,4 +33,5 @@ add_executable(Spark
         Spark/Thread.cpp
         Spark/Config.hpp
         Spark/Types/Type.cpp
+        Spark/Compilation/BytecodeBuffer.hpp
 )

@@ -109,7 +109,29 @@ namespace Spark {
     }
 
     void Thread::push(const Value& value) {
+#ifndef NDEBUG
+        size_t newStackLength = stackLength + 1;
+        if (newStackLength > maxStackCapacity)
+            throw std::runtime_error("Stack overflow.");
+        else if (newStackLength > stackCapacity) {
+            // Calculate new stack capacity
+            size_t newStackCapacity = stackCapacity * 2;
+            if (newStackCapacity < newStackLength)
+                newStackCapacity = newStackLength;
+
+            // Allocate new stack buffer
+            Value* newStackBuffer = new Value[newStackCapacity];
+            std::memcpy(newStackBuffer, stackBuffer, stackLength);
+
+            // Update stack registers and stack buffer
+            stackPointer = newStackBuffer + (stackPointer - stackBuffer);
+            basePointer = newStackBuffer + (basePointer - stackBuffer);
+            delete[] stackBuffer;
+            stackBuffer = newStackBuffer;
+        }
+#endif
         stackLength++;
+
         *stackPointer = value;
         stackPointer++;
 

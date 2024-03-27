@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "Spark/Compilation/BytecodeBuffer.hpp"
 #include "Spark/GC/AllocateOperation.hpp"
 #include "Spark/GC/CollectOperation.hpp"
 #include "Spark/GC/GC.hpp"
@@ -55,15 +56,18 @@ int main() {
 
 
     /* Thread Test */
-    Opcode opcodes[] = {
-        Opcode::PushNil,
-        Opcode::Pop,
-        Opcode::Halt,
-    };
+    BytecodeBuffer buffer;
+    buffer.append(Opcode::PushInteger);
+    buffer.append<Int>(7);
+    buffer.append(Opcode::PushFloat);
+    buffer.append<Float>(3.14);
+    buffer.append(Opcode::PushBoolean);
+    buffer.append<Bool>(true);
+    buffer.append(Opcode::Halt);
 
     GC gc;
     Thread thread(gc);
-    thread.programCounter = opcodes;
+    thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
     // Print the stack
