@@ -66,6 +66,7 @@ int main() {
     thread.programCounter = opcodes;
     while (!thread.execute()) { }
 
+    // Print the stack
     std::vector<Value> stack = thread.stackToVector();
     if (!stack.empty()) {
         std::cout << "[";
