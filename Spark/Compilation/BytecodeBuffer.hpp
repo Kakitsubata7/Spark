@@ -67,14 +67,37 @@ public:
         _size = newSize;
     }
 
+    void appendString(const std::string& str) {
+        size_t strSize = str.length() * sizeof(char);
+        size_t newSize = _size + strSize;
+
+        // Resize if needed
+        if (newSize > _capacity) {
+            size_t newCapacity = _capacity * 2;
+            if (newCapacity < newSize)
+                newCapacity = newSize;
+            resize(newCapacity);
+        }
+
+        // Append the string
+        std::memcpy(static_cast<char*>(buffer) + _size, str.c_str(), strSize);
+
+        // Update size
+        _size = newSize;
+    }
+
     void resize(size_t newCapacity) {
         if (newCapacity < _size)
             throw std::runtime_error("New capacity cannot be less than the current buffer size.");
 
+        // Reallocate the buffer
         void* newBuffer = new uint8_t[newCapacity];
         std::memcpy(newBuffer, buffer, _size);
         delete[] static_cast<uint8_t*>(buffer);
         buffer = newBuffer;
+
+        // Update capacity
+        _capacity = newCapacity;
     }
 
     [[nodiscard]]

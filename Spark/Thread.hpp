@@ -86,10 +86,21 @@ public:
         return value;
     }
 
+    std::string fetchString(Int length) {
+        // Create the string
+        char* pc = reinterpret_cast<char*>(programCounter);
+        std::string str(pc, length);
+
+        // Update the programmer counter
+        programCounter = reinterpret_cast<Opcode*>(pc + length);
+
+        return str;
+    }
+
     bool execute();
 
     void push(const Value& value);
-    void pop(int count);
+    void pop(Int count);
 
 };
 

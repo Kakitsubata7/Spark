@@ -63,6 +63,10 @@ int main() {
     buffer.append<Float>(3.14);
     buffer.append(Opcode::PushBoolean);
     buffer.append<Bool>(true);
+    buffer.append(Opcode::PushString);
+    buffer.append<Int>(3);
+    buffer.appendString("abc");
+    buffer.append(Opcode::PushNil);
     buffer.append(Opcode::Halt);
 
     GC gc;

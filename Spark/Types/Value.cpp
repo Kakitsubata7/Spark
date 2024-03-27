@@ -47,7 +47,7 @@ namespace Spark {
                 break;
 
             case Type::String:
-                os << value.nodePtr->getData<std::string>();
+                os << '"' << value.nodePtr->getData<std::string>() << '"';
                 break;
 
             default:

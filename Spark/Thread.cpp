@@ -91,6 +91,10 @@ namespace Spark {
                 push(Value::makeBool(fetch<Bool>()));
                 break;
 
+            case Opcode::PushString:
+                push(Value::makeString(gc, fetchString(fetch<Int>())));
+                break;
+
             case Opcode::Pop:
                 pop(1);
                 break;
@@ -139,7 +143,7 @@ namespace Spark {
             gc.registerEntryNode(value.nodePtr);
     }
 
-    void Thread::pop(int count) {
+    void Thread::pop(Int count) {
         for (int i = 0; i < count; i++) {
             // Move stack pointer one value back
 #ifndef NDEBUG
