@@ -65,9 +65,14 @@ int main() {
     thread.programCounter = opcodes;
     while (!thread.execute()) { }
 
-    for (const Value& value : thread.stackToVector()) {
-        std::cout << value << std::endl;
+    std::cout << "[";
+    std::vector<Value> stack = thread.stackToVector();
+    for (size_t i = 0; i < stack.size(); i++) {
+        std::cout << stack[i];
+        if (i != stack.size() - 1)
+            std::cout << ", ";
     }
+    std::cout << "]" << std::endl;
 
     return EXIT_SUCCESS;
 }

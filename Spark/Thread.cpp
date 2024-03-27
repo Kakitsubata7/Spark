@@ -89,6 +89,10 @@ namespace Spark {
                 push(Value::makeBool(fetch<Bool>()));
                 break;
 
+            case Opcode::Pop:
+                pop(1);
+                break;
+
             default:
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
