@@ -5,6 +5,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <iostream>
+
 #include "Config.hpp"
 #include "Types/Value.hpp"
 
@@ -118,12 +120,11 @@ namespace Spark {
     void Thread::pop(int count) {
         for (int i = 0; i < count; i++) {
             // Move stack pointer one value back
-#ifdef NDEBUG
-            stackPointer--;
-#else
+#ifndef NDEBUG
             if ((stackPointer - 1) < basePointer)
                 throw std::runtime_error("Stack underflow.");
 #endif
+            stackPointer--;
 
             // Decrease stack length
             stackLength--;

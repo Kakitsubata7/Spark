@@ -57,6 +57,7 @@ int main() {
     /* Thread Test */
     Opcode opcodes[] = {
         Opcode::PushNil,
+        Opcode::Pop,
         Opcode::Halt,
     };
 
@@ -65,14 +66,16 @@ int main() {
     thread.programCounter = opcodes;
     while (!thread.execute()) { }
 
-    std::cout << "[";
     std::vector<Value> stack = thread.stackToVector();
-    for (size_t i = 0; i < stack.size(); i++) {
-        std::cout << stack[i];
-        if (i != stack.size() - 1)
-            std::cout << ", ";
+    if (!stack.empty()) {
+        std::cout << "[";
+        for (size_t i = 0; i < stack.size(); i++) {
+            std::cout << stack[i];
+            if (i != stack.size() - 1)
+                std::cout << ", ";
+        }
+        std::cout << "]" << std::endl;
     }
-    std::cout << "]" << std::endl;
 
     return EXIT_SUCCESS;
 }

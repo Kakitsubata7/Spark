@@ -56,6 +56,9 @@ public:
     void setMaxStackCapacity(size_t maxStackCapacity);
 
     std::vector<Value> stackToVector() {
+        if (stackLength == 0)
+            return {};
+
         std::vector<Value> vec(stackLength);
         Value* p = stackBuffer;
         for (int i = 0; p < stackPointer; i++, p++)
