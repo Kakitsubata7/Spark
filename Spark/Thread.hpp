@@ -97,6 +97,10 @@ public:
         return str;
     }
 
+    /**
+     * Execute one instruction.
+     * @return Whether the thread is halted.
+     */
     bool execute();
 
     void push(const Value& value);
