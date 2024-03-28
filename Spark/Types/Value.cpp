@@ -49,7 +49,7 @@ namespace Spark {
                 break;
 
             case Type::String:
-                os << '"' << value.nodePtr->getData<std::string>() << '"';
+                os << value.nodePtr->getData<std::string>();
                 break;
 
             default:
@@ -90,6 +90,9 @@ namespace Spark {
                 break;
 
             case Type::String: {
+                std::ostringstream ss;
+                ss << nodePtr->getData<std::string>() << other;
+                return makeString(nodePtr->getGC(), ss.str());
             }
                 break;
 
@@ -98,7 +101,31 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Unsupported addition between " << type << " and " << other.type << ".";
+        ss << "Operator '+' is not supported between " << type << " and " << other.type << ".";
+        throw std::runtime_error(ss.str());
+    }
+
+    Value Value::operator-(const Value& other) const {
+        std::ostringstream ss;
+        ss << "Operator '-' is not supported between " << type << " and " << other.type << ".";
+        throw std::runtime_error(ss.str());
+    }
+
+    Value Value::operator*(const Value& other) const {
+        std::ostringstream ss;
+        ss << "Operator '*' is not supported between " << type << " and " << other.type << ".";
+        throw std::runtime_error(ss.str());
+    }
+
+    Value Value::operator/(const Value& other) const {
+        std::ostringstream ss;
+        ss << "Operator '/' is not supported between " << type << " and " << other.type << ".";
+        throw std::runtime_error(ss.str());
+    }
+
+    Value Value::operator%(const Value& other) const {
+        std::ostringstream ss;
+        ss << "Operator '%' is not supported between " << type << " and " << other.type << ".";
         throw std::runtime_error(ss.str());
     }
 

@@ -65,8 +65,11 @@ int main() {
     buffer.append<Bool>(true);
     buffer.append(Opcode::PushString);
     buffer.append<Int>(3);
+    buffer.appendString("def");
+    buffer.append(Opcode::PushString);
+    buffer.append<Int>(3);
     buffer.appendString("abc");
-    buffer.append(Opcode::PushNil);
+    buffer.append(Opcode::Add);
     buffer.append(Opcode::Halt);
 
     GC gc;
