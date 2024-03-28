@@ -54,7 +54,7 @@ public:
     [[nodiscard]]
     GCNode* allocate(Args&&... args) {
         // Allocate the data and the GC node
-        GCNode* nodePtr = new GCNode(GCNode::make<T>(std::forward<Args>(args)...));
+        GCNode* nodePtr = new GCNode(GCNode::make<T>(std::forward<Args>(args)..., *this));
 
         // Pend the allocation to the operation queue
         operationQueue.emplace(new AllocateOperation(nodePtr, allNodeSet));

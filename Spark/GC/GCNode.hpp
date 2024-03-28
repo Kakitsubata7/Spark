@@ -4,6 +4,8 @@
 
 namespace Spark {
 
+class GC;
+
 class GCNode {
 
     /* ===== Data ===== */
@@ -11,10 +13,16 @@ class GCNode {
 private:
     void* dataPtr;
     void (*destructorPtr)(void*);
+    GC* gcPtr;
 
     std::list<GCNode*> _neighbors;
 
 public:
+    [[nodiscard]]
+    constexpr GC& getGC() const {
+        return *gcPtr;
+    }
+
     [[nodiscard]]
     constexpr const std::list<GCNode*>& neighbors() const {
         return _neighbors;
@@ -47,15 +55,16 @@ public:
     /* ===== Constructor, Factory Method & Destructor ===== */
 
 private:
-    GCNode(void* dataPtr, void (*destructorPtr)(void*)) : dataPtr(dataPtr),
-                                                          destructorPtr(destructorPtr) { }
+    GCNode(void* dataPtr, void (*destructorPtr)(void*), GC* gcPtr) : dataPtr(dataPtr),
+                                                                     destructorPtr(destructorPtr),
+                                                                     gcPtr(gcPtr) { }
 
 public:
     template <typename T>
-    static GCNode make(const T& value) {
+    static GCNode make(const T& value, GC& gc) {
         void* dataPtr = new T(value);
         void (*destructorPtr)(void*) = [](void* obj) { static_cast<T*>(obj)->~T(); };
-        return GCNode(dataPtr, destructorPtr);
+        return GCNode(dataPtr, destructorPtr, &gc);
     }
 
     ~GCNode() {
