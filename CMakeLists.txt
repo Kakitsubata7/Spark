@@ -34,4 +34,6 @@ add_executable(Spark
         Spark/Config.hpp
         Spark/Types/Type.cpp
         Spark/Compilation/BytecodeBuffer.hpp
+        Spark/Types/Int64.hpp
+        Spark/Types/Float64.hpp
 )
