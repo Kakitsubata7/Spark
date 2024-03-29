@@ -8,7 +8,7 @@
 #include <iostream> // TODO: Remove this include
 
 #include "Config.hpp"
-#include "Types/Value.hpp"
+#include "Types.hpp"
 
 namespace Spark {
 
@@ -80,11 +80,11 @@ namespace Spark {
                 break;
 
             case Opcode::PushInteger:
-                push(Value::makeInt(fetch<Int>()));
+                push(Value::makeInt(static_cast<Int>(fetch<Int64>())));
                 break;
 
             case Opcode::PushFloat:
-                push(Value::makeFloat(fetch<Float>()));
+                push(Value::makeFloat(static_cast<Float>(fetch<Float64>())));
                 break;
 
             case Opcode::PushBoolean:
@@ -92,7 +92,7 @@ namespace Spark {
                 break;
 
             case Opcode::PushString:
-                push(Value::makeString(gc, fetchString(fetch<Int>())));
+                push(Value::makeString(gc, fetchString(static_cast<Int>(fetch<Int64>()))));
                 break;
 
             case Opcode::PushEmptyArray:
