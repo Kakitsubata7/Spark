@@ -77,6 +77,14 @@ int main() {
 
     buffer.append(Opcode::Add);
 
+    buffer.append(Opcode::PushFloat);
+    buffer.append<Float>(1.01);
+
+    buffer.append(Opcode::PushFloat);
+    buffer.append<Float>(7.0);
+
+    buffer.append(Opcode::Divide);
+
     buffer.append(Opcode::Halt);
 
     GC gc;

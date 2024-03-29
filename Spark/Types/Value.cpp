@@ -1,5 +1,6 @@
 #include "Value.hpp"
 
+#include <cmath>
 #include <sstream>
 
 #include "../GC/GC.hpp"
@@ -106,24 +107,156 @@ namespace Spark {
     }
 
     Value Value::operator-(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeInt(intValue - other.intValue);
+
+                    case Type::Float:
+                        return makeFloat(static_cast<Float>(intValue) - other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeFloat(floatValue - static_cast<Float>(other.intValue));
+
+                    case Type::Float:
+                        return makeFloat(floatValue - other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
         std::ostringstream ss;
         ss << "Operator '-' is not supported between " << type << " and " << other.type << ".";
         throw std::runtime_error(ss.str());
     }
 
     Value Value::operator*(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeInt(intValue * other.intValue);
+
+                    case Type::Float:
+                        return makeFloat(static_cast<Float>(intValue) * other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeFloat(floatValue * static_cast<Float>(other.intValue));
+
+                    case Type::Float:
+                        return makeFloat(floatValue * other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
         std::ostringstream ss;
         ss << "Operator '*' is not supported between " << type << " and " << other.type << ".";
         throw std::runtime_error(ss.str());
     }
 
     Value Value::operator/(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeInt(intValue / other.intValue);
+
+                    case Type::Float:
+                        return makeFloat(static_cast<Float>(intValue) / other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeFloat(floatValue / static_cast<Float>(other.intValue));
+
+                    case Type::Float:
+                        return makeFloat(floatValue / other.floatValue);
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
         std::ostringstream ss;
         ss << "Operator '/' is not supported between " << type << " and " << other.type << ".";
         throw std::runtime_error(ss.str());
     }
 
     Value Value::operator%(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeInt(intValue % other.intValue);
+
+                    case Type::Float:
+                        return makeFloat(std::fmod(static_cast<Float>(intValue), other.floatValue));
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return makeFloat(std::fmod(floatValue, static_cast<Float>(other.intValue)));
+
+                    case Type::Float:
+                        return makeFloat(std::fmod(floatValue, other.floatValue));
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
         std::ostringstream ss;
         ss << "Operator '%' is not supported between " << type << " and " << other.type << ".";
         throw std::runtime_error(ss.str());
