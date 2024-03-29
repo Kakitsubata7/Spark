@@ -85,6 +85,8 @@ int main() {
 
     buffer.append(Opcode::Divide);
 
+    buffer.append(Opcode::PushEmptyArray);
+
     buffer.append(Opcode::Halt);
 
     GC gc;

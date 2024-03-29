@@ -53,6 +53,18 @@ namespace Spark {
                 os << value.nodePtr->getData<std::string>();
                 break;
 
+            case Type::Array: {
+                const std::vector<Value>& vec = value.nodePtr->getData<std::vector<Value>>();
+                os << "[";
+                for (size_t i = 0; i < vec.size(); i++) {
+                    os << vec[i];
+                    if (i != vec.size() - 1)
+                        os << ", ";
+                }
+                os << "]";
+            }
+                break;
+
             default:
                 os << "unimplemented";
                 break;

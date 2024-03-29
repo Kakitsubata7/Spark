@@ -13,6 +13,7 @@ enum class Opcode : uint8_t {
     PushFloat,
     PushBoolean,
     PushString,
+    PushEmptyArray,
 
     Pop,
 

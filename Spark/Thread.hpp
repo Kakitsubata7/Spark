@@ -103,10 +103,34 @@ public:
      */
     bool execute();
 
+    /**
+     * Push the value at the top of the stack. If the value is a reference type, it will be registered as an entry node
+     * in the GC.
+     * @param value Value to push.
+     */
     void push(const Value& value);
+
+    /**
+     * Pop the value at the top of the stack. If the value is a reference type, its entry reference count in the GC will
+     * be decreased. When reaches zero, the value is unregistered as a entry node.
+     */
     void pop();
-    void pop(int count);
+
+    /**
+     * Pop n number of values at the top of the stack.
+     * @param n Number of values to pop.
+     */
+    void pop(int n);
+
+    /**
+     * Pop the value at the top of the stack and return it.
+     * @return Popped value.
+     */
     Value popGet();
+
+    /**
+     * @return The value at the top of the stack.
+     */
     [[nodiscard]] Value& top();
 
 };

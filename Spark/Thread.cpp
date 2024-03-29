@@ -95,6 +95,14 @@ namespace Spark {
                 push(Value::makeString(gc, fetchString(fetch<Int>())));
                 break;
 
+            case Opcode::PushEmptyArray:
+                push(Value::makeArray(gc));
+                break;
+
+            case Opcode::Pop:
+                pop();
+                break;
+
             case Opcode::Add: {
                 const Value& b = popGet();
                 const Value& a = popGet();
@@ -128,10 +136,6 @@ namespace Spark {
                 const Value& a = popGet();
                 push(a % b);
             }
-                break;
-
-            case Opcode::Pop:
-                pop(1);
                 break;
 
             default: {
@@ -196,8 +200,8 @@ namespace Spark {
             gc.unregisterEntryNode(value.nodePtr);
     }
 
-    void Thread::pop(int count) {
-        for (int i = 0; i < count; i++)
+    void Thread::pop(int n) {
+        for (int i = 0; i < n; i++)
             pop();
     }
 
@@ -213,7 +217,7 @@ namespace Spark {
         stackLength--;
 
         // Unregister the node as an entry node if the popped value is a reference type
-        const Value& value = *stackPointer;
+        Value value = *stackPointer;
         if (value.isReferenceType())
             gc.unregisterEntryNode(value.nodePtr);
 
