@@ -104,36 +104,36 @@ namespace Spark {
                 break;
 
             case Opcode::Add: {
-                const Value& b = popGet();
-                const Value& a = popGet();
+                const Value b = popGet();
+                const Value a = popGet();
                 push(a + b);
             }
                 break;
 
             case Opcode::Subtract: {
-                const Value& b = popGet();
-                const Value& a = popGet();
+                const Value b = popGet();
+                const Value a = popGet();
                 push(a - b);
             }
                 break;
 
             case Opcode::Multiply: {
-                const Value& b = popGet();
-                const Value& a = popGet();
+                const Value b = popGet();
+                const Value a = popGet();
                 push(a * b);
             }
                 break;
 
             case Opcode::Divide: {
-                const Value& b = popGet();
-                const Value& a = popGet();
+                const Value b = popGet();
+                const Value a = popGet();
                 push(a / b);
             }
                 break;
 
             case Opcode::Modulus: {
-                const Value& b = popGet();
-                const Value& a = popGet();
+                const Value b = popGet();
+                const Value a = popGet();
                 push(a % b);
             }
                 break;
