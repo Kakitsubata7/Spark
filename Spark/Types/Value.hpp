@@ -9,7 +9,7 @@
 #include "../GC/GCNode.hpp"
 #include "Bool.hpp"
 #include "Float.hpp"
-#include "Integer.hpp"
+#include "Int.hpp"
 #include "Type.hpp"
 
 namespace Spark {

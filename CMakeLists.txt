@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Spark
         main.cpp
-        Spark/Types/Integer.hpp
+        Spark/Types/Int.hpp
         Spark/Types/Float.hpp
         Spark/Types/Bool.hpp
         Spark/Types.hpp
