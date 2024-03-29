@@ -105,7 +105,7 @@ public:
 
     void push(const Value& value);
     void pop();
-    void pop(Int count);
+    void pop(int count);
     Value popGet();
     [[nodiscard]] Value& top();
 

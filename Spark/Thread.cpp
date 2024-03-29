@@ -96,17 +96,45 @@ namespace Spark {
                 break;
 
             case Opcode::Add: {
-                const Value& a = popGet();
                 const Value& b = popGet();
+                const Value& a = popGet();
                 push(a + b);
-                break;
             }
+                break;
+
+            case Opcode::Subtract: {
+                const Value& b = popGet();
+                const Value& a = popGet();
+                push(a - b);
+            }
+                break;
+
+            case Opcode::Multiply: {
+                const Value& b = popGet();
+                const Value& a = popGet();
+                push(a * b);
+            }
+                break;
+
+            case Opcode::Divide: {
+                const Value& b = popGet();
+                const Value& a = popGet();
+                push(a / b);
+            }
+                break;
+
+            case Opcode::Modulus: {
+                const Value& b = popGet();
+                const Value& a = popGet();
+                push(a % b);
+            }
+                break;
 
             case Opcode::Pop:
                 pop(1);
                 break;
 
-            default:
+            default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
                    << std::hex
@@ -114,6 +142,7 @@ namespace Spark {
                    << std::setfill('0')
                    << static_cast<unsigned int>(opcode);
                 throw std::runtime_error(ss.str());
+            }
         }
 
         return false;
@@ -167,7 +196,7 @@ namespace Spark {
             gc.unregisterEntryNode(value.nodePtr);
     }
 
-    void Thread::pop(Int count) {
+    void Thread::pop(int count) {
         for (int i = 0; i < count; i++)
             pop();
     }
