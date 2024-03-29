@@ -1,7 +1,10 @@
 #include <cstdlib>
 #include <iostream>
 
+#include <Windows.h>
+
 #include "Spark/Compilation/BytecodeBuffer.hpp"
+#include "Spark/Env.hpp"
 #include "Spark/GC/AllocateOperation.hpp"
 #include "Spark/GC/CollectOperation.hpp"
 #include "Spark/GC/GC.hpp"
@@ -9,7 +12,7 @@
 #include "Spark/GC/GCOperation.hpp"
 #include "Spark/GC/ReferenceOperation.hpp"
 #include "Spark/GC/UnreferenceOperation.hpp"
-#include "Spark/Env.hpp"
+#include "Spark/Types.hpp"
 
 using namespace Spark;
 
@@ -56,32 +59,32 @@ int main() {
 
 
     /* Thread Test */
+    SetConsoleOutputCP(CP_UTF8);
+
     BytecodeBuffer buffer;
     
     buffer.append(Opcode::PushInteger);
-    buffer.append<Int>(7);
+    buffer.append<Int64>(7);
 
     buffer.append(Opcode::PushFloat);
-    buffer.append<Float>(3.14);
+    buffer.append<Float64>(3.14);
 
     buffer.append(Opcode::PushBoolean);
     buffer.append<Bool>(true);
 
     buffer.append(Opcode::PushString);
-    buffer.append<Int>(3);
-    buffer.appendString("abc");
+    buffer.appendString(u8"凯");
 
     buffer.append(Opcode::PushString);
-    buffer.append<Int>(3);
-    buffer.appendString("def");
+    buffer.appendString(u8"书");
 
     buffer.append(Opcode::Add);
 
     buffer.append(Opcode::PushFloat);
-    buffer.append<Float>(1.01);
+    buffer.append<Float64>(1.01);
 
     buffer.append(Opcode::PushFloat);
-    buffer.append<Float>(7.0);
+    buffer.append<Float64>(7.0);
 
     buffer.append(Opcode::Divide);
 
