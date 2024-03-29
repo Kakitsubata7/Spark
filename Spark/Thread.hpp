@@ -55,6 +55,10 @@ public:
 
     void setMaxStackCapacity(size_t maxStackCapacity);
 
+    constexpr void trimStackExcess() {
+        resizeStack(stackLength);
+    }
+
     std::vector<Value> stackToVector() {
         if (stackLength == 0)
             return {};
