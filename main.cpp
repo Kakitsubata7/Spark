@@ -57,19 +57,26 @@ int main() {
 
     /* Thread Test */
     BytecodeBuffer buffer;
+    
     buffer.append(Opcode::PushInteger);
     buffer.append<Int>(7);
+
     buffer.append(Opcode::PushFloat);
     buffer.append<Float>(3.14);
+
     buffer.append(Opcode::PushBoolean);
     buffer.append<Bool>(true);
-    buffer.append(Opcode::PushString);
-    buffer.append<Int>(3);
-    buffer.appendString("def");
+
     buffer.append(Opcode::PushString);
     buffer.append<Int>(3);
     buffer.appendString("abc");
+
+    buffer.append(Opcode::PushString);
+    buffer.append<Int>(3);
+    buffer.appendString("def");
+
     buffer.append(Opcode::Add);
+
     buffer.append(Opcode::Halt);
 
     GC gc;

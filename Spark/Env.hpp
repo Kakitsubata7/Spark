@@ -24,6 +24,7 @@ public:
 
 private:
     Thread* mainThread;
+    Thread* asyncThread;
     std::unordered_set<Thread*> threadSet;
 
 
