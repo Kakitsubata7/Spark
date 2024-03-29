@@ -3,9 +3,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <stdexcept>
 
+#include <iostream> // TODO: Delete this include
+
 #include "../Opcode.hpp"
+#include "../Types/Int64.hpp"
 
 namespace Spark {
 
@@ -67,8 +71,15 @@ public:
         _size = newSize;
     }
 
-    void appendString(const std::string& str) {
-        size_t strSize = str.length() * sizeof(char);
+    void appendString(const std::string& str, const std::optional<size_t>& length = {}) {
+        // Get string length
+        size_t len = length.value_or(str.size());
+
+        // Append the string length to the buffer as a metadata first
+        append<Int64>(static_cast<Int64>(len));
+
+        // Calculate string size and new buffer size
+        size_t strSize = len * sizeof(char);
         size_t newSize = _size + strSize;
 
         // Resize if needed
