@@ -26,6 +26,9 @@ enum class Opcode : uint8_t {
     PushField,
     SetField,
 
+    Call,
+    Return,
+
 };
 
 } // Spark
