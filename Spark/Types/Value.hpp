@@ -132,6 +132,7 @@ public:
     Value operator%(const Value& other) const;
 
     bool operator==(const Value& other) const;
+    bool operator!=(const Value& other) const;
 
 };
 

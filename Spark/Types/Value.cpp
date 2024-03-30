@@ -347,4 +347,8 @@ namespace Spark {
         }
     }
 
+    bool Value::operator!=(const Value& other) const {
+        return !(*this == other);
+    }
+
 } // Spark
