@@ -1,5 +1,6 @@
 #include "Thread.hpp"
 
+#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -21,13 +22,12 @@ namespace Spark {
           maxStackCapacity(maxStackCapacity),
           gc(gc) {
         stackBuffer = new Value[stackCapacity];
-        stackPointer = basePointer = stackBuffer;
+        stackPointer = basePointer = framePointer = stackBuffer;
     }
 
     Thread::Thread(size_t stackCapacity, GC& gc) : Thread(stackCapacity, stackCapacity, gc) { }
 
     Thread::Thread(GC& gc) : Thread(Config::DEFAULT_STACK_CAPACITY, gc) { }
-
 
     Thread::~Thread() {
         delete stackBuffer;
@@ -138,13 +138,95 @@ namespace Spark {
             }
                 break;
 
+            case Opcode::Equal: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a == b));
+            }
+                break;
+
+            case Opcode::NotEqual: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a != b));
+            }
+                break;
+
+            case Opcode::Call: {
+                // Get callable
+                Value& value = top();
+                if (!value.isCallable()) {
+                    std::ostringstream ss;
+                    ss << value.type;
+                    ss << " is not callable.";
+                    throw std::runtime_error(ss.str());
+                }
+
+                // Get number of arguments and prepare stack registers
+                Int64 narg = fetch<Int64>();
+                SPOffsets.push_front(stackPointer - stackBuffer);
+                BPOffsets.push_front(basePointer - stackBuffer);
+                FPOffsets.push_front(framePointer - stackBuffer);
+                basePointer = stackPointer - (static_cast<ptrdiff_t>(narg) + 1);
+                framePointer = stackPointer;
+
+                // Call the function/closure
+                switch (value.type) {
+                    case Type::CFunction: {
+                        Int returnCount = value.cFuncPtr(this);
+                        push(Value::makeInt(returnCount));
+                        goto cFuncReturn;
+                    }
+                        break;
+
+                    case Type::Function: {
+                        previousPCs.push_front(programCounter);
+                        const Function& func = value.nodePtr->getData<Function>();
+                        programCounter = func.programCounter();
+                    }
+                        break;
+
+                    case Type::Closure: {
+                        previousPCs.push_front(programCounter);
+                        const Closure& closure = value.nodePtr->getData<Closure>();
+                        programCounter = closure.programCounter();
+                    }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Opcode::Return: {
+                // Restore PC
+                programCounter = previousPCs.front();
+                previousPCs.pop_front();
+
+            cFuncReturn:
+                // Get the number of returned values
+                Int returnCount = top().intValue;
+
+                Value* newSP = stackBuffer + SPOffsets.front() + returnCount + 1;
+                SPOffsets.pop_front();
+
+                // Restore SP, BP and FP
+                stackPointer = newSP;
+                basePointer = stackBuffer + BPOffsets.front();
+                BPOffsets.pop_front();
+                framePointer = stackBuffer + FPOffsets.front();
+                FPOffsets.pop_front();
+            }
+                break;
+
             default: {
                 std::ostringstream ss;
                 ss << "Invalid opcode: 0x"
                    << std::hex
                    << std::setw(2)
                    << std::setfill('0')
-                   << static_cast<unsigned int>(opcode);
+                   << static_cast<uintptr_t>(opcode);
                 throw std::runtime_error(ss.str());
             }
         }
@@ -170,6 +252,7 @@ namespace Spark {
             // Update stack registers and stack buffer
             stackPointer = newStackBuffer + (stackPointer - stackBuffer);
             basePointer = newStackBuffer + (basePointer - stackBuffer);
+            framePointer = newStackBuffer + (framePointer - stackBuffer);
             delete[] stackBuffer;
             stackBuffer = newStackBuffer;
         }
@@ -183,10 +266,25 @@ namespace Spark {
             gc.registerEntryNode(value.nodePtr);
     }
 
+    void Thread::pushArg(int index) {
+        push(getArg(index));
+    }
+
+    Value& Thread::getArg(int index) {
+#ifdef NDEBUG
+        return *(basePointer + index);
+#else
+        Value* ptr = basePointer + index;
+        if (ptr >= framePointer || index < 0)
+            throw std::runtime_error("Index out of bounds.");
+        return *ptr;
+#endif
+    }
+
     void Thread::pop() {
         // Move stack pointer one value back
 #ifndef NDEBUG
-        if ((stackPointer - 1) < basePointer)
+        if ((stackPointer - 1) < framePointer)
             throw std::runtime_error("Stack underflow.");
 #endif
         stackPointer--;
@@ -208,7 +306,7 @@ namespace Spark {
     Value Thread::popGet() {
         // Move stack pointer one value back
 #ifndef NDEBUG
-        if ((stackPointer - 1) < basePointer)
+        if ((stackPointer - 1) < framePointer)
             throw std::runtime_error("Stack underflow.");
 #endif
         stackPointer--;
@@ -227,7 +325,7 @@ namespace Spark {
     Value& Thread::top() {
         Value* p = stackPointer - 1;
 #ifndef NDEBUG
-        if (p < basePointer)
+        if (p < framePointer)
             throw std::runtime_error("Stack underflow.");
 #endif
         return *p;

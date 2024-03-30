@@ -15,12 +15,17 @@ class Closure {
 
 private:
     void* _programCounter;
-    std::unordered_map<std::string, Value> capturedMap;
+    std::unordered_map<std::string, Value> _capturedMap;
 
 public:
     [[nodiscard]]
-    constexpr const void* programCounter() const {
+    constexpr void* programCounter() const {
         return _programCounter;
+    }
+
+    [[nodiscard]]
+    constexpr std::unordered_map<std::string, Value>& capturedMap() {
+        return _capturedMap;
     }
 
 

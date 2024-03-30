@@ -17,7 +17,7 @@ private:
 
 public:
     [[nodiscard]]
-    constexpr const void* programCounter() const {
+    constexpr void* programCounter() const {
         return _programCounter;
     }
 

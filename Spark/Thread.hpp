@@ -1,5 +1,6 @@
 #pragma once
 
+#include <forward_list>
 #include <vector>
 
 #include "GC/GC.hpp"
@@ -24,11 +25,17 @@ public:
     /* ===== Registers ===== */
 
 private:
-    Value* stackPointer;
-    Value* basePointer;
+    Value* stackPointer;    // Points to the next available space on the stack.
+    Value* basePointer;     // Points to the start of the current stack frame (start of arguments).
+    Value* framePointer;    // Points to the start of operational stack.
+
+    std::forward_list<ptrdiff_t> SPOffsets;
+    std::forward_list<ptrdiff_t> BPOffsets;
+    std::forward_list<ptrdiff_t> FPOffsets;
+    std::forward_list<void*> previousPCs;
 
 public:
-    Opcode* programCounter;
+    void* programCounter;   // Points to the next instruction to be executed.
 
 
 
@@ -41,6 +48,11 @@ private:
     size_t maxStackCapacity;
 
 public:
+    [[nodiscard]]
+    constexpr size_t getStackLength() const {
+        return stackLength;
+    }
+
     [[nodiscard]]
     constexpr size_t getStackCapacity() const {
         return stackCapacity;
@@ -84,19 +96,19 @@ private:
 public:
     template <typename T>
     T fetch() {
-        T* pc = reinterpret_cast<T*>(programCounter);
+        T* pc = static_cast<T*>(programCounter);
         T value = *pc;
-        programCounter = reinterpret_cast<Opcode*>(pc + 1);
+        programCounter = static_cast<void*>(pc + 1);
         return value;
     }
 
     std::string fetchString(Int length) {
         // Create the string
-        char* pc = reinterpret_cast<char*>(programCounter);
+        char* pc = static_cast<char*>(programCounter);
         std::string str(pc, length);
 
         // Update the programmer counter
-        programCounter = reinterpret_cast<Opcode*>(pc + length);
+        programCounter = static_cast<void*>(pc + length);
 
         return str;
     }
@@ -113,6 +125,11 @@ public:
      * @param value Value to push.
      */
     void push(const Value& value);
+
+    void pushArg(int index);
+
+    [[nodiscard]]
+    Value& getArg(int index);
 
     /**
      * Pop the value at the top of the stack. If the value is a reference type, its entry reference count in the GC will

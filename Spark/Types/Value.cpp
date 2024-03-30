@@ -1,6 +1,7 @@
 #include "Value.hpp"
 
 #include <cmath>
+#include <iomanip>
 #include <sstream>
 
 #include "../GC/GC.hpp"
@@ -53,6 +54,16 @@ namespace Spark {
                 os << (value.boolValue ? "true" : "false");
                 break;
 
+            case Type::CFunction: {
+                os << "<CFunction: 0x"
+                   << std::hex
+                   << std::setw(2)
+                   << std::setfill('0')
+                   << reinterpret_cast<uintptr_t>(value.cFuncPtr)
+                   << ">";
+            }
+                break;
+
             case Type::Type:
                 os << value.typeValue;
                 break;
@@ -73,8 +84,24 @@ namespace Spark {
             }
                 break;
 
-            default:
-                os << "unimplemented";
+            case Type::Function: {
+                os << "<Function: "
+                   << std::hex
+                   << std::setw(2)
+                   << std::setfill('0')
+                   << reinterpret_cast<uintptr_t>(value.nodePtr)
+                   << ">";
+            }
+                break;
+
+            default: {
+                os << "<" << value.type <<": 0x"
+                   << std::hex
+                   << std::setw(2)
+                   << std::setfill('0')
+                   << reinterpret_cast<uintptr_t>(value.nodePtr)
+                   << ">";
+            }
                 break;
         }
         return os;
@@ -326,6 +353,9 @@ namespace Spark {
 
             case Type::Boolean:
                 return boolValue == other.boolValue;
+
+            case Type::CFunction:
+                return cFuncPtr == other.cFuncPtr;
 
             case Type::Type:
                 return typeValue == other.typeValue;

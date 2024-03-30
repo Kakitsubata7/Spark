@@ -119,6 +119,11 @@ public:
         return static_cast<int>(type) > static_cast<int>(Type::Type);
     }
 
+    [[nodiscard]]
+    bool isCallable() const {
+        return (type == Type::CFunction) || (type == Type::Function) || (type == Type::Closure);
+    }
+
 
 
     /* ===== Operators ===== */

@@ -40,4 +40,5 @@ add_executable(Spark
         Spark/Types/Closure.hpp
         Spark/Types/Object.hpp
         Spark/Types/Function.hpp
+        Spark/Types/Array.hpp
 )

@@ -67,37 +67,21 @@ int main() {
 
     BytecodeBuffer buffer;
     
-    buffer.append(Opcode::PushInteger);
-    buffer.append<Int64>(7);
-
-    buffer.append(Opcode::PushFloat);
-    buffer.append<Float64>(3.14);
-
-    buffer.append(Opcode::PushBoolean);
-    buffer.append<Bool>(true);
+    buffer.append(Opcode::Call);
+    buffer.append<Int64>(2);
 
     buffer.append(Opcode::PushString);
-    buffer.appendString(u8"凯");
-
-    buffer.append(Opcode::PushString);
-    buffer.appendString(u8"书");
-
-    buffer.append(Opcode::Add);
-
-    buffer.append(Opcode::PushFloat);
-    buffer.append<Float64>(1.01);
-
-    buffer.append(Opcode::PushFloat);
-    buffer.append<Float64>(7.0);
-
-    buffer.append(Opcode::Divide);
-
-    buffer.append(Opcode::PushEmptyArray);
+    buffer.appendString(u8"凯书");
 
     buffer.append(Opcode::Halt);
 
     GC gc;
     Thread thread(gc);
+    Value array = Value::makeArray(gc);
+    thread.push(array);
+    thread.push(array);
+    thread.push(Value::makeInt(1));
+    thread.push(Value::makeCFunction(Array::append));
     thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
