@@ -9,6 +9,7 @@
 #include "../GC/GCNode.hpp"
 #include "Bool.hpp"
 #include "Float.hpp"
+#include "Function.hpp"
 #include "Int.hpp"
 #include "Type.hpp"
 
@@ -64,7 +65,7 @@ public:
     }
 
     [[nodiscard]]
-    static Value makeFunction(int (*funcPtr)(Thread*)) {
+    static Value makeFunction(Function funcPtr) {
         Value self;
         self.type = Type::Function;
         self.funcPtr = funcPtr;
@@ -108,7 +109,7 @@ public:
         Float floatValue;
         Bool boolValue;
         void* ptrValue;
-        int (*funcPtr)(Thread*);
+        Function funcPtr;
         Type typeValue;
         GCNode* nodePtr;
     };
