@@ -1,7 +1,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <Windows.h>
+#ifdef _WIN32
+#   include <Windows.h>
+#endif
 
 #include "Spark/Compilation/BytecodeBuffer.hpp"
 #include "Spark/Env.hpp"
@@ -59,7 +61,9 @@ int main() {
 
 
     /* Thread Test */
+#ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
+#endif
 
     BytecodeBuffer buffer;
     
