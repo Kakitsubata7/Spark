@@ -9,7 +9,7 @@
 #include "../GC/GCNode.hpp"
 #include "Bool.hpp"
 #include "Float.hpp"
-#include "Function.hpp"
+#include "CFunction.hpp"
 #include "Int.hpp"
 #include "Type.hpp"
 
@@ -65,10 +65,10 @@ public:
     }
 
     [[nodiscard]]
-    static Value makeFunction(Function funcPtr) {
+    static Value makeCFunction(CFunction cFuncPtr) {
         Value self;
-        self.type = Type::Function;
-        self.funcPtr = funcPtr;
+        self.type = Type::CFunction;
+        self.cFuncPtr = cFuncPtr;
         return self;
     }
 
@@ -109,7 +109,7 @@ public:
         Float floatValue;
         Bool boolValue;
         void* ptrValue;
-        Function funcPtr;
+        CFunction cFuncPtr;
         Type typeValue;
         GCNode* nodePtr;
     };
