@@ -14,7 +14,9 @@
 
 namespace Spark {
 
+class Closure;
 class GC;
+class Thread;
 
 /**
  * The size of this type should be (8 bytes + pointer size + alignment); at least 16 bytes.
@@ -62,6 +64,14 @@ public:
     }
 
     [[nodiscard]]
+    static Value makeFunction(int (*funcPtr)(Thread*)) {
+        Value self;
+        self.type = Type::Function;
+        self.funcPtr = funcPtr;
+        return self;
+    }
+
+    [[nodiscard]]
     static Value makeType(Type value) {
         Value self;
         self.type = Type::Type;
@@ -81,6 +91,9 @@ public:
     [[nodiscard]]
     static Value makeArray(GC& gc, const std::vector<Value>& value = {});
 
+    [[nodiscard]]
+    static Value makeClosure(GC& gc, const Closure& value);
+
     ~Value() = default;
 
 
@@ -95,6 +108,7 @@ public:
         Float floatValue;
         Bool boolValue;
         void* ptrValue;
+        int (*funcPtr)(Thread*);
         Type typeValue;
         GCNode* nodePtr;
     };
@@ -116,6 +130,8 @@ public:
     Value operator*(const Value& other) const;
     Value operator/(const Value& other) const;
     Value operator%(const Value& other) const;
+
+    bool operator==(const Value& other) const;
 
 };
 
