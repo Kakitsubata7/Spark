@@ -17,9 +17,11 @@ enum class Opcode : uint8_t {
     PushEmptySet,       // Push an empty set onto the stack.
     PushEmptyMap,       // Push an empty map onto the stack.
 
-    Pop,                // Pop a value from the stack.
+    Push,               // Fetch an 8-byte index, and use it to push a value to the operation stack.
+    PushStorage,        // Fetch an 8-byte index, and use it to push a value to the storage stack.
 
-    LoadArg,            // Load an argument at an index onto the stack.
+    Pop,                // Pop a value from the operation stack.
+    PopStorage,         // Pop a value from the storage stack.
 
     Add,                // Pop two values and perform the '+' operation. Push the result onto the stack.
     Subtract,           // Pop two values and perform the '-' operation. Push the result onto the stack.
