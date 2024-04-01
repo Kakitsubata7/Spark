@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -143,3 +144,45 @@ public:
 };
 
 } // Spark
+
+namespace std {
+    template<>
+    struct hash<Spark::Value> {
+        std::size_t operator()(const Spark::Value& value) const {
+            using namespace Spark;
+
+            std::size_t h1 = std::hash<Type>()(value.type);
+            std::size_t h2;
+            switch (value.type) {
+                case Type::Nil:
+                    h2 = 0;
+                    break;
+
+                case Type::Integer:
+                    h2 = std::hash<Int>()(value.intValue);
+                    break;
+
+                case Type::Float:
+                    h2 = std::hash<Float>()(value.floatValue);
+                    break;
+
+                case Type::Boolean:
+                    h2 = std::hash<Bool>()(value.boolValue);
+                    break;
+
+                case Type::CFunction:
+                    h2 = std::hash<CFunction>()(value.cFuncPtr);
+                    break;
+
+                case Type::Type:
+                    h2 = std::hash<Type>()(value.typeValue);
+                    break;
+
+                default:
+                    h2 = std::hash<GCNode*>()(value.nodePtr);
+                    break;
+            }
+            return h1 ^ (h2 << 1);
+        }
+    };
+} // std
