@@ -66,8 +66,28 @@ namespace Spark {
                 push(Value::makeArray(gc));
                 break;
 
+            case Opcode::PushEmptySet:
+                push(Value::makeSet(gc));
+                break;
+
+            case Opcode::PushEmptyMap:
+                push(Value::makeMap(gc));
+                break;
+
+            case Opcode::Push:
+                push(get(fetch<Int64>()));
+                break;
+
+            case Opcode::PushStorage:
+                pushStorage(get(fetch<Int64>()));
+                break;
+
             case Opcode::Pop:
                 pop();
+                break;
+
+            case Opcode::PopStorage:
+                popStorage();
                 break;
 
             case Opcode::Add: {
@@ -198,16 +218,28 @@ namespace Spark {
         opStack.push(value);
     }
 
+    void Thread::pushStorage(const Value& value) {
+        stStack.push(value);
+    }
+
     void Thread::pop() {
         opStack.pop();
     }
 
-    Value Thread::popGet() {
-        return opStack.popGet();
-    }
-
     void Thread::pop(int n) {
         opStack.pop(n);
+    }
+
+    void Thread::popStorage() {
+        stStack.pop();
+    }
+
+    void Thread::popStorage(int n) {
+        stStack.pop(n);
+    }
+
+    Value Thread::popGet() {
+        return opStack.popGet();
     }
 
     Value& Thread::top() {

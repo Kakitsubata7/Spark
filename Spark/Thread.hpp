@@ -89,9 +89,13 @@ public:
     bool execute();
 
     void push(const Value& value);
+    void pushStorage(const Value& value);
 
     void pop();
     void pop(int n);
+
+    void popStorage();
+    void popStorage(int n);
 
     Value popGet();
 
