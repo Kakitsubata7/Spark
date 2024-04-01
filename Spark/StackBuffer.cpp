@@ -236,7 +236,10 @@ namespace Spark {
         // Pop all values in the current operation stack frame except for the return values
         opStack.stackPointer = returnBegin;
         opStack.pop(static_cast<Int64>(opStack.stackPointer - opStack.basePointer));
+
+        // Move the return values back, then update operation stack pointer
         std::memcpy(stStack.basePointer, returnBegin, nreturn * sizeof(Value));
+        opStack.stackPointer += nreturn;
 
         // Resume operation stack base pointer
         opStack.basePointer = opStack.buffer + opStack.prevBPOffset.front();
