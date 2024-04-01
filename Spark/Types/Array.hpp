@@ -10,13 +10,13 @@ namespace Array {
 
     /**
      * Parameters:
-     *     [0] Array reference
-     *     [1] Value to append
+     *     [1] Array reference
+     *     [2] Value to append
      */
     inline Int append(Thread* th) {
         // TODO: Provide actual implementation
-        Value& array = th->getArg(0);
-        Value& item = th->getArg(1);
+        Value& array = th->getArg(1);
+        Value& item = th->getArg(2);
         array.nodePtr->getData<std::vector<Value>>().push_back(item);
         return 0;
     }

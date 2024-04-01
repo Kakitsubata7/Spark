@@ -3,8 +3,10 @@
 #include <forward_list>
 #include <vector>
 
+#include "Config.hpp"
 #include "GC/GC.hpp"
 #include "Opcode.hpp"
+#include "StackBuffer.hpp"
 #include "Types/Value.hpp"
 
 namespace Spark {
@@ -14,9 +16,11 @@ class Thread {
     /* ===== Constructors & Destructor ===== */
 
 public:
-    Thread(size_t stackCapacity, size_t maxStackCapacity, GC& gc);
-    Thread(size_t stackCapacity, GC& gc);
-    explicit Thread(GC& gc);
+    explicit Thread(GC& gc,
+           size_t opStackCapacity = DEFAULT_OPERATION_STACK_CAPACITY,
+           size_t maxOpStackCapacity = DEFAULT_MAX_OPERATION_STACK_CAPACITY,
+           size_t varStackCapacity = DEFAULT_VARIABLE_STACK_CAPACITY,
+           size_t maxVarStackCapacity = DEFAULT_MAX_VARIABLE_STACK_CAPACITY);
 
     ~Thread();
 
@@ -25,14 +29,7 @@ public:
     /* ===== Registers ===== */
 
 private:
-    Value* stackPointer;    // Points to the next available space on the stack.
-    Value* basePointer;     // Points to the start of the current stack frame (start of arguments).
-    Value* framePointer;    // Points to the start of operational stack.
-
-    std::forward_list<ptrdiff_t> SPOffsets;
-    std::forward_list<ptrdiff_t> BPOffsets;
-    std::forward_list<ptrdiff_t> FPOffsets;
-    std::forward_list<void*> previousPCs;
+    std::forward_list<void*> prevPCs;
 
 public:
     void* programCounter;   // Points to the next instruction to be executed.
@@ -42,44 +39,16 @@ public:
     /* ===== Stack ===== */
 
 private:
-    Value* stackBuffer;
-    size_t stackLength;
-    size_t stackCapacity;
-    size_t maxStackCapacity;
+    StackBuffer opStack;    // Operation stack
+    StackBuffer stStack;    // Storage stack
 
 public:
-    [[nodiscard]]
-    constexpr size_t getStackLength() const {
-        return stackLength;
+    std::vector<std::reference_wrapper<const Value>> operationStackToVector() {
+        return opStack.toVector();
     }
 
-    [[nodiscard]]
-    constexpr size_t getStackCapacity() const {
-        return stackCapacity;
-    }
-
-    void resizeStack(size_t stackCapacity);
-
-    [[nodiscard]]
-    constexpr size_t getMaxStackCapacity() const {
-        return maxStackCapacity;
-    }
-
-    void setMaxStackCapacity(size_t maxStackCapacity);
-
-    constexpr void trimStackExcess() {
-        resizeStack(stackLength);
-    }
-
-    std::vector<Value> stackToVector() {
-        if (stackLength == 0)
-            return {};
-
-        std::vector<Value> vec(stackLength);
-        Value* p = stackBuffer;
-        for (int i = 0; p < stackPointer; i++, p++)
-            vec[i] = *p;
-        return vec;
+    std::vector<std::reference_wrapper<const Value>> storageStackToVector() {
+        return stStack.toVector();
     }
 
 
@@ -119,40 +88,17 @@ public:
      */
     bool execute();
 
-    /**
-     * Push the value at the top of the stack. If the value is a reference type, it will be registered as an entry node
-     * in the GC.
-     * @param value Value to push.
-     */
     void push(const Value& value);
 
-    void pushArg(int index);
-
-    [[nodiscard]]
-    Value& getArg(int index);
-
-    /**
-     * Pop the value at the top of the stack. If the value is a reference type, its entry reference count in the GC will
-     * be decreased. When reaches zero, the value is unregistered as a entry node.
-     */
     void pop();
-
-    /**
-     * Pop n number of values at the top of the stack.
-     * @param n Number of values to pop.
-     */
     void pop(int n);
 
-    /**
-     * Pop the value at the top of the stack and return it.
-     * @return Popped value.
-     */
     Value popGet();
 
-    /**
-     * @return The value at the top of the stack.
-     */
-    [[nodiscard]] Value& top();
+    Value& top();
+
+    Value& get(Int64 index);
+    Value& getArg(Int64 index);
 
 };
 

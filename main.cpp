@@ -68,25 +68,26 @@ int main() {
     BytecodeBuffer buffer;
     
     buffer.append(Opcode::Call);
+    buffer.append<Int64>(-4);
     buffer.append<Int64>(2);
 
     buffer.append(Opcode::PushString);
-    buffer.appendString(u8"凯书");
+    buffer.appendString("String");
 
     buffer.append(Opcode::Halt);
 
     GC gc;
     Thread thread(gc);
+    thread.push(Value::makeCFunction(Array::append));
     Value array = Value::makeArray(gc);
     thread.push(array);
     thread.push(array);
     thread.push(Value::makeInt(1));
-    thread.push(Value::makeCFunction(Array::append));
     thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
     // Print the stack
-    std::vector<Value> stack = thread.stackToVector();
+    auto stack = thread.operationStackToVector();
     if (!stack.empty()) {
         std::cout << "[";
         for (size_t i = 0; i < stack.size(); i++) {

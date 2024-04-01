@@ -15,50 +15,17 @@ namespace Spark {
 
     /* ===== Constructors & Destructor */
 
-    Thread::Thread(size_t stackCapacity, size_t maxStackCapacity, GC& gc)
+    Thread::Thread(GC& gc,
+                   size_t opStackCapacity,
+                   size_t maxOpStackCapacity,
+                   size_t varStackCapacity,
+                   size_t maxVarStackCapacity)
         : programCounter(nullptr),
-          stackLength(0),
-          stackCapacity(stackCapacity),
-          maxStackCapacity(maxStackCapacity),
-          gc(gc) {
-        stackBuffer = new Value[stackCapacity];
-        stackPointer = basePointer = framePointer = stackBuffer;
-    }
+          gc(gc),
+          opStack(gc, opStackCapacity, maxOpStackCapacity),
+          stStack(gc, varStackCapacity, maxVarStackCapacity) { }
 
-    Thread::Thread(size_t stackCapacity, GC& gc) : Thread(stackCapacity, stackCapacity, gc) { }
-
-    Thread::Thread(GC& gc) : Thread(Config::DEFAULT_STACK_CAPACITY, gc) { }
-
-    Thread::~Thread() {
-        delete stackBuffer;
-    }
-
-
-
-    /* ===== Stack ===== */
-
-    void Thread::resizeStack(size_t stackCapacity) {
-        if (stackCapacity < stackLength)
-            throw std::runtime_error("Current stack capacity cannot be less than the current stack length.");
-
-        // Allocate the new stack buffer
-        this->stackCapacity = stackCapacity;
-        Value* newStackBuffer = new Value[stackCapacity];
-
-        // Copy the current stack to the new stack buffer
-        std::memcpy(newStackBuffer, this->stackBuffer, stackLength);
-
-        // Deallocate the previous stack buffer and reassign to the new one
-        delete stackBuffer;
-        stackBuffer = newStackBuffer;
-    }
-
-    void Thread::setMaxStackCapacity(size_t maxStackCapacity) {
-        if (maxStackCapacity < stackLength)
-            throw std::runtime_error("Max stack capacity cannot be less than the current stack length.");
-
-        this->maxStackCapacity = maxStackCapacity;
-    }
+    Thread::~Thread() = default;
 
 
 
@@ -153,42 +120,41 @@ namespace Spark {
                 break;
 
             case Opcode::Call: {
+                // Get callable index and number of arguments
+                Int64 index = fetch<Int64>();
+                Int64 narg = fetch<Int64>();
+
                 // Get callable
-                Value& value = top();
-                if (!value.isCallable()) {
+                Value& callable = get(index);
+                if (!callable.isCallable()) {
                     std::ostringstream ss;
-                    ss << value.type;
+                    ss << callable.type;
                     ss << " is not callable.";
                     throw std::runtime_error(ss.str());
                 }
 
-                // Get number of arguments and prepare stack registers
-                Int64 narg = fetch<Int64>();
-                SPOffsets.push_front(stackPointer - stackBuffer);
-                BPOffsets.push_front(basePointer - stackBuffer);
-                FPOffsets.push_front(framePointer - stackBuffer);
-                basePointer = stackPointer - (static_cast<ptrdiff_t>(narg) + 1);
-                framePointer = stackPointer;
+                // Signal both stacks to start a call
+                StackBuffer::startCall(opStack, stStack, narg);
 
                 // Call the function/closure
-                switch (value.type) {
+                switch (callable.type) {
                     case Type::CFunction: {
-                        Int returnCount = value.cFuncPtr(this);
+                        Int returnCount = callable.cFuncPtr(this);
                         push(Value::makeInt(returnCount));
                         goto cFuncReturn;
                     }
                         break;
 
                     case Type::Function: {
-                        previousPCs.push_front(programCounter);
-                        const Function& func = value.nodePtr->getData<Function>();
+                        prevPCs.push_front(programCounter);
+                        const Function& func = callable.nodePtr->getData<Function>();
                         programCounter = func.programCounter();
                     }
                         break;
 
                     case Type::Closure: {
-                        previousPCs.push_front(programCounter);
-                        const Closure& closure = value.nodePtr->getData<Closure>();
+                        prevPCs.push_front(programCounter);
+                        const Closure& closure = callable.nodePtr->getData<Closure>();
                         programCounter = closure.programCounter();
                     }
                         break;
@@ -201,22 +167,16 @@ namespace Spark {
 
             case Opcode::Return: {
                 // Restore PC
-                programCounter = previousPCs.front();
-                previousPCs.pop_front();
+                programCounter = prevPCs.front();
+                prevPCs.pop_front();
 
             cFuncReturn:
                 // Get the number of returned values
                 Int returnCount = top().intValue;
 
-                Value* newSP = stackBuffer + SPOffsets.front() + returnCount + 1;
-                SPOffsets.pop_front();
-
-                // Restore SP, BP and FP
-                stackPointer = newSP;
-                basePointer = stackBuffer + BPOffsets.front();
-                BPOffsets.pop_front();
-                framePointer = stackBuffer + FPOffsets.front();
-                FPOffsets.pop_front();
+                // Signal both stacks to end call
+                // One is added to return count because the number of returned values are also pushed onto the stack
+                StackBuffer::endCall(opStack, stStack, returnCount + 1);
             }
                 break;
 
@@ -235,100 +195,36 @@ namespace Spark {
     }
 
     void Thread::push(const Value& value) {
-#ifndef NDEBUG
-        size_t newStackLength = stackLength + 1;
-        if (newStackLength > maxStackCapacity)
-            throw std::runtime_error("Stack overflow.");
-        else if (newStackLength > stackCapacity) {
-            // Calculate new stack capacity
-            size_t newStackCapacity = stackCapacity * 2;
-            if (newStackCapacity < newStackLength)
-                newStackCapacity = newStackLength;
-
-            // Allocate new stack buffer
-            Value* newStackBuffer = new Value[newStackCapacity];
-            std::memcpy(newStackBuffer, stackBuffer, stackLength);
-
-            // Update stack registers and stack buffer
-            stackPointer = newStackBuffer + (stackPointer - stackBuffer);
-            basePointer = newStackBuffer + (basePointer - stackBuffer);
-            framePointer = newStackBuffer + (framePointer - stackBuffer);
-            delete[] stackBuffer;
-            stackBuffer = newStackBuffer;
-        }
-#endif
-        stackLength++;
-
-        *stackPointer = value;
-        stackPointer++;
-
-        if (value.isReferenceType())
-            gc.registerEntryNode(value.nodePtr);
-    }
-
-    void Thread::pushArg(int index) {
-        push(getArg(index));
-    }
-
-    Value& Thread::getArg(int index) {
-#ifdef NDEBUG
-        return *(basePointer + index);
-#else
-        Value* ptr = basePointer + index;
-        if (ptr >= framePointer || index < 0)
-            throw std::runtime_error("Index out of bounds.");
-        return *ptr;
-#endif
+        opStack.push(value);
     }
 
     void Thread::pop() {
-        // Move stack pointer one value back
-#ifndef NDEBUG
-        if ((stackPointer - 1) < framePointer)
-            throw std::runtime_error("Stack underflow.");
-#endif
-        stackPointer--;
-
-        // Decrease stack length
-        stackLength--;
-
-        // Unregister the node as an entry node if the popped value is a reference type
-        const Value& value = *stackPointer;
-        if (value.isReferenceType())
-            gc.unregisterEntryNode(value.nodePtr);
-    }
-
-    void Thread::pop(int n) {
-        for (int i = 0; i < n; i++)
-            pop();
+        opStack.pop();
     }
 
     Value Thread::popGet() {
-        // Move stack pointer one value back
-#ifndef NDEBUG
-        if ((stackPointer - 1) < framePointer)
-            throw std::runtime_error("Stack underflow.");
-#endif
-        stackPointer--;
+        return opStack.popGet();
+    }
 
-        // Decrease stack length
-        stackLength--;
-
-        // Unregister the node as an entry node if the popped value is a reference type
-        Value value = *stackPointer;
-        if (value.isReferenceType())
-            gc.unregisterEntryNode(value.nodePtr);
-
-        return value;
+    void Thread::pop(int n) {
+        opStack.pop(n);
     }
 
     Value& Thread::top() {
-        Value* p = stackPointer - 1;
-#ifndef NDEBUG
-        if (p < framePointer)
-            throw std::runtime_error("Stack underflow.");
-#endif
-        return *p;
+        return opStack.top();
+    }
+
+    Value& Thread::get(Int64 index) {
+        if (index < 0)
+            return opStack.top(index + 1);
+        else if (index > 0)
+            return stStack.bottom(index - 1);
+        else
+            return top();
+    }
+
+    Value& Thread::getArg(Int64 index) {
+        return stStack.bottom(index - 1);
     }
 
 } // Spark

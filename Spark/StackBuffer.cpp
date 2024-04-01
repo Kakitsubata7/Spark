@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include <iostream> // TODO: Delete this include
+
 #include "GC/GC.hpp"
 
 namespace Spark {
@@ -98,9 +100,51 @@ namespace Spark {
             gc.unregisterEntryNode(value.nodePtr);
     }
 
-    void StackBuffer::pop(int n) {
-        for (int i = 0; i < n; i++)
-            pop();
+    void StackBuffer::pop(Int64 n) {
+        if (n == 0)
+            return;
+
+        // Move stack pointer n values back
+        Value* targetSP = stackPointer - static_cast<ptrdiff_t>(n);
+#ifndef NDEBUG
+        if (n < 0)
+            throw std::runtime_error("Pop number cannot be negative.");
+        if (targetSP < basePointer)
+            throw std::runtime_error("Stack underflow.");
+#endif
+
+        // Decrease the length
+        length -= static_cast<size_t>(n);
+
+        // Unregister nodes
+        while (stackPointer > targetSP) {
+            stackPointer--;
+            const Value& value = *stackPointer;
+            if (value.isReferenceType())
+                gc.unregisterEntryNode(value.nodePtr);
+        }
+    }
+
+    Value StackBuffer::popGet() {
+        // Move stack pointer one value back
+#ifdef NDEBUG
+        stackPointer--;
+#else
+        Value* newSP = stackPointer - 1;
+        if (newSP < basePointer)
+            throw std::runtime_error("Stack underflow.");
+        stackPointer = newSP;
+#endif
+
+        // Decrease the length
+        length--;
+
+        // Unregister the node as an entry node if the popped value is a reference type
+        Value value = *stackPointer;
+        if (value.isReferenceType())
+            gc.unregisterEntryNode(value.nodePtr);
+
+        return value;
     }
 
     Value& StackBuffer::top() {
@@ -138,26 +182,65 @@ namespace Spark {
         return *p;
     }
 
-    Value StackBuffer::popGet() {
-        // Move stack pointer one value back
-#ifdef NDEBUG
-        stackPointer--;
-#else
-        Value* newSP = stackPointer - 1;
-        if (newSP < basePointer)
+    std::vector<std::reference_wrapper<const Value>> StackBuffer::toVector() {
+        if (length == 0)
+            return {};
+
+        std::vector<std::reference_wrapper<const Value>> vec;
+        vec.reserve(length);
+        Value* p = buffer;
+        for (int i = 0; p < stackPointer; i++, p++)
+            vec.emplace_back(*p);
+        return vec;
+    }
+
+    void StackBuffer::openFrame() {
+        // Record previous base pointer offset
+        prevBPOffset.push_front(basePointer - buffer);
+
+        // Update base pointer
+        basePointer = stackPointer;
+    }
+
+    void StackBuffer::startCall(StackBuffer& opStack, StackBuffer& stStack, Int64 narg) {
+        // Copy arguments from operation stack to storage stack
+        // Note: using 'std::memcpy' is fine here because the reference count doesn't change
+        std::memcpy(stStack.basePointer, opStack.stackPointer - static_cast<ptrdiff_t>(narg), narg * sizeof(Value));
+
+        // Manually update operation stack pointer and length
+        opStack.stackPointer -= static_cast<ptrdiff_t>(narg);
+        opStack.length -= static_cast<size_t>(narg);
+
+        // Open new frames in both operation stack and storage stack
+        opStack.openFrame();
+        stStack.openFrame();
+
+        // Manually update storage stack pointer and length
+        stStack.stackPointer += static_cast<ptrdiff_t>(narg);
+        stStack.length += static_cast<size_t>(narg);
+    }
+
+    void StackBuffer::endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn) {
+        // Pop all values in the current storage stack frame, then resume the base pointer
+        stStack.pop(static_cast<Int64>(stStack.stackPointer - stStack.basePointer));
+        stStack.basePointer = stStack.buffer + stStack.prevBPOffset.front();
+        stStack.prevBPOffset.pop_front();
+
+        // Record the pointer of the first return value
+        Value* returnBegin = opStack.stackPointer - static_cast<ptrdiff_t>(nreturn);
+#ifndef NDEBUG
+        if (returnBegin < opStack.basePointer)
             throw std::runtime_error("Stack underflow.");
-        stackPointer = newSP;
 #endif
 
-        // Decrease the length
-        length--;
+        // Pop all values in the current operation stack frame except for the return values
+        opStack.stackPointer = returnBegin;
+        opStack.pop(static_cast<Int64>(opStack.stackPointer - opStack.basePointer));
+        std::memcpy(stStack.basePointer, returnBegin, nreturn * sizeof(Value));
 
-        // Unregister the node as an entry node if the popped value is a reference type
-        Value value = *stackPointer;
-        if (value.isReferenceType())
-            gc.unregisterEntryNode(value.nodePtr);
-
-        return value;
+        // Resume operation stack base pointer
+        opStack.basePointer = opStack.buffer + opStack.prevBPOffset.front();
+        opStack.prevBPOffset.pop_front();
     }
 
 } // Spark

@@ -6,17 +6,21 @@ namespace Spark {
 
     /* ===== Constructor & Destructor ===== */
 
-    Env::Env(size_t stackCapacity, size_t maxStackCapacity) {
-        mainThread = new Thread(stackCapacity, maxStackCapacity, gc);
+    Env::Env(size_t opStackCapacity,
+             size_t maxOpStackCapacity,
+             size_t varStackCapacity,
+             size_t maxVarStackCapacity) {
+        mainThread = new Thread(gc,
+                                opStackCapacity,
+                                maxOpStackCapacity,
+                                varStackCapacity,
+                                maxVarStackCapacity);
     }
-
-    Env::Env(size_t stackCapacity) : Env(stackCapacity, stackCapacity) { }
-
-    Env::Env() : Env(Config::DEFAULT_STACK_CAPACITY) { }
 
     Env::~Env() {
         // Deallocate threads
         delete mainThread;
+        delete asyncThread;
         for (Thread* thread : threadSet)
             delete thread;
     }

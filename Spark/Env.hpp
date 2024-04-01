@@ -12,9 +12,10 @@ class Env {
     /* ===== Constructor & Destructor ===== */
 
 public:
-    Env(size_t stackCapacity, size_t maxStackCapacity);
-    explicit Env(size_t stackCapacity);
-    Env();
+    explicit Env(size_t opStackCapacity = DEFAULT_OPERATION_STACK_CAPACITY,
+                 size_t maxOpStackCapacity = DEFAULT_MAX_OPERATION_STACK_CAPACITY,
+                 size_t varStackCapacity = DEFAULT_VARIABLE_STACK_CAPACITY,
+                 size_t maxVarStackCapacity = DEFAULT_MAX_VARIABLE_STACK_CAPACITY);
 
     ~Env();
 

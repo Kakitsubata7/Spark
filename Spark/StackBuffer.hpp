@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <forward_list>
 
 #include "Types/Int64.hpp"
 #include "Types/Value.hpp"
@@ -15,14 +16,17 @@ class StackBuffer {
 
 private:
     GC& gc;
+
     Value* buffer;
+
     size_t length;
     size_t capacity;
     size_t maxCapacity;
 
-public:
     Value* basePointer;
     Value* stackPointer;
+
+    std::forward_list<ptrdiff_t> prevBPOffset;
 
 
 
@@ -43,7 +47,7 @@ public:
     void push(const Value& value);
 
     void pop();
-    void pop(int n);
+    void pop(Int64 n);
     [[nodiscard]] Value popGet();
 
     [[nodiscard]] Value& top();
@@ -51,6 +55,14 @@ public:
 
     [[nodiscard]] Value& bottom();
     [[nodiscard]] Value& bottom(Int64 offset);
+
+    std::vector<std::reference_wrapper<const Value>> toVector();
+
+    static void startCall(StackBuffer& opStack, StackBuffer& stStack, Int64 narg);
+    static void endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn);
+
+private:
+    void openFrame();
 
 };
 
