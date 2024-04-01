@@ -53,3 +53,12 @@ public:
 };
 
 } // Spark
+
+namespace std {
+    template<>
+    struct hash<Spark::Bool> {
+        std::size_t operator()(const Spark::Bool b) const {
+            return std::hash<bool>()(b);
+        }
+    };
+} // std
