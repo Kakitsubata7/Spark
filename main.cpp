@@ -66,23 +66,17 @@ int main() {
 #endif
 
     BytecodeBuffer buffer;
-    
-    buffer.append(Opcode::Call);
-    buffer.append<Int64>(-4);
-    buffer.append<Int64>(2);
 
-    buffer.append(Opcode::PushString);
-    buffer.appendString("string");
+    buffer.append(Opcode::PushStorage);
+    buffer.append<Int64>(-1);
+
+    buffer.append(Opcode::Pop);
 
     buffer.append(Opcode::Halt);
 
     GC gc;
     Thread thread(gc);
     thread.push(Value::makeCFunction(Array::append));
-    Value array = Value::makeArray(gc);
-    thread.push(array);
-    thread.push(array);
-    thread.push(Value::makeInt(1));
     thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
