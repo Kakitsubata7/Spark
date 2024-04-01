@@ -3,7 +3,6 @@
 namespace Spark {
 
     std::ostream& operator<<(std::ostream& os, const Type type) {
-        os << "<Type: '";
         switch (type) {
             case Type::Nil:
                 os << "Nil";
@@ -19,6 +18,10 @@ namespace Spark {
 
             case Type::Boolean:
                 os << "Boolean";
+                break;
+
+            case Type::CFunction:
+                os << "CFunction";
                 break;
 
             case Type::Type:
@@ -49,7 +52,6 @@ namespace Spark {
                 os << "Unimplemented";
                 break;
         }
-        os << "'>";
         return os;
     }
 

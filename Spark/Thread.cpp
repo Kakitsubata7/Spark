@@ -145,11 +145,13 @@ namespace Spark {
                 Int64 narg = fetch<Int64>();
 
                 // Get callable
-                Value& callable = get(index);
+                Value callable = get(index);
                 if (!callable.isCallable()) {
+                notCallableError:
                     std::ostringstream ss;
+                    ss << "Type '";
                     ss << callable.type;
-                    ss << " is not callable.";
+                    ss << "' is not callable.";
                     throw std::runtime_error(ss.str());
                 }
 
@@ -163,7 +165,6 @@ namespace Spark {
                         push(Value::makeInt(returnCount));
                         goto cFuncReturn;
                     }
-                        break;
 
                     case Type::Function: {
                         prevPCs.push_front(programCounter);
@@ -180,7 +181,7 @@ namespace Spark {
                         break;
 
                     default:
-                        break;
+                        goto notCallableError;
                 }
             }
                 break;

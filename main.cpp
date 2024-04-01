@@ -72,6 +72,15 @@ int main() {
 
     buffer.append(Opcode::Pop);
 
+    buffer.append(Opcode::PushEmptyArray);
+
+    buffer.append(Opcode::PushInteger);
+    buffer.append<Int64>(37);
+
+    buffer.append(Opcode::Call);
+    buffer.append<Int64>(1); // Callable index
+    buffer.append<Int64>(2); // Number of arguments
+
     buffer.append(Opcode::Halt);
 
     GC gc;
@@ -81,7 +90,7 @@ int main() {
     while (!thread.execute()) { }
 
     // Print the stacks
-    auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix) {
+    auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix = "") {
         std::cout << prefix << "[";
         if (!stack.empty()) {
             for (size_t i = 0; i < stack.size(); i++) {

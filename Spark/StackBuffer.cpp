@@ -188,7 +188,7 @@ namespace Spark {
 
         std::vector<std::reference_wrapper<const Value>> vec;
         vec.reserve(length);
-        Value* p = buffer;
+        Value* p = basePointer;
         for (int i = 0; p < stackPointer; i++, p++)
             vec.emplace_back(*p);
         return vec;
@@ -203,24 +203,38 @@ namespace Spark {
     }
 
     void StackBuffer::startCall(StackBuffer& opStack, StackBuffer& stStack, Int64 narg) {
+        // Open a new storage stack frame
+        stStack.openFrame();
+
         // Copy arguments from operation stack to storage stack
         // Note: using 'std::memcpy' is fine here because the reference count doesn't change
         std::memcpy(stStack.basePointer, opStack.stackPointer - static_cast<ptrdiff_t>(narg), narg * sizeof(Value));
 
-        // Manually update operation stack pointer and length
+        // Manually move forward storage stack pointer and length
+        stStack.stackPointer += static_cast<ptrdiff_t>(narg);
+        stStack.length += static_cast<size_t>(narg);
+
+        // Manually move back operation stack pointer and length
         opStack.stackPointer -= static_cast<ptrdiff_t>(narg);
         opStack.length -= static_cast<size_t>(narg);
 
-        // Open new frames in both operation stack and storage stack
+        // Open a new operation stack frame
         opStack.openFrame();
-        stStack.openFrame();
-
-        // Manually update storage stack pointer and length
-        stStack.stackPointer += static_cast<ptrdiff_t>(narg);
-        stStack.length += static_cast<size_t>(narg);
     }
 
     void StackBuffer::endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn) {
+        auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix = "") {
+            std::cout << prefix << "[";
+            if (!stack.empty()) {
+                for (size_t i = 0; i < stack.size(); i++) {
+                    std::cout << stack[i];
+                    if (i != stack.size() - 1)
+                        std::cout << ", ";
+                }
+            }
+            std::cout << "]" << std::endl;
+        };
+
         // Pop all values in the current storage stack frame, then resume the base pointer
         stStack.pop(static_cast<Int64>(stStack.stackPointer - stStack.basePointer));
         stStack.basePointer = stStack.buffer + stStack.prevBPOffset.front();
@@ -238,7 +252,7 @@ namespace Spark {
         opStack.pop(static_cast<Int64>(opStack.stackPointer - opStack.basePointer));
 
         // Move the return values back, then update operation stack pointer
-        std::memcpy(stStack.basePointer, returnBegin, nreturn * sizeof(Value));
+        std::memcpy(opStack.basePointer, returnBegin, nreturn * sizeof(Value));
         opStack.stackPointer += nreturn;
 
         // Resume operation stack base pointer
