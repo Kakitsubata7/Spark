@@ -72,7 +72,7 @@ int main() {
     buffer.append<Int64>(2);
 
     buffer.append(Opcode::PushString);
-    buffer.appendString("String");
+    buffer.appendString("string");
 
     buffer.append(Opcode::Halt);
 
@@ -86,17 +86,20 @@ int main() {
     thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
-    // Print the stack
-    auto stack = thread.operationStackToVector();
-    if (!stack.empty()) {
-        std::cout << "[";
-        for (size_t i = 0; i < stack.size(); i++) {
-            std::cout << stack[i];
-            if (i != stack.size() - 1)
-                std::cout << ", ";
+    // Print the stacks
+    auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix) {
+        std::cout << prefix << "[";
+        if (!stack.empty()) {
+            for (size_t i = 0; i < stack.size(); i++) {
+                std::cout << stack[i];
+                if (i != stack.size() - 1)
+                    std::cout << ", ";
+            }
         }
         std::cout << "]" << std::endl;
-    }
+    };
+    printStack(thread.operationStackToVector(), "Operation: ");
+    printStack(thread.storageStackToVector(), "Storage:   ");
 
     return EXIT_SUCCESS;
 }
