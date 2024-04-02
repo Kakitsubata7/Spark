@@ -6,8 +6,6 @@
 #include <optional>
 #include <stdexcept>
 
-#include <iostream> // TODO: Delete this include
-
 #include "../Opcode.hpp"
 #include "../Types/Int64.hpp"
 

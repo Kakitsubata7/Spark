@@ -6,8 +6,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <iostream> // TODO: Remove this include
-
 #include "Config.hpp"
 #include "Types.hpp"
 

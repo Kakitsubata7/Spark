@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-#include <iostream> // TODO: Delete this include
-
 #include "GC/GC.hpp"
 
 namespace Spark {
