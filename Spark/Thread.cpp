@@ -207,7 +207,8 @@ namespace Spark {
                    << std::hex
                    << std::setw(2)
                    << std::setfill('0')
-                   << static_cast<uintptr_t>(opcode);
+                   << static_cast<uintptr_t>(opcode)
+                   << std::dec;
                 throw std::runtime_error(ss.str());
             }
         }

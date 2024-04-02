@@ -58,6 +58,8 @@ public:
 
     std::vector<std::reference_wrapper<const Value>> toVector();
 
+    static void move(StackBuffer& from, StackBuffer& to, Int64 n);
+
     static void startCall(StackBuffer& opStack, StackBuffer& stStack, Int64 narg);
     static void endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn);
 

@@ -11,9 +11,9 @@ namespace Spark {
     /* ===== Constructor & Destructor ===== */
 
     StackBuffer::StackBuffer(GC& gc, size_t capacity, size_t maxCapacity) : gc(gc),
-                                                                                   length(0),
-                                                                                   capacity(capacity),
-                                                                                   maxCapacity(maxCapacity) {
+                                                                            length(0),
+                                                                            capacity(capacity),
+                                                                            maxCapacity(maxCapacity) {
         buffer = new Value[capacity];
         basePointer = buffer;
         stackPointer = buffer;
@@ -61,7 +61,9 @@ namespace Spark {
         else if (newLength > capacity) {
             // Calculate new capacity and resize the buffer
             size_t newCapacity = capacity * 2;
-            if (newCapacity < newLength)
+            if (newCapacity > maxCapacity)
+                newCapacity = maxCapacity;
+            else if (newCapacity < newLength)
                 newCapacity = newLength;
             resize(newCapacity);
         }
@@ -194,47 +196,42 @@ namespace Spark {
         return vec;
     }
 
-    void StackBuffer::openFrame() {
-        // Record previous base pointer offset
-        prevBPOffset.push_front(basePointer - buffer);
+    void StackBuffer::move(StackBuffer& from, StackBuffer& to, Int64 n) {
+        // Move back source stack pointer and decrease stack length
+        from.stackPointer -= n;
+#ifndef NDEBUG
+        if (from.stackPointer < from.basePointer)
+            throw std::runtime_error("Stack underflow.");
+#endif
+        from.length -= n;
 
-        // Update base pointer
-        basePointer = stackPointer;
+        // Make sure destination stack have enough capacity
+        size_t newLen = to.length + n;
+        if (newLen > to.maxCapacity)
+            throw std::runtime_error("Stack overflow.");
+        if (newLen > to.capacity) {
+            size_t newCapacity = to.capacity * 2;
+
+        }
+
+        std::memcpy(to.stackPointer, from.stackPointer, n * sizeof(Value));
+
+        to.stackPointer += n;
+        to.length += newLen;
     }
 
     void StackBuffer::startCall(StackBuffer& opStack, StackBuffer& stStack, Int64 narg) {
         // Open a new storage stack frame
         stStack.openFrame();
 
-        // Copy arguments from operation stack to storage stack
-        // Note: using 'std::memcpy' is fine here because the reference count doesn't change
-        std::memcpy(stStack.basePointer, opStack.stackPointer - static_cast<ptrdiff_t>(narg), narg * sizeof(Value));
-
-        // Manually move forward storage stack pointer and length
-        stStack.stackPointer += static_cast<ptrdiff_t>(narg);
-        stStack.length += static_cast<size_t>(narg);
-
-        // Manually move back operation stack pointer and length
-        opStack.stackPointer -= static_cast<ptrdiff_t>(narg);
-        opStack.length -= static_cast<size_t>(narg);
+        // Move arguments from operation stack to storage stack
+        move(opStack, stStack, narg);
 
         // Open a new operation stack frame
         opStack.openFrame();
     }
 
     void StackBuffer::endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn) {
-        auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix = "") {
-            std::cout << prefix << "[";
-            if (!stack.empty()) {
-                for (size_t i = 0; i < stack.size(); i++) {
-                    std::cout << stack[i];
-                    if (i != stack.size() - 1)
-                        std::cout << ", ";
-                }
-            }
-            std::cout << "]" << std::endl;
-        };
-
         // Pop all values in the current storage stack frame, then resume the base pointer
         stStack.pop(static_cast<Int64>(stStack.stackPointer - stStack.basePointer));
         stStack.basePointer = stStack.buffer + stStack.prevBPOffset.front();
@@ -258,6 +255,14 @@ namespace Spark {
         // Resume operation stack base pointer
         opStack.basePointer = opStack.buffer + opStack.prevBPOffset.front();
         opStack.prevBPOffset.pop_front();
+    }
+
+    void StackBuffer::openFrame() {
+        // Record previous base pointer offset
+        prevBPOffset.push_front(basePointer - buffer);
+
+        // Update base pointer
+        basePointer = stackPointer;
     }
 
 } // Spark

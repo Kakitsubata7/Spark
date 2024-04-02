@@ -113,7 +113,8 @@ namespace Spark {
                    << std::setw(2)
                    << std::setfill('0')
                    << reinterpret_cast<uintptr_t>(value.cFuncPtr)
-                   << ">";
+                   << ">"
+                   << std::dec;
             }
                 break;
 
@@ -143,7 +144,8 @@ namespace Spark {
                    << std::setw(2)
                    << std::setfill('0')
                    << reinterpret_cast<uintptr_t>(value.nodePtr)
-                   << ">";
+                   << ">"
+                   << std::dec;
             }
                 break;
 
@@ -153,7 +155,8 @@ namespace Spark {
                    << std::setw(2)
                    << std::setfill('0')
                    << reinterpret_cast<uintptr_t>(value.nodePtr)
-                   << ">";
+                   << ">"
+                   << std::dec;
             }
                 break;
         }
