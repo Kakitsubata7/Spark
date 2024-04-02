@@ -89,6 +89,11 @@ public:
     bool execute();
 
     void push(const Value& value);
+    void pushNil();
+    void pushInt(Int i);
+    void pushFloat(Float f);
+    void pushBool(Bool b);
+    void pushCFunc(CFunction cFunc);
     void pushStorage(const Value& value);
 
     void pop();
