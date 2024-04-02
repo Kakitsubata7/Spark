@@ -77,12 +77,14 @@ int main() {
     buffer.append(Opcode::PushStorage);
     buffer.append<Int64>(-1);
 
-//    buffer.append(Opcode::PushInteger);
-//    buffer.append<Int64>(37);
-//
+    buffer.append(Opcode::PushInteger);
+    buffer.append<Int64>(37);
+
 //    buffer.append(Opcode::Call);
 //    buffer.append<Int64>(1); // Callable index
 //    buffer.append<Int64>(2); // Number of arguments
+
+    buffer.append(Opcode::PopStorage);
 
     buffer.append(Opcode::Halt);
 

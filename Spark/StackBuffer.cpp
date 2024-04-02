@@ -21,10 +21,10 @@ namespace Spark {
 
     StackBuffer::~StackBuffer() {
         // Unregister remaining reference type values from the GC
-        Value* p = stackPointer--;
+        Value* p = stackPointer - 1;
         while (p >= buffer) {
             const Value& value = *p;
-            if (p->isReferenceType())
+            if (value.isReferenceType())
                 gc.unregisterEntryNode(value.nodePtr);
             p--;
         }
@@ -43,15 +43,15 @@ namespace Spark {
 
         // Allocate and initialize new buffer
         Value* newBuffer = new Value[newCapacity];
-        std::memcpy(newBuffer, buffer, length);
+        std::memcpy(newBuffer, buffer, length * sizeof(Value));
 
         // Update registers
         basePointer = newBuffer + (basePointer - buffer);
         stackPointer = newBuffer + (stackPointer - buffer);
 
         // Deallocate previous buffer and set new buffer
-        buffer = newBuffer;
         delete[] buffer;
+        buffer = newBuffer;
     }
 
     void StackBuffer::push(const Value& value) {
@@ -103,14 +103,16 @@ namespace Spark {
     }
 
     void StackBuffer::pop(Int64 n) {
+#ifndef NDEBUG
+        if (n < 0)
+            throw std::runtime_error("Pop number cannot be negative.");
+#endif
         if (n == 0)
             return;
 
         // Move stack pointer n values back
         Value* targetSP = stackPointer - static_cast<ptrdiff_t>(n);
 #ifndef NDEBUG
-        if (n < 0)
-            throw std::runtime_error("Pop number cannot be negative.");
         if (targetSP < basePointer)
             throw std::runtime_error("Stack underflow.");
 #endif
@@ -184,18 +186,6 @@ namespace Spark {
         return *p;
     }
 
-    std::vector<std::reference_wrapper<const Value>> StackBuffer::toVector() {
-        if (length == 0)
-            return {};
-
-        std::vector<std::reference_wrapper<const Value>> vec;
-        vec.reserve(length);
-        Value* p = basePointer;
-        for (int i = 0; p < stackPointer; i++, p++)
-            vec.emplace_back(*p);
-        return vec;
-    }
-
     void StackBuffer::move(StackBuffer& from, StackBuffer& to, Int64 n) {
         // Move back source stack pointer and decrease stack length
         from.stackPointer -= n;
@@ -211,11 +201,15 @@ namespace Spark {
             throw std::runtime_error("Stack overflow.");
         if (newLen > to.capacity) {
             size_t newCapacity = to.capacity * 2;
-
+            if (newCapacity < newLen)
+                newCapacity = newLen;
+            to.resize(newCapacity);
         }
 
+        // Copy values from source to destination
         std::memcpy(to.stackPointer, from.stackPointer, n * sizeof(Value));
 
+        // Move forward destination stack pointer and increase stack length
         to.stackPointer += n;
         to.length += newLen;
     }
@@ -263,6 +257,18 @@ namespace Spark {
 
         // Update base pointer
         basePointer = stackPointer;
+    }
+
+    std::vector<std::reference_wrapper<const Value>> StackBuffer::toVector() {
+        if (length == 0)
+            return {};
+
+        std::vector<std::reference_wrapper<const Value>> vec;
+        vec.reserve(length);
+        Value* p = buffer;
+        for (int i = 0; p < stackPointer; i++, p++)
+            vec.emplace_back(*p);
+        return vec;
     }
 
 } // Spark
