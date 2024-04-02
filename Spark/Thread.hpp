@@ -82,6 +82,15 @@ public:
         return str;
     }
 
+    [[nodiscard]] static Value makeNil() { return Value::makeNil(); }
+    [[nodiscard]] static Value makeInt(Int i) { return Value::makeInt(i); }
+    [[nodiscard]] static Value makeFloat(Float f) { return Value::makeFloat(f); }
+    [[nodiscard]] static Value makeBool(Bool b) { return Value::makeBool(b); }
+    [[nodiscard]] static Value makeCFunc(CFunction cFunc) { return Value::makeCFunction(cFunc); }
+    [[nodiscard]] static Value makeType(Type type) { return Value::makeType(type); }
+    [[nodiscard]] Value makeString(const std::string& str) const { return Value::makeString(gc, str); }
+    [[nodiscard]] 
+
     /**
      * Execute one instruction.
      * @return Whether the thread is halted.
@@ -89,11 +98,6 @@ public:
     bool execute();
 
     void push(const Value& value);
-    void pushNil();
-    void pushInt(Int i);
-    void pushFloat(Float f);
-    void pushBool(Bool b);
-    void pushCFunc(CFunction cFunc);
     void pushStorage(const Value& value);
 
     void pop();
