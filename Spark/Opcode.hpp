@@ -39,7 +39,7 @@ enum class Opcode : uint8_t {
     LogicalAnd,         // Pop two values and perform the '&&' operation. Push the result onto the stack.
     LogicalOr,          // Pop two values and perform the '||' operation. Push the result onto the stack.
     LogicalXor,         // Pop two values and perform the '^^' operation. Push the result onto the stack.
-    LogicalNegation,    // Pop two values and perform the '!' operation. Push the result onto the stack.
+    LogicalNegation,    // Pop one value and perform the '!' operation. Push the result onto the stack.
 
     BitwiseAnd,         // Pop two values and perform the '&' operation. Push the result onto the stack.
     BitwiseOr,          // Pop two values and perform the '|' operation. Push the result onto the stack.
