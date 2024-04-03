@@ -67,28 +67,36 @@ int main() {
 
     BytecodeBuffer buffer;
 
-    buffer.append(Opcode::PushStorage);
-    buffer.append<Int64>(-1);
+//    buffer.append(Opcode::PushStorage);
+//    buffer.append<Int64>(-1);
+//
+//    buffer.append(Opcode::Pop);
+//
+//    buffer.append(Opcode::PushEmptyArray);
+//
+//    buffer.append(Opcode::PushStorage);
+//    buffer.append<Int64>(-1);
+//
+//    buffer.append(Opcode::PushInteger);
+//    buffer.append<Int64>(37);
+//
+//    buffer.append(Opcode::Call);
+//    buffer.append<Int64>(1); // Callable index
+//    buffer.append<Int64>(2); // Number of arguments
 
-    buffer.append(Opcode::Pop);
+    buffer.append(Opcode::PushBoolean);
+    buffer.append<Bool>(true);
 
-    buffer.append(Opcode::PushEmptyArray);
+    buffer.append(Opcode::PushBoolean);
+    buffer.append<Bool>(false);
 
-    buffer.append(Opcode::PushStorage);
-    buffer.append<Int64>(-1);
-
-    buffer.append(Opcode::PushInteger);
-    buffer.append<Int64>(37);
-
-    buffer.append(Opcode::Call);
-    buffer.append<Int64>(1); // Callable index
-    buffer.append<Int64>(2); // Number of arguments
+    buffer.append(Opcode::LogicalAnd);
 
     buffer.append(Opcode::Halt);
 
     GC gc;
     Thread thread(gc);
-    thread.push(Value::makeCFunction(Array::append));
+//    thread.push(Value::makeCFunction(Array::append));
     thread.programCounter = buffer.getOpcode();
     while (!thread.execute()) { }
 
