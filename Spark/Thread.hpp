@@ -89,7 +89,7 @@ public:
     [[nodiscard]] static Value makeCFunc(CFunction cFunc) { return Value::makeCFunction(cFunc); }
     [[nodiscard]] static Value makeType(Type type) { return Value::makeType(type); }
     [[nodiscard]] Value makeString(const std::string& str) const { return Value::makeString(gc, str); }
-    [[nodiscard]] 
+    [[nodiscard]] Value makeArray(const std::vector<Value>& vec) const { return Value::makeArray(gc, vec); }
 
     /**
      * Execute one instruction.
