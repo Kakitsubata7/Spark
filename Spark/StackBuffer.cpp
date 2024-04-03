@@ -224,6 +224,11 @@ namespace Spark {
     }
 
     void StackBuffer::endCall(StackBuffer& opStack, StackBuffer& stStack, Int64 nreturn) {
+#ifndef NDEBUG
+        if (opStack.prevBPOffset.empty() || stStack.prevBPOffset.empty())
+            throw std::runtime_error("Attempt to close the initial stack frame.");
+#endif
+
         // Pop all values in the current storage stack frame, then resume the base pointer
         stStack.pop(static_cast<Int64>(stStack.stackPointer - stStack.basePointer));
         stStack.basePointer = stStack.buffer + stStack.prevBPOffset.front();
