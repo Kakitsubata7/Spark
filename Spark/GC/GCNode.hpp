@@ -38,7 +38,7 @@ public:
 
     template <typename T>
     [[nodiscard]]
-    T& getData() {
+    T& data() {
         T* p = static_cast<T*>(dataPtr);
         return *p;
     }

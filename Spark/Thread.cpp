@@ -166,14 +166,14 @@ namespace Spark {
 
                     case Type::Function: {
                         prevPCs.push_front(programCounter);
-                        const Function& func = callable.nodePtr->getData<Function>();
+                        const Function& func = callable.nodePtr->data<Function>();
                         programCounter = func.programCounter();
                     }
                         break;
 
                     case Type::Closure: {
                         prevPCs.push_front(programCounter);
-                        const Closure& closure = callable.nodePtr->getData<Closure>();
+                        const Closure& closure = callable.nodePtr->data<Closure>();
                         programCounter = closure.programCounter();
                     }
                         break;

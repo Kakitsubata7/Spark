@@ -17,7 +17,7 @@ namespace Array {
         // TODO: Provide actual implementation
         Value& array = th->getArg(1);
         Value& item = th->getArg(2);
-        array.nodePtr->getData<std::vector<Value>>().push_back(item);
+        array.nodePtr->data<std::vector<Value>>().push_back(item);
         return 0;
     }
 

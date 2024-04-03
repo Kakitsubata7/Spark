@@ -123,11 +123,11 @@ namespace Spark {
                 break;
 
             case Type::String:
-                os << value.nodePtr->getData<std::string>();
+                os << value.nodePtr->data<std::string>();
                 break;
 
             case Type::Array: {
-                const std::vector<Value>& vec = value.nodePtr->getData<std::vector<Value>>();
+                const std::vector<Value>& vec = value.nodePtr->data<std::vector<Value>>();
                 os << "[";
                 for (size_t i = 0; i < vec.size(); i++) {
                     os << vec[i];
@@ -195,7 +195,7 @@ namespace Spark {
 
             case Type::String: {
                 std::ostringstream ss;
-                ss << nodePtr->getData<std::string>() << other;
+                ss << nodePtr->data<std::string>() << other;
                 return makeString(nodePtr->getGC(), ss.str());
             }
                 break;
@@ -417,16 +417,17 @@ namespace Spark {
                 return typeValue == other.typeValue;
 
             case Type::String:
-                return nodePtr->getData<std::string>() == other.nodePtr->getData<std::string>();
+                return nodePtr->data<std::string>() == other.nodePtr->data<std::string>();
 
             case Type::Array:
-                return nodePtr->getData<std::vector<Value>>() == other.nodePtr->getData<std::vector<Value>>();
+                return nodePtr->data<std::vector<Value>>() == other.nodePtr->data<std::vector<Value>>();
 
             case Type::Set:
-                return nodePtr->getData<std::unordered_set<Value>>() == other.nodePtr->getData<std::unordered_set<Value>>();
+                return nodePtr->data<std::unordered_set<Value>>() == other.nodePtr->data<std::unordered_set<Value>>();
 
             case Type::Map:
-                return nodePtr->getData<std::unordered_map<Value, Value>>() == other.nodePtr->getData<std::unordered_map<Value, Value>>();
+                return nodePtr->data<std::unordered_map<Value, Value>>() ==
+                       other.nodePtr->data<std::unordered_map<Value, Value>>();
 
             default:
                 return nodePtr == other.nodePtr;
