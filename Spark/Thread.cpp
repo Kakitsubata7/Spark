@@ -137,6 +137,61 @@ namespace Spark {
             }
                 break;
 
+            case Opcode::Less: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a < b));
+            }
+                break;
+
+            case Opcode::LessOrEqual: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a <= b));
+            }
+                break;
+
+            case Opcode::Greater: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a > b));
+            }
+                break;
+
+            case Opcode::GreaterOrEqual: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a >= b));
+            }
+                break;
+
+            case Opcode::LogicalAnd: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a && b));
+            }
+                break;
+
+            case Opcode::LogicalOr: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(a || b));
+            }
+                break;
+
+            case Opcode::LogicalXor: {
+                const Value b = popGet();
+                const Value a = popGet();
+                push(Value::makeBool(Value::exclusiveOr(a, b)));
+            }
+                break;
+
+            case Opcode::LogicalNegation: {
+                const Value& v = popGet();
+                push(Value::makeBool(!v));
+            }
+                break;
+
             case Opcode::Call: {
                 // Get callable index and number of arguments
                 Int64 index = fetch<Int64>();
