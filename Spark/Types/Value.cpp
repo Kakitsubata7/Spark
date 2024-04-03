@@ -205,7 +205,7 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Operator '+' is not supported between " << type << " and " << other.type << ".";
+        ss << "Operator '+' is not supported between '" << type << "' and '" << other.type << "'.";
         throw std::runtime_error(ss.str());
     }
 
@@ -244,7 +244,7 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Operator '-' is not supported between " << type << " and " << other.type << ".";
+        ss << "Operator '-' is not supported between '" << type << "' and '" << other.type << "'.";
         throw std::runtime_error(ss.str());
     }
 
@@ -283,7 +283,7 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Operator '*' is not supported between " << type << " and " << other.type << ".";
+        ss << "Operator '*' is not supported between '" << type << "' and '" << other.type << "'.";
         throw std::runtime_error(ss.str());
     }
 
@@ -322,7 +322,7 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Operator '/' is not supported between " << type << " and " << other.type << ".";
+        ss << "Operator '/' is not supported between '" << type << "' and '" << other.type << "'.";
         throw std::runtime_error(ss.str());
     }
 
@@ -361,7 +361,7 @@ namespace Spark {
         }
 
         std::ostringstream ss;
-        ss << "Operator '%' is not supported between " << type << " and " << other.type << ".";
+        ss << "Operator '%' is not supported between '" << type << "' and '" << other.type << "'.";
         throw std::runtime_error(ss.str());
     }
 
@@ -436,6 +436,198 @@ namespace Spark {
 
     bool Value::operator!=(const Value& other) const {
         return !(*this == other);
+    }
+
+    bool Value::operator<(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return intValue < other.intValue;
+
+                    case Type::Float:
+                        return static_cast<Float>(intValue) < other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return floatValue < static_cast<Float>(other.intValue);
+
+                    case Type::Float:
+                        return floatValue < other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        std::ostringstream ss;
+        ss << "Operator '<' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator<=(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return intValue <= other.intValue;
+
+                    case Type::Float:
+                        return static_cast<Float>(intValue) <= other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return floatValue <= static_cast<Float>(other.intValue);
+
+                    case Type::Float:
+                        return floatValue <= other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        std::ostringstream ss;
+        ss << "Operator '<=' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator>(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return intValue > other.intValue;
+
+                    case Type::Float:
+                        return static_cast<Float>(intValue) > other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return floatValue > static_cast<Float>(other.intValue);
+
+                    case Type::Float:
+                        return floatValue > other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        std::ostringstream ss;
+        ss << "Operator '>' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator>=(const Value& other) const {
+        switch (type) {
+            case Type::Integer: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return intValue >= other.intValue;
+
+                    case Type::Float:
+                        return static_cast<Float>(intValue) >= other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            case Type::Float: {
+                switch (other.type) {
+                    case Type::Integer:
+                        return floatValue >= static_cast<Float>(other.intValue);
+
+                    case Type::Float:
+                        return floatValue >= other.floatValue;
+
+                    default:
+                        break;
+                }
+            }
+                break;
+
+            default:
+                break;
+        }
+
+        std::ostringstream ss;
+        ss << "Operator '>=' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator&&(const Value& other) const {
+        if (type == Type::Boolean && other.type == Type::Boolean)
+            return boolValue && other.boolValue;
+
+        std::ostringstream ss;
+        ss << "Operator '&&' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator||(const Value& other) const {
+        if (type == Type::Boolean && other.type == Type::Boolean)
+            return boolValue || other.boolValue;
+
+        std::ostringstream ss;
+        ss << "Operator '||' is not supported between '" << type << "' and '" << other.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::exclusiveOr(const Value& lhs, const Value& rhs) {
+        if (lhs.type == Type::Boolean && rhs.type == Type::Boolean)
+            return lhs.boolValue != rhs.boolValue;
+
+        std::ostringstream ss;
+        ss << "Operator '^^' is not supported between '" << lhs.type << "' and '" << rhs.type << "'.";
+        throw std::runtime_error(ss.str());
+    }
+
+    bool Value::operator!() const {
+        if (type == Type::Boolean)
+            return !boolValue;
+
+        std::ostringstream ss;
+        ss << "Operator '!' is not supported for '" << type << "'.";
+        throw std::runtime_error(ss.str());
     }
 
 } // Spark

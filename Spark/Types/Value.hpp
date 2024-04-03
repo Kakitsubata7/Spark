@@ -158,6 +158,16 @@ public:
     bool operator==(const Value& other) const;
     bool operator!=(const Value& other) const;
 
+    bool operator<(const Value& other) const;
+    bool operator<=(const Value& other) const;
+    bool operator>(const Value& other) const;
+    bool operator>=(const Value& other) const;
+
+    bool operator&&(const Value& other) const;
+    bool operator||(const Value& other) const;
+    [[nodiscard]] static bool exclusiveOr(const Value& lhs, const Value& rhs);
+    bool operator!() const;
+
 };
 
 } // Spark
