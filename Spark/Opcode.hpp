@@ -8,6 +8,8 @@ enum class Opcode : uint8_t {
 
     Halt,               // Stop the execution of the current thread.
 
+    Cadence,            // Used to signal a context switching.
+
     PushNil,            // Push a 'nil' value onto the stack.
     PushInteger,        // Fetch 8 bytes value and push it as a signed integer.
     PushFloat,          // Fetch 8 bytes and push it as a floating-point number.
@@ -54,7 +56,7 @@ enum class Opcode : uint8_t {
     Call,               // Fetch an 8-byte integer as the number of arguments. Pop a callable value and call it.
     Return,             //
 
-    Capture,            // Pop a value
+    Capture,            //
 
 };
 
