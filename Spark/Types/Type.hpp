@@ -16,10 +16,11 @@ enum class Type : uint8_t {
     Array     = 0x07,
     Set       = 0x08,
     Map       = 0x09,
-    Object    = 0x0A,
-    Function  = 0x0B,
-    Closure   = 0x0C,
-    Thread    = 0x0D
+    Function  = 0x0A,
+    Closure   = 0x0B,
+    Thread    = 0x0C,
+    Namespace = 0x0D,
+    Object    = 0x0E
 };
 
 std::ostream& operator<<(std::ostream& os, Type type);
