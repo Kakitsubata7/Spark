@@ -30,6 +30,7 @@ namespace Spark {
 class Closure;
 class GC;
 class Thread;
+class Namespace;
 
 /**
  * The size of this type should be (8 bytes + pointer size + alignment); at least 16 bytes.
@@ -98,9 +99,6 @@ public:
     [[nodiscard]]
     static Value makeString(GC& gc, const std::string& value = "");
 
-    /**
-     * Note: the returned value is not registered as an entry node in the GC.
-     */
     [[nodiscard]]
     static Value makeArray(GC& gc, const std::vector<Value>& value = {});
 
@@ -112,6 +110,9 @@ public:
 
     [[nodiscard]]
     static Value makeClosure(GC& gc, const Closure& value);
+
+    [[nodiscard]]
+    static Value makeNamespace(GC& gc, const Namespace& value);
 
     ~Value() = default;
 
