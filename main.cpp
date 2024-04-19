@@ -84,13 +84,7 @@ int main() {
 //    buffer.append<Int64>(1); // Callable index
 //    buffer.append<Int64>(2); // Number of arguments
 
-    buffer.append(Opcode::PushBoolean);
-    buffer.append<Bool>(true);
-
-    buffer.append(Opcode::PushBoolean);
-    buffer.append<Bool>(false);
-
-    buffer.append(Opcode::LogicalAnd);
+    buffer.append(Opcode::PushEmptyNamespace);
 
     buffer.append(Opcode::Halt);
 
