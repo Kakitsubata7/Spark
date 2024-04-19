@@ -18,6 +18,7 @@ enum class Opcode : uint8_t {
     PushEmptyArray,     // Push an empty array onto the stack.
     PushEmptySet,       // Push an empty set onto the stack.
     PushEmptyMap,       // Push an empty map onto the stack.
+    PushEmptyNamespace, // Push an empty namespace onto the stack.
 
     Push,               // Fetch an 8-byte index, and use it to push a value to the operation stack.
     PushStorage,        // Fetch an 8-byte index, and use it to push a value to the storage stack.
