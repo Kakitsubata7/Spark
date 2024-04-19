@@ -93,6 +93,10 @@ namespace Spark {
         return self;
     }
 
+    Value Value::makeNamespace(GC& gc) {
+        return makeNamespace(gc, {});
+    }
+
 
 
     /* ===== Operators ===== */

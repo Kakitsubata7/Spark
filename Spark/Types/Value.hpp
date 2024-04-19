@@ -114,6 +114,9 @@ public:
     [[nodiscard]]
     static Value makeNamespace(GC& gc, const Namespace& value);
 
+    [[nodiscard]]
+    static Value makeNamespace(GC& gc);
+
     ~Value() = default;
 
 
