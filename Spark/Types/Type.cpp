@@ -44,6 +44,10 @@ namespace Spark {
                 os << "Map";
                 break;
 
+            case Type::Namespace:
+                os << "Namespace";
+                break;
+
             case Type::Object:
                 os << "Object";
                 break;
