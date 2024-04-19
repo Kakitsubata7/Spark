@@ -45,4 +45,5 @@ add_executable(Spark
         Spark/StackBuffer.cpp
         Spark/Types/Namespace.hpp
         Spark/Types/Object.cpp
+        Spark/Utilities/ConcurrentQueue.hpp
 )
