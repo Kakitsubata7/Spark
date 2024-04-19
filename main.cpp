@@ -1,10 +1,13 @@
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 
 #ifdef _WIN32
 #   include <Windows.h>
 #endif
 
+#include "Spark/Utilities/ConcurrentQueue.hpp"
 #include "Spark/Compilation/BytecodeBuffer.hpp"
 #include "Spark/Env.hpp"
 #include "Spark/GC/AllocateOperation.hpp"
@@ -84,30 +87,44 @@ int main() {
 //    buffer.append<Int64>(1); // Callable index
 //    buffer.append<Int64>(2); // Number of arguments
 
-    buffer.append(Opcode::PushEmptyNamespace);
+//    buffer.append(Opcode::PushEmptyNamespace);
+//
+//    buffer.append(Opcode::Halt);
+//
+//    GC gc;
+//    Thread thread(gc);
+////    thread.push(Value::makeCFunction(Array::append));
+//    thread.programCounter = buffer.getOpcode();
+//    while (!thread.execute()) { }
+//
+//    // Print the stacks
+//    auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix = "") {
+//        std::cout << prefix << "[";
+//        if (!stack.empty()) {
+//            for (size_t i = 0; i < stack.size(); i++) {
+//                std::cout << stack[i];
+//                if (i != stack.size() - 1)
+//                    std::cout << ", ";
+//            }
+//        }
+//        std::cout << "]" << std::endl;
+//    };
+//    printStack(thread.operationStackToVector(), "Operation: ");
+//    printStack(thread.storageStackToVector(), "Storage:   ");
 
-    buffer.append(Opcode::Halt);
+    ConcurrentQueue<int> queue;
 
-    GC gc;
-    Thread thread(gc);
-//    thread.push(Value::makeCFunction(Array::append));
-    thread.programCounter = buffer.getOpcode();
-    while (!thread.execute()) { }
+    std::thread th1([&] {
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        queue.push(1);
+    });
 
-    // Print the stacks
-    auto printStack = [](const std::vector<std::reference_wrapper<const Value>>& stack, const std::string& prefix = "") {
-        std::cout << prefix << "[";
-        if (!stack.empty()) {
-            for (size_t i = 0; i < stack.size(); i++) {
-                std::cout << stack[i];
-                if (i != stack.size() - 1)
-                    std::cout << ", ";
-            }
-        }
-        std::cout << "]" << std::endl;
-    };
-    printStack(thread.operationStackToVector(), "Operation: ");
-    printStack(thread.storageStackToVector(), "Storage:   ");
+    std::thread th2([&] {
+        std::cout << queue.waitUntilPop() << std::endl;
+    });
+
+    th1.join();
+    th2.join();
 
     return EXIT_SUCCESS;
 }
