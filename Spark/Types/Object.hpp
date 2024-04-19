@@ -18,36 +18,12 @@ private:
 
 
 
-    /* ===== Constructor ===== */
-
-public:
-    explicit Object(const Value& _class) {
-        setField("__class", _class);
-    }
-
-
-
     /* ===== Operations ===== */
 
 public:
-    Value& getField(const std::string& name) {
-        // If field doesn't exist
-        if (map.find(name) == map.end()) {
-            std::ostringstream ss;
-            ss << "Object has no field '" << name << "'.";
-            throw std::runtime_error(ss.str());
-        }
+    Value& getField(const std::string& name);
 
-        return map[name];
-    }
-
-    void setField(const std::string& name, const Value& value) {
-        map[name] = value;
-    }
-
-    Value& getClass() {
-        return getField("__class");
-    }
+    void setField(const std::string& name, const Value& value);
 
 };
 

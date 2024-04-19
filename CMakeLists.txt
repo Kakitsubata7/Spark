@@ -44,4 +44,5 @@ add_executable(Spark
         Spark/StackBuffer.hpp
         Spark/StackBuffer.cpp
         Spark/Types/Namespace.hpp
+        Spark/Types/Object.cpp
 )
