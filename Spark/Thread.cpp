@@ -72,6 +72,10 @@ namespace Spark {
                 push(Value::makeMap(gc));
                 break;
 
+            case Opcode::PushEmptyNamespace:
+                push(Value::makeNamespace(gc));
+                break;
+
             case Opcode::Push:
                 push(get(fetch<Int64>()));
                 break;
