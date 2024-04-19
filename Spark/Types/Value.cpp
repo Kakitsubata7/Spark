@@ -6,6 +6,7 @@
 
 #include "../GC/GC.hpp"
 #include "Closure.hpp"
+#include "Namespace.hpp"
 
 namespace std {
     std::size_t hash<Spark::Value>::operator()(const Spark::Value& value) const  {
@@ -82,6 +83,13 @@ namespace Spark {
         Value self;
         self.type = Type::Closure;
         self.nodePtr = gc.allocate<Closure>(value);
+        return self;
+    }
+
+    Value Value::makeNamespace(GC& gc, const Namespace& value) {
+        Value self;
+        self.type = Type::Namespace;
+        self.nodePtr = gc.allocate<Namespace>(value);
         return self;
     }
 
