@@ -46,4 +46,8 @@ add_executable(Spark
         Spark/Types/Namespace.hpp
         Spark/Types/Object.cpp
         Spark/Utilities/ConcurrentQueue.hpp
+        Spark/NewThread.hpp
+        Spark/NewThread.cpp
+        Spark/GC/GCBase.hpp
+        Spark/GC/ConcurrentGC.hpp
 )

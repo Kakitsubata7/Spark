@@ -6,7 +6,7 @@ class GCNode;
 
 class GCBase {
 
-    /* ===== Entry Nodes ===== */
+    /* ===== Operations ===== */
 
 public:
     virtual void addEntryNode(GCNode* node) = 0;
