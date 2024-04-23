@@ -11,7 +11,7 @@ namespace Spark {
     /* ===== Constructor & Destructor ===== */
 
     NewThread::NewThread(GCBase& gc, size_t stackCapacity, size_t maxStackCapacity)
-        : gc(gc), stackCapacity(stackCapacity), maxStackCapacity(maxStackCapacity), stackLength(0) {
+        : gc(gc), stackCapacity(stackCapacity), stackMaxCapacity(maxStackCapacity), stackLength(0) {
         // Allocate stack buffer and initialize stack registers
         stackBuffer = new Value[stackCapacity];
         basePointer = stackPointer = stackBuffer;
@@ -73,7 +73,7 @@ namespace Spark {
     void NewThread::resize(size_t newCapacity) {
         if (newCapacity < stackLength)
             throw std::runtime_error("Stack capacity cannot be less than the current length.");
-        if (newCapacity > maxStackCapacity)
+        if (newCapacity > stackMaxCapacity)
             throw std::runtime_error("Stack capacity cannot be greater than the current max stack capacity.");
 
         // Allocate new buffer, then copy data to it
@@ -91,13 +91,13 @@ namespace Spark {
 
     void NewThread::push(const Value& value) {
         size_t newLength = stackLength + 1;
-        if (newLength > maxStackCapacity)
+        if (newLength > stackMaxCapacity)
             throw std::runtime_error("Stack overflow.");
         if (newLength > stackCapacity) {
             // Calculate new capacity and resize the buffer
             size_t newCapacity = stackCapacity * 2;
-            if (newCapacity > maxStackCapacity)
-                newCapacity = maxStackCapacity;
+            if (newCapacity > stackMaxCapacity)
+                newCapacity = stackMaxCapacity;
             else if (newCapacity < newLength)
                 newCapacity = newLength;
             resize(newCapacity);

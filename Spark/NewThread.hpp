@@ -36,7 +36,7 @@ private:
     Value* stackBuffer;
 
     size_t stackCapacity;
-    size_t maxStackCapacity;
+    size_t stackMaxCapacity;
 
     size_t stackLength;
 
@@ -88,9 +88,9 @@ public:
 
     /**
      * Resize the stack buffer.
-     * @param newCapacity Capacity to resize to. It cannot be greater than the current max stack capacity or less than
+     * @param newCapacity Capacity to resize to. It cannot be greater than the current stack max capacity or less than
      *                    the current stack length.
-     * @throws std::runtime_error If new capacity is greater than the current max stack capacity or less than the
+     * @throws std::runtime_error If new capacity is greater than the current stack max capacity or less than the
      *                            current stack length.
      */
     void resize(size_t newCapacity);
