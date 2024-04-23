@@ -5,11 +5,11 @@
 
 #include "Config.hpp"
 #include "GC/GCType.hpp"
-#include "NewThread.hpp"
 
 namespace Spark {
 
 class GCBase;
+class NewThread;
 
 class InterpretedVM {
 

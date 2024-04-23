@@ -4,6 +4,7 @@
 
 #include "GC/ConcurrentGC.hpp"
 #include "GC/SingleThreadedGC.hpp"
+#include "NewThread.hpp"
 
 namespace Spark {
 
