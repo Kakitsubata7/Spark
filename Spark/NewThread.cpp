@@ -10,8 +10,8 @@ namespace Spark {
 
     /* ===== Constructor & Destructor ===== */
 
-    NewThread::NewThread(GCBase& gc, size_t stackCapacity, size_t maxStackCapacity)
-        : gc(gc), stackCapacity(stackCapacity), stackMaxCapacity(maxStackCapacity), stackLength(0) {
+    NewThread::NewThread(GCBase& gc, size_t stackCapacity, size_t stackMaxCapacity)
+        : gc(gc), stackCapacity(stackCapacity), stackMaxCapacity(stackMaxCapacity), stackLength(0) {
         // Allocate stack buffer and initialize stack registers
         stackBuffer = new Value[stackCapacity];
         basePointer = stackPointer = stackBuffer;

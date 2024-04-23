@@ -47,7 +47,7 @@ private:
 public:
     explicit NewThread(GCBase& gc,
                        size_t stackCapacity = DEFAULT_STACK_CAPACITY,
-                       size_t maxStackCapacity = DEFAULT_STACK_MAX_CAPACITY);
+                       size_t stackMaxCapacity = DEFAULT_STACK_MAX_CAPACITY);
 
     ~NewThread();
 
