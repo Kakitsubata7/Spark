@@ -50,4 +50,10 @@ add_executable(Spark
         Spark/NewThread.cpp
         Spark/GC/GCBase.hpp
         Spark/GC/ConcurrentGC.hpp
+        Spark/GC/SingleThreadedGC.hpp
+        Spark/GC/ConcurrentGC.cpp
+        Spark/GC/SingleThreadedGC.cpp
+        Spark/InterpretedVM.hpp
+        Spark/InterpretedVM.cpp
+        Spark/GC/GCType.hpp
 )
