@@ -13,6 +13,6 @@ namespace Spark {
     constexpr size_t DEFAULT_MAX_VARIABLE_STACK_CAPACITY = 131072 * sizeof(Value);
 
     constexpr size_t DEFAULT_STACK_CAPACITY = 256;
-    constexpr size_t DEFAULT_MAX_STACK_CAPACITY = 131072;
+    constexpr size_t DEFAULT_STACK_MAX_CAPACITY = 131072;
 
 } // Spark
