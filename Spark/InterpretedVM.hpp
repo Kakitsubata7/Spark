@@ -16,8 +16,15 @@ class InterpretedVM {
     /* ===== Thread ===== */
 
 private:
-    std::unique_ptr<NewThread> mainThread;
-    std::unordered_set<std::unique_ptr<NewThread>> threadSet;
+    NewThread* mainThread;
+    std::unordered_set<NewThread*> threadSet;
+
+public:
+    [[nodiscard]]
+    NewThread& createThread(size_t stackCapacity = DEFAULT_STACK_CAPACITY,
+                            size_t stackMaxCapacity = DEFAULT_STACK_MAX_CAPACITY);
+
+    void deleteThread(const NewThread& thread);
 
 
 
@@ -28,12 +35,28 @@ private:
 
 
 
-    /* ===== Constructor ===== */
+    /* ===== Constructor & Destructor ===== */
 
 public:
     explicit InterpretedVM(GCType gcType,
                            size_t mainThreadCapacity = DEFAULT_STACK_CAPACITY,
                            size_t mainThreadMaxCapacity = DEFAULT_STACK_MAX_CAPACITY);
+
+    ~InterpretedVM();
+
+
+
+    /* ===== Execution ===== */
+
+public:
+    void run() {
+        (this->*runFunc)();
+    }
+
+private:
+    void (InterpretedVM::*runFunc)();
+    void runWithSingleThreadedGC();
+    void runWithConcurrentGC();
 
 };
 

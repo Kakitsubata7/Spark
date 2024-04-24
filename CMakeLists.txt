@@ -13,24 +13,18 @@ add_executable(Spark
         Spark/Types.hpp
         Spark/API.hpp
         Spark/API.cpp
-        Spark/Env.hpp
-        Spark/Thread.hpp
-        Spark/GC/GC.hpp
         Spark/GC/GCNode.hpp
         Spark/Types/Value.hpp
-        spark/GC/GC.cpp
         spark/GC/GCOperation.hpp
-        spark/GC/CollectOperation.hpp
-        spark/GC/ReferenceOperation.hpp
-        spark/GC/UnreferenceOperation.hpp
-        spark/GC/AllocateOperation.hpp
+        Spark/GC/Operations/CollectOperation.hpp
+        Spark/GC/Operations/ReferenceOperation.hpp
+        Spark/GC/Operations/UnreferenceOperation.hpp
+        Spark/GC/Operations/AllocateOperation.hpp
         spark/Types/Type.hpp
         Spark/GC/GCPtr.hpp
         spark/Types/Value.cpp
-        Spark/GC/CollectOperation.cpp
-        Spark/Env.cpp
+        Spark/GC/Operations/CollectOperation.cpp
         Spark/Opcode.hpp
-        Spark/Thread.cpp
         Spark/Config.hpp
         Spark/Types/Type.cpp
         Spark/Compilation/BytecodeBuffer.hpp

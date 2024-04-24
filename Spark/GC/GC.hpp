@@ -7,8 +7,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "AllocateOperation.hpp"
-#include "CollectOperation.hpp"
+#include "Operations/AllocateOperation.hpp"
+#include "Operations/CollectOperation.hpp"
 #include "GCNode.hpp"
 #include "GCOperation.hpp"
 

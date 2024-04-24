@@ -8,9 +8,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../Types/Value.hpp"
-#include "GCNode.hpp"
-#include "GCOperation.hpp"
+#include "../../Types/Value.hpp"
+#include "../GCNode.hpp"
+#include "../GCOperation.hpp"
 
 namespace Spark {
 

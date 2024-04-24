@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 #include "Config.hpp"
 #include "Opcode.hpp"

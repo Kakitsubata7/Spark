@@ -7,17 +7,8 @@
 #   include <Windows.h>
 #endif
 
-#include "Spark/Utilities/ConcurrentQueue.hpp"
-#include "Spark/Compilation/BytecodeBuffer.hpp"
-#include "Spark/Env.hpp"
-#include "Spark/GC/AllocateOperation.hpp"
-#include "Spark/GC/CollectOperation.hpp"
-#include "Spark/GC/GC.hpp"
-#include "Spark/GC/GCNode.hpp"
-#include "Spark/GC/GCOperation.hpp"
-#include "Spark/GC/ReferenceOperation.hpp"
-#include "Spark/GC/UnreferenceOperation.hpp"
-#include "Spark/Types.hpp"
+#include "Spark/NewThread.hpp"
+#include "Spark/InterpretedVM.hpp"
 
 using namespace Spark;
 
@@ -68,7 +59,7 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    BytecodeBuffer buffer;
+//    BytecodeBuffer buffer;
 
 //    buffer.append(Opcode::PushStorage);
 //    buffer.append<Int64>(-1);
@@ -112,19 +103,8 @@ int main() {
 //    printStack(thread.operationStackToVector(), "Operation: ");
 //    printStack(thread.storageStackToVector(), "Storage:   ");
 
-    ConcurrentQueue<int> queue;
-
-    std::thread th1([&] {
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        queue.push(1);
-    });
-
-    std::thread th2([&] {
-        std::cout << queue.waitUntilPop() << std::endl;
-    });
-
-    th1.join();
-    th2.join();
+    InterpretedVM vm = InterpretedVM(GCType::SingleThreaded);
+    vm.createThread();
 
     return EXIT_SUCCESS;
 }

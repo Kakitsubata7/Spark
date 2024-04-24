@@ -2,8 +2,8 @@
 
 #include <unordered_set>
 
-#include "GCNode.hpp"
-#include "GCOperation.hpp"
+#include "../GCNode.hpp"
+#include "../GCOperation.hpp"
 
 namespace Spark {
 

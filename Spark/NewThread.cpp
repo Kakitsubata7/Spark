@@ -1,5 +1,6 @@
 #include "NewThread.hpp"
 
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 

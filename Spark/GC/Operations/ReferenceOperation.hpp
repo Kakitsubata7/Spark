@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GCNode.hpp"
-#include "GCOperation.hpp"
+#include "../GCNode.hpp"
+#include "../GCOperation.hpp"
 
 namespace Spark {
 
