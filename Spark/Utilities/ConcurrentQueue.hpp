@@ -9,6 +9,9 @@ namespace Spark {
 template <typename T>
 class ConcurrentQueue {
 
+    // Make sure templated type has move semantics
+    static_assert(std::is_move_constructible<T>::value, "T must be move constructible.");
+
     /* ===== Data ===== */
 
 private:
@@ -21,10 +24,7 @@ private:
     /* ===== Constructor & Destructor ===== */
 
 public:
-    ConcurrentQueue() {
-        // Make sure templated type has move semantics
-        static_assert(std::is_move_constructible<T>::value, "T must be move constructible.");
-    }
+    ConcurrentQueue() = default;
 
     ~ConcurrentQueue() = default;
 
