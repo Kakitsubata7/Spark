@@ -7,12 +7,5 @@
 #endif
 
 extern "C" {
-    SPARK_API void* spark_new_env();
-    SPARK_API void spark_close_env(void* env);
-
-    SPARK_API void spark_push_int();
-    SPARK_API void spark_push_float();
-    SPARK_API void spark_push_bool();
-
-    SPARK_API void spark_pop(int num);
+    
 }
