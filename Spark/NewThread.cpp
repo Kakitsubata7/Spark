@@ -5,6 +5,11 @@
 #include <sstream>
 
 #include "GC/GCBase.hpp"
+#include "Types/Bool.hpp"
+#include "Types/Float.hpp"
+#include "Types/Float64.hpp"
+#include "Types/Int.hpp"
+#include "Types/Int64.hpp"
 #include "Types/Value.hpp"
 
 namespace Spark {
@@ -55,6 +60,22 @@ namespace Spark {
 
                 case Opcode::PushNil:
                     push(Value::makeNil());
+                    break;
+
+                case Opcode::PushInteger:
+                    push(Value::makeInt(static_cast<Int>(fetch<Int64>())));
+                    break;
+
+                case Opcode::PushFloat:
+                    push(Value::makeFloat(static_cast<Float>(fetch<Float64>())));
+                    break;
+
+                case Opcode::PushBoolean:
+                    push(Value::makeBool(fetch<Bool>()));
+                    break;
+
+                case Opcode::PushString:
+                    push(Value::makeString(gc, fetchString(static_cast<Int>(fetch<Int64>()))));
                     break;
 
                 default: {
