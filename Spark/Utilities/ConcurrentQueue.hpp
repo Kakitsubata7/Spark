@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <condition_variable>
 #include <mutex>
 #include <queue>
@@ -57,6 +58,26 @@ public:
         {
             std::lock_guard<std::mutex> lock(mutex);
             queue.push(std::move(value));
+        }
+        cv.notify_one();
+    }
+
+    template <size_t size>
+    void pushArray(const std::array<T, size>& array) {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            for (const T& value : array)
+                queue.push(value);
+        }
+        cv.notify_one();
+    }
+
+    template <size_t size>
+    void moveArray(std::array<T, size>& array) {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            for (T& value : array)
+                queue.push(std::move(value));
         }
         cv.notify_one();
     }
