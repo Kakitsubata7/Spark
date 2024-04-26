@@ -72,22 +72,6 @@ public:
         ::operator delete(dataPtr);
     }
 
-
-
-    /* ===== Operations ===== */
-    /*
-     * TODO: Delete the following
-     */
-
-public:
-    void reference(GCNode* other) {
-
-    }
-
-    void unreference(GCNode* other) {
-
-    }
-
 };
 
 } // Spark

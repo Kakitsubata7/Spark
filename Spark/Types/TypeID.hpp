@@ -5,13 +5,13 @@
 
 namespace Spark {
 
-enum class Type : uint8_t {
+enum class TypeID : uint8_t {
     Nil       = 0x00,
     Integer   = 0x01,
     Float     = 0x02,
     Boolean   = 0x03,
     CFunction = 0x04,
-    Type      = 0x05,
+    TypeID    = 0x05,
     String    = 0x06,
     Array     = 0x07,
     Set       = 0x08,
@@ -20,9 +20,10 @@ enum class Type : uint8_t {
     Closure   = 0x0B,
     Thread    = 0x0C,
     Namespace = 0x0D,
-    Object    = 0x0E
+    Object    = 0x0E,
+    UserData  = 0x0F
 };
 
-std::ostream& operator<<(std::ostream& os, Type type);
+std::ostream& operator<<(std::ostream& os, TypeID typeID);
 
 } // Spark
