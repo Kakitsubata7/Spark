@@ -9,6 +9,7 @@
 #include "Types/Function.hpp"
 #include "Types/Int.hpp"
 #include "Types/Int64.hpp"
+#include "Types/Namespace.hpp"
 #include "Types/Object.hpp"
-#include "Types/Type.hpp"
+#include "Types/TypeID.hpp"
 #include "Types/Value.hpp"

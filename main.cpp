@@ -104,6 +104,7 @@ int main() {
 //    printStack(thread.storageStackToVector(), "Storage:   ");
 
     InterpretedVM vm = InterpretedVM(GCType::SingleThreaded);
+    vm.run();
 
     return EXIT_SUCCESS;
 }

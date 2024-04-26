@@ -9,10 +9,10 @@
 
 #include "../GC/GCNode.hpp"
 #include "Bool.hpp"
-#include "Float.hpp"
 #include "CFunction.hpp"
+#include "Float.hpp"
 #include "Int.hpp"
-#include "Type.hpp"
+#include "TypeID.hpp"
 
 namespace Spark {
     class Value;
@@ -29,6 +29,7 @@ namespace Spark {
 
 class Closure;
 class GC;
+class GCBase;
 class Thread;
 class Namespace;
 
@@ -40,64 +41,58 @@ class Value {
     /* ===== Constructor, Factory Methods & Destructor ===== */
 
 public:
-    Value() {
-        type = Type::Nil;
-        intValue = {};
-        ptrValue = {};
+    constexpr Value() : type(TypeID::Nil) { }
+
+    [[nodiscard]]
+    constexpr static Value makeNil() {
+        return Value();
     }
 
     [[nodiscard]]
-    static Value makeNil() {
+    constexpr static Value makeInt(Int i = 0) {
         Value self;
-        self.type = Type::Nil;
+        self.type = TypeID::Integer;
+        self.intValue = i;
         return self;
     }
 
     [[nodiscard]]
-    static Value makeInt(Int value = 0) {
+    constexpr static Value makeFloat(Float f = 0.0) {
         Value self;
-        self.type = Type::Integer;
-        self.intValue = value;
+        self.type = TypeID::Float;
+        self.floatValue = f;
         return self;
     }
 
     [[nodiscard]]
-    static Value makeFloat(Float value = 0.0) {
+    constexpr static Value makeBool(Bool b = false) {
         Value self;
-        self.type = Type::Float;
-        self.floatValue = value;
+        self.type = TypeID::Boolean;
+        self.boolValue = b;
         return self;
     }
 
     [[nodiscard]]
-    static Value makeBool(Bool value = false) {
+    constexpr static Value makeCFunction(CFunction cFunc) {
         Value self;
-        self.type = Type::Boolean;
-        self.boolValue = value;
+        self.type = TypeID::CFunction;
+        self.cFunc = cFunc;
         return self;
     }
 
     [[nodiscard]]
-    static Value makeCFunction(CFunction cFuncPtr) {
+    constexpr static Value makeType(TypeID typeID) {
         Value self;
-        self.type = Type::CFunction;
-        self.cFuncPtr = cFuncPtr;
+        self.type = TypeID::TypeID;
+        self.typeValue = typeID;
         return self;
     }
 
-    [[nodiscard]]
-    static Value makeType(Type value) {
-        Value self;
-        self.type = Type::Type;
-        self.typeValue = value;
-        return self;
-    }
-
-    /**
-     * Note: the returned value is not registered as an entry node in the GC.
-     */
     [[nodiscard]]
     static Value makeString(GC& gc, const std::string& value = "");
+
+    [[nodiscard]]
+    static Value makeString(GCBase& gc, const std::string& str = "");
 
     [[nodiscard]]
     static Value makeArray(GC& gc, const std::vector<Value>& value = {});
@@ -124,26 +119,26 @@ public:
     /* ===== Data ===== */
 
 public:
-    Type type;
+    TypeID type;
 
     union {
-        Int intValue{};
+        Int intValue;
         Float floatValue;
         Bool boolValue;
-        void* ptrValue;
-        CFunction cFuncPtr;
-        Type typeValue;
-        GCNode* nodePtr;
+        void* ptrValue{};
+        CFunction cFunc;
+        TypeID typeValue;
+        GCNode* node;
     };
 
     [[nodiscard]]
     bool isReferenceType() const {
-        return static_cast<int>(type) > static_cast<int>(Type::Type);
+        return static_cast<int>(type) > static_cast<int>(TypeID::TypeID);
     }
 
     [[nodiscard]]
     bool isCallable() const {
-        return (type == Type::CFunction) || (type == Type::Function) || (type == Type::Closure);
+        return (type == TypeID::CFunction) || (type == TypeID::Function) || (type == TypeID::Closure);
     }
 
 

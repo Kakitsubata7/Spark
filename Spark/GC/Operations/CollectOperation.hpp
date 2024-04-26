@@ -10,7 +10,7 @@
 
 #include "../../Types/Value.hpp"
 #include "../GCNode.hpp"
-#include "../GCOperation.hpp"
+#include "GCOperation.hpp"
 
 namespace Spark {
 

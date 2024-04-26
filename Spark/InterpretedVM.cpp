@@ -27,16 +27,12 @@ namespace Spark {
     InterpretedVM::InterpretedVM(GCType gcType, size_t mainThreadStackCapacity, size_t mainThreadStackMaxCapacity) {
         // Create GC
         switch (gcType) {
-            case GCType::SingleThreaded: {
+            case GCType::SingleThreaded:
                 gc = std::make_unique<SingleThreadedGC>();
-                runFunc = &InterpretedVM::runWithSingleThreadedGC;
-            }
                 break;
 
-            case GCType::Concurrent: {
+            case GCType::Concurrent:
                 gc = std::make_unique<ConcurrentGC>();
-                runFunc = &InterpretedVM::runWithConcurrentGC;
-            }
                 break;
 
             default:
@@ -57,11 +53,7 @@ namespace Spark {
 
     /* ===== Execution ===== */
 
-    void InterpretedVM::runWithSingleThreadedGC() {
-
-    }
-
-    void InterpretedVM::runWithConcurrentGC() {
+    void InterpretedVM::run() {
         bool isHalted = false;
         while (!isHalted) {
             isHalted = true;
@@ -70,6 +62,8 @@ namespace Spark {
                 if (!thread->execute())
                     isHalted = false;
             }
+
+            gc->step();
         }
     }
 

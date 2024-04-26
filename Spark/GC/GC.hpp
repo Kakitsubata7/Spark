@@ -10,7 +10,7 @@
 #include "Operations/AllocateOperation.hpp"
 #include "Operations/CollectOperation.hpp"
 #include "GCNode.hpp"
-#include "GCOperation.hpp"
+#include "Operations/GCOperation.hpp"
 
 namespace Spark {
 

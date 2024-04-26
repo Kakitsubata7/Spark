@@ -1,54 +1,54 @@
-#include "Type.hpp"
+#include "TypeID.hpp"
 
 namespace Spark {
 
-    std::ostream& operator<<(std::ostream& os, const Type type) {
-        switch (type) {
-            case Type::Nil:
+    std::ostream& operator<<(std::ostream& os, const TypeID typeID) {
+        switch (typeID) {
+            case TypeID::Nil:
                 os << "Nil";
                 break;
 
-            case Type::Integer:
+            case TypeID::Integer:
                 os << "Integer";
                 break;
 
-            case Type::Float:
+            case TypeID::Float:
                 os << "Float";
                 break;
 
-            case Type::Boolean:
+            case TypeID::Boolean:
                 os << "Boolean";
                 break;
 
-            case Type::CFunction:
+            case TypeID::CFunction:
                 os << "CFunction";
                 break;
 
-            case Type::Type:
+            case TypeID::TypeID:
                 os << "Type";
                 break;
 
-            case Type::String:
+            case TypeID::String:
                 os << "String";
                 break;
 
-            case Type::Array:
+            case TypeID::Array:
                 os << "Array";
                 break;
 
-            case Type::Set:
+            case TypeID::Set:
                 os << "Set";
                 break;
 
-            case Type::Map:
+            case TypeID::Map:
                 os << "Map";
                 break;
 
-            case Type::Namespace:
+            case TypeID::Namespace:
                 os << "Namespace";
                 break;
 
-            case Type::Object:
+            case TypeID::Object:
                 os << "Object";
                 break;
 

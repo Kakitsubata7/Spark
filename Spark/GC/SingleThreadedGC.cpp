@@ -12,4 +12,8 @@ namespace Spark {
 
     }
 
+    void SingleThreadedGC::step() {
+
+    }
+
 } // Spark

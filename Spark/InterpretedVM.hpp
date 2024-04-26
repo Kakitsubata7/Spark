@@ -38,7 +38,7 @@ private:
     /* ===== Constructor & Destructor ===== */
 
 public:
-    explicit InterpretedVM(GCType gcType,
+    explicit InterpretedVM(GCType gcType = GCType::SingleThreaded,
                            size_t mainThreadCapacity = DEFAULT_STACK_CAPACITY,
                            size_t mainThreadMaxCapacity = DEFAULT_STACK_MAX_CAPACITY);
 
@@ -49,14 +49,7 @@ public:
     /* ===== Execution ===== */
 
 public:
-    void run() {
-        (this->*runFunc)();
-    }
-
-private:
-    void (InterpretedVM::*runFunc)();
-    void runWithSingleThreadedGC();
-    void runWithConcurrentGC();
+    void run();
 
 };
 

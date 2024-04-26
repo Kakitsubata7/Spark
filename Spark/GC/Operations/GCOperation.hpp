@@ -4,7 +4,7 @@ namespace Spark {
 
 class GCOperation {
 
-    /* ===== Interface Methods ===== */
+    /* ===== Operation ===== */
 
 public:
     virtual bool step() = 0;

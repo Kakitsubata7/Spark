@@ -15,12 +15,12 @@ add_executable(Spark
         Spark/API.cpp
         Spark/GC/GCNode.hpp
         Spark/Types/Value.hpp
-        spark/GC/GCOperation.hpp
+        Spark/GC/Operations/GCOperation.hpp
         Spark/GC/Operations/CollectOperation.hpp
         Spark/GC/Operations/ReferenceOperation.hpp
         Spark/GC/Operations/UnreferenceOperation.hpp
         Spark/GC/Operations/AllocateOperation.hpp
-        spark/Types/Type.hpp
+        Spark/Types/TypeID.hpp
         Spark/GC/GCPtr.hpp
         spark/Types/Value.cpp
         Spark/GC/Operations/CollectOperation.cpp
@@ -48,4 +48,6 @@ add_executable(Spark
         Spark/InterpretedVM.hpp
         Spark/InterpretedVM.cpp
         Spark/GC/GCType.hpp
+        Spark/GC/Operations/AddEntryOperation.hpp
+        Spark/GC/Operations/RemoveEntryOperation.hpp
 )
