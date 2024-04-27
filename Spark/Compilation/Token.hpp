@@ -22,6 +22,13 @@ public:
     Token(TokenType type, const std::string& content) : type(type), content(content) { }
     Token(TokenType type, std::string&& content) : type(type), content(std::move(content)) { }
 
+
+
+    /* ===== Operator ===== */
+
+public:
+    friend std::ostream& operator<<(std::ostream& os, const Token& token);
+
 };
 
 } // Spark
