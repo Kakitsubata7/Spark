@@ -52,10 +52,10 @@ add_executable(Spark
         Spark/GC/Operations/RemoveEntryOperation.hpp
         Spark/Compilation/Compiler.hpp
         Spark/Compilation/Lex/Lexer.hpp
-        Spark/Compilation/Lex/ASTNode.hpp
-        Spark/Compilation/Lex/BinaryExpression.hpp
-        Spark/Compilation/Lex/StatementNode.hpp
-        Spark/Compilation/Lex/ExpressionNode.hpp
+        Spark/Compilation/Parse/ASTNode.hpp
+        Spark/Compilation/Parse/BinaryExpression.hpp
+        Spark/Compilation/Parse/StatementNode.hpp
+        Spark/Compilation/Parse/ExpressionNode.hpp
         Spark/Compilation/Lex/Token.hpp
         Spark/Compilation/Lex/TokenType.hpp
         Spark/Compilation/Lex/Lexer.cpp
