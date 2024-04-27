@@ -167,6 +167,46 @@ namespace Spark {
 
             // TODO: Check for string beginnings
 
+            // Check for numerical literal
+            if (std::isdigit(c) || (c == '+') || (c == '-') || (c == '.')) {
+                bool hasDigit = std::isdigit(c);
+                bool hasDot = (c == '.');
+
+                // Save current character and iss position
+                int startC = c;
+                std::streampos startPos = iss.tellg();
+
+                // Build number
+                std::string num = std::string(1, static_cast<char>(c));
+                while ((c = iss.peek()) != EOF) {
+                    if (c == '.') {
+                        // Check for there's too many decimal points
+                        if (hasDot)
+                            throw LexException("Too many decimal points in a number");
+
+                        hasDot = true;
+                    } else {
+                        // Check for end of the number
+                        if (std::isspace(c) || isOperator(static_cast<char>(c)))
+                            break;
+                    }
+
+                    if (std::isdigit(c))
+                        hasDigit = true;
+
+                    num += static_cast<char>(c);
+                    iss.ignore(1);
+                }
+
+                // Tokenize number if it's valid (have at least one digit), otherwise resume
+                if (hasDigit)
+                    tokens.emplace_back(TokenType::NumericalLiteral, num);
+                else {
+                    c = startC;
+                    iss.seekg(startPos);
+                }
+            }
+
             // Tokenize current if the current character is a white space character
             if (std::isspace(c)) {
                 tokenizeCurrent();
