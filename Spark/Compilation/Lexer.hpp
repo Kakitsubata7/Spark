@@ -1,13 +1,15 @@
 #pragma once
 
+#include <vector>
+
+#include "Token.hpp"
+
 namespace Spark {
 
-class Lexer {
+namespace Lexer {
 
-    /* ===== Constructor ===== */
-
-public:
-    Lexer() = default;
+    [[nodiscard]]
+    std::vector<Token> lex(const std::string& code);
 
 };
 
