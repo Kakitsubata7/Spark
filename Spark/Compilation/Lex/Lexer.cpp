@@ -179,30 +179,43 @@ namespace Spark {
                 // Build number
                 std::string num = std::string(1, static_cast<char>(c));
                 while ((c = iss.peek()) != EOF) {
+                    bool isDot = false;
                     if (c == '.') {
                         // Check for there's too many decimal points
                         if (hasDot)
                             throw LexException("Too many decimal points in a number");
 
+                        isDot = true;
                         hasDot = true;
                     } else {
-                        // Check for end of the number
+                        // Check if number ends
                         if (std::isspace(c) || isOperator(static_cast<char>(c)))
                             break;
                     }
 
-                    if (std::isdigit(c))
-                        hasDigit = true;
+                    // Check if it's a digit
+                    bool isDigit = std::isdigit(c);
+                    if (!isDot && !hasDigit)
+                        hasDigit = isDigit;
 
+                    // Check if it's an unexpected character
+                    if (!isDot && !isDigit) {
+                        std::stringstream ss;
+                        ss << "Unexpected character '" << static_cast<char>(c) << "'" << " in a number";
+                        throw LexException(ss.str());
+                    }
+
+                    // Append character to number string
                     num += static_cast<char>(c);
                     iss.ignore(1);
                 }
 
-                // Tokenize number if it's valid (have at least one digit), otherwise resume
+                // Tokenize number if it's valid (have at least one digit)
                 if (hasDigit) {
                     tokens.emplace_back(TokenType::NumericalLiteral, num);
                     continue;
                 }
+                // Otherwise resume
                 else {
                     c = startC;
                     iss.seekg(startPos);
