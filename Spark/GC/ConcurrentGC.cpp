@@ -24,8 +24,7 @@ namespace Spark {
     /* ===== Operations ===== */
 
     void ConcurrentGC::addEntryNode(GCNode* node) {
-        cachedOperations[currentCacheSize] = std::make_unique<>();
-        currentCacheSize++;
+
     }
 
     void ConcurrentGC::removeEntryNode(GCNode* node) {
