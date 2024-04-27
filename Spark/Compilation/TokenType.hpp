@@ -8,8 +8,7 @@ enum class TokenType {
     Keyword,
     Literal,
     Operator,
-    Delimiter,
-    EOF
+    Delimiter
 
 };
 
