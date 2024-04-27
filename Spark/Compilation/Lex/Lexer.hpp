@@ -25,6 +25,7 @@ private:
     };
 
     State state = State::None;
+    char stringEndChar = 0;
 
 
 

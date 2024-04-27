@@ -120,10 +120,10 @@ namespace Spark {
                     state = State::None;
                 // Check for CR and CRLF
                 else if (c == '\r') {
-                    c = iss.peek();
-                    if (c == EOF)
+                    int next = iss.peek();
+                    if (next == EOF)
                         break;
-                    if (c == '\n')
+                    if (next == '\n')
                         iss.ignore(1);
 
                     state = State::None;
@@ -134,11 +134,11 @@ namespace Spark {
             // Check for group commenting end
             else if (state == State::GroupComment) {
                 if (c == '*') {
-                    c = iss.peek();
-                    if (c == EOF)
+                    int next = iss.peek();
+                    if (next == EOF)
                         break;
 
-                    if (c == '/') {
+                    if (next == '/') {
                         state = State::None;
                         iss.ignore(1);
                     }
@@ -149,14 +149,14 @@ namespace Spark {
 
             // Check for comment beginnings
             if (c == '/') {
-                if ((c = iss.peek()) != EOF) {
+                if (int next = iss.peek(); next != EOF) {
                     // Check for line comment beginning
-                    if (c == '/') {
+                    if (next == '/') {
                         state = State::LineComment;
                         iss.ignore(1);
                     }
-                        // Check for group comment beginning
-                    else if (c == '*') {
+                    // Check for group comment beginning
+                    else if (next == '*') {
                         state = State::GroupComment;
                         iss.ignore(1);
                     }
@@ -165,22 +165,95 @@ namespace Spark {
                 }
             }
 
-            // TODO: Check for string beginnings
+            // Check for string beginnings
+            if (c == '"' || c == '\'') {
+                // Set state and string character
+                state = State::String;
+                stringEndChar = static_cast<char>(c);
+            } else if (c == 'r' || c == 'R') {
+                if (int next = iss.peek(); next != EOF) {
+                    if (next == '"' || next == '\'') {
+                        // Set state and string character
+                        state = State::RawString;
+                        stringEndChar = static_cast<char>(next);
 
-            // Check for numerical literal
+                        iss.ignore(1);
+                    }
+                }
+            } else if (c == 'f' || c == 'F') {
+                if (int next = iss.peek(); next != EOF) {
+                    if (next == '"' || next == '\'') {
+                        // Set state and string character
+                        state = State::FormattedString;
+                        stringEndChar = static_cast<char>(next);
+
+                        iss.ignore(1);
+                    }
+                }
+            }
+
+            // Tokenize string
+            if (state == State::String) {
+                // TODO
+                std::string str;
+                int next;
+                while ((next = iss.peek()) != EOF) {
+                    // Move iss forward
+                    iss.ignore(1);
+
+                    // Tokenize string when reaches the end
+                    if (next == stringEndChar) {
+                        tokens.emplace_back(TokenType::StringLiteral, str);
+                        state = State::None;
+                        break;
+                    }
+
+                    // Append character
+                    str += static_cast<char>(next);
+                }
+
+                continue;
+            }
+            // Tokenize raw string
+            else if (state == State::RawString) {
+                std::string str;
+                int next;
+                while ((next = iss.peek()) != EOF) {
+                    // Move iss forward
+                    iss.ignore(1);
+
+                    // Tokenize string when reaches the end
+                    if (next == stringEndChar) {
+                        tokens.emplace_back(TokenType::StringLiteral, str);
+                        state = State::None;
+                        break;
+                    }
+
+                    // Append character
+                    str += static_cast<char>(next);
+                }
+
+                continue;
+            }
+            // Tokenize formatted string
+            else if (state == State::FormattedString) {
+                // TODO
+            }
+
+            // Check for numerical literal and tokenize it
             if (std::isdigit(c) || (c == '+') || (c == '-') || (c == '.')) {
                 bool hasDigit = std::isdigit(c);
                 bool hasDot = (c == '.');
 
-                // Save current character and iss position
-                int startC = c;
+                // Save iss position
                 std::streampos startPos = iss.tellg();
 
                 // Build number
                 std::string num = std::string(1, static_cast<char>(c));
-                while ((c = iss.peek()) != EOF) {
+                int next;
+                while ((next = iss.peek()) != EOF) {
                     bool isDot = false;
-                    if (c == '.') {
+                    if (next == '.') {
                         // Check for there's too many decimal points
                         if (hasDot)
                             throw LexException("Too many decimal points in a number");
@@ -189,24 +262,24 @@ namespace Spark {
                         hasDot = true;
                     } else {
                         // Check if number ends
-                        if (std::isspace(c) || isOperator(static_cast<char>(c)))
+                        if (std::isspace(next) || isOperator(static_cast<char>(next)))
                             break;
                     }
 
                     // Check if it's a digit
-                    bool isDigit = std::isdigit(c);
+                    bool isDigit = std::isdigit(next);
                     if (!isDot && !hasDigit)
                         hasDigit = isDigit;
 
                     // Check if it's an unexpected character
                     if (!isDot && !isDigit) {
                         std::stringstream ss;
-                        ss << "Unexpected character '" << static_cast<char>(c) << "'" << " in a number";
+                        ss << "Unexpected character '" << static_cast<char>(next) << "'" << " in a number";
                         throw LexException(ss.str());
                     }
 
                     // Append character to number string
-                    num += static_cast<char>(c);
+                    num += static_cast<char>(next);
                     iss.ignore(1);
                 }
 
@@ -215,11 +288,9 @@ namespace Spark {
                     tokens.emplace_back(TokenType::NumericalLiteral, num);
                     continue;
                 }
-                // Otherwise resume
-                else {
-                    c = startC;
+                // Otherwise resume iss position
+                else
                     iss.seekg(startPos);
-                }
             }
 
             // Tokenize current if the current character is a white space character
@@ -235,9 +306,10 @@ namespace Spark {
 
                 // Check if it's a sequence operator
                 std::string op = std::string(1, static_cast<char>(c));
-                while ((c = iss.peek()) != EOF) {
-                    if (Lexer::isOperator(op + static_cast<char>(c))) {
-                        op += static_cast<char>(c);
+                int next;
+                while ((next = iss.peek()) != EOF) {
+                    if (Lexer::isOperator(op + static_cast<char>(next))) {
+                        op += static_cast<char>(next);
                         iss.get();
                     }
                     else
@@ -246,6 +318,7 @@ namespace Spark {
 
                 // Tokenize operator
                 tokens.emplace_back(TokenType::Operator, op);
+
                 continue;
             }
 
@@ -258,7 +331,7 @@ namespace Spark {
             case State::GroupComment:
                 throw LexException("Unterminated group comment");
 
-            case State::LineComment:
+            case State::String:
             case State::RawString:
             case State::FormattedString:
                 throw LexException("Missing string terminating character");
