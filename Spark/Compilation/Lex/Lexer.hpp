@@ -14,6 +14,14 @@ class Lexer {
 private:
     std::istringstream iss;
 
+    enum class CommentState {
+        None,
+        LineCommenting,
+        GroupCommenting
+    };
+
+    CommentState commentState = CommentState::None;
+
 
 
     /* ===== Constructor ===== */
