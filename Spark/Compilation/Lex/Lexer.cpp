@@ -38,6 +38,45 @@ namespace Spark {
         ")"
     };
 
+    bool Lexer::isKeyword(const std::string& str) {
+        return keywordSet.find(str) != keywordSet.end();
+    }
+
+    bool Lexer::isOperator(const std::string& str) {
+        return operatorSet.find(str) != operatorSet.end();
+    }
+
+    bool Lexer::isOperator(char c) {
+        return isOperator(std::string(1, c));
+    }
+
+    bool Lexer::isNumericalLiteral(const std::string& str) {
+        std::istringstream iss(str);
+        double num;
+        iss >> num;
+        return iss.eof() && !iss.fail();
+    }
+
+    bool Lexer::isIdentifier(const std::string& str) {
+        // Empty string
+        if (str.empty())
+            return false;
+
+        // First character has to be letters, '_' or '@'
+        char firstChar = str[0];
+        if (!std::isalpha(firstChar) && (firstChar != '_') && (firstChar != '@'))
+            return false;
+
+        // Rest characters have to be letters, digits or '_'
+        for (size_t i = 1; i < str.length(); i++) {
+            char c = str[i];
+            if (!std::isalpha(c) && !std::isdigit(c) && (c != '_'))
+                return false;
+        }
+
+        return true;
+    }
+
 
 
     /* ===== Operations ===== */
@@ -61,8 +100,13 @@ namespace Spark {
                 tokens.emplace_back(TokenType::Operator, current);
             else if (Lexer::isNumericalLiteral(current))
                 tokens.emplace_back(TokenType::NumericalLiteral, current);
-            else
+            else if (Lexer::isIdentifier(current))
                 tokens.emplace_back(TokenType::Identifier, current);
+            else {
+                std::stringstream ss;
+                ss << "Invalid identifier: " << current;
+                throw LexException(ss.str());
+            }
 
             current.clear();
         };
@@ -124,7 +168,7 @@ namespace Spark {
             // TODO: Check for string beginnings
 
             // Tokenize current if the current character is a white space character
-            if (isspace(c)) {
+            if (std::isspace(c)) {
                 tokenizeCurrent();
                 continue;
             }

@@ -35,24 +35,15 @@ private:
     static std::unordered_set<std::string> operatorSet;
     static std::unordered_set<char> delimiterSet;
 
-    static bool isKeyword(const std::string& str) {
-        return keywordSet.find(str) != keywordSet.end();
-    }
+    static bool isKeyword(const std::string& str);
+    static bool isOperator(const std::string& str);
+    static bool isOperator(char c);
+    static bool isNumericalLiteral(const std::string& str);
 
-    static bool isOperator(const std::string& str) {
-        return operatorSet.find(str) != operatorSet.end();
-    }
-
-    static bool isOperator(char c) {
-        return isOperator(std::string(1, c));
-    }
-
-    static bool isNumericalLiteral(const std::string& str) {
-        std::istringstream iss(str);
-        double num;
-        iss >> num;
-        return iss.eof() && !iss.fail();
-    }
+    /**
+     * First character can be letters, '_', or '@'. The rest can be letters, digits, or '_'.
+     */
+    static bool isIdentifier(const std::string& str);
 
 
 
