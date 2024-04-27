@@ -26,7 +26,7 @@ add_executable(Spark
         Spark/GC/Operations/CollectOperation.cpp
         Spark/Opcode.hpp
         Spark/Config.hpp
-        Spark/Types/Type.cpp
+        Spark/Types/TypeID.cpp
         Spark/Compilation/BytecodeBuffer.hpp
         Spark/Types/Int64.hpp
         Spark/Types/Float64.hpp
@@ -50,4 +50,15 @@ add_executable(Spark
         Spark/GC/GCType.hpp
         Spark/GC/Operations/AddEntryOperation.hpp
         Spark/GC/Operations/RemoveEntryOperation.hpp
+        Spark/Compilation/Compiler.hpp
+        Spark/Compilation/Lex/Lexer.hpp
+        Spark/Compilation/Lex/ASTNode.hpp
+        Spark/Compilation/Lex/BinaryExpression.hpp
+        Spark/Compilation/Lex/StatementNode.hpp
+        Spark/Compilation/Lex/ExpressionNode.hpp
+        Spark/Compilation/Lex/Token.hpp
+        Spark/Compilation/Lex/TokenType.hpp
+        Spark/Compilation/Lex/Lexer.cpp
+        Spark/Compilation/Lex/Token.cpp
+        Spark/Compilation/Lex/TokenType.cpp
 )
