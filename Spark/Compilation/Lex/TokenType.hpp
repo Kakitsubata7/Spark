@@ -6,10 +6,10 @@
 namespace Spark {
 
 enum class TokenType {
-    Identifier,
     Keyword,
+    Operator,
     Literal,
-    Operator
+    Identifier
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType tokenType);

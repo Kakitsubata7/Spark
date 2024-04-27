@@ -4,20 +4,20 @@ namespace Spark {
 
     std::ostream& operator<<(std::ostream& os, TokenType tokenType) {
         switch (tokenType) {
-            case TokenType::Identifier:
-                os << "Identifier";
-                break;
-
             case TokenType::Keyword:
                 os << "Keyword";
+                break;
+
+            case TokenType::Operator:
+                os << "Operator";
                 break;
 
             case TokenType::Literal:
                 os << "Literal";
                 break;
 
-            case TokenType::Operator:
-                os << "Operator";
+            case TokenType::Identifier:
+                os << "Identifier";
                 break;
 
             default:
