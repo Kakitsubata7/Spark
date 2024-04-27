@@ -61,4 +61,5 @@ add_executable(Spark
         Spark/Compilation/Lex/Lexer.cpp
         Spark/Compilation/Lex/Token.cpp
         Spark/Compilation/Lex/TokenType.cpp
+        Spark/Compilation/Lex/LexException.hpp
 )
