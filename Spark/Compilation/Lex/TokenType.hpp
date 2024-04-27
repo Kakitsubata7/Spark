@@ -8,7 +8,8 @@ namespace Spark {
 enum class TokenType {
     Keyword,
     Operator,
-    Literal,
+    NumericalLiteral,
+    StringLiteral,
     Identifier
 };
 

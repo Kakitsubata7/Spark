@@ -12,8 +12,12 @@ namespace Spark {
                 os << "Operator";
                 break;
 
-            case TokenType::Literal:
-                os << "Literal";
+            case TokenType::NumericalLiteral:
+                os << "NumericalLiteral";
+                break;
+
+            case TokenType::StringLiteral:
+                os << "StringLiteral";
                 break;
 
             case TokenType::Identifier:
