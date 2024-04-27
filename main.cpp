@@ -9,7 +9,7 @@ using namespace Spark;
 int main() {
 
     std::string code = R"(
-let a = /* Group comment */1; // Line comment
+let a=/* Group comment */1; // Line comment
 )";
     std::vector<Token> tokens = Lexer::lex(code);
 
