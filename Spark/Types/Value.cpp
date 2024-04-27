@@ -41,7 +41,7 @@ namespace std {
                 break;
 
             default:
-                h2 = std::hash<GCNode*>()(value.node);
+                h2 = std::hash<GCNode*>()(value.nodePtr);
                 break;
         }
         return h1 ^ (h2 << 1);
@@ -55,7 +55,7 @@ namespace Spark {
     Value Value::makeString(GC& gc, const std::string& value) {
         Value self;
         self.type = TypeID::String;
-        self.node = gc.allocate<std::string>(value);
+        self.nodePtr = gc.allocate<std::string>(value);
         return self;
     }
 
@@ -68,35 +68,35 @@ namespace Spark {
     Value Value::makeArray(GC& gc, const std::vector<Value>& value) {
         Value self;
         self.type = TypeID::Array;
-        self.node = gc.allocate<std::vector<Value>>(value);
+        self.nodePtr = gc.allocate<std::vector<Value>>(value);
         return self;
     }
 
     Value Value::makeSet(GC& gc, const std::unordered_set<Value>& value) {
         Value self;
         self.type = TypeID::Set;
-        self.node = gc.allocate<std::unordered_set<Value>>(value);
+        self.nodePtr = gc.allocate<std::unordered_set<Value>>(value);
         return self;
     }
 
     Value Value::makeMap(GC& gc, const std::unordered_map<Value, Value>& value) {
         Value self;
         self.type = TypeID::Map;
-        self.node = gc.allocate<std::unordered_map<Value, Value>>(value);
+        self.nodePtr = gc.allocate<std::unordered_map<Value, Value>>(value);
         return self;
     }
 
     Value Value::makeClosure(GC& gc, const Closure& value) {
         Value self;
         self.type = TypeID::Closure;
-        self.node = gc.allocate<Closure>(value);
+        self.nodePtr = gc.allocate<Closure>(value);
         return self;
     }
 
     Value Value::makeNamespace(GC& gc, const Namespace& value) {
         Value self;
         self.type = TypeID::Namespace;
-        self.node = gc.allocate<Namespace>(value);
+        self.nodePtr = gc.allocate<Namespace>(value);
         return self;
     }
 
@@ -142,11 +142,11 @@ namespace Spark {
                 break;
 
             case TypeID::String:
-                os << value.node->data<std::string>();
+                os << value.nodePtr->data<std::string>();
                 break;
 
             case TypeID::Array: {
-                const std::vector<Value>& vec = value.node->data<std::vector<Value>>();
+                const std::vector<Value>& vec = value.nodePtr->data<std::vector<Value>>();
                 os << "[";
                 for (size_t i = 0; i < vec.size(); i++) {
                     os << vec[i];
@@ -162,7 +162,7 @@ namespace Spark {
                    << std::hex
                    << std::setw(2)
                    << std::setfill('0')
-                   << reinterpret_cast<uintptr_t>(value.node)
+                   << reinterpret_cast<uintptr_t>(value.nodePtr)
                    << ">"
                    << std::dec;
             }
@@ -173,7 +173,7 @@ namespace Spark {
                    << std::hex
                    << std::setw(2)
                    << std::setfill('0')
-                   << reinterpret_cast<uintptr_t>(value.node)
+                   << reinterpret_cast<uintptr_t>(value.nodePtr)
                    << ">"
                    << std::dec;
             }
@@ -214,8 +214,8 @@ namespace Spark {
 
             case TypeID::String: {
                 std::ostringstream ss;
-                ss << node->data<std::string>() << other;
-                return makeString(node->getGC(), ss.str());
+                ss << nodePtr->data<std::string>() << other;
+                return makeString(nodePtr->getGC(), ss.str());
             }
                 break;
 
@@ -436,20 +436,20 @@ namespace Spark {
                 return typeValue == other.typeValue;
 
             case TypeID::String:
-                return node->data<std::string>() == other.node->data<std::string>();
+                return nodePtr->data<std::string>() == other.nodePtr->data<std::string>();
 
             case TypeID::Array:
-                return node->data<std::vector<Value>>() == other.node->data<std::vector<Value>>();
+                return nodePtr->data<std::vector<Value>>() == other.nodePtr->data<std::vector<Value>>();
 
             case TypeID::Set:
-                return node->data<std::unordered_set<Value>>() == other.node->data<std::unordered_set<Value>>();
+                return nodePtr->data<std::unordered_set<Value>>() == other.nodePtr->data<std::unordered_set<Value>>();
 
             case TypeID::Map:
-                return node->data<std::unordered_map<Value, Value>>() ==
-                       other.node->data<std::unordered_map<Value, Value>>();
+                return nodePtr->data<std::unordered_map<Value, Value>>() ==
+                       other.nodePtr->data<std::unordered_map<Value, Value>>();
 
             default:
-                return node == other.node;
+                return nodePtr == other.nodePtr;
         }
     }
 

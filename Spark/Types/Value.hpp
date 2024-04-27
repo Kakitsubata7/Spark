@@ -128,7 +128,7 @@ public:
         void* ptrValue{};
         CFunction cFunc;
         TypeID typeValue;
-        GCNode* node;
+        GCNode* nodePtr;
     };
 
     [[nodiscard]]
