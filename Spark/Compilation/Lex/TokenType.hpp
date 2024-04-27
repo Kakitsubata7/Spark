@@ -9,8 +9,7 @@ enum class TokenType {
     Identifier,
     Keyword,
     Literal,
-    Operator,
-    Delimiter
+    Operator
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType tokenType);

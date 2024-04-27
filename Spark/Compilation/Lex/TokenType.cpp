@@ -20,10 +20,6 @@ namespace Spark {
                 os << "Operator";
                 break;
 
-            case TokenType::Delimiter:
-                os << "Delimiter";
-                break;
-
             default:
                 throw std::runtime_error("Token type is not implemented.");
         }
