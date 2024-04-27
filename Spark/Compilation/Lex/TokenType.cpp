@@ -20,6 +20,10 @@ namespace Spark {
                 os << "StringLiteral";
                 break;
 
+            case TokenType::FormattedStringLiteral:
+                os << "FormattedStringLiteral";
+                break;
+
             case TokenType::Identifier:
                 os << "Identifier";
                 break;
