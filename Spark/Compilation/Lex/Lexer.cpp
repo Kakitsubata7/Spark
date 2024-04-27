@@ -199,8 +199,10 @@ namespace Spark {
                 }
 
                 // Tokenize number if it's valid (have at least one digit), otherwise resume
-                if (hasDigit)
+                if (hasDigit) {
                     tokens.emplace_back(TokenType::NumericalLiteral, num);
+                    continue;
+                }
                 else {
                     c = startC;
                     iss.seekg(startPos);
