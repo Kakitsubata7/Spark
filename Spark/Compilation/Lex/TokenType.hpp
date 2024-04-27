@@ -10,6 +10,7 @@ enum class TokenType {
     Operator,
     NumericalLiteral,
     StringLiteral,
+    FormattedStringLiteral,
     Identifier
 };
 
