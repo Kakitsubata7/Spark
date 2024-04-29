@@ -9,7 +9,15 @@ namespace Spark {
     /* ===== Tokenization ===== */
 
     std::unordered_set<std::string> Lexer::keywordSet = {
-        "let"
+        "let", "var", "const",
+        "if", "else",
+        "for",
+        "while", "do",
+        "try", "catch", "finally",
+        "function", "return",
+        "class",
+        "namespace",
+        "private", "protected", "public"
     };
 
     std::unordered_set<std::string> Lexer::operatorSet = {
