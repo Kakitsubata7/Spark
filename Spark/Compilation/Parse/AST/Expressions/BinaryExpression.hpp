@@ -19,7 +19,7 @@ protected:
     /* ===== Constructor ===== */
 
 public:
-    BinaryExpression(std::unique_ptr<ExpressionNode>& rLeft, std::unique_ptr<ExpressionNode>& rRight)
+    BinaryExpression(std::unique_ptr<ExpressionNode>&& rLeft, std::unique_ptr<ExpressionNode>&& rRight)
         : left(std::move(rLeft)), right(std::move(rRight)) { }
 
 };
