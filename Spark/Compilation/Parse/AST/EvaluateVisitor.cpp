@@ -3,29 +3,17 @@
 #include "../Types/Value.hpp"
 #include "Expressions/AddExpression.hpp"
 #include "Expressions/ConstExpression.hpp"
+#include "Expressions/DivideExpression.hpp"
+#include "Expressions/ModulusExpression.hpp"
+#include "Expressions/MultiplyExpression.hpp"
 #include "Expressions/SubtractExpression.hpp"
 #include "Statements/ExpressionStatement.hpp"
 
 namespace Spark {
 
     bool EvaluateVisitor::visit(AddExpression& expr, Value& out) const {
-        // Evaluate left and right expressions
-        Value left, right;
-        bool isLeftConst = expr.left->accept(*this, left);
-        bool isRightConst = expr.right->accept(*this, right);
-
-        // Both expressions are constant, meaning this expression can be constant as well
-        if (isLeftConst && isRightConst) {
-            out = left + right;
-            return true;
-        }
-
-        // One of the nodes cannot be constant
-        if (isLeftConst && !(dynamic_cast<ConstExpression*>(expr.left.get())))
-            expr.left = std::make_unique<ConstExpression>(left);
-        else if (isRightConst && !(dynamic_cast<ConstExpression*>(expr.right.get())))
-            expr.right = std::make_unique<ConstExpression>(right);
-        return false;
+        return visit(expr, out,
+                     [](const Value& left, const Value& right) { return left + right; });
     }
 
     bool EvaluateVisitor::visit(ConstExpression& expr, Value& out) const {
@@ -33,24 +21,24 @@ namespace Spark {
         return true;
     }
 
+    bool EvaluateVisitor::visit(DivideExpression& expr, Value& out) const {
+        return visit(expr, out,
+                     [](const Value& left, const Value& right) { return left / right; });
+    }
+
+    bool EvaluateVisitor::visit(ModulusExpression& expr, Value& out) const {
+        return visit(expr, out,
+                     [](const Value& left, const Value& right) { return left % right; });
+    }
+
+    bool EvaluateVisitor::visit(MultiplyExpression& expr, Value& out) const {
+        return visit(expr, out,
+                     [](const Value& left, const Value& right) { return left * right; });
+    }
+
     bool EvaluateVisitor::visit(SubtractExpression& expr, Value& out) const {
-        // Evaluate left and right expressions
-        Value left, right;
-        bool isLeftConst = expr.left->accept(*this, left);
-        bool isRightConst = expr.right->accept(*this, right);
-
-        // Both expressions are constant, meaning this expression can be constant as well
-        if (isLeftConst && isRightConst) {
-            out = left - right;
-            return true;
-        }
-
-        // One of the nodes cannot be constant
-        if (isLeftConst && !(dynamic_cast<ConstExpression*>(expr.left.get())))
-            expr.left = std::make_unique<ConstExpression>(left);
-        else if (isRightConst && !(dynamic_cast<ConstExpression*>(expr.right.get())))
-            expr.right = std::make_unique<ConstExpression>(right);
-        return false;
+        return visit(expr, out,
+                     [](const Value& left, const Value& right) { return left - right; });
     }
 
     bool EvaluateVisitor::visit(ExpressionStatement& stmt, Value& out) const {

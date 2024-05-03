@@ -52,4 +52,8 @@ add_executable(Spark
         Spark/Compilation/Parse/Types/Type.cpp
         Spark/Compilation/Parse/Types/Bool.hpp
         Spark/Compilation/Parse/AST/Expressions/SubtractExpression.hpp
+        Spark/Compilation/Parse/AST/Expressions/MultiplyExpression.hpp
+        Spark/Compilation/Parse/AST/Expressions/DivideExpression.hpp
+        Spark/Compilation/Parse/AST/Expressions/ModulusExpression.hpp
+        Spark/Compilation/Parse/AST/Expressions/ConstExpression.cpp
 )

@@ -5,6 +5,9 @@
 #include "Spark/Compilation/Parse/AST/EvaluateVisitor.hpp"
 #include "Spark/Compilation/Parse/AST/Expressions/AddExpression.hpp"
 #include "Spark/Compilation/Parse/AST/Expressions/ConstExpression.hpp"
+#include "Spark/Compilation/Parse/AST/Expressions/DivideExpression.hpp"
+#include "Spark/Compilation/Parse/AST/Expressions/ModulusExpression.hpp"
+#include "Spark/Compilation/Parse/AST/Expressions/MultiplyExpression.hpp"
 #include "Spark/Compilation/Parse/AST/Expressions/SubtractExpression.hpp"
 #include "Spark/Compilation/Parse/AST/Statements/ExpressionStatement.hpp"
 #include "Spark/Compilation/Parse/Types/Value.hpp"
@@ -22,9 +25,15 @@ int main() {
 //        std::cout << token << std::endl;
 
     ExpressionStatement statement {
-        std::make_unique<SubtractExpression>(
-            std::make_unique<ConstExpression>(Value::makeInt(1)),
-            std::make_unique<ConstExpression>(Value::makeInt(2))
+        std::make_unique<MultiplyExpression>(
+            std::make_unique<SubtractExpression>(
+                std::make_unique<ConstExpression>(Value::makeInt(7)),
+                std::make_unique<ConstExpression>(Value::makeInt(5))
+            ),
+            std::make_unique<AddExpression>(
+                std::make_unique<ConstExpression>(Value::makeInt(7)),
+                std::make_unique<ConstExpression>(Value::makeInt(5))
+            )
         )
     };
     EvaluateVisitor evaluator;

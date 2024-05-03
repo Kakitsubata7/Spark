@@ -22,6 +22,12 @@ public:
     BinaryExpression(std::unique_ptr<ExpressionNode>&& rLeft, std::unique_ptr<ExpressionNode>&& rRight)
         : left(std::move(rLeft)), right(std::move(rRight)) { }
 
+
+
+    /* ===== Visitor ===== */
+
+    friend EvaluateVisitor;
+
 };
 
 } // Spark

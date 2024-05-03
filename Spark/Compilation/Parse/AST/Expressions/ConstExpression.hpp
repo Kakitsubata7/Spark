@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../Types/Value.hpp"
-#include "../EvaluateVisitor.hpp"
 #include "ExpressionNode.hpp"
 
 namespace Spark {
@@ -28,9 +27,7 @@ public:
     friend EvaluateVisitor;
 
 public:
-    bool accept(const EvaluateVisitor& visitor, Value& out) override {
-        return visitor.visit(*this, out);
-    }
+    bool accept(const EvaluateVisitor& visitor, Value& out) override;
 
 };
 
