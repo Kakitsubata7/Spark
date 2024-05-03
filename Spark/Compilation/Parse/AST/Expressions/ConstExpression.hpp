@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Types/Value.hpp"
+#include "../EvaluateVisitor.hpp"
 #include "ExpressionNode.hpp"
 
 namespace Spark {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BinaryExpression.hpp"
+#include "../EvaluateVisitor.hpp"
 
 namespace Spark {
 
