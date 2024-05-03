@@ -25,6 +25,8 @@ public:
 
     /* ===== Visitor ===== */
 
+    friend EvaluateVisitor;
+
 public:
     void accept(const EvaluateVisitor& visitor) override {
         visitor.visit(*this);
