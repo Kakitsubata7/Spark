@@ -16,6 +16,10 @@ namespace Spark {
                 os << "Float";
                 break;
 
+            case Type::Bool:
+                os << "Bool";
+                break;
+
             case Type::String:
                 os << "String";
                 break;

@@ -8,6 +8,7 @@ enum class Type {
     Nil,
     Int,
     Float,
+    Bool,
     String
 };
 
