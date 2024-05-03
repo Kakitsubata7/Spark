@@ -36,19 +36,19 @@ public:
     ~Value();
 
     [[nodiscard]]
-    inline static Value makeNil();
+    static Value makeNil();
 
     [[nodiscard]]
-    inline static Value makeInt(Int i);
+    static Value makeInt(Int i);
 
     [[nodiscard]]
-    inline static Value makeFloat(Float f);
+    static Value makeFloat(Float f);
 
     [[nodiscard]]
-    inline static Value makeBool(Bool b);
+    static Value makeBool(Bool b);
 
     [[nodiscard]]
-    inline static Value makeString(const std::string& str);
+    static Value makeString(const std::string& str);
 
 
 
