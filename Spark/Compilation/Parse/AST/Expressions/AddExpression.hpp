@@ -11,8 +11,8 @@ class AddExpression : public BinaryExpression {
     /* ===== Constructor ===== */
 
 public:
-    AddExpression(std::unique_ptr<ExpressionNode>& left, std::unique_ptr<ExpressionNode>& right)
-        : BinaryExpression(left, right) { }
+    AddExpression(std::unique_ptr<ExpressionNode>& rLeft, std::unique_ptr<ExpressionNode>& rRight)
+        : BinaryExpression(rLeft, rRight) { }
 
 
 
