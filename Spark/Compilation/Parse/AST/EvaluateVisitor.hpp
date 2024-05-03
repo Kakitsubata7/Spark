@@ -5,6 +5,7 @@ namespace Spark {
 class AddExpression;
 class ConstExpression;
 class ExpressionStatement;
+class SubtractExpression;
 class Value;
 
 class EvaluateVisitor {
@@ -17,6 +18,9 @@ public:
 
     [[nodiscard]]
     bool visit(ConstExpression& expr, Value& out) const;
+
+    [[nodiscard]]
+    bool visit(SubtractExpression& expr, Value& out) const;
 
     [[nodiscard]]
     bool visit(ExpressionStatement& stmt, Value& out) const;
