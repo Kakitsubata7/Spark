@@ -9,43 +9,11 @@ namespace Spark {
     /* ===== Constructors, Factory Methods & Destructor ===== */
 
     Value::Value(const Value& other) {
-        type = other.type;
-        switch (other.type) {
-            case Type::Int:
-                intValue = other.intValue;
-                break;
-
-            case Type::Float:
-                floatValue = other.floatValue;
-                break;
-
-            case Type::String:
-                strValue = other.strValue;
-                break;
-
-            default:
-                break;
-        }
+        *this = other;
     }
 
     Value::Value(Value&& other) noexcept {
-        type = other.type;
-        switch (other.type) {
-            case Type::Int:
-                intValue = other.intValue;
-                break;
-
-            case Type::Float:
-                floatValue = other.floatValue;
-                break;
-
-            case Type::String:
-                strValue = std::move(other.strValue);
-                break;
-
-            default:
-                break;
-        }
+        *this = std::move(other);
     }
 
     Value::~Value() {
@@ -96,6 +64,60 @@ namespace Spark {
 
 
     /* ===== Operators ===== */
+
+    Value& Value::operator=(const Value& other) {
+        if (this != &other) {
+            type = other.type;
+            switch (other.type) {
+                case Type::Int:
+                    intValue = other.intValue;
+                    break;
+
+                case Type::Float:
+                    floatValue = other.floatValue;
+                    break;
+
+                case Type::Bool:
+                    boolValue = other.boolValue;
+                    break;
+
+                case Type::String:
+                    strValue = other.strValue;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        return *this;
+    }
+
+    Value& Value::operator=(Value&& other) noexcept {
+        if (this != &other) {
+            type = other.type;
+            switch (other.type) {
+                case Type::Int:
+                    intValue = other.intValue;
+                    break;
+
+                case Type::Float:
+                    floatValue = other.floatValue;
+                    break;
+
+                case Type::Bool:
+                    boolValue = other.boolValue;
+                    break;
+
+                case Type::String:
+                    strValue = std::move(other.strValue);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        return *this;
+    }
 
     Value Value::operator+(const Value& other) const {
         switch (type) {

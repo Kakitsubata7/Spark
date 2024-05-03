@@ -55,6 +55,9 @@ public:
     /* ===== Operators ===== */
 
 public:
+    Value& operator=(const Value& other);
+    Value& operator=(Value&& other) noexcept;
+
     Value operator+(const Value& other) const;
     Value operator-(const Value& other) const;
     Value operator*(const Value& other) const;
