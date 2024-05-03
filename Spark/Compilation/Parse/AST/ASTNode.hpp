@@ -3,6 +3,7 @@
 namespace Spark {
 
 class EvaluateVisitor;
+class Value;
 
 class ASTNode {
 
@@ -16,7 +17,8 @@ public:
     /* ===== Visitor ===== */
 
 public:
-    virtual void accept(const EvaluateVisitor& visitor) = 0;
+    [[nodiscard]]
+    virtual bool accept(const EvaluateVisitor& visitor, Value& out) = 0;
 
 };
 

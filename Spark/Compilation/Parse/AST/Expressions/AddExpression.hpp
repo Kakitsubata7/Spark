@@ -1,7 +1,8 @@
 #pragma once
 
-#include "BinaryExpression.hpp"
+#include "../../Types/Value.hpp"
 #include "../EvaluateVisitor.hpp"
+#include "BinaryExpression.hpp"
 
 namespace Spark {
 
@@ -20,8 +21,8 @@ public:
     friend EvaluateVisitor;
 
 public:
-    void accept(const EvaluateVisitor& visitor) override {
-        visitor.visit(*this);
+    bool accept(const EvaluateVisitor& visitor, Value& out) override {
+        return visitor.visit(*this, out);
     }
 
 };
