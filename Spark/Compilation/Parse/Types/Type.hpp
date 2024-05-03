@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace Spark {
 
 enum class Type {
@@ -8,5 +10,7 @@ enum class Type {
     Float,
     String
 };
+
+std::ostream& operator<<(std::ostream& os, Type type);
 
 } // Spark
