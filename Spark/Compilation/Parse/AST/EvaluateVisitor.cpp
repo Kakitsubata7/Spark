@@ -13,7 +13,7 @@ namespace Spark {
 
     bool EvaluateVisitor::visit(AddExpression& expr, Value& out) const {
         return visit(expr, out,
-                     [](const Value& left, const Value& right) { return left + right; });
+                     [](const Value& left, const Value& right) -> Value { return left + right; });
     }
 
     bool EvaluateVisitor::visit(ConstExpression& expr, Value& out) const {
@@ -23,27 +23,28 @@ namespace Spark {
 
     bool EvaluateVisitor::visit(DivideExpression& expr, Value& out) const {
         return visit(expr, out,
-                     [](const Value& left, const Value& right) { return left / right; });
+                     [](const Value& left, const Value& right) -> Value { return left / right; });
     }
 
     bool EvaluateVisitor::visit(ModulusExpression& expr, Value& out) const {
         return visit(expr, out,
-                     [](const Value& left, const Value& right) { return left % right; });
+                     [](const Value& left, const Value& right) -> Value { return left % right; });
     }
 
     bool EvaluateVisitor::visit(MultiplyExpression& expr, Value& out) const {
         return visit(expr, out,
-                     [](const Value& left, const Value& right) { return left * right; });
+                     [](const Value& left, const Value& right) -> Value { return left * right; });
     }
 
     bool EvaluateVisitor::visit(SubtractExpression& expr, Value& out) const {
         return visit(expr, out,
-                     [](const Value& left, const Value& right) { return left - right; });
+                     [](const Value& left, const Value& right) -> Value { return left - right; });
     }
 
     bool EvaluateVisitor::visit(ExpressionStatement& stmt, Value& out) const {
         // Evaluate the expression
         // If it can be constant, substitute it to be a constant expression
+        // Return if the statement can be simplified to a statement with a single constant expression
         Value value;
         if (stmt.expr->accept(*this, value)) {
             out = value;
