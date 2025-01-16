@@ -1,0 +1,15 @@
+fn binarySearch(l: List<Int>, target: Int) -> Int do
+    let low = 0
+    let high = l.length() - 1
+    while low <= high do
+        let mid = (low + high) / 2
+        if l[mid] == target do
+            return mid
+        else if l[mid] < target do
+            low = mid + 1
+        else do
+            high = mid - 1
+        end
+    end
+    return -1
+end
