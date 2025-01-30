@@ -12,7 +12,7 @@ namespace {
 
 bool isSyntaxInitialized = false;
 
-std::array<std::string_view, 27> keywords = {
+std::array<std::string_view, 28> keywords = {
     "do", "end",
     "if", "else",
     "match", "case",
@@ -20,16 +20,18 @@ std::array<std::string_view, 27> keywords = {
     "let", "const",
     "fn",
     "not", "and", "or",
+    "is", "in",
+    "yield",
     "undefined", "nil", "true", "false",
-    "import", "export",
-    "class", "struct", "union", "enum", "alias"
+    "import",
+    "class", "struct", "enum", "alias"
 };
 
-std::array<std::string_view, 27> symbols = {
+std::array<std::string_view, 38> symbols = {
     ",", ";",
-    ".", ":",
-    "=",
+    ".", "?", "!", ":", "->"
     "+", "-", "*", "/", "%", "&", "|", "^", "~",
+    "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
     "==", "!=", "<", ">", "<=", ">=",
     "(", ")", "[", "]", "{", "}",
     "@"
