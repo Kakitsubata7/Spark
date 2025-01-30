@@ -13,3 +13,34 @@ fn binarySearch(l: List<Int>, target: Int) -> Int do
     end
     return -1
 end
+
+module MyModule do
+    @export
+    struct Vector2 do
+        @public
+        let x: Real
+
+        @public
+        let y: Real
+
+        @public
+        constructor() do
+
+        end
+
+        @public
+        destructor() do
+
+        end
+
+        @public
+        fn normalize() -> Void do
+            // ...
+        end
+
+        @public
+        fn toString() -> String do
+            return f"Vector2({x}, {y})"
+        end
+    end
+end
