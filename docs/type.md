@@ -27,9 +27,30 @@ Note that in the context of *Spark*, immutability is not the same as constness. 
 
 
 ## Type Union
-It's possible to declare a type as a **type union** (note this is completely different from a union structure that's defined with the `union` keyword).
+It's possible to declare a type as a **type union**.
 
-For example:
+When declaring a variable with a type union. For example:
 ```spark
-
+let u: String | Real = "abc"
+u = 1.23
+print(typeof(u)) // Real
 ```
+For function arguments and return types:
+```spark
+fn foo(x: Int | Real) -> String | Int do /* ... */ end
+foo(1)              // Fine
+const u = foo(3.14) // Fine
+foo("string")       // Compile-time error
+
+foo(u)
+// Compile-time error since the compiler is unable to
+// know if u is String or Int
+
+if u is Int do
+    foo(u)
+end
+// This is fine
+// or use the do-if statement
+do foo(u) if u is Int
+```
+This means passing a `Int` or a `Real` is fine for the argument `x`, but not `String` since the type union doesn't include `String`.
