@@ -11,5 +11,7 @@ add_executable(Spark
         src/compiler/result.hpp
         src/compiler/token.cpp
         src/compiler/token.hpp
+        src/utils/trie.cpp
+        src/utils/trie.hpp
         src/main.cpp
 )
