@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -18,7 +17,7 @@ private:
     struct Node {
         char ch;
         bool isEnd;
-        std::vector<std::unique_ptr<Node>> children;
+        std::vector<Node> children;
 
         explicit Node(char ch, bool isEnd) : ch(ch), isEnd(isEnd) { }
     };
@@ -35,7 +34,7 @@ public:
     /* ===== Data ===== */
 
 private:
-    std::unique_ptr<Node> root;
+    Node root;
 
 
 
@@ -44,10 +43,11 @@ private:
 public:
     template <typename It>
     Trie(It first, It last) {
+        root = Node('\0', false);
         // TODO: Build trie
     }
 
-    Trie() : root(std::make_unique<Node>('\0', false)) { }
+    Trie() : root('\0', false) { }
 
 
 
