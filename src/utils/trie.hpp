@@ -1,9 +1,8 @@
 ﻿#pragma once
 
+#include <initializer_list>
 #include <string_view>
 #include <vector>
-
-#include <iostream>
 
 namespace spark {
 
@@ -43,6 +42,8 @@ private:
     /* ===== Constructors ===== */
 
 public:
+    Trie() : root('\0', false) { }
+
     template <typename It>
     Trie(It first, It last) : root('\0', false) {
         for (It curr = first; curr != last; ++curr) {
@@ -50,7 +51,7 @@ public:
         }
     }
 
-    Trie() : root('\0', false) { }
+    Trie(std::initializer_list<std::string_view> init) : Trie(init.begin(), init.end()) { }
 
 
 
