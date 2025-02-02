@@ -19,7 +19,7 @@ private:
         bool isEnd;
         std::vector<Node> children;
 
-        explicit Node(char ch, bool isEnd) : ch(ch), isEnd(isEnd) { }
+        explicit Node(char ch, bool isEnd) : ch(ch), isEnd(isEnd), children({}) { }
     };
 
 public:
@@ -42,8 +42,7 @@ private:
 
 public:
     template <typename It>
-    Trie(It first, It last) {
-        root = Node('\0', false);
+    Trie(It first, It last) : root('\0', false) {
         // TODO: Build trie
     }
 
