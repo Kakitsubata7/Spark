@@ -26,7 +26,7 @@ public:
     /* ===== Data ===== */
 
 private:
-    bool ignoreComments;
+    const bool ignoreComments;
 
 
 
