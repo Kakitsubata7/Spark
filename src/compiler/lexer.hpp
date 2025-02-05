@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <sstream>
+#include <string_view>
 #include <vector>
 
 #include "result.hpp"
@@ -15,6 +16,10 @@ class Lexer {
 
 public:
     static void initializeSyntax();
+
+    static bool isKeyword(std::string_view sv);
+    static bool isSymbol(std::string_view sv);
+    static bool isIdentifier(std::string_view sv);
 
 
 
