@@ -15,8 +15,6 @@ class Lexer {
     /* ===== Syntax ===== */
 
 public:
-    static void initializeSyntax();
-
     static bool isKeyword(std::string_view sv);
     static bool isSymbol(std::string_view sv);
     static bool isIdentifier(std::string_view sv);
@@ -33,9 +31,7 @@ private:
     /* ===== Constructor ===== */
 
 public:
-    explicit Lexer(bool ignoreComments = true) : ignoreComments(ignoreComments) {
-        initializeSyntax();
-    }
+    explicit Lexer(bool ignoreComments = true) : ignoreComments(ignoreComments) { }
 
 
 
