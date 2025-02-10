@@ -7,6 +7,7 @@
 
 #include "result.hpp"
 #include "token.hpp"
+#include "../utils/trie.hpp"
 
 namespace spark {
 
@@ -15,8 +16,12 @@ class Lexer {
     /* ===== Syntax ===== */
 
 public:
+    using Match = Trie::Match;
+
     static bool isKeyword(std::string_view sv);
-    static bool isSymbol(std::string_view sv);
+
+    static Match matchSymbol(std::string_view sv);
+    
     static bool isIdentifier(std::string_view sv);
 
 
