@@ -25,9 +25,9 @@ private:
 
 public:
     enum class Match {
-        NotFound,
-        Prefix,
-        Complete
+        None    = -1,
+        Final   = 0,
+        Partial = 1
     };
 
 

@@ -37,14 +37,14 @@ Trie::Match Trie::match(std::string_view s) const {
             continue;
         }
         // Otherwise, no match
-        return Match::NotFound;
+        return Match::None;
     }
 
     if (!node->isEnd) {
         // Not an entry ending, no match
-        return Match::NotFound;
+        return Match::None;
     }
-    return node->children.empty() ? Match::Complete : Match::Prefix;
+    return node->children.empty() ? Match::Final : Match::Partial;
 }
 
 } // spark
