@@ -1,8 +1,6 @@
 #include "lexer.hpp"
 
-#include <algorithm>
-#include <array>
-#include <istream>
+#include <unordered_set>
 
 namespace spark {
 
@@ -10,9 +8,7 @@ namespace spark {
 
 namespace {
 
-bool isSyntaxInitialized = false;
-
-std::array<std::string_view, 28> keywords = {
+const std::unordered_set<std::string_view> keywords {
     "do", "end",
     "if", "else",
     "match", "case",
@@ -27,10 +23,11 @@ std::array<std::string_view, 28> keywords = {
     "class", "struct", "enum", "alias"
 };
 
-std::array<std::string_view, 38> symbols = {
+const Trie symbols {
     ",", ";",
-    ".", "?", "!", ":", "->"
+    ".", "?", "!", ":", "->",
     "+", "-", "*", "/", "%", "&", "|", "^", "~",
+    "++", "--",
     "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
     "==", "!=", "<", ">", "<=", ">=",
     "(", ")", "[", "]", "{", "}",
@@ -39,68 +36,28 @@ std::array<std::string_view, 38> symbols = {
 
 }
 
-void Lexer::initializeSyntax() {
-    if (isSyntaxInitialized) { return; }
-    isSyntaxInitialized = true;
-
-    std::sort(keywords.begin(), keywords.end());
+bool Lexer::isKeyword(std::string_view sv) {
+    return keywords.find(sv) != keywords.end();
 }
 
-
-
-/* ===== Operations ===== */
-
-namespace {
-
-[[nodiscard]]
-bool isKeyword(const std::string& s) {
-    return std::binary_search(keywords.cbegin(), keywords.cend(), s);
+Lexer::Match Lexer::matchSymbol(std::string_view sv) {
+    return symbols.match(sv);
 }
 
-enum class Match {
-    Possible,
-    Equal,
-    Impossible
-};
-
-[[nodiscard]]
-Match matchKeyword(const std::string& s) {
-    const std::string_view* it = std::lower_bound(keywords.cbegin(), keywords.cend(), s);
-    if (it != keywords.cend() && it->compare(0, s.length(), s.c_str()) == 0) {
-        if (s.length() < it->length()) {
-            return Match::Possible;
-        }
-        return Match::Equal;
-    }
-    return Match::Impossible;
-}
-
-[[nodiscard]]
-Token tokenizeKeyword(const std::string& s) {
-    if (s == "true" || s == "false") {
-        return {TokenType::Boolean, s};
-    }
-    if (s == "nil") {
-        return {TokenType::Nil, s};
-    }
-    return {TokenType::Keyword, s};
-}
-
-[[nodiscard]]
-bool isIdentifier(const std::string& s) {
-    // Empty string is not identifier
-    if (s.empty()) {
+bool Lexer::isIdentifier(std::string_view sv) {
+    // Empty string is not an identifier
+    if (sv.empty()) {
         return false;
     }
 
-    // First character must be letters or underscore
-    if (!std::isalpha(s[0]) && s[0] != '_') {
+    // The first character must be an English alphabet or an underscore
+    if (!std::isalpha(sv[0]) && sv[0] != '_') {
         return false;
     }
 
-    // The rest characters must be letters, digits, or underscore
-    for (size_t i = 1; i < s.size(); i++) {
-        if (!std::isalnum(s[i]) && s[i] != '_') {
+    // The rest must be an English alphabet, a digit, or an underscore
+    for (size_t i = 1; i < sv.length(); i++) {
+        if (!std::isalpha(sv[1]) && !std::isdigit(sv[i]) && sv[i] != '_') {
             return false;
         }
     }
@@ -108,26 +65,9 @@ bool isIdentifier(const std::string& s) {
     return true;
 }
 
-[[nodiscard]]
-Token tokenizeIdentifier(const std::string& s) {
-    if (s == "_") {
-        return {TokenType::Ignore, "_"};
-    }
-    return {TokenType::Identifier, s};
-}
 
-[[nodiscard]]
-bool isDelimiter(char c) {
-    if (std::isspace(c)) {
-        return true;
-    }
-    if () {
-        return true;
-    }
-    return false;
-}
 
-}
+/* ===== Operations ===== */
 
 Result<std::vector<Token>> Lexer::lex(std::istream& is) {
     Result<std::vector<Token>> result;
@@ -135,9 +75,9 @@ Result<std::vector<Token>> Lexer::lex(std::istream& is) {
 
     std::string current;
 
-    // General matching
-    while (true) {
-
+    char c;
+    while (is.get(c)) {
+        // TODO
     }
 
     // Set lexing result
