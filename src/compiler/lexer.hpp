@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-#include "result.hpp"
+#include "lex_result.hpp"
 #include "token.hpp"
 #include "../utils/trie.hpp"
 
@@ -61,9 +61,9 @@ public:
     /* ===== Operations ===== */
 
 public:
-    Result<std::vector<Token>> lex(std::istream& is);
+    LexResult lex(std::istream& is);
 
-    Result<std::vector<Token>> lex(const std::string& s) {
+    LexResult lex(const std::string& s) {
         std::istringstream iss(s);
         return lex(iss);
     }

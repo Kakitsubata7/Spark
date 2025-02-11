@@ -69,20 +69,9 @@ bool Lexer::isIdentifier(std::string_view sv) {
 
 /* ===== Operations ===== */
 
-Result<std::vector<Token>> Lexer::lex(std::istream& is) {
-    Result<std::vector<Token>> result;
-    std::vector<Token> tokens;
-
-    std::string current;
-
-    char c;
-    while (is.get(c)) {
-        // TODO
-    }
-
-    // Set lexing result
-    result.value = result.hasError() ? std::nullopt : std::make_optional<std::vector<Token>>(tokens);
-
+LexResult Lexer::lex(std::istream& is) {
+    LexResult result;
+    // TODO
     return result;
 }
 
