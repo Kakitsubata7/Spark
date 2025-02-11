@@ -4,8 +4,6 @@
 
 using namespace spark;
 
-using namespace spark;
-
 class TrieTest : public ::testing::Test {
 protected:
     Trie trie;
