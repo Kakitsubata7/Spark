@@ -17,10 +17,9 @@ class Trie {
 private:
     struct Node {
         char ch;
-        bool isEnd;
         std::vector<Node> children;
 
-        explicit Node(char ch, bool isEnd) : ch(ch), isEnd(isEnd), children({}) { }
+        explicit Node(char ch, bool isEnd) : ch(ch), children({}) { }
     };
 
 public:

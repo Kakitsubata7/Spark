@@ -16,9 +16,6 @@ void Trie::append(std::string_view s) {
         // If current character exists, proceed to the next level
         if (it != node->children.end() && it->ch == c) {
             node = &(*it);
-            if (i == s.length() - 1) {
-                node->isEnd = true;  // Mark as complete word
-            }
             continue;
         }
         // Otherwise, insert a new node
@@ -27,6 +24,11 @@ void Trie::append(std::string_view s) {
 }
 
 Trie::Match Trie::match(std::string_view s) const {
+    if (s.empty()) {
+        // Empty string is a part of any entry
+        return root.children.empty() ? Match::None : Match::Partial;
+    }
+
     const Node* node = &(this->root);
     for (char c : s) {
         auto it = std::lower_bound(node->children.cbegin(), node->children.cend(), c,
@@ -40,10 +42,7 @@ Trie::Match Trie::match(std::string_view s) const {
         return Match::None;
     }
 
-    if (!node->isEnd) {
-        // Not an entry ending, no match
-        return Match::None;
-    }
+    // Match::Final if no further possible matches, Match::Partial otherwise
     return node->children.empty() ? Match::Final : Match::Partial;
 }
 
