@@ -35,6 +35,7 @@ target_link_libraries(spark PRIVATE spark_lib)
 enable_testing()
 
 add_executable(spark_test
+        tests/token_test.cpp
         tests/trie_test.cpp
 )
 target_link_libraries(spark_test
