@@ -6,31 +6,31 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
     os << "<";
     switch (token.type) {
         case TokenType::Identifier:
-            os << "Identifier: " << token.lexeme;
+            os << "Identifier: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Keyword:
-            os << "Keyword: " << token.lexeme;
+            os << "Keyword: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Symbol:
-            os << "Symbol: " << token.lexeme;
+            os << "Symbol: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Integer:
-            os << "Integer: " << token.lexeme;
+            os << "Integer: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Real:
-            os << "Real: " << token.lexeme;
+            os << "Real: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Boolean:
-            os << "Boolean: " << token.lexeme;
+            os << "Boolean: '" << token.lexeme << '\'';
             break;
 
         case TokenType::String:
-            os << "String: " << token.lexeme;
+            os << "String: '" << token.lexeme << '\'';
             break;
 
         case TokenType::Nil:
@@ -42,7 +42,7 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
             break;
 
         case TokenType::Comment:
-            os << "Comment: " << token.lexeme;
+            os << "Comment: '" << token.lexeme << '\'';
             break;
 
         case TokenType::End:
@@ -50,9 +50,10 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
             break;
 
         case TokenType::Unknown:
-            os << "Unknown";
+            os << "Unknown: '" << token.lexeme << '\'';
             break;
     }
+    os << ' ' << token.line << ':' << token.column;
     os << ">";
     return os;
 }
