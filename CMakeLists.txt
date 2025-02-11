@@ -17,9 +17,10 @@ FetchContent_MakeAvailable(googletest)
 add_library(spark_lib
         src/compiler/ast.hpp
         src/compiler/expr.hpp
+        src/compiler/lex_error.hpp
+        src/compiler/lex_result.hpp
         src/compiler/lexer.cpp
         src/compiler/lexer.hpp
-        src/compiler/result.hpp
         src/compiler/token.cpp
         src/compiler/token.hpp
         src/utils/trie.cpp
@@ -35,6 +36,7 @@ target_link_libraries(spark PRIVATE spark_lib)
 enable_testing()
 
 add_executable(spark_test
+        tests/lex_error_test.cpp
         tests/token_test.cpp
         tests/trie_test.cpp
 )
