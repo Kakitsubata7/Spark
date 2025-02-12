@@ -30,6 +30,7 @@ public:
 
     /* ===== Operations ===== */
 
+    [[nodiscard]]
     bool success() const noexcept { return _errors.empty(); }
 
     void pushToken(Token&& token) {
