@@ -37,6 +37,7 @@ enable_testing()
 
 add_executable(spark_test
         tests/lex_error_test.cpp
+        tests/lex_result_test.cpp
         tests/token_test.cpp
         tests/trie_test.cpp
 )
