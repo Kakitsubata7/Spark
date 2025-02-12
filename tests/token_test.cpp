@@ -32,8 +32,8 @@ TEST(TokenTest, StreamOutputBasic) {
     test({TokenType::Boolean, "true", 1, 2},
          "<Boolean: 'true' 1:2>");
 
-    test({TokenType::String, "\"Hello, World!\"", 4, 3},
-         R"(<String: '"Hello, World!"' 4:3>)");
+    test({TokenType::String, "Hello, World!", 4, 3},
+         R"(<String: 'Hello, World!' 4:3>)");
 
     test({TokenType::Nil, "nil", 30, 40},
          "<Nil 30:40>");
@@ -57,10 +57,10 @@ TEST(TokenTest, StreamOutputSpecialCharacters) {
          "<Identifier: 'with space' 5:12>");
 
     // Token with escape sequences
-    test({TokenType::String, "\"New\nLine\"", 6, 2},
-         "<String: '\"New\nLine\"' 6:2>");
-    test({TokenType::String, "\"Tab\tSeparated\"", 8, 4},
-         "<String: '\"Tab\tSeparated\"' 8:4>");
+    test({TokenType::String, "New\nLine", 6, 2},
+         "<String: 'New\nLine' 6:2>");
+    test({TokenType::String, "Tab\tSeparated", 8, 4},
+         "<String: 'Tab\tSeparated' 8:4>");
 }
 
 TEST(TokenTest, StreamOutputEdgeCases) {
@@ -69,8 +69,8 @@ TEST(TokenTest, StreamOutputEdgeCases) {
          "<Identifier: '' 1:1>");
 
     // Multi-line string
-    test({TokenType::String, "\"Line1\nLine2\"", 12, 5},
-         "<String: '\"Line1\nLine2\"' 12:5>");
+    test({TokenType::String, "Line1\nLine2", 12, 5},
+         "<String: 'Line1\nLine2' 12:5>");
 
     // Tokens at extreme positions
     test({TokenType::Keyword, "return", 9999, 999},
