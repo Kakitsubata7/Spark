@@ -38,8 +38,8 @@ TEST(TokenTest, StreamOutputBasic) {
     test({TokenType::Nil, "nil", 30, 40},
          "<Nil 30:40>");
 
-    test({TokenType::Ignore, "_", 5, 6},
-         "<Ignore 5:6>");
+    test({TokenType::Discard, "_", 5, 6},
+         "<Discard 5:6>");
 
     test({TokenType::Comment, "Comment", 0, 0},
          "<Comment: 'Comment' 0:0>");

@@ -15,7 +15,7 @@ enum class TokenType {
     Boolean,
     String,
     Nil,
-    Ignore,
+    Discard,
     Comment,
     End,
     Unknown

@@ -37,8 +37,8 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
             os << "Nil";
             break;
 
-        case TokenType::Ignore:
-            os << "Ignore";
+        case TokenType::Discard:
+            os << "Discard";
             break;
 
         case TokenType::Comment:
