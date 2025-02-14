@@ -50,6 +50,11 @@ bool Lexer::isIdentifier(std::string_view sv) {
         return false;
     }
 
+    // Discard is not considered as an identifier
+    if (sv == "_") {
+        return false;
+    }
+
     // The first character must be an English alphabet or an underscore
     if (!std::isalpha(sv[0]) && sv[0] != '_') {
         return false;
