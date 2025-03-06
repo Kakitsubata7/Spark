@@ -19,7 +19,7 @@ private:
         char ch;
         std::vector<Node> children;
 
-        explicit Node(char ch, bool isEnd) : ch(ch), children({}) { }
+        explicit Node(char ch) : ch(ch), children({}) { }
     };
 
 public:
@@ -41,10 +41,10 @@ private:
     /* ===== Constructors ===== */
 
 public:
-    Trie() : root('\0', false) { }
+    Trie() : root('\0') { }
 
     template <typename It>
-    Trie(It first, It last) : root('\0', false) {
+    Trie(It first, It last) : root('\0') {
         for (It curr = first; curr != last; ++curr) {
             append(*curr);
         }

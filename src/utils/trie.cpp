@@ -19,7 +19,7 @@ void Trie::append(std::string_view s) {
             continue;
         }
         // Otherwise, insert a new node
-        node = &(*(node->children.insert(it, Node(c, i == s.length() - 1))));
+        node = &(*(node->children.insert(it, Node(c))));
     }
 }
 
