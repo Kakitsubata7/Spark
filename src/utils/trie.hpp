@@ -7,7 +7,7 @@
 namespace spark {
 
 /**
- * This class is implemented as a read-only trie that supports matching @c std::string  while knowing if it is the
+ * This class is implemented as a read-only trie that supports matching @c std::string while knowing if it is the
  * longest possible match.
  */
 class Trie {
