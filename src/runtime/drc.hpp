@@ -42,6 +42,9 @@ namespace std {
 
 namespace Spark::Runtime {
 
+/**
+ * Represents a DRC graph that associates DRC objects with DRC nodes to manage their lifetimes.
+ */
 class DRC {
 private:
     std::unordered_set<DRCNode> _nodes;
@@ -49,6 +52,9 @@ private:
     std::vector<DRCNode*> _toRemoveCache;
     std::vector<DRCNode*> _stackCache;
 
+    /**
+     * Current traversal ID.
+     */
     uintptr_t _traversalId = 0;
 
 public:
@@ -58,20 +64,41 @@ public:
      * Adds a new DRC node to the DRC graph with associated with a given DRC object.
      *
      * @param obj DRC object associated with the node.
+     * @return Pointer to the newly created DRC node.
      */
     DRCNode* add(DRCHeader* obj);
 
     /**
-     * A DRC object
+     * A DRC node references another DRC node.
      *
+     * @param owner DRC node that references referencee.
+     * @param referencee DRC node that gets referenced by owner.
      */
     void retain(DRCNode* owner, DRCNode* referencee);
 
+    /**
+     * A DRC node releases (one) reference for the other DRC node.
+     *
+     * @param owner DRC node that references referencee.
+     * @param referencee DRC node that is referencing by owner.
+     * @return Array of DRC nodes that were deleted.
+     */
     const std::vector<DRCNode*>& release(DRCNode* owner, DRCNode* referencee);
 
+    /**
+     * Tries to start cleaning up from a node.
+     *
+     * @param from Node where the cleanup starts.
+     * @return Array of DRC nodes that were deleted during the cleanup.
+     */
     const std::vector<DRCNode*>& tryCleanup(DRCNode* from);
 
 private:
+    /**
+     * Gets a new traversal traversal ID.
+     *
+     * @return New traversal ID.
+     */
     uintptr_t getNewTraversalId();
 };
 
