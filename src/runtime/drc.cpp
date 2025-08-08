@@ -52,10 +52,9 @@ const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) {
         _toRemoveCache.clear();
         return _toRemoveCache;
     }
-
-    uintptr_t traversalId = getNewTraversalId();
-
+    
     // Trial removal
+    uintptr_t traversalId = getNewTraversalId();
     _toRemoveCache.clear();
     std::vector<DRCNode*>& toRemove = _toRemoveCache;
     toRemove.push_back(from);
