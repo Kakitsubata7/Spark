@@ -29,9 +29,9 @@ private:
     DRC _drc;
 
 public:
-    explicit Thread(Allocator allocator = {}) : _allocator(std::move(allocator)) { }
+    explicit Thread(Allocator allocator = {}) noexcept : _allocator(std::move(allocator)) { }
 
-    ~Thread() {
+    ~Thread() noexcept {
         for (RCHeader* obj : _rcObjects) {
             obj->type->destruct(obj);
             _allocator.free(obj);
@@ -42,7 +42,7 @@ public:
         }
     }
 
-    static RCHeader* newRCObject(Thread* th, const Type* type) {
+    static RCHeader* newRCObject(Thread* th, const Type* type) noexcept {
         RCHeader* obj = reinterpret_cast<RCHeader*>(th->_allocator.alloc(type->size()));
         obj->refCount = 0;
         obj->type = type;
@@ -50,12 +50,12 @@ public:
         return obj;
     }
 
-    static void deleteRCObject(Thread* th, RCHeader* obj) {
+    static void deleteRCObject(Thread* th, RCHeader* obj) noexcept {
         obj->type->destruct(obj);
         th->_allocator.free(obj);
     }
 
-    static DRCHeader* newDRCObject(Thread* th, const Type* type) {
+    static DRCHeader* newDRCObject(Thread* th, const Type* type) noexcept {
         DRCHeader* obj = static_cast<DRCHeader*>(th->_allocator.alloc(type->size()));
         obj->rcHeader.refCount = 0;
         obj->rcHeader.type = type;
@@ -64,11 +64,11 @@ public:
         return obj;
     }
 
-    static void drcRetainDRC(Thread* th, DRCHeader* owner, DRCHeader* referencee) {
+    static void drcRetainDRC(Thread* th, DRCHeader* owner, DRCHeader* referencee) noexcept {
         th->_drc.retain(owner->node, referencee->node);
     }
 
-    static void drcReleaseDRC(Thread* th, DRCHeader* owner, DRCHeader* referencee) {
+    static void drcReleaseDRC(Thread* th, DRCHeader* owner, DRCHeader* referencee) noexcept {
         const std::vector<DRCNode*>& toDelete = th->_drc.release(owner->node, referencee->node);
         for (DRCNode* node : toDelete) {
             DRCHeader* obj = node->obj;

@@ -16,7 +16,7 @@ private:
     Destructor _destructor = nullptr;
 
 public:
-    explicit Type(std::size_t size, Destructor destructor = nullptr) : _size(size), _destructor(destructor) { }
+    explicit Type(std::size_t size, Destructor destructor = nullptr) noexcept : _size(size), _destructor(destructor) { }
 
     Type(const Type& other) = delete;
     Type& operator=(const Type& other) = delete;
@@ -29,7 +29,7 @@ public:
      *
      * @param p Pointer to the Spark object to destruct.
      */
-    void destruct(void* p) const {
+    void destruct(void* p) const noexcept {
         if (_destructor != nullptr) {
             _destructor(p);
         }
@@ -39,7 +39,7 @@ public:
      * Size of the type in bytes for the current platform.
      */
     [[nodiscard]]
-    constexpr std::size_t size() const {
+    constexpr std::size_t size() const noexcept {
         return _size;
     }
 };

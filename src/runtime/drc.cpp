@@ -10,7 +10,7 @@ namespace Spark::Runtime {
  * @param owner Owner node (to remove referencee from).
  * @param referencee Node that's being referenced by owner (to be removed from owner).
  */
-static bool removeReferencee(DRCNode* owner, DRCNode* referencee) {
+static bool removeReferencee(DRCNode* owner, DRCNode* referencee) noexcept {
     std::vector<DRCNode*>& referencees = owner->referencees;
     DRCNode* referenceeNode = referencee;
     for (size_t i = 0; referencees.size(); ++i) {
@@ -23,19 +23,19 @@ static bool removeReferencee(DRCNode* owner, DRCNode* referencee) {
     return false;
 }
 
-DRCNode* DRC::add(DRCHeader* obj) {
+DRCNode* DRC::add(DRCHeader* obj) noexcept {
     auto it = _nodes.emplace().first;
     DRCNode* node = const_cast<DRCNode*>(&*it);
     node->obj = obj;
     return node;
 }
 
-void DRC::retain(DRCNode* owner, DRCNode* referencee) {
+void DRC::retain(DRCNode* owner, DRCNode* referencee) noexcept {
     owner->referencees.push_back(referencee);
     referencee->internalRefCount++;
 }
 
-const std::vector<DRCNode*>& DRC::release(DRCNode* owner, DRCNode* referencee) {
+const std::vector<DRCNode*>& DRC::release(DRCNode* owner, DRCNode* referencee) noexcept {
     // Remove referencee node from owner's referencees
     if (!removeReferencee(owner, referencee)) {
         _toRemoveCache.clear();
@@ -46,13 +46,13 @@ const std::vector<DRCNode*>& DRC::release(DRCNode* owner, DRCNode* referencee) {
     return tryCleanup(referencee);
 }
 
-const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) {
+const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) noexcept {
     // Ignore if the starting node is still externally referenced
     if (from->obj->rcHeader.refCount > 0) {
         _toRemoveCache.clear();
         return _toRemoveCache;
     }
-    
+
     // Trial removal
     uintptr_t traversalId = getNewTraversalId();
     _toRemoveCache.clear();
@@ -113,7 +113,7 @@ const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) {
     return toRemove;
 }
 
-uintptr_t DRC::getNewTraversalId() {
+uintptr_t DRC::getNewTraversalId() noexcept {
     _traversalId++;
     if (_traversalId == 0) {
         for (const DRCNode& node : _nodes) {

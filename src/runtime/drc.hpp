@@ -24,7 +24,7 @@ struct DRCNode {
     std::vector<DRCNode*> referencees;
     uintptr_t traversalId;
 
-    bool operator==(const DRCNode& other) const {
+    bool operator==(const DRCNode& other) const noexcept {
         return obj == other.obj;
     }
 };
@@ -66,7 +66,7 @@ public:
      * @param obj DRC object associated with the node.
      * @return Pointer to the newly created DRC node.
      */
-    DRCNode* add(DRCHeader* obj);
+    DRCNode* add(DRCHeader* obj) noexcept;
 
     /**
      * A DRC node references another DRC node.
@@ -74,7 +74,7 @@ public:
      * @param owner DRC node that references referencee.
      * @param referencee DRC node that gets referenced by owner.
      */
-    void retain(DRCNode* owner, DRCNode* referencee);
+    void retain(DRCNode* owner, DRCNode* referencee) noexcept;
 
     /**
      * A DRC node releases (one) reference for the other DRC node.
@@ -83,7 +83,7 @@ public:
      * @param referencee DRC node that is referencing by owner.
      * @return Array of DRC nodes that were deleted.
      */
-    const std::vector<DRCNode*>& release(DRCNode* owner, DRCNode* referencee);
+    const std::vector<DRCNode*>& release(DRCNode* owner, DRCNode* referencee) noexcept;
 
     /**
      * Tries to start cleaning up from a node.
@@ -91,7 +91,7 @@ public:
      * @param from Node where the cleanup starts.
      * @return Array of DRC nodes that were deleted during the cleanup.
      */
-    const std::vector<DRCNode*>& tryCleanup(DRCNode* from);
+    const std::vector<DRCNode*>& tryCleanup(DRCNode* from) noexcept;
 
 private:
     /**
@@ -99,7 +99,7 @@ private:
      *
      * @return New traversal ID.
      */
-    uintptr_t getNewTraversalId();
+    uintptr_t getNewTraversalId() noexcept;
 };
 
 } // Spark::Runtime

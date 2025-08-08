@@ -11,11 +11,11 @@ namespace Spark::Runtime {
  * @see std::free
  */
 class DefaultAllocator {
-    void* alloc(std::size_t size) {
+    void* alloc(std::size_t size) noexcept {
         return std::malloc(size);
     }
 
-    void free(void* ptr) {
+    void free(void* ptr) noexcept {
         std::free(ptr);
     }
 };
