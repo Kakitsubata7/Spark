@@ -10,15 +10,17 @@ namespace Spark::Runtime {
  * @param owner Owner node (to remove referencee from).
  * @param referencee Node that's being referenced by owner (to be removed from owner).
  */
-static void removeReferencee(DRCNode* owner, DRCNode* referencee) {
+static bool removeReferencee(DRCNode* owner, DRCNode* referencee) {
     std::vector<DRCNode*>& referencees = owner->referencees;
     DRCNode* referenceeNode = referencee;
     for (size_t i = 0; referencees.size(); ++i) {
         if (referencees[i] == referenceeNode) {
             referencees[i] = referencees.back();
             referencees.pop_back();
+            return true;
         }
     }
+    return false;
 }
 
 DRCNode* DRC::add(DRCHeader* obj) {
@@ -35,7 +37,10 @@ void DRC::retain(DRCNode* owner, DRCNode* referencee) {
 
 const std::vector<DRCNode*>& DRC::release(DRCNode* owner, DRCNode* referencee) {
     // Remove referencee node from owner's referencees
-    removeReferencee(owner, referencee);
+    if (!removeReferencee(owner, referencee)) {
+        _toRemoveCache.clear();
+        return _toRemoveCache;
+    }
     referencee->internalRefCount--;
 
     return tryCleanup(referencee);
