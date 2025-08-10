@@ -1,0 +1,137 @@
+Program = { Statement } ;
+
+Statement = 
+      VarDeclStmt
+    | ModuleDeclStmt
+    | FnDeclStmt
+    | ReturnStmt
+    | TypeDeclStmt
+    | AssignmentStmt
+    | IfStmt
+    | MatchStmt
+    | WhileStmt
+    | ForStmt 
+    | ContinueStmt
+    | BreakStmt
+    | ThrowStmt
+    | TryCatchStmt ;
+
+Expression =
+      Literal
+    | Name
+    | FnExpr
+    | MatchExpr
+    | UnaryExpr
+    | BinaryExpr
+    | SubscriptExpr
+    | CastExpr
+    | CallExpr
+    | RangeExpr
+    | TryElseExpr;
+
+(* Variable Declaration Statement *)
+VarDeclStmt = ( 'let' | 'const' ) , [ '^' ] , Identifier , [ ':' , Name ] , '=' , Expression ;
+
+(* Module Declaration Statement *)
+ModuleDeclStmt = 'module' , Identifier , { '.' , Identifier } , 'do' , { Statement } , 'end' ;
+
+(* Function *)
+FnDeclStmt = 'fn' , Identifier , FnBody ;
+FnExpr = 'fn' , FnBody ;
+FnBody = '(' , [ FnParameter , { ',' , FnParameter } ] ,  ')' , 
+         [ '['  , [ FnCapturedValue , { ',' , FnCapturedValue } ] , ']' ] , 
+         [ '->' , Name ] , 
+         'do' , { Statement } , 'end' ;
+FnParameter = [ 'let' | 'const' ] , ( Identifier | Discard ) , ':' , Name , [ '=' , Expression ] ;
+FnCapturedValue = [ 'let' | 'const' ] , Name ;
+
+(* Return Statement *)
+ReturnStmt = 'return' ;
+
+(* Type Declaration Statement *)
+TypeDeclStmt = ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ ':' , Name , { ',' , Name } ] , 'do' ,
+               { Statement } ,
+               'end' ;
+
+(* Assignment Statement *)
+AssignmentStmt = Name , AssignmentOp , Expression;
+
+(* If Statement *)
+IfStmt = 'if' , Expression , 'do' , { Statement } , 'end' , 
+         [ { 'else' , 'if' , Expression , 'do' , { Statement } , 'end' } ] , 
+         [ 'else' , 'do' , { Statement } , 'end' ];
+
+(* Match *)
+MatchStmt = 'match' , Expression , [ 'as' , Identifier ] ,
+            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , 'do' , { Statement } , 'end' } ] , 
+            'end' ;
+MatchExpr = 'match' , Expression , [ 'as' , Identifier ] ,
+            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , (Expression | ThrowStmt) } ] ,
+            'end' ;
+
+(* While Statement *)
+WhileStmt = 'while' , Expression , 'do' , { Statement } , 'end' ;
+
+(* For Statement *)
+ForStmt = 'for' , Identifier , 'in' , Expression , 'do' , { Statement } , 'end' ;
+
+(* Continue/Break Statement *)
+ContinueStmt = 'continue' ;
+BreakStmt = 'break' ;
+
+(* Throw Statement *)
+ThrowStmt = 'throw' , [ Expression ] ;
+
+(* Try/Catch Statement *)
+TryCatchStmt = 'try' , 'do' , { Statement } , 'end' , CatchBlock , { CatchBlock } ;
+CatchBlock = 'catch' , ( ( ( 'let' | 'const' ) , [ '^' ] , ( Identifier | Discard ) , ':' , Name) | Discard ) , 'do' , { Statement } , 'end' ;
+
+(* Unary Expression *)
+UnaryExpr = UnaryOp , Expression ;
+
+(* Binary Expression *)
+BinaryExpr = Expression , BinaryExpr , Expression ;
+
+(* Subscript Expression *)
+SubscriptExpr = Expression , '[' , Expression , ']' ;
+
+(* Cast Expression *)
+CastExpr = '(' , Expression , ')' , Expression ;
+
+(* Call Expression *)
+CallExpr = Expression , '(' , [ Expression , { ',' , Expression } ] , ')' ;
+
+(* Range Expression *)
+RangeExpr = Expression , '..' , ( '.' | '<' | '>' ) , Expression , [ ':' , Expression ] ;
+
+(* Try/Else Expression *)
+TryElseExpr = 'try' , Expression , 'else' , ( Expression | ThrowStmt ) ;
+
+(* Identifier *)
+Identifier = ( ( Letter | '_' ) , { Letter | Digit | '_' } ) - '_' ;
+Discard = '_' ;
+
+(* Literals *)
+Literal = 
+      IntegerLiteral
+    | BooleanLiteral
+    | StringLiteral ;
+IntegerLiteral = Digit , { Digit } ;
+BooleanLiteral = 'true' | 'false' ;
+StringLiteral = ( "'" , { StringCharacter } , "'") | ( '"' , { StringCharacter } , '"' ) ;
+StringCharacter = ? any character except quote/backslash/line break ? ;
+
+(* Name *)
+Name = { '$' } , SingleName , { '.' , SingleName } ;
+SingleName = Identifier , [ '<' , Name , { ',' , Name } , '>' ] , [ '^' ] ;
+
+(* Misc *)
+Letter = UpperCaseLetter | LowerCaseLetter ;
+UpperCaseLetter = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
+LowerCaseLetter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' ;
+Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+(* Operators *)
+UnaryOp = '+' | '-' | '!' | '~' ;
+BinaryOp = '+' | '-' | '*' | '/' | '%' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||' | '&' | '|' | '^' | '<<' | '>>' |  ;
+AssignmentOp = [ '+' | '-' | '*' | '/' | '%' | '&' | '|' | '^' | '<<' | '>>' ] , '=' ;
