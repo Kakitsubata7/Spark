@@ -37,6 +37,7 @@ add_executable(spark_test
 target_link_libraries(spark_test
         PRIVATE spark_lib
         GTest::gtest_main
+        GTest::gmock
 )
 
 include(GoogleTest)

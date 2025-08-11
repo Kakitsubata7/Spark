@@ -66,19 +66,27 @@ const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) noexcept {
     while (!stack.empty()) {
         DRCNode* node = stack.back();
         stack.pop_back();
+        if (node->traversalId == traversalId) {
+            continue;
+        }
         node->traversalId = traversalId; // Update traversal ID to mark it as visited
 
         for (DRCNode* referencee : node->referencees) {
             // Decrease internal RC
             referencee->internalRefCount--;
+
+            // Stop if it's externally referenced
+            if (referencee->obj->rcHeader.refCount > 0) {
+                continue;
+            }
+
+            // Mark as to remove if internal RC reaches zero
             if (referencee->internalRefCount == 0) {
                 toRemove.push_back(referencee);
             }
 
-            // Don't push to the stack if already visited
-            if (referencee->traversalId != traversalId) {
-                stack.push_back(referencee);
-            }
+            // Push to the stack
+            stack.push_back(referencee);
         }
     }
 
