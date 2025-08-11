@@ -30,13 +30,14 @@ add_executable(spark
 target_link_libraries(spark PRIVATE spark_lib)
 
 # Testing
-#enable_testing()
-#
-#add_executable(spark_test)
-#target_link_libraries(spark_test
-#        PRIVATE spark_lib
-#        GTest::gtest_main
-#)
-#
-#include(GoogleTest)
-#gtest_discover_tests(spark_test)
+enable_testing()
+
+add_executable(spark_test
+        tests/runtime/drc_test.cpp)
+target_link_libraries(spark_test
+        PRIVATE spark_lib
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(spark_test)

@@ -57,7 +57,9 @@ const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) noexcept {
     uintptr_t traversalId = getNewTraversalId();
     _toRemoveCache.clear();
     std::vector<DRCNode*>& toRemove = _toRemoveCache;
-    toRemove.push_back(from);
+    if (from->internalRefCount == 0) {
+        toRemove.push_back(from);
+    }
     _stackCache.clear();
     std::vector<DRCNode*>& stack = _stackCache;
     stack.push_back(from);
@@ -67,16 +69,15 @@ const std::vector<DRCNode*>& DRC::tryCleanup(DRCNode* from) noexcept {
         node->traversalId = traversalId; // Update traversal ID to mark it as visited
 
         for (DRCNode* referencee : node->referencees) {
-            // Ignore if visited
-            if (referencee->traversalId == traversalId) {
-                continue;
-            }
-            stack.push_back(referencee);
-
-            // Decrease internal RC and mark as visited if internal RC reaches
+            // Decrease internal RC
             referencee->internalRefCount--;
             if (referencee->internalRefCount == 0) {
                 toRemove.push_back(referencee);
+            }
+
+            // Don't push to the stack if already visited
+            if (referencee->traversalId != traversalId) {
+                stack.push_back(referencee);
             }
         }
     }
