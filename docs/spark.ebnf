@@ -46,7 +46,7 @@ FnParameter = [ 'let' | 'const' ] , ( Identifier | Discard ) , ':' , Name , [ '=
 FnCapturedValue = [ 'let' | 'const' ] , Name ;
 
 (* Return Statement *)
-ReturnStmt = 'return' ;
+ReturnStmt = 'return' , [ Expression ] ;
 
 (* Type Declaration Statement *)
 TypeDeclStmt = ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ ':' , Name , { ',' , Name } ] , 'do' ,
