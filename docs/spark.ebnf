@@ -19,6 +19,7 @@ Statement =
 Expression =
       Literal
     | Name
+    | ParenthesesExpr
     | FnExpr
     | MatchExpr
     | UnaryExpr
@@ -27,7 +28,7 @@ Expression =
     | CastExpr
     | CallExpr
     | RangeExpr
-    | TryElseExpr;
+    | TryElseExpr ;
 
 (* Variable Declaration Statement *)
 VarDeclStmt = ( 'let' | 'const' ) , [ '^' ] , Identifier , [ ':' , Name ] , '=' , Expression ;
@@ -85,6 +86,9 @@ ThrowStmt = 'throw' , [ Expression ] ;
 (* Try/Catch Statement *)
 TryCatchStmt = 'try' , 'do' , { Statement } , 'end' , CatchBlock , { CatchBlock } ;
 CatchBlock = 'catch' , ( ( ( 'let' | 'const' ) , [ '^' ] , ( Identifier | Discard ) , ':' , Name) | Discard ) , 'do' , { Statement } , 'end' ;
+
+(* Parentheses Expression *)
+ParenthesesExpr = '(' , Expression , ')' ;
 
 (* Unary Expression *)
 UnaryExpr = UnaryOp , Expression ;
