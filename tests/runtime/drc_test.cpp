@@ -130,3 +130,20 @@ TEST(DRCTest, ExampleCase2) {
     auto& actual = drc.tryCleanup(a);
     EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
 }
+
+TEST(DRCTest, ExampleCase3) {
+    // [a] -> b, d
+    // b -> b, c
+    DRC drc;
+    DRCHeader objA = newObj(0); DRCNode* a = drc.add(&objA);
+    DRCHeader objB = newObj(0); DRCNode* b = drc.add(&objB);
+    DRCHeader objC = newObj(0); DRCNode* c = drc.add(&objC);
+    DRCHeader objD = newObj(0); DRCNode* d = drc.add(&objD);
+
+    drc.retain(a, b); drc.retain(a, d);
+    drc.retain(b, b); drc.retain(b, c);
+
+    std::vector<DRCNode*> expected = { a, b, c, d };
+    auto& actual = drc.tryCleanup(a);
+    EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
+}
