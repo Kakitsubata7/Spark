@@ -83,7 +83,7 @@ TEST(DRCTest, RetainTrioCycle) {
     EXPECT_EQ(drc.tryCleanup(a).size(), 3);
 }
 
-TEST(DRCTest, RetainComplexCase1) {
+TEST(DRCTest, ExampleCase1) {
     // [a] -> b, c
     // b -> c, d
     // c -> b
@@ -104,6 +104,29 @@ TEST(DRCTest, RetainComplexCase1) {
     drc.retain(d, a); drc.retain(d, f); // d -> a, f
 
     std::vector<DRCNode*> expected = { a, b, c, d, e, f };
+    auto& actual = drc.tryCleanup(a);
+    EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
+}
+
+TEST(DRCTest, ExampleCase2) {
+    // [a] -> b
+    // b -> c, d, e
+    // c -> a
+    // d -> a, b
+    // external -> e
+    DRC drc;
+    DRCHeader objA = newObj(0); DRCNode* a = drc.add(&objA);
+    DRCHeader objB = newObj(0); DRCNode* b = drc.add(&objB);
+    DRCHeader objC = newObj(0); DRCNode* c = drc.add(&objC);
+    DRCHeader objD = newObj(0); DRCNode* d = drc.add(&objD);
+    DRCHeader objE = newObj(1); DRCNode* e = drc.add(&objE);
+
+    drc.retain(a, b);
+    drc.retain(b, c); drc.retain(b, d); drc.retain(b, e);
+    drc.retain(c, a);
+    drc.retain(d, a); drc.retain(d, b);
+
+    std::vector<DRCNode*> expected = { a, b, c, d };
     auto& actual = drc.tryCleanup(a);
     EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
 }
