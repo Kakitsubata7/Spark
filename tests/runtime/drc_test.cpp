@@ -147,3 +147,29 @@ TEST(DRCTest, ExampleCase3) {
     auto& actual = drc.tryCleanup(a);
     EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
 }
+
+TEST(DRCTest, ExampleCase4) {
+    // [a] -> b
+    // c -> a
+    DRC drc;
+    DRCHeader objA = newObj(0); DRCNode* a = drc.add(&objA);
+    DRCHeader objB = newObj(0); DRCNode* b = drc.add(&objB);
+    DRCHeader objC = newObj(0); DRCNode* c = drc.add(&objC);
+
+    drc.retain(a, b);
+    drc.retain(c, a);
+
+    EXPECT_TRUE(drc.tryCleanup(a).empty());
+}
+
+TEST(DRCTest, ExampleCase5) {
+    // [a] -> b
+    // external -> a
+    DRC drc;
+    DRCHeader objA = newObj(1); DRCNode* a = drc.add(&objA);
+    DRCHeader objB = newObj(0); DRCNode* b = drc.add(&objB);
+
+    drc.retain(a, b);
+
+    EXPECT_TRUE(drc.tryCleanup(a).empty());
+}
