@@ -173,3 +173,31 @@ TEST(DRCTest, ExampleCase5) {
 
     EXPECT_TRUE(drc.tryCleanup(a).empty());
 }
+
+TEST(DRCTest, ExampleCase6) {
+    // [a] -> b, c
+    // b -> d
+    // c -> e
+    // d -> a, c
+    // e -> a, f
+    // f -> b
+    // external -> e
+    DRC drc;
+    DRCHeader objA = newObj(0); DRCNode* a = drc.add(&objA);
+    DRCHeader objB = newObj(0); DRCNode* b = drc.add(&objB);
+    DRCHeader objC = newObj(0); DRCNode* c = drc.add(&objC);
+    DRCHeader objD = newObj(0); DRCNode* d = drc.add(&objD);
+    DRCHeader objE = newObj(1); DRCNode* e = drc.add(&objE);
+    DRCHeader objF = newObj(0); DRCNode* f = drc.add(&objF);
+
+    drc.retain(a, b); drc.retain(a, c);
+    drc.retain(b, d);
+    drc.retain(c, e);
+    drc.retain(d, a);
+    drc.retain(d, c);
+    drc.retain(e, a);
+    drc.retain(e, f);
+    drc.retain(f, b);
+
+    EXPECT_TRUE(drc.tryCleanup(a).empty());
+}
