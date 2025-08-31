@@ -9,41 +9,35 @@ FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
+# For Windows: prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Library
 add_library(spark_lib
-        src/compiler/ast.hpp
-        src/compiler/expr.hpp
-        src/compiler/lex_error.hpp
-        src/compiler/lex_result.hpp
-        src/compiler/lexer.cpp
-        src/compiler/lexer.hpp
-        src/compiler/token.cpp
-        src/compiler/token.hpp
-        src/utils/trie.cpp
-        src/utils/trie.hpp
-)
+        src/runtime/allocator.hpp
+        src/runtime/drc.cpp
+        src/runtime/drc.hpp
+        src/runtime/rc.hpp
+        src/runtime/spark.hpp
+        src/runtime/thread.hpp
+        src/runtime/type.hpp)
 target_include_directories(spark_lib PUBLIC src)
 
 # Executable
-add_executable(spark src/main.cpp)
+add_executable(spark
+        src/main.cpp)
 target_link_libraries(spark PRIVATE spark_lib)
 
 # Testing
 enable_testing()
 
 add_executable(spark_test
-        tests/lex_error_test.cpp
-        tests/lex_result_test.cpp
-        tests/token_test.cpp
-        tests/trie_test.cpp
-)
+        tests/runtime/drc_test.cpp)
 target_link_libraries(spark_test
         PRIVATE spark_lib
         GTest::gtest_main
+        GTest::gmock
 )
 
 include(GoogleTest)
