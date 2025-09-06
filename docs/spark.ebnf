@@ -7,6 +7,8 @@ Statement =
     | FnDeclStmt
     | ReturnStmt
     | TypeDeclStmt
+    | CtorDeclStmt
+    | DtorDeclStmt
     | EnumMemberDeclStmt
     | AssignmentStmt
     | IfStmt
@@ -58,6 +60,10 @@ ReturnStmt = 'return' , [ Expression ] ;
 
 (* Type Declaration Statement *)
 TypeDeclStmt = [ Annotation ] , ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ ':' , Name , { ',' , Name } ] , BlockStmt ;
+
+(* Constructor/Destructor Statements *)
+CtorDeclStmt = [ Annotation ] , 'constructor' , FnBody ;
+DtorDeclStmt = [ Annotation ] , 'destructor' , FnBody ;
 
 (* Enum Member Declaration Statement *)
 EnumMemberDeclStmt = [ Annotation ] , 'case' , Identifier , [ '(' , Identifier , ':' , Name , ')' ] ;
