@@ -93,7 +93,7 @@ ThrowStmt = 'throw' , [ Expression ] ;
 
 (* Try/Catch Statement *)
 TryCatchStmt = 'try' , BlockStmt , CatchBlock , { CatchBlock } ;
-CatchBlock = 'catch' , ( ( ( 'let' | 'const' ) , [ '^' ] , ( Identifier | Discard ) , ':' , Name) | Discard ) , BlockStmt ;
+CatchBlock = 'catch' , ( ( Name , 'as' , ( Identifier | Discard ) ) | Discard ) , BlockStmt ;
 
 (* Parentheses Expression *)
 ParenthesesExpr = '(' , Expression , ')' ;
