@@ -286,6 +286,130 @@ const^ b = Point(3, 7)
 print(a == b) // Prints true
 ```
 
+#### Operator Overloading
+- User-defined types can overload operators to provide custom behaviors. Operator definitions use the `operator` keyword, followed by the operator symbol.
+```
+struct Vector2 do
+    let x: Real
+    let y: Real
+    
+    constructor(x: Real, y: Real) do
+        $x = x
+        $y = y
+    end
+
+    operator +(Vector2 rhs) -> Vector2 do
+        return Vector2(x + rhs.x, y + rhs.y)
+    end
+    
+    operator ==(Vector2 rhs) -> Bool do
+        return x == rhs.x && y == rhs.y
+    end
+    
+    // ...
+end
+```
+- Operators that are purely syntactic with no runtime behavior such as the immutability operator (`^`) and the user-scope access operator (`$`) cannot be overloaded.
+
+
+### Module Declaration
+- A module is a compile-time scoping mechanism that groups declarations under a shared name.
+- Modules do **not** get compiled into runtime objects.
+- The body of a module is an execution body. Its top-level statements are executed once the code is processed by the language runtime.
+- Names inside a module can only be used inside that module.
+```
+module Foo do
+    fn foo() do
+        // ...
+    end
+
+    export let s: String = "foo"
+
+    module Bar do
+        export fn bar() do
+            print(s)
+        end
+    end
+end
+
+Foo.foo() // Compile-time error since `foo` is not exported
+Foo.Bar.bar() // Prints "foo"
+Foo.s += "bar"
+Foo.Bar.bar() // Prints "foobar"
+```
+
+#### Nested Module
+- When declaring a module, its module name can be written in nested form.
+```
+module Foo.Bar.Baz do
+    // ...
+end
+```
+
+#### `global` Keyword
+- The `global` keyword can be used to access the top-level scope.
+```
+fn foo() do
+    print("foo")
+end
+
+module M do
+    fn foo() do
+        print("bar")
+    end
+    
+    global.foo() // Prints "foo"
+end
+```
+
+#### Top-level Module
+- The top-level scope of a module is seen as an invisible module. To access a name from another file, the name has to be exported.
+```
+// File A
+let foo = "foo"
+export let bar = "bar"
+
+// File B
+print(foo) // Compile-time error since `foo` in file A is not exported
+print(bar) // Prints "bar"
+```
+
+#### Importing
+- Exported names of a module can be imported into a scope with the `from` and `import` keywords.
+```
+module ModuleA do
+    export class Foo do
+        fn foo() do
+            // ...
+        end
+    end
+end
+
+module ModuleB do
+    from ModuleA import Foo
+
+    const f = Foo()
+    f.foo()
+end
+```
+- Multiple names inside a module can be imported together, and each name can be given an alias with the `as` keyword.
+```
+from Collections import Stack as S, Queue as Q, Map as M
+```
+- `*` can be used to import all exported names from a module into the current scope.
+```
+module Collections do
+    export class Stack<T> do end
+    export class Queue<T> do end
+    export class Map<K, V> do end
+end
+
+from Collections import *
+
+const s = Stack<Int>()
+const q = Queue<Real>()
+const m = Map<String, Any>()
+```
 
 
 ## Reserved Keywords
@@ -309,6 +433,7 @@ print(a == b) // Prints true
 - `false`
 - `fn`
 - `for`
+- `from`
 - `global`
 - `if`
 - `import`
