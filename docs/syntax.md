@@ -412,6 +412,76 @@ const m = Map<String, Any>()
 ```
 
 
+### Error Handling
+- Errors are values, and there are no restrictions on what types can be thrown.
+
+#### Function Throw Clause
+- A function cannot throw unless it is explicitly marked as throwable with the `throw` keyword in its signature.
+- A function can list specific types in its throw clause, or use `throw` with no arguments to let the compiler infer the set of possible thrown types.
+- Top-level statements (including module bodies) cannot throw.
+```
+fn foo() -> Int do
+    throw Error() // Compile-time error: `foo` is not throwable
+end
+
+fn bar() -> Int throw(Error) do
+    throw Error()
+end
+
+// Compiler infers the throw clause as `throw(FooError, BarError)`
+fn baz(b: Bool) throw do
+    if b do
+        throw FooError()
+    end else do
+        throw BarError()
+    end
+end
+
+fn qux(i: Int) throw(Real, Bool, String) do
+    if i < 0 do
+        throw 3.14
+    end else if i == 0 do
+        throw false
+    end else do
+        throw "foo"
+    end
+end
+```
+
+#### Calling Throwable Functions
+- A throwable function must be called with the `try` keyword.
+```
+fn readline() -> String throw(IOError) do
+    // ...
+end
+
+let line = try readline() else "" // Provides a default value on error
+
+fn foo() throw do
+    // Propagate the error to the caller
+    let line = try readline() else throw
+
+    // Throw a different error type
+    let line2 = try readline() else throw RuntimeError()
+end
+```
+
+#### Catching Errors
+- Thrown values can be caught by enclosing the call in a `try/catch` statement.
+- Discard (`_`) can be used to match any thrown type.
+```
+try do
+    // ...
+end catch RuntimeError as e do
+    print(e.message)
+end catch String as s do
+    print(s)
+end catch _ do
+    print("unknown error")
+end
+```
+
+
 ## Reserved Keywords
 - `alias`
 - `as`
