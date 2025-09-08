@@ -4,6 +4,7 @@ Statement =
       VarDeclStmt
     | BlockStmt
     | ModuleDeclStmt
+    | ImportStmt
     | FnDeclStmt
     | ReturnStmt
     | TypeDeclStmt
@@ -44,6 +45,10 @@ BlockStmt = 'do' , { Statement } , 'end' ;
 
 (* Module Declaration Statement *)
 ModuleDeclStmt = [ Annotation ] , 'module' , Identifier , { '.' , Identifier } , BlockStmt ;
+
+(* Import Statement *)
+ImportStmt = 'from' , Name , 'import' , ImportedName , { ',' , ImportedName } ;
+ImportedName = Name , [ 'as' , Identifier ];
 
 (* Function *)
 FnDeclStmt = [ Annotation ] , 'fn' , [ '^' ] , Identifier , FnBody ;
