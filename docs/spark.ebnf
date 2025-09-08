@@ -64,7 +64,8 @@ FnCapturedValue = [ 'let' | 'const' ] , Name ;
 ReturnStmt = 'return' , [ Expression ] ;
 
 (* Type Declaration Statement *)
-TypeDeclStmt = [ Annotation ] , ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ ':' , Name , { ',' , Name } ] , BlockStmt ;
+TypeDeclStmt = [ Annotation ] , ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ '^' ] ,
+               [ ':' , Name , { ',' , Name } ] , BlockStmt ;
 
 (* Constructor/Destructor Statements *)
 CtorDeclStmt = [ Annotation ] , 'constructor' , FnBody ;

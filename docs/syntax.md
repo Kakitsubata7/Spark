@@ -267,6 +267,10 @@ cat.woof() // Prints woof!
 ```
 - Type extensions cannot access private or protected members of the type they are extending **unless** the member (or the entire type) is marked with the `@extendible` annotation.
 
+#### Immutable Types
+- A type can be declared as immutable by adding ^ after its name. Immutable types cannot contain let fields or define mutating methods.
+- Casting from `Type^` to `Type` is allowed for immutable types.
+
 #### Records
 - The compile-time annotation `@record` can be applied to concrete types (class, struct, enum, etc.) to **enforce immutability** and automatically generate **equality** and **hash code** implementations.
 ```
