@@ -2,10 +2,15 @@ Program = { Statement } ;
 
 Statement = 
       VarDeclStmt
+    | BlockStmt
     | ModuleDeclStmt
+    | ImportStmt
     | FnDeclStmt
     | ReturnStmt
     | TypeDeclStmt
+    | CtorDeclStmt
+    | DtorDeclStmt
+    | EnumMemberDeclStmt
     | AssignmentStmt
     | IfStmt
     | MatchStmt
@@ -14,7 +19,8 @@ Statement =
     | ContinueStmt
     | BreakStmt
     | ThrowStmt
-    | TryCatchStmt ;
+    | TryCatchStmt
+    , [ ';' ] ;
 
 Expression =
       Literal
@@ -24,6 +30,7 @@ Expression =
     | MatchExpr
     | UnaryExpr
     | BinaryExpr
+    | TernaryExpr
     | SubscriptExpr
     | CastExpr
     | CallExpr
@@ -31,50 +38,63 @@ Expression =
     | TryElseExpr ;
 
 (* Variable Declaration Statement *)
-VarDeclStmt = ( 'let' | 'const' ) , [ '^' ] , Identifier , [ ':' , Name ] , '=' , Expression ;
+VarDeclStmt = [ Annotation ] , ( 'let' | 'const' | 'ref' | 'cref' ) , [ '^' ] , Identifier , [ ':' , Name ] , '=' , Expression ;
+
+(* Block Statement *)
+BlockStmt = 'do' , { Statement } , 'end' ;
 
 (* Module Declaration Statement *)
-ModuleDeclStmt = 'module' , Identifier , { '.' , Identifier } , 'do' , { Statement } , 'end' ;
+ModuleDeclStmt = [ Annotation ] , 'module' , Identifier , { '.' , Identifier } , BlockStmt ;
+
+(* Import Statement *)
+ImportStmt = 'from' , Name , 'import' , ImportedName , { ',' , ImportedName } ;
+ImportedName = Name , [ 'as' , Identifier ];
 
 (* Function *)
-FnDeclStmt = 'fn' , Identifier , FnBody ;
-FnExpr = 'fn' , FnBody ;
+FnDeclStmt = [ Annotation ] , 'fn' , [ '^' ] , Identifier , FnBody ;
+FnExpr = [ Annotation ] , 'fn' , [ '^' ] , FnBody ;
 FnBody = '(' , [ FnParameter , { ',' , FnParameter } ] ,  ')' , 
          [ '['  , [ FnCapturedValue , { ',' , FnCapturedValue } ] , ']' ] , 
-         [ '->' , Name ] , 
-         'do' , { Statement } , 'end' ;
-FnParameter = [ 'let' | 'const' ] , ( Identifier | Discard ) , ':' , Name , [ '=' , Expression ] ;
+         [ '->' , [ 'ref' | 'cref' ] , Name ] ,
+         BlockStmt ;
+FnParameter = [ 'let' | 'const' | 'ref' | 'cref' ] , ( Identifier | Discard ) , ':' , Name , [ '=' , Expression ] ;
 FnCapturedValue = [ 'let' | 'const' ] , Name ;
 
 (* Return Statement *)
 ReturnStmt = 'return' , [ Expression ] ;
 
 (* Type Declaration Statement *)
-TypeDeclStmt = ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ ':' , Name , { ',' , Name } ] , 'do' ,
-               { Statement } ,
-               'end' ;
+TypeDeclStmt = [ Annotation ] , ( 'class' | 'struct' | 'trait' | 'alias' | 'extension' ) , SingleName , [ '^' ] ,
+               [ ':' , Name , { ',' , Name } ] , BlockStmt ;
+
+(* Constructor/Destructor Statements *)
+CtorDeclStmt = [ Annotation ] , 'constructor' , FnBody ;
+DtorDeclStmt = [ Annotation ] , 'destructor' , FnBody ;
+
+(* Enum Member Declaration Statement *)
+EnumMemberDeclStmt = [ Annotation ] , 'case' , Identifier , [ '(' , Identifier , ':' , Name , ')' ] ;
 
 (* Assignment Statement *)
 AssignmentStmt = Name , AssignmentOp , Expression;
 
 (* If Statement *)
-IfStmt = 'if' , Expression , 'do' , { Statement } , 'end' , 
-         [ { 'else' , 'if' , Expression , 'do' , { Statement } , 'end' } ] , 
-         [ 'else' , 'do' , { Statement } , 'end' ];
+IfStmt = 'if' , Expression , BlockStmt ,
+         [ { 'else' , 'if' , Expression , BlockStmt } ] ,
+         [ 'else' , BlockStmt ];
 
 (* Match *)
 MatchStmt = 'match' , Expression , [ 'as' , Identifier ] ,
-            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , 'do' , { Statement } , 'end' } ] , 
+            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , BlockStmt } ] ,
             'end' ;
 MatchExpr = 'match' , Expression , [ 'as' , Identifier ] ,
-            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , (Expression | ThrowStmt) } ] ,
+            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , ( Expression | ThrowStmt ) } ] ,
             'end' ;
 
 (* While Statement *)
-WhileStmt = 'while' , Expression , 'do' , { Statement } , 'end' ;
+WhileStmt = 'while' , Expression , BlockStmt ;
 
 (* For Statement *)
-ForStmt = 'for' , Identifier , 'in' , Expression , 'do' , { Statement } , 'end' ;
+ForStmt = 'for' , Identifier , 'in' , Expression , BlockStmt ;
 
 (* Continue/Break Statement *)
 ContinueStmt = 'continue' ;
@@ -84,8 +104,8 @@ BreakStmt = 'break' ;
 ThrowStmt = 'throw' , [ Expression ] ;
 
 (* Try/Catch Statement *)
-TryCatchStmt = 'try' , 'do' , { Statement } , 'end' , CatchBlock , { CatchBlock } ;
-CatchBlock = 'catch' , ( ( ( 'let' | 'const' ) , [ '^' ] , ( Identifier | Discard ) , ':' , Name) | Discard ) , 'do' , { Statement } , 'end' ;
+TryCatchStmt = 'try' , BlockStmt , CatchBlock , { CatchBlock } ;
+CatchBlock = 'catch' , ( ( Name , 'as' , ( Identifier | Discard ) ) | Discard ) , BlockStmt ;
 
 (* Parentheses Expression *)
 ParenthesesExpr = '(' , Expression , ')' ;
@@ -95,6 +115,9 @@ UnaryExpr = UnaryOp , Expression ;
 
 (* Binary Expression *)
 BinaryExpr = Expression , BinaryExpr , Expression ;
+
+(* Ternary Expression *)
+TernaryExpr = Expression , '?' , Expression , ':' , Expression ;
 
 (* Subscript Expression *)
 SubscriptExpr = Expression , '[' , Expression , ']' ;
@@ -111,6 +134,9 @@ RangeExpr = Expression , '..' , ( '.' | '<' | '>' ) , Expression , [ ':' , Expre
 (* Try/Else Expression *)
 TryElseExpr = 'try' , Expression , 'else' , ( Expression | ThrowStmt ) ;
 
+(* Annotation *)
+Annotation = '@' , Name , { ',' , Annotation  }
+
 (* Identifier *)
 Identifier = ( ( Letter | '_' ) , { Letter | Digit | '_' } ) - '_' ;
 Discard = '_' ;
@@ -119,11 +145,16 @@ Discard = '_' ;
 Literal = 
       IntegerLiteral
     | BooleanLiteral
-    | StringLiteral ;
-IntegerLiteral = Digit , { Digit } ;
+    | StringLiteral
+    | CollectionLiteral ;
+IntegerLiteral = BinIntegerLiteral | DecIntegerLiteral | HexIntegerLiteral ;
+BinIntegerLiteral = '0b' , BinDigit , { BinDigit } ;
+DecIntegerLiteral = Digit , { Digit } ;
+HexIntegerLiteral = '0x' , HexDigit , { HexDigit } ;
 BooleanLiteral = 'true' | 'false' ;
 StringLiteral = ( "'" , { StringCharacter } , "'") | ( '"' , { StringCharacter } , '"' ) ;
-StringCharacter = ? any character except quote/backslash/line break ? ;
+StringCharacter = ? any character except quote, backslash, and line break ? ;
+CollectionLiteral = '{' , [ Expression ] , { ',' , Expression } , '}' ;
 
 (* Name *)
 Name = { '$' } , SingleName , { '.' , SingleName } ;
@@ -133,9 +164,11 @@ SingleName = Identifier , [ '<' , Name , { ',' , Name } , '>' ] , [ '^' ] ;
 Letter = UpperCaseLetter | LowerCaseLetter ;
 UpperCaseLetter = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
 LowerCaseLetter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' ;
-Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+BinDigit = '0' | '1' ;
+Digit = BinDigit | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+HexDigit = Digit | 'A' | 'a' | 'B' | 'b' | 'C' | 'c' | 'D' | 'd' | 'E' | 'e' | 'F' | 'f' ;
 
 (* Operators *)
-UnaryOp = '+' | '-' | '!' | '~' ;
+UnaryOp = '+' | '-' | '!' | '~' | '&' ;
 BinaryOp = '+' | '-' | '*' | '/' | '%' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||' | '&' | '|' | '^' | '<<' | '>>' |  ;
 AssignmentOp = [ '+' | '-' | '*' | '/' | '%' | '&' | '|' | '^' | '<<' | '>>' ] , '=' ;
