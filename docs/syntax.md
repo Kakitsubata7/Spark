@@ -50,7 +50,6 @@ const^ bar: Bar^ = undefined
 - If the name doesn't exist, the statement simply does nothing.
 - If the value under the name is an overloaded function, all overloadings will be unbound from the name (since the language sees an overloaded function as one value).
 
-
 ### Function Declaration
 ```
 fn talk(msg: String) do
@@ -154,6 +153,80 @@ end
 - Pure functions can only call other pure functions and any kind of mutation is **not** allowed inside the function body.
 
 
+### References
+- References act as **aliases** to existing variables.
+- When a reference is created, the reference simply provides another name for the same variable. Any change made through the reference is reflected in the original variable.
+- References are established at compile-time and are permanently bound to a variable they refer to.
+
+#### Taking References
+- To obtain a reference to a variable, use the `&` unary operator.
+```
+let x = 43
+foo(&x) // Passing `x` by reference
+```
+
+#### Declaration
+- References can be declared two forms:
+  - `ref` is a reassignable reference, which requires the target variable to be declared with `let`.
+  - `cref` is a non-reassignable reference, which can be created from either a `let` or a `const` variable.
+```
+let i = 37
+ref ri = &i
+ri = 67
+print(i) // Prints "67"
+
+const s = "foo"
+ref rs = &s // Compile-time error: cannot bind `ref` to a `const`
+cref cs = &s
+```
+
+#### Reference Parameters
+- Functions can declare parameters as references, allowing them to work with the variable references passed by the caller directly.
+```
+// `Point` is an immutable type
+struct Point^ do
+    const x: Int
+    const y: Int
+    
+    constructor(x: Int, y: Int) do
+        $x = x
+        $y = y
+    end
+    
+    // ...
+end
+
+fn foo(ref p: Point, x: Int, y: Int) do
+    p = Point(x, y)
+end
+
+let point = Point(1, 2)
+foo(&point, 3, 4)
+print(point) // Prints "(3, 4)"
+```
+
+#### Returning References
+- Functions can also return references. 
+```
+class Foo do
+    @private
+    let id: Int
+
+    Foo(id: Int) do
+        $id = id
+    end
+
+    fn getIdRef() -> ref Int do
+        return &id
+    end
+end
+
+const foo = Foo(100)
+foo.getIdRef() = 200
+print(foo.getIdRef()) // Prints "200"
+```
+
+
 ### Type Declaration
 - Like functions, types are also **hoisted**, meaning they can be referenced before their declaration.
 
@@ -184,7 +257,7 @@ end
 - Classes are **reference** types lives on the heap managed by **Reference Counting (RC)** or **Double Reference Counting (DRC)** if a class-level **cyclic** dependency is detected at compile-time.
 - Instance of class types (objects) will be released as soon as possible when the object is deemed safe to be removed by RC or DRC.
 - A class can extend from (only one) base class but implements multiple traits.
-- `@cstruct` annotation can be applied to classes to map the class to a C struct for FFI purpose. For classes, `@cstruct` disallows dynamic dispatching and inheritance.
+- `@cstruct` annotation can be applied to classes to map the class to a C struct for FFI purposes. For classes, `@cstruct` disallows dynamic dispatching and inheritance.
 
 #### Struct
 - Structs are **value** types that live on where they are created.

@@ -55,9 +55,9 @@ FnDeclStmt = [ Annotation ] , 'fn' , [ '^' ] , Identifier , FnBody ;
 FnExpr = [ Annotation ] , 'fn' , [ '^' ] , FnBody ;
 FnBody = '(' , [ FnParameter , { ',' , FnParameter } ] ,  ')' , 
          [ '['  , [ FnCapturedValue , { ',' , FnCapturedValue } ] , ']' ] , 
-         [ '->' , Name ] , 
+         [ '->' , [ 'ref' | 'cref' ] , Name ] ,
          BlockStmt ;
-FnParameter = [ 'let' | 'const' ] , ( Identifier | Discard ) , ':' , Name , [ '=' , Expression ] ;
+FnParameter = [ 'let' | 'const' | 'ref' | 'cref' ] , ( Identifier | Discard ) , ':' , Name , [ '=' , Expression ] ;
 FnCapturedValue = [ 'let' | 'const' ] , Name ;
 
 (* Return Statement *)
@@ -169,6 +169,6 @@ Digit = BinDigit | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 HexDigit = Digit | 'A' | 'a' | 'B' | 'b' | 'C' | 'c' | 'D' | 'd' | 'E' | 'e' | 'F' | 'f' ;
 
 (* Operators *)
-UnaryOp = '+' | '-' | '!' | '~' ;
+UnaryOp = '+' | '-' | '!' | '~' | '&' ;
 BinaryOp = '+' | '-' | '*' | '/' | '%' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '&&' | '||' | '&' | '|' | '^' | '<<' | '>>' |  ;
 AssignmentOp = [ '+' | '-' | '*' | '/' | '%' | '&' | '|' | '^' | '<<' | '>>' ] , '=' ;
