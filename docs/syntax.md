@@ -596,6 +596,7 @@ end
 - `self`
 - `struct`
 - `super`
+- `then`
 - `throw`
 - `trait`
 - `true`

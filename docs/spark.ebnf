@@ -18,7 +18,7 @@ Statement =
     | ForStmt 
     | ContinueStmt
     | BreakStmt
-    | ThrowStmt
+    | Throw
     | TryCatchStmt
     , [ ';' ] ;
 
@@ -30,11 +30,12 @@ Expression =
     | MatchExpr
     | UnaryExpr
     | BinaryExpr
-    | TernaryExpr
     | SubscriptExpr
     | CastExpr
     | CallExpr
     | RangeExpr
+    | IfExpr
+    | Throw
     | TryElseExpr ;
 
 (* Variable Declaration Statement *)
@@ -87,7 +88,7 @@ MatchStmt = 'match' , Expression , [ 'as' , Identifier ] ,
             [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , BlockStmt } ] ,
             'end' ;
 MatchExpr = 'match' , Expression , [ 'as' , Identifier ] ,
-            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , ( Expression | ThrowStmt ) } ] ,
+            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , Expression } ] ,
             'end' ;
 
 (* While Statement *)
@@ -100,8 +101,8 @@ ForStmt = 'for' , Identifier , 'in' , Expression , BlockStmt ;
 ContinueStmt = 'continue' ;
 BreakStmt = 'break' ;
 
-(* Throw Statement *)
-ThrowStmt = 'throw' , [ Expression ] ;
+(* Throw *)
+Throw = 'throw' , [ Expression ] ;
 
 (* Try/Catch Statement *)
 TryCatchStmt = 'try' , BlockStmt , CatchBlock , { CatchBlock } ;
@@ -116,9 +117,6 @@ UnaryExpr = UnaryOp , Expression ;
 (* Binary Expression *)
 BinaryExpr = Expression , BinaryExpr , Expression ;
 
-(* Ternary Expression *)
-TernaryExpr = Expression , '?' , Expression , ':' , Expression ;
-
 (* Subscript Expression *)
 SubscriptExpr = Expression , '[' , Expression , ']' ;
 
@@ -131,8 +129,11 @@ CallExpr = Expression , '(' , [ Expression , { ',' , Expression } ] , ')' ;
 (* Range Expression *)
 RangeExpr = Expression , '..' , ( '.' | '<' | '>' ) , Expression , [ ':' , Expression ] ;
 
+(* If Expression *)
+IfExpr = 'if' , Expression , 'then' , Expression , [ 'else' , Expression ] ;
+
 (* Try/Else Expression *)
-TryElseExpr = 'try' , Expression , 'else' , ( Expression | ThrowStmt ) ;
+TryElseExpr = 'try' , Expression , 'else' , Expression ;
 
 (* Annotation *)
 Annotation = '@' , Name , { ',' , Annotation  }
