@@ -121,7 +121,7 @@ BinaryExpr = Expression , BinaryExpr , Expression ;
 SubscriptExpr = Expression , '[' , Expression , ']' ;
 
 (* Cast Expression *)
-CastExpr = '(' , Expression , ')' , Expression ;
+CastExpr = '(' , Name , ')' , Expression ;
 
 (* Call Expression *)
 CallExpr = Expression , '(' , [ Expression , { ',' , Expression } ] , ')' ;
