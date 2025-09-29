@@ -38,6 +38,8 @@ Expression =
     | Throw
     | TryElseExpr ;
 
+Pattern = Discard ; (* TODO *)
+
 (* Variable Declaration Statement *)
 VarDeclStmt = [ Annotation ] , ( 'let' | 'const' | 'ref' | 'cref' ) , [ '^' ] , Identifier , [ ':' , Name ] , '=' , Expression ;
 
@@ -85,10 +87,10 @@ IfStmt = 'if' , Expression , BlockStmt ,
 
 (* Match *)
 MatchStmt = 'match' , Expression , [ 'as' , Identifier ] ,
-            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , BlockStmt } ] ,
+            [ { 'case' , [ Pattern ] , [ 'if' , Expression ] , BlockStmt } ] ,
             'end' ;
 MatchExpr = 'match' , Expression , [ 'as' , Identifier ] ,
-            [ { 'case' , ( [ 'if' , Expression ] | ( Expression | Discard ) ) , '=>' , Expression } ] ,
+            [ { 'case' , [ Pattern ] , [ 'if' , Expression ] , '=>' , Expression } ] ,
             'end' ;
 
 (* While Statement *)
