@@ -15,6 +15,10 @@ FetchContent_MakeAvailable(googletest)
 
 # Library
 add_library(spark_lib
+        src/frontend/lexer.cpp
+        src/frontend/lexer.hpp
+        src/frontend/syntax.hpp
+        src/frontend/token.hpp
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
         src/runtime/drc.hpp
@@ -26,7 +30,11 @@ target_include_directories(spark_lib PUBLIC src)
 
 # Executable
 add_executable(spark
-        src/main.cpp)
+        src/main.cpp
+        src/frontend/lexer.hpp
+        src/frontend/lexer.cpp
+        src/result.hpp
+        src/error.hpp)
 target_link_libraries(spark PRIVATE spark_lib)
 
 # Testing
