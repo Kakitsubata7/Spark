@@ -9,10 +9,10 @@ private:
     std::string _message;
 
 public:
-    explicit Error(std::string message) : _message(message) { }
+    explicit Error(std::string message) noexcept : _message(message) { }
 
     [[nodiscard]]
-    constexpr const std::string& message() const { return _message; }
+    constexpr const std::string& message() const noexcept { return _message; }
 };
 
 } // Spark
