@@ -25,16 +25,14 @@ add_library(spark_lib
         src/runtime/rc.hpp
         src/runtime/spark.hpp
         src/runtime/thread.hpp
-        src/runtime/type.hpp)
+        src/runtime/type.hpp
+        src/result.hpp
+        src/error.hpp)
 target_include_directories(spark_lib PUBLIC src)
 
 # Executable
 add_executable(spark
-        src/main.cpp
-        src/frontend/lexer.hpp
-        src/frontend/lexer.cpp
-        src/result.hpp
-        src/error.hpp)
+        src/main.cpp)
 target_link_libraries(spark PRIVATE spark_lib)
 
 # Testing
