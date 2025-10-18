@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 #include <istream>
 #include <vector>
 
@@ -13,11 +12,23 @@ class Lexer {
 private:
     std::istream& _stream;
 
-    size_t _line;
-    size_t _column;
+    /**
+     * Counts the line and column numbers at the current position, then returns them as a pair.
+     * @param stream Input stream to count.
+     * @return Line and column numbers as a pair.
+     */
+    static std::pair<size_t, size_t> countLineAndColumn(std::istream& stream);
+
+    static Result<Token> lexWord(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexNumber(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexString(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexPunctuator(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexComment(std::istream& stream, size_t& line, size_t& column);
+
+    static Result<Token> lex(std::istream& stream, size_t& line, size_t& column);
 
 public:
-    Lexer(std::istream& stream) : _stream(stream) { }
+    explicit Lexer(std::istream& stream) : _stream(stream) { }
 
     Result<Token> lex() const;
 
