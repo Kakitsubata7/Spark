@@ -20,7 +20,10 @@ private:
     static std::pair<size_t, size_t> countLineAndColumn(std::istream& stream);
 
     static Result<Token> lexWord(std::istream& stream, size_t& line, size_t& column);
-    static Result<Token> lexNumber(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexDecimalNumber(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexBinaryNumber(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexOctalNumber(std::istream& stream, size_t& line, size_t& column);
+    static Result<Token> lexHexNumber(std::istream& stream, size_t& line, size_t& column);
     static Result<Token> lexString(std::istream& stream, size_t& line, size_t& column);
     static Result<Token> lexPunctuator(std::istream& stream, size_t& line, size_t& column);
     static Result<Token> lexComment(std::istream& stream, size_t& line, size_t& column);
