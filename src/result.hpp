@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "error.hpp"
 
 namespace Spark {
@@ -65,6 +67,14 @@ public:
 
     [[nodiscard]]
     constexpr bool hasError() const noexcept { return _hasError; }
+
+    [[nodiscard]]
+    const Error& error() const {
+        if (!_hasError) {
+            throw std::runtime_error("bad result error access");
+        }
+        return _error;
+    }
 
     bool tryGetValue(T& out) const noexcept {
         if (_hasError) {
