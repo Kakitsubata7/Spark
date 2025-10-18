@@ -9,6 +9,7 @@ enum class TokenType {
     Keyword,
     Identifier,
     Discard,
+    Number,
     Operator,
     Delimiter,
     EndOfFile
