@@ -17,6 +17,7 @@ FetchContent_MakeAvailable(googletest)
 add_library(spark_lib
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
+        src/frontend/syntax.cpp
         src/frontend/syntax.hpp
         src/frontend/token.hpp
         src/runtime/allocator.hpp
@@ -28,6 +29,7 @@ add_library(spark_lib
         src/runtime/type.hpp
         src/result.hpp
         src/error.hpp)
+
 target_include_directories(spark_lib PUBLIC src)
 
 # Executable
@@ -39,12 +41,14 @@ target_link_libraries(spark PRIVATE spark_lib)
 enable_testing()
 
 add_executable(spark_test
+        tests/frontend/lexer_test.cpp
         tests/runtime/drc_test.cpp)
 target_link_libraries(spark_test
         PRIVATE spark_lib
         GTest::gtest_main
         GTest::gmock
 )
+target_compile_definitions(spark_test PRIVATE SPARK_TESTS_ENABLED)
 
 include(GoogleTest)
 gtest_discover_tests(spark_test)

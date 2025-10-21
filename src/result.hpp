@@ -69,6 +69,14 @@ public:
     constexpr bool hasError() const noexcept { return _hasError; }
 
     [[nodiscard]]
+    const T& value() const {
+        if (_hasError) {
+            throw std::runtime_error("bad result value access");
+        }
+        return _value;
+    }
+
+    [[nodiscard]]
     const Error& error() const {
         if (!_hasError) {
             throw std::runtime_error("bad result error access");

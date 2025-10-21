@@ -1,56 +1,17 @@
 #pragma once
 
-#include <string>
-#include <unordered_set>
+#include <string_view>
 
 namespace Spark::FrontEnd::Syntax {
 
-const std::unordered_set<std::string> keywords {
-    "alias", "as",
-    "break",
-    "case", "catch", "class", "const", "constructor", "continue", "cref",
-    "destructor", "do",
-    "else", "end", "enum", "export", "extension",
-    "false", "fn", "for", "from",
-    "global",
-    "if", "import", "in", "is",
-    "let",
-    "match", "module",
-    "nil",
-    "operator",
-    "ref", "return",
-    "self", "struct", "super",
-    "then", "throw", "trait", "true", "try", "typeof",
-    "undefined",
-    "while",
-    "yield"
-};
+bool isKeyword(std::string_view s) noexcept;
 
-const std::unordered_set<std::string> operators {
-    "+", "-", "*", "/", "%",
-    "~", "&", "|", "^", "<<", ">>",
-    "!", "&&", "||",
-    "==", "!=", ">", "<", ">=", "<=",
-    "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="
-};
+bool isOperator(std::string_view s) noexcept;
 
-const std::unordered_set<std::string> delimiters {
-    ",", ".", ":", ";",
-    "(", ")", "[", "]", "{", "}", "<", ">",
-    "->",
-    "=>"
-};
+bool isDelimiter(std::string_view s) noexcept;
 
-inline bool isKeyword(const std::string& s) {
-    return keywords.find(s) != keywords.end();
-}
+bool isNonCompositeDelimiter(char c) noexcept;
 
-inline bool isOperator(const std::string& s) {
-    return operators.find(s) != operators.end();
-}
-
-inline bool isDelimiter(const std::string& s) {
-    return delimiters.find(s) != delimiters.end();
-}
+bool isPunctuator(char c) noexcept;
 
 } // Spark::FrontEnd::Syntax
