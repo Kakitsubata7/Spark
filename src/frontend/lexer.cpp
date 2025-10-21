@@ -131,7 +131,8 @@ Result<Token> Lexer::lexDecimalNumber(std::istream& stream, size_t& line, size_t
 }
 
 Result<Token> Lexer::lexBinaryNumber(std::istream& stream, size_t& line, size_t& column) {
-    std::string s = "0b";
+    size_t startColumn = column;
+    std::string s;
 
     // Make sure starting with 0b
     if (streamStartWith(stream, "0b")) {
@@ -180,7 +181,7 @@ Result<Token> Lexer::lexBinaryNumber(std::istream& stream, size_t& line, size_t&
         }
     }
 
-    return Result(Token(TokenType::Number, s, line, column));
+    return Result(Token(TokenType::Number, s, line, startColumn));
 }
 
 static constexpr bool isOctalDigit(char c) noexcept {
