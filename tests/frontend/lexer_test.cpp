@@ -62,8 +62,22 @@ namespace Spark::FrontEnd {
         stream = std::istringstream("0B1100010100010101");
         result = Lexer::lexBinaryNumber(stream, line, column);
         EXPECT_FALSE(result.hasError());
-        std::cout << result.value().lexeme << std::endl;
         EXPECT_EQ(result.value(), Token(TokenType::Number, "0B1100010100010101", 1, 1));
         EXPECT_EQ(line, 1); EXPECT_EQ(column, 19);
+    }
+
+    TEST_F(LexerTests, BinaryNumberUnderscore) {
+        size_t line = 1, column = 1;
+        std::istringstream stream("0b0000_1111");
+        Result<Token> result = Lexer::lexBinaryNumber(stream, line, column);
+        EXPECT_FALSE(result.hasError());
+        EXPECT_EQ(result.value(), Token(TokenType::Number, "0b0000_1111", 1, 1));
+        EXPECT_EQ(line, 1); EXPECT_EQ(column, 12);
+
+        line = 1; column = 1;
+        stream = std::istringstream("0b1100_");
+        result = Lexer::lexBinaryNumber(stream, line, column);
+        EXPECT_TRUE(result.hasError());
+        EXPECT_EQ(line, 1); EXPECT_EQ(column, 8);
     }
 }
