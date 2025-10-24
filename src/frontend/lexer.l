@@ -4,11 +4,18 @@
 
 %option yylineno c++
 
-DIGIT   [0-9]
-ID      [a-zA-Z_][a-zA-Z0-9_]*
-
 %%
+[[:alpha:]_][[:alnum:]_]*
 
-[ \t\n]+
+(\-?)[[:digit:]_]+
 
+0[bB][01_]+
+
+0[oO][01234567_]+
+
+0[xX][[:xdigit:]_]+
+
+[ \t\n]+    
+
+.
 %%
