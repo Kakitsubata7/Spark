@@ -15,8 +15,7 @@ FetchContent_MakeAvailable(googletest)
 
 # Library
 add_library(spark_lib
-        src/frontend/lexer.cpp
-        src/frontend/lexer.hpp
+        src/frontend/lexer_utils.hpp
         src/frontend/syntax.cpp
         src/frontend/syntax.hpp
         src/frontend/token.hpp

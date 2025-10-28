@@ -1,21 +1,23 @@
 %{
+#include "lexer_utils.hpp"
 
+using namespace Spark::Frontend;
 %}
 
-%option yylineno c++
+%option noyywrap yylineno c++
 
 %%
-[[:alpha:]_][[:alnum:]_]*
+[[:alpha:]_][[:alnum:]_]*   { return classifyWord(yytext); }
 
-(\-?)[[:digit:]_]+
+(\-?)[[:digit:]_]+          { return  }
 
-0[bB][01_]+
+0[bB][01_]+                 {}
 
-0[oO][01234567_]+
+0[oO][01234567_]+           {}
 
-0[xX][[:xdigit:]_]+
+0[xX][[:xdigit:]_]+         {}
 
-[ \t\n]+    
+[ \t\n]+
 
 .
 %%
