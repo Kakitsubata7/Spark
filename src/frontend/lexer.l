@@ -1,23 +1,23 @@
 %{
-#include "lexer_utils.hpp"
+#include "parser.tab.h"
 
-using namespace Spark::Frontend;
+extern YYSTYPE yylval;
 %}
 
 %option noyywrap yylineno c++
 
 %%
-[[:alpha:]_][[:alnum:]_]*   { return classifyWord(yytext); }
+[[:alpha:]_][[:alnum:]_]*
 
-(\-?)[[:digit:]_]+          { return  }
+(\-?)[[:digit:]_]+
 
-0[bB][01_]+                 {}
+0[bB][01_]+
 
-0[oO][01234567_]+           {}
+0[oO][01234567_]+
 
-0[xX][[:xdigit:]_]+         {}
+0[xX][[:xdigit:]_]+
 
-[ \t\n]+
+[ \t\r\n]+
 
 .
 %%
