@@ -1,5 +1,5 @@
 %{
-#include "parser.tab.h"
+#include "parser.tab.hpp"
 #include "frontend/lexer_utils.hpp"
 
 extern YYSTYPE yylval;
@@ -8,9 +8,9 @@ extern YYSTYPE yylval;
 %option noyywrap yylineno
 
 %%
-[[:alpha:]_][[:alnum:]_]*   { return  }
+[[:alpha:]_][[:alnum:]_]*
 
-(\-?)[[:digit:]_]+          { return spk_(); }
+(\-?)[[:digit:]_]+
 
 0[bB][01_]+
 

@@ -27,15 +27,14 @@ file(MAKE_DIRECTORY ${FRONTEND_GENERATED_DIR})
 FLEX_TARGET(
         sparklexer
         ${FRONTEND_DIR}/lexer.l
-        ${FRONTEND_GENERATED_DIR}/lex.yy.ccp
-        COMPILE_FLAGS "--c++"
+        ${FRONTEND_GENERATED_DIR}/lex.yy.cpp
 )
 
 BISON_TARGET(
         sparkparser
         ${FRONTEND_DIR}/parser.y
-        ${FRONTEND_GENERATED_DIR}/parser.tab.ccp
-        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hhp --language=c++"
+        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
+        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
 )
 
 add_flex_bison_dependency(sparklexer sparkparser)
