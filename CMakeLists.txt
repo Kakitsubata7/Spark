@@ -10,13 +10,14 @@ include(FetchContent)
 FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 # For Windows: prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
+find_package(BISON 3.5 REQUIRED)
 
 # Flex & Bison
 set(FRONTEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend)
@@ -26,21 +27,26 @@ file(MAKE_DIRECTORY ${FRONTEND_GENERATED_DIR})
 FLEX_TARGET(
         sparklexer
         ${FRONTEND_DIR}/lexer.l
-        ${FRONTEND_GENERATED_DIR}/lex.yy.cc
+        ${FRONTEND_GENERATED_DIR}/lex.yy.ccp
+        COMPILE_FLAGS "--c++"
 )
 
 BISON_TARGET(
-        sparktest
+        sparkparser
         ${FRONTEND_DIR}/parser.y
-        ${FRONTEND_GENERATED_DIR}/parser.tab.cc
-        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hh"
+        ${FRONTEND_GENERATED_DIR}/parser.tab.ccp
+        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hhp --language=c++"
 )
+
+add_flex_bison_dependency(sparklexer sparkparser)
 
 # Library
 add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
-        ${BISON_sparktest_OUTPUTS}
+        ${BISON_sparkparser_OUTPUTS}
 
+        src/frontend/lexer_utils.cpp
+        src/frontend/lexer_utils.hpp
         src/frontend/syntax.cpp
         src/frontend/syntax.hpp
 
@@ -53,12 +59,14 @@ add_library(sparklib
         src/runtime/type.hpp
 
         src/result.hpp
-        src/error.hpp)
+        src/error.hpp
+        src/frontend/lexer_utils.hpp
+)
 
 target_include_directories(sparklib
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend
-        ${FRONTEND_GENERATED_DIR}
+        src
+        ${FRONTEND_GEN_DIR}
 )
 
 # Executable
@@ -71,9 +79,16 @@ enable_testing()
 
 add_executable(sparktest
         tests/frontend/lexer_test.cpp
-        tests/runtime/drc_test.cpp)
+        tests/runtime/drc_test.cpp
+)
+target_include_directories(sparktest
+    PRIVATE
+        src
+        ${FRONTEND_GENERATED_DIR}
+)
 target_link_libraries(sparktest
-        PRIVATE sparklib
+    PRIVATE
+        sparklib
         GTest::gtest_main
         GTest::gmock
 )
