@@ -46,8 +46,7 @@ add_library(sparklib
 
         src/frontend/lexer_utils.cpp
         src/frontend/lexer_utils.hpp
-        src/frontend/syntax.cpp
-        src/frontend/syntax.hpp
+        src/frontend/token_value.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
@@ -59,13 +58,12 @@ add_library(sparklib
 
         src/result.hpp
         src/error.hpp
-        src/frontend/lexer_utils.hpp
 )
 
 target_include_directories(sparklib
     PRIVATE
         src
-        ${FRONTEND_GEN_DIR}
+        ${FRONTEND_GENERATED_DIR}
 )
 
 # Executable
