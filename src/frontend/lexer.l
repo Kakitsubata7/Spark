@@ -1,4 +1,4 @@
-%option bison-bridge reentrant noyywrap noyylineno noyy_locale
+%option bison-bridge reentrant noyywrap noyylineno
 
 %{
 
@@ -21,11 +21,11 @@ extern YYSTYPE yylval;
     consumeCharacters(*static_cast<LexerState*>(yyextra), static_cast<size_t>(yyleng));
 }
 
-[[:alpha:]_][[:alnum:]_]* {
+[A-Za-z_][A-Za-z0-9_]* {
     return makeWord(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
 }
 
-([[:digit:]_]+|0[bB][01_]+|0[oO][0-7_]+|0[xX][[:xdigit:]_]+)) {
+([0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+) {
     return makeInteger(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
 }
 

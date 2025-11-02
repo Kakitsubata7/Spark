@@ -11,8 +11,8 @@ void yyerror(const char* msg);
     using namespace Spark::FrontEnd;
 }
 
-%define api.value.type { TokenValue }
-%define api.token.prefix { SPK_ }
+%define api.value.type {TokenValue}
+%define api.token.prefix {SPK_}
 
 %token IDENTIFIER
 %token INTEGER REAL STRING
