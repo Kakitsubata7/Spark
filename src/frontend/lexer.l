@@ -21,12 +21,16 @@ extern YYSTYPE yylval;
     consumeCharacters(*static_cast<LexerState*>(yyextra), static_cast<size_t>(yyleng));
 }
 
-[A-Za-z_][A-Za-z0-9_]* {
-    return makeWord(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+([0-9_]*\.[0-9_]+) {
+    return makeReal(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
 }
 
 ([0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+) {
     return makeInteger(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+}
+
+[A-Za-z_][A-Za-z0-9_]* {
+    return makeWord(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
 }
 
 "+=" { return SPK_ADD_ASSIGN; }

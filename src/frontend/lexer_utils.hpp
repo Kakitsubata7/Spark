@@ -18,8 +18,10 @@ TokenType makeWord(std::string_view sv, LexerState& state) noexcept;
 
 TokenType makeInteger(std::string_view sv, LexerState& state) noexcept;
 
-void whenNewline(LexerState& state);
+TokenType makeReal(std::string_view sv, LexerState& state) noexcept;
 
-void consumeCharacters(LexerState& state, size_t n);
+void whenNewline(LexerState& state) noexcept;
+
+void consumeCharacters(LexerState& state, size_t n) noexcept;
 
 } // Spark::Frontend

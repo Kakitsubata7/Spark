@@ -45,12 +45,18 @@ TokenType makeInteger(std::string_view sv, LexerState& state) noexcept {
     return SPK_INTEGER;
 }
 
-void whenNewline(LexerState& state) {
+TokenType makeReal(std::string_view sv, LexerState& state) noexcept {
+    yylval = TokenValue(std::string(sv), state.line, state.column);
+    state.line += sv.size();
+    return SPK_REAL;
+}
+
+void whenNewline(LexerState& state) noexcept {
     state.line++;
     state.column = 1;
 }
 
-void consumeCharacters(LexerState& state, size_t n) {
+void consumeCharacters(LexerState& state, size_t n) noexcept {
     state.column += n;
 }
 
