@@ -14,16 +14,12 @@ struct LexerState {
     size_t column;
 };
 
-TokenType makeWord(std::string_view sv, LexerState& state) noexcept;
+void handleNewline(LexerState& lstate) noexcept;
 
-TokenType makeInteger(std::string_view sv, LexerState& state) noexcept;
+void consumeCharacters(LexerState& lstate, size_t n) noexcept;
 
-TokenType makeReal(std::string_view sv, LexerState& state) noexcept;
+TokenType makeToken(std::string_view lexeme, TokenType type, LexerState& lstate) noexcept;
 
-TokenType makeLineComment(std::string_view sv, LexerState& state) noexcept;
-
-void whenNewline(LexerState& state) noexcept;
-
-void consumeCharacters(LexerState& state, size_t n) noexcept;
+TokenType makeWord(std::string_view lexeme, LexerState& lstate) noexcept;
 
 } // Spark::Frontend

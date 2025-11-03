@@ -1,5 +1,5 @@
 %option bison-bridge reentrant noyywrap noyylineno
-%x IN_COMMENT
+%x IN_BLOCK_COMMENT
 
 %{
 
@@ -10,32 +10,66 @@ using namespace Spark::FrontEnd;
 
 extern YYSTYPE yylval;
 
+#define lstate (*static_cast<LexerState*>(yyextra))
+
 %}
 
 %%
 
 \n {
-    whenNewline(*static_cast<LexerState*>(yyextra));
+    handleNewline(lstate);
 }
 
 [ \t\r]+ {
-    consumeCharacters(*static_cast<LexerState*>(yyextra), static_cast<size_t>(yyleng));
+    consumeCharacters(lstate, static_cast<size_t>(yyleng));
 }
 
-([0-9_]*\.[0-9_]+) {
-    return makeReal(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+[0-9_]*\.[0-9_]+ {
+    return makeToken(std::string_view(yytext, yyleng), SPK_REAL, lstate);
 }
 
-([0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+) {
-    return makeInteger(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+[0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
+    return makeToken(std::string_view(yytext, yyleng), SPK_INTEGER, lstate);
 }
 
 [A-Za-z_][A-Za-z0-9_]* {
-    return makeWord(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+    return makeWord(std::string_view(yytext, yyleng), lstate);
 }
 
 "//"[^\n]* {
-    return makeLineComment(std::string_view(yytext, yyleng).substr(2), *static_cast<LexerState*>(yyextra));
+    return makeToken(std::string_view(yytext, yyleng).substr(2), SPK_LINE_COMMENT, lstate);
+}
+
+"/*" {
+    lstate.column += 2;
+    BEGIN(IN_BLOCK_COMMENT);
+}
+
+<IN_BLOCK_COMMENT>{
+    "*/" {
+        lstate.column += 2;
+        BEGIN(INITIAL);
+        // return
+    }
+
+    [^*\n]+ {
+        lstate.column += yyleng;
+    }
+
+    "*" {
+        ++lstate.column;
+        // ...
+    }
+
+    \n {
+        ++lstate.line;
+        lstate.column = 1;
+        // buf
+    }
+
+    <<EOF>> {
+
+    }
 }
 
 "+=" { return SPK_ADD_ASSIGN; }

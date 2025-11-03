@@ -30,43 +30,28 @@ namespace {
     };
 }
 
-TokenType makeWord(std::string_view sv, LexerState& state) noexcept {
-    yylval = TokenValue(std::string(sv), state.line, state.column);
-    state.line += sv.size();
-    if (keywordTokenMap.find(sv) != keywordTokenMap.end()) {
-        return keywordTokenMap.at(sv);
+void handleNewline(LexerState& lstate) noexcept {
+    ++lstate.line;
+    lstate.column = 1;
+}
+
+void consumeCharacters(LexerState& lstate, size_t n) noexcept {
+    lstate.column += n;
+}
+
+TokenType makeToken(std::string_view lexeme, TokenType type, LexerState& lstate) noexcept {
+    yylval = TokenValue(std::string(lexeme), lstate.line, lstate.column);
+    lstate.line += lexeme.size();
+    return type;
+}
+
+TokenType makeWord(std::string_view lexeme, LexerState& lstate) noexcept {
+    yylval = TokenValue(std::string(lexeme), lstate.line, lstate.column);
+    lstate.line += lexeme.size();
+    if (keywordTokenMap.find(lexeme) != keywordTokenMap.end()) {
+        return keywordTokenMap.at(lexeme);
     }
-    if (sv == "_") {
-        return SPK_DISCARD;
-    }
-    return SPK_IDENTIFIER;
-}
-
-TokenType makeInteger(std::string_view sv, LexerState& state) noexcept {
-    yylval = TokenValue(std::string(sv), state.line, state.column);
-    state.line += sv.size();
-    return SPK_INTEGER;
-}
-
-TokenType makeReal(std::string_view sv, LexerState& state) noexcept {
-    yylval = TokenValue(std::string(sv), state.line, state.column);
-    state.line += sv.size();
-    return SPK_REAL;
-}
-
-TokenType makeLineComment(std::string_view sv, LexerState& state) noexcept {
-    yylval = TokenValue(std::string(sv), state.line, state.column);
-    state.line += sv.size();
-    return SPK_LINE_COMMENT;
-}
-
-void whenNewline(LexerState& state) noexcept {
-    state.line++;
-    state.column = 1;
-}
-
-void consumeCharacters(LexerState& state, size_t n) noexcept {
-    state.column += n;
+    return lexeme == "_" ? SPK_DISCARD : SPK_IDENTIFIER;
 }
 
 } // Spark::FrontEnd
