@@ -36,6 +36,9 @@ TokenType makeWord(std::string_view sv, LexerState& state) noexcept {
     if (keywordTokenMap.find(sv) != keywordTokenMap.end()) {
         return keywordTokenMap.at(sv);
     }
+    if (sv == "_") {
+        return SPK_DISCARD;
+    }
     return SPK_IDENTIFIER;
 }
 
