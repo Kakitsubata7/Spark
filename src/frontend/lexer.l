@@ -1,4 +1,5 @@
 %option bison-bridge reentrant noyywrap noyylineno
+%x IN_COMMENT
 
 %{
 
@@ -31,6 +32,10 @@ extern YYSTYPE yylval;
 
 [A-Za-z_][A-Za-z0-9_]* {
     return makeWord(std::string_view(yytext, yyleng), *static_cast<LexerState*>(yyextra));
+}
+
+"//"[^\n]* {
+    return makeLineComment(std::string_view(yytext, yyleng).substr(2), *static_cast<LexerState*>(yyextra));
 }
 
 "+=" { return SPK_ADD_ASSIGN; }

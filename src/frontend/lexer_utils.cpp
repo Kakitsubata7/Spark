@@ -51,6 +51,12 @@ TokenType makeReal(std::string_view sv, LexerState& state) noexcept {
     return SPK_REAL;
 }
 
+TokenType makeLineComment(std::string_view sv, LexerState& state) noexcept {
+    yylval = TokenValue(std::string(sv), state.line, state.column);
+    state.line += sv.size();
+    return SPK_LINE_COMMENT;
+}
+
 void whenNewline(LexerState& state) noexcept {
     state.line++;
     state.column = 1;
