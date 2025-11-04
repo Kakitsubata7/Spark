@@ -7,6 +7,9 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents a wrapper to Flex's lexer logics.
+ */
 class Lexer {
 private:
     yyscan_t _scanner{};

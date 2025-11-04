@@ -4,6 +4,9 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents an error occurred during lexing, containing the error message and the position the error occurred.
+ */
 struct LexerError {
     std::string message;
     size_t line;
