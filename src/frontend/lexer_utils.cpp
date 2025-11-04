@@ -1,0 +1,80 @@
+#include "lexer_utils.hpp"
+
+#include <unordered_map>
+
+namespace Spark::FrontEnd {
+
+namespace {
+    const std::unordered_map<std::string_view, TokenType> keywordTokenMap {
+        { "alias", TokenType::Alias }, { "as", TokenType::As },
+        { "break", TokenType::Break },
+        { "case", TokenType::Case }, { "catch", TokenType::Catch }, { "class", TokenType::Class },
+            { "const", TokenType::Const }, { "constructor", TokenType::Constructor },
+            { "continue", TokenType::Continue }, { "cref", TokenType::Cref },
+        { "destructor", TokenType::Destructor }, { "do", TokenType::Do },
+        { "else", TokenType::Else }, { "end", TokenType::End }, { "enum", TokenType::Enum },
+            { "export", TokenType::Export }, { "extension", TokenType::Extension },
+        { "false", TokenType::False }, { "fn", TokenType::Fn }, { "for", TokenType::For },
+            { "from", TokenType::From }, { "global", TokenType::Global },
+        { "if", TokenType::If }, { "import", TokenType::Import }, { "in", TokenType::In },
+            { "is", TokenType::Is },
+        { "let", TokenType::Let },
+        { "match", TokenType::Match }, { "module", TokenType::Module },
+        { "nil", TokenType::Nil },
+        { "operator", TokenType::Operator },
+        { "ref", TokenType::Ref }, { "return", TokenType::Return },
+        { "self", TokenType::Self }, { "struct", TokenType::Struct }, { "super", TokenType::Super },
+        { "then", TokenType::Then }, { "throw", TokenType::Throw }, { "trait", TokenType::Trait },
+            { "true", TokenType::True }, { "try", TokenType::Try }, { "typeof", TokenType::Typeof },
+        { "undefined", TokenType::Undefined },
+        { "while", TokenType::While },
+        { "yield", TokenType::Yield }
+    };
+}
+
+void handleNewline(LexerState& lstate) noexcept {
+    ++lstate.line;
+    lstate.column = 1;
+}
+
+void consumeCharacters(size_t n, LexerState& lstate) noexcept {
+    lstate.column += n;
+}
+
+TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept {
+    size_t column = lstate.column;
+    lstate.column += lexeme.size();
+    return TokenValue(std::string(lexeme), lstate.line, column);
+}
+
+TokenValue makeToken(std::string_view lexeme, size_t startColumn, LexerState& lstate) noexcept {
+    lstate.column += lexeme.size();
+    return TokenValue(std::string(lexeme), lstate.line, startColumn);
+}
+
+TokenType classifyWord(std::string_view word) noexcept {
+    if (keywordTokenMap.find(word) != keywordTokenMap.end()) {
+        return keywordTokenMap.at(word);
+    }
+    return word == "_" ? TokenType::Discard : TokenType::Identifier;
+}
+
+void clearTokenBuffer(LexerState& lstate) noexcept {
+    lstate.tokenBuffer.clear();
+}
+
+void appendTokenBuffer(LexerState& lstate, std::string_view sv) noexcept {
+    lstate.tokenBuffer.append(sv.data(), sv.size());
+}
+
+void appendTokenBuffer(LexerState& lstate, char c) noexcept {
+    lstate.tokenBuffer.push_back(c);
+}
+
+void raiseError(LexerState& lstate, std::string_view message) noexcept {
+    lstate.errors.emplace_back(std::string(message.data(), message.size()), lstate.line, lstate.column);
+}
+
+} // Spark::FrontEnd
+
+

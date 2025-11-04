@@ -1,35 +1,15 @@
-#pragma once
+﻿#pragma once
 
-#include <string>
+#include "token_type.hpp"
+#include "token_value.hpp"
 
 namespace Spark::FrontEnd {
 
-enum class TokenType {
-    None,
-    Keyword,
-    Identifier,
-    Discard,
-    Number,
-    String,
-    Operator,
-    Delimiter,
-    Comment,
-    EndOfFile
-};
-
 struct Token {
     TokenType type;
-    std::string lexeme;
-    size_t line;
-    size_t column;
+    TokenValue value;
 
-    Token(TokenType type, std::string lexeme, size_t line, size_t column)
-        : type(type), lexeme(std::move(lexeme)), line(line), column(column) { }
-    Token() : type(TokenType::None), line(0), column(0) { }
-
-    constexpr bool operator==(const Token& rhs) const {
-        return type == rhs.type && lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
-    }
+    Token(TokenType type, TokenValue value) : type(type), value(std::move(value)) { }
 };
 
 } // Spark::FrontEnd

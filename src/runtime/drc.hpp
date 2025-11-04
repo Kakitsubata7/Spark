@@ -66,7 +66,7 @@ public:
      * @return Number of nodes in this DRC graph.
      */
     [[nodiscard]]
-    constexpr size_t nodeCount() const noexcept { return _nodes.size(); }
+    size_t nodeCount() const noexcept { return _nodes.size(); }
 
     /**
      * Adds a new DRC node to the DRC graph with associated with a given DRC object.
