@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <istream>
-
 #include "lexer_state.hpp"
 #include "token.hpp"
 

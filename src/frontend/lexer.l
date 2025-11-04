@@ -1,4 +1,4 @@
-%option bison-bridge reentrant noyywrap noyylineno
+%option bison-bridge reentrant noyywrap noyylineno nounput noinput
 %x IN_STRING IN_BLOCK_COMMENT
 
 %top {
@@ -15,42 +15,57 @@
 
 using namespace Spark::FrontEnd;
 
-#define get_lstate(scanner) (*static_cast<LexerState*>(yyget_extra(scanner)))
+#define ltext (yyget_text(yyscanner))
+#define lleng (static_cast<size_t>(yyget_leng(yyscanner)))
+#define llval (yyget_lval(yyscanner))
+#define lextra (yyget_extra(yyscanner))
+#define lstate (*static_cast<LexerState*>(yyget_extra(yyscanner)))
+
+#define EMIT_TOKEN() (*llval = makeToken(std::string_view(ltext, lleng), lstate))
+
+#define YY_INPUT(buf, result, max_size)                                  \
+{                                                                        \
+    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner));  \
+    ls.stream->read(reinterpret_cast<char*>(buf), max_size);             \
+    result = ls.stream->gcount();                                        \
+    if (result == 0) {                                                   \
+        result = YY_NULL;                                                \
+    }                                                                    \
+}
 %}
 
 %%
 
-"\r\n" { handleNewline(get_lstate(yyscanner)); }
-"\n" { handleNewline(get_lstate(yyscanner)); }
-"\r" { handleNewline(get_lstate(yyscanner)); }
+"\r\n" { handleNewline(lstate); }
+"\n" { handleNewline(lstate); }
+"\r" { handleNewline(lstate); }
 
 [ \t\r]+ {
-    consumeCharacters(static_cast<size_t>(yyget_leng(yyscanner)), get_lstate(yyscanner));
+    consumeCharacters(lleng, lstate);
 }
 
 [0-9_]*\.[0-9_]+ {
-    makeToken(std::string_view(yyget_text(yyscanner), yyget_leng(yyscanner)), get_lstate(yyscanner));
+    *llval = makeToken(std::string_view(ltext, lleng), lstate);
     return TokenType::Real;
 }
 
 [0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
-    makeToken(std::string_view(yyget_text(yyscanner), yyget_leng(yyscanner)), get_lstate(yyscanner));
+    *llval = makeToken(std::string_view(ltext, lleng), lstate);
     return TokenType::Integer;
 }
 
 [A-Za-z_][A-Za-z0-9_]* {
-    std::string_view word(yyget_text(yyscanner), yyget_leng(yyscanner));
-    makeToken(word, get_lstate(yyscanner));
+    std::string_view word(ltext, lleng);
+    *llval = makeToken(word, lstate);
     return classifyWord(word);
 }
 
 "//"[^\n]* {
-    *yylval = makeToken(std::string_view(yyget_text(yyscanner), yyget_leng(yyscanner)).substr(2), get_lstate(yyscanner));
+    *llval = makeToken(std::string_view(ltext, lleng).substr(2), lstate);
     return TokenType::LineComment;
 }
 
 "/*" {
-    LexerState& lstate = get_lstate(yyscanner);
     consumeCharacters(2, lstate);
     clearTokenBuffer(lstate);
     BEGIN(IN_BLOCK_COMMENT);
@@ -58,102 +73,99 @@ using namespace Spark::FrontEnd;
 
 <IN_BLOCK_COMMENT>{
     "*/" {
-        LexerState& lstate = get_lstate(yyscanner);
         consumeCharacters(2, lstate);
-        makeToken(lstate.tokenBuffer, lstate);
+        *llval = makeToken(lstate.tokenBuffer, lstate);
         clearTokenBuffer(lstate);
         BEGIN(INITIAL);
         return TokenType::BlockComment;
     }
 
     [^*\n]+ {
-        size_t n = static_cast<size_t>(yyget_leng(yyscanner));
-        LexerState& lstate = get_lstate(yyscanner);
+        size_t n = lleng;
         consumeCharacters(n, lstate);
-        appendTokenBuffer(lstate, std::string_view(yyget_text(yyscanner), n));
+        appendTokenBuffer(lstate, std::string_view(ltext, n));
     }
 
     "*" {
-        LexerState& lstate = get_lstate(yyscanner);
         consumeCharacters(1, lstate);
         appendTokenBuffer(lstate, '*');
     }
 
     "\n" {
-        LexerState& lstate = get_lstate(yyscanner);
         handleNewline(lstate);
         appendTokenBuffer(lstate, '\n');
     }
 
     <<EOF>> {
-        LexerState& lstate = get_lstate(yyscanner);
         raiseError(lstate, "unterminated block comment");
         return TokenType::BlockComment;
     }
 }
 
-"+=" { return TokenType::AddAssign; }
-"+" { return TokenType::Add; }
+"+=" { EMIT_TOKEN(); return TokenType::AddAssign; }
+"+" { EMIT_TOKEN(); return TokenType::Add; }
 
-"->" { return TokenType::Arrow; }
-"-=" { return TokenType::SubAssign; }
-"-" { return TokenType::Sub; }
+"->" { EMIT_TOKEN(); return TokenType::Arrow; }
+"-=" { EMIT_TOKEN(); return TokenType::SubAssign; }
+"-" { EMIT_TOKEN(); return TokenType::Sub; }
 
-"*=" { return TokenType::MulAssign; }
-"*" { return TokenType::Mul; }
+"*=" { EMIT_TOKEN(); return TokenType::MulAssign; }
+"*" { EMIT_TOKEN(); return TokenType::Mul; }
 
-"/=" { return TokenType::DivAssign; }
-"/" { return TokenType::Div; }
+"/=" { EMIT_TOKEN(); return TokenType::DivAssign; }
+"/" { EMIT_TOKEN(); return TokenType::Div; }
 
-"%=" { return TokenType::ModAssign; }
-"%" { return TokenType::Mod; }
+"%=" { EMIT_TOKEN(); return TokenType::ModAssign; }
+"%" { EMIT_TOKEN(); return TokenType::Mod; }
 
-"~" { return TokenType::BitNot; }
+"~" { EMIT_TOKEN(); return TokenType::BitNot; }
 
-"&&" { return TokenType::LogAnd; }
-"&=" { return TokenType::BitAndAssign; }
-"&" { return TokenType::BitAnd; }
+"&&" { EMIT_TOKEN(); return TokenType::LogAnd; }
+"&=" { EMIT_TOKEN(); return TokenType::BitAndAssign; }
+"&" { EMIT_TOKEN(); return TokenType::BitAnd; }
 
-"||" { return TokenType::LogOr; }
-"|=" { return TokenType::BitOrAssign; }
-"|" { return TokenType::BitOr; }
+"||" { EMIT_TOKEN(); return TokenType::LogOr; }
+"|=" { EMIT_TOKEN(); return TokenType::BitOrAssign; }
+"|" { EMIT_TOKEN(); return TokenType::BitOr; }
 
-"^=" { return TokenType::BitXorAssign; }
-"^" { return TokenType::BitXor; }
+"^=" { EMIT_TOKEN(); return TokenType::BitXorAssign; }
+"^" { EMIT_TOKEN(); return TokenType::BitXor; }
 
-"<<=" { return TokenType::BitShlAssign; }
-"<<" { return TokenType::BitShl; }
-"<=" { return TokenType::Le; }
-"<" { return TokenType::Lt; }
+"<<=" { EMIT_TOKEN(); return TokenType::BitShlAssign; }
+"<<" { EMIT_TOKEN(); return TokenType::BitShl; }
+"<=" { EMIT_TOKEN(); return TokenType::Le; }
+"<" { EMIT_TOKEN(); return TokenType::Lt; }
 
-">>=" { return TokenType::BitShrAssign; }
-">>" { return TokenType::BitShr; }
-">=" { return TokenType::Ge; }
-">" { return TokenType::Gt; }
+">>=" { EMIT_TOKEN(); return TokenType::BitShrAssign; }
+">>" { EMIT_TOKEN(); return TokenType::BitShr; }
+">=" { EMIT_TOKEN(); return TokenType::Ge; }
+">" { EMIT_TOKEN(); return TokenType::Gt; }
 
-"!=" { return TokenType::Ne; }
-"!" { return TokenType::LogNot; }
+"!=" { EMIT_TOKEN(); return TokenType::Ne; }
+"!" { EMIT_TOKEN(); return TokenType::LogNot; }
 
-"=>" { return TokenType::FatArrow; }
-"==" { return TokenType::Eq; }
-"=" { return TokenType::Assign; }
+"=>" { EMIT_TOKEN(); return TokenType::FatArrow; }
+"==" { EMIT_TOKEN(); return TokenType::Eq; }
+"=" { EMIT_TOKEN(); return TokenType::Assign; }
 
-"..<" { return TokenType::RangeExcl; }
-"..." { return TokenType::Range; }
-"." { return TokenType::Dot; }
+"..<" { EMIT_TOKEN(); return TokenType::RangeExcl; }
+"..." { EMIT_TOKEN(); return TokenType::Range; }
+"." { EMIT_TOKEN(); return TokenType::Dot; }
 
-"," { return TokenType::Comma; }
-":" { return TokenType::Colon; }
-";" { return TokenType::Semicolon; }
-"(" { return TokenType::LParen; }
-")" { return TokenType::RParen; }
-"[" { return TokenType::LBracket; }
-"]" { return TokenType::RBracket; }
-"{" { return TokenType::LBrace; }
-"}" { return TokenType::RBrace; }
+"," { EMIT_TOKEN(); return TokenType::Comma; }
+":" { EMIT_TOKEN(); return TokenType::Colon; }
+";" { EMIT_TOKEN(); return TokenType::Semicolon; }
+"(" { EMIT_TOKEN(); return TokenType::LParen; }
+")" { EMIT_TOKEN(); return TokenType::RParen; }
+"[" { EMIT_TOKEN(); return TokenType::LBracket; }
+"]" { EMIT_TOKEN(); return TokenType::RBracket; }
+"{" { EMIT_TOKEN(); return TokenType::LBrace; }
+"}" { EMIT_TOKEN(); return TokenType::RBrace; }
 
 . {
-
+    raiseError(lstate, "unrecognized character");
+    EMIT_TOKEN();
+    return TokenType::Error;
 }
 
 %%

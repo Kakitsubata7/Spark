@@ -13,6 +13,7 @@ namespace Spark::FrontEnd {
 struct LexerState {
     size_t line;
     size_t column;
+    std::istream* stream;
     std::string tokenBuffer;
     std::vector<LexerError> errors;
 };

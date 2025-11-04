@@ -68,7 +68,7 @@ add_library(sparklib
 )
 
 target_include_directories(sparklib
-    PRIVATE
+    PUBLIC
         src
         ${FRONTEND_GENERATED_DIR}
 )

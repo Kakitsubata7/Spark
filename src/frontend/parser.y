@@ -34,6 +34,8 @@ void yyerror(yyscan_t, const char* msg);
 %token Range RangeExcl
 %token LineComment BlockComment
 
+%token Error
+%token EndOfFile 0
 
 %%
 start:

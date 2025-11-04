@@ -37,12 +37,12 @@ void handleNewline(LexerState& lstate) noexcept {
     lstate.column = 1;
 }
 
-void consumeCharacters(LexerState& lstate, size_t n) noexcept {
+void consumeCharacters(size_t n, LexerState& lstate) noexcept {
     lstate.column += n;
 }
 
 TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept {
-    lstate.line += lexeme.size();
+    lstate.column += lexeme.size();
     return TokenValue(std::string(lexeme), lstate.line, lstate.column);
 }
 
