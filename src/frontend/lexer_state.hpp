@@ -14,6 +14,9 @@ struct LexerState {
     size_t line;
     size_t column;
     std::istream* stream;
+    char stringDelimiter;
+    size_t tokenLine;
+    size_t tokenColumn;
     std::string tokenBuffer;
     std::vector<LexerError> errors;
 };

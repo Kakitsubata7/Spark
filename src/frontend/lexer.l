@@ -11,6 +11,9 @@
 }
 
 %{
+#include <sstream>
+#include <string_view>
+
 #include "frontend/lexer_utils.hpp"
 
 using namespace Spark::FrontEnd;
@@ -65,6 +68,54 @@ using namespace Spark::FrontEnd;
     return TokenType::LineComment;
 }
 
+["'] {
+    lstate.tokenColumn = lstate.column;
+    consumeCharacters(1, lstate);
+    lstate.stringDelimiter = ltext[0];
+    clearTokenBuffer(lstate);
+    BEGIN(IN_STRING);
+}
+
+<IN_STRING>{
+    /* TODO: Record a length of the token instead */
+    "\\n" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\n'); }
+    "\\t" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\t'); }
+    "\\r" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\r'); }
+    "\\\\" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\\'); }
+    "\\\"" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '"'); }
+    "\\\'" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\''); }
+
+    "\\." {
+        consumeCharacters(2, lstate);
+        std::ostringstream oss;
+        oss << "unrecognized escape sequence: " << "'" << ltext << "'";
+        raiseError(lstate, oss.str());
+    }
+
+    "\n" {
+        handleNewline(lstate);
+        raiseError(lstate, "unterminated string literal");
+        BEGIN(INITIAL);
+        return TokenType::Error;
+    }
+
+    <<EOF>> {
+        raiseError(lstate, "unterminated string literal at EOF");
+        return TokenType::Error;
+    }
+
+    . {
+        char c = ltext[0];
+        if (c == lstate.stringDelimiter) {
+            consumeCharacters(1, lstate);
+            *llval = makeToken(lstate.tokenBuffer, lstate.tokenColumn, lstate);
+            BEGIN(INITIAL);
+            return TokenType::String;
+        }
+        appendTokenBuffer(lstate, c);
+    }
+}
+
 "/*" {
     consumeCharacters(2, lstate);
     clearTokenBuffer(lstate);
@@ -81,9 +132,7 @@ using namespace Spark::FrontEnd;
     }
 
     [^*\n]+ {
-        size_t n = lleng;
-        consumeCharacters(n, lstate);
-        appendTokenBuffer(lstate, std::string_view(ltext, n));
+        appendTokenBuffer(lstate, std::string_view(ltext, lleng));
     }
 
     "*" {
@@ -163,7 +212,9 @@ using namespace Spark::FrontEnd;
 "}" { EMIT_TOKEN(); return TokenType::RBrace; }
 
 . {
-    raiseError(lstate, "unrecognized character");
+    std::ostringstream oss;
+    oss << "unrecognized character: " << "'" << ltext << "'";
+    raiseError(lstate, oss.str());
     EMIT_TOKEN();
     return TokenType::Error;
 }

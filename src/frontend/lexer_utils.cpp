@@ -42,8 +42,14 @@ void consumeCharacters(size_t n, LexerState& lstate) noexcept {
 }
 
 TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept {
+    size_t column = lstate.column;
     lstate.column += lexeme.size();
-    return TokenValue(std::string(lexeme), lstate.line, lstate.column);
+    return TokenValue(std::string(lexeme), lstate.line, column);
+}
+
+TokenValue makeToken(std::string_view lexeme, size_t startColumn, LexerState& lstate) noexcept {
+    lstate.column += lexeme.size();
+    return TokenValue(std::string(lexeme), lstate.line, startColumn);
 }
 
 TokenType classifyWord(std::string_view word) noexcept {

@@ -14,6 +14,7 @@ void handleNewline(LexerState& lstate) noexcept;
 void consumeCharacters(size_t n, LexerState& lstate) noexcept;
 
 TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept;
+TokenValue makeToken(std::string_view lexeme, size_t startColumn, LexerState& lstate) noexcept;
 
 TokenType classifyWord(std::string_view word) noexcept;
 
