@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <vector>
+
 #include "lexer_state.hpp"
 #include "token.hpp"
 
@@ -11,10 +13,11 @@ private:
     LexerState _lstate{};
 
 public:
-    explicit Lexer(std::istream& stream);
+    explicit Lexer(std::istream& stream) noexcept;
     ~Lexer();
 
-    Token lex();
+    Token lex() noexcept;
+    std::vector<Token> lexAll() noexcept;
 };
 
 } // Spark::FrontEnd
