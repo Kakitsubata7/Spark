@@ -53,6 +53,22 @@ TokenType classifyWord(std::string_view word) noexcept {
     return word == "_" ? TokenType::Discard : TokenType::Identifier;
 }
 
+void clearTokenBuffer(LexerState& lstate) noexcept {
+    lstate.tokenBuffer.clear();
+}
+
+void appendTokenBuffer(LexerState& lstate, std::string_view sv) noexcept {
+    lstate.tokenBuffer.append(sv.data(), sv.size());
+}
+
+void appendTokenBuffer(LexerState& lstate, char c) noexcept {
+    lstate.tokenBuffer.push_back(c);
+}
+
+void raiseError(LexerState& lstate, std::string_view message) noexcept {
+    lstate.errors.emplace_back(std::string(message.data(), message.size()), lstate.line, lstate.column);
+}
+
 } // Spark::FrontEnd
 
 

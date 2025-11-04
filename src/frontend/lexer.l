@@ -52,7 +52,7 @@ using namespace Spark::FrontEnd;
 "/*" {
     LexerState& lstate = get_lstate(yyscanner);
     consumeCharacters(2, lstate);
-    lstate.tokenBuffer.clear();
+    clearTokenBuffer(lstate);
     BEGIN(IN_BLOCK_COMMENT);
 }
 
@@ -61,7 +61,7 @@ using namespace Spark::FrontEnd;
         LexerState& lstate = get_lstate(yyscanner);
         consumeCharacters(2, lstate);
         makeToken(lstate.tokenBuffer, lstate);
-        lstate.tokenBuffer.clear();
+        clearTokenBuffer(lstate);
         BEGIN(INITIAL);
         return TokenType::BlockComment;
     }
@@ -70,24 +70,24 @@ using namespace Spark::FrontEnd;
         size_t n = static_cast<size_t>(yyget_leng(yyscanner));
         LexerState& lstate = get_lstate(yyscanner);
         consumeCharacters(n, lstate);
-        lstate.tokenBuffer.append(yyget_text(yyscanner), n);
+        appendTokenBuffer(lstate, std::string_view(yyget_text(yyscanner), n));
     }
 
     "*" {
         LexerState& lstate = get_lstate(yyscanner);
         consumeCharacters(1, lstate);
-        lstate.tokenBuffer.push_back('*');
+        appendTokenBuffer(lstate, '*');
     }
 
     "\n" {
         LexerState& lstate = get_lstate(yyscanner);
         handleNewline(lstate);
-        lstate.tokenBuffer.push_back('\n');
+        appendTokenBuffer(lstate, '\n');
     }
 
     <<EOF>> {
         LexerState& lstate = get_lstate(yyscanner);
-        lstate.errors.emplace_back("unterminated block comment", lstate.line, lstate.column);
+        raiseError(lstate, "unterminated block comment");
         return TokenType::BlockComment;
     }
 }

@@ -17,4 +17,11 @@ TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept;
 
 TokenType classifyWord(std::string_view word) noexcept;
 
+void clearTokenBuffer(LexerState& lstate) noexcept;
+
+void appendTokenBuffer(LexerState& lstate, std::string_view sv) noexcept;
+void appendTokenBuffer(LexerState& lstate, char c) noexcept;
+
+void raiseError(LexerState& lstate, std::string_view message) noexcept;
+
 } // Spark::Frontend

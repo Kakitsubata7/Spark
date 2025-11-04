@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <istream>
 #include <string>
 #include <vector>
 
@@ -8,10 +7,12 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents additional information used by Flex (as `yyextra`).
+ */
 struct LexerState {
     size_t line;
     size_t column;
-    std::istream* stream;
     std::string tokenBuffer;
     std::vector<LexerError> errors;
 };

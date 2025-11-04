@@ -8,7 +8,6 @@ Lexer::Lexer(std::istream& stream) {
     yylex_init(&_scanner);
     _lstate.line = 1;
     _lstate.column = 1;
-    _lstate.stream = &stream;
     yyset_extra(&_lstate, _scanner);
 }
 
