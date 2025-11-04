@@ -1,32 +1,39 @@
-%{
-int yylex(void);
-void yyerror(const char* msg);
-%}
-
 %require "3.5"
 
-%code requires {
-    #include "frontend/token_value.hpp"
+%language "c++"
+%define api.value.type {TokenValue}
+%define api.token.raw
 
-    using namespace Spark::FrontEnd;
+%lex-param { yyscan_t scanner }
+%parse-param { yyscan_t scanner }
+
+%code requires {
+#include "frontend/token_value.hpp"
+
+using namespace Spark::FrontEnd;
+
+typedef void* yyscan_t;
 }
 
-%define api.value.type {TokenValue}
-%define api.token.prefix {SPK_}
+%code {
+int yylex(TokenValue* yylval, yyscan_t scanner);
+void yyerror(yyscan_t, const char* msg);
+}
 
-%token IDENTIFIER DISCARD
-%token INTEGER REAL STRING
-%token ALIAS AS BREAK CASE CATCH CLASS CONST CONSTRUCTOR CONTINUE CREF DESTRUCTOR DO ELSE END ENUM EXPORT EXTENSION FALSE FN FOR FROM GLOBAL IF IMPORT IN IS LET MATCH MODULE NIL OPERATOR REF RETURN SELF STRUCT SUPER THEN THROW TRAIT TRUE TRY TYPEOF UNDEFINED WHILE YIELD
-%token ADD SUB MUL DIV MOD
-%token BIT_NOT BIT_AND BIT_OR BIT_XOR BIT_SHL BIT_SHR
-%token LOG_NOT LOG_AND LOG_OR
-%token EQ NE LT GT LE GE
-%token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN BIT_AND_ASSIGN BIT_OR_ASSIGN BIT_XOR_ASSIGN BIT_SHL_ASSIGN BIT_SHR_ASSIGN
-%token DOT
-%token COMMA COLON ARROW FAT_ARROW
-%token SEMICOLON LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE
-%token RANGE RANGE_EXCL
-%token LINE_COMMENT BLOCK_COMMENT
+%token Identifier Discard
+%token Integer Real String
+%token Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefined While Yield
+%token Add Sub Mul Div Mod
+%token BitNot BitAnd BitOr BitXor BitShl BitShr
+%token LogNot LogAnd LogOr
+%token Eq Ne Lt Gt Le Ge
+%token Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign BitShlAssign BitShrAssign
+%token Dot
+%token Comma Colon Arrow FatArrow
+%token Semicolon LParen RParen LBracket RBracket LBrace RBrace
+%token Range RangeExcl
+%token LineComment BlockComment
+
 
 %%
 start:

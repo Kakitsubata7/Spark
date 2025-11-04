@@ -28,6 +28,7 @@ FLEX_TARGET(
         sparklexer
         ${FRONTEND_DIR}/lexer.l
         ${FRONTEND_GENERATED_DIR}/lex.yy.cpp
+        COMPILE_FLAGS "--header-file=${FRONTEND_GENERATED_DIR}/lex.yy.hpp"
 )
 
 BISON_TARGET(
@@ -44,8 +45,14 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
+        src/frontend/lexer.cpp
+        src/frontend/lexer.hpp
+        src/frontend/lexer_error.hpp
+        src/frontend/lexer_state.hpp
         src/frontend/lexer_utils.cpp
         src/frontend/lexer_utils.hpp
+        src/frontend/token.hpp
+        src/frontend/token_type.hpp
         src/frontend/token_value.hpp
 
         src/runtime/allocator.hpp

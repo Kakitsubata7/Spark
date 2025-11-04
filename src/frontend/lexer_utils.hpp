@@ -1,25 +1,20 @@
 #pragma once
 
-#include <string>
 #include <string_view>
 
-#include "parser.tab.hpp"
+#include "lexer_state.hpp"
+#include "lexer_utils.hpp"
+#include "token_type.hpp"
+#include "token_value.hpp"
 
 namespace Spark::FrontEnd {
 
-using TokenType = yytoken_kind_t;
-
-struct LexerState {
-    size_t line;
-    size_t column;
-};
-
 void handleNewline(LexerState& lstate) noexcept;
 
-void consumeCharacters(LexerState& lstate, size_t n) noexcept;
+void consumeCharacters(size_t n, LexerState& lstate) noexcept;
 
-TokenType makeToken(std::string_view lexeme, TokenType type, LexerState& lstate) noexcept;
+TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept;
 
-TokenType makeWord(std::string_view lexeme, LexerState& lstate) noexcept;
+TokenType classifyWord(std::string_view word) noexcept;
 
 } // Spark::Frontend

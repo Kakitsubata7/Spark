@@ -5,28 +5,30 @@
 namespace Spark::FrontEnd {
 
 namespace {
-    const std::unordered_map<std::string_view, yytoken_kind_t> keywordTokenMap {
-        { "alias", SPK_ALIAS }, { "as", SPK_AS },
-        { "break", SPK_BREAK },
-        { "case", SPK_CASE }, { "catch", SPK_CATCH }, { "class", SPK_CLASS }, { "const", SPK_CONST },
-            { "constructor", SPK_CONSTRUCTOR }, { "continue", SPK_CONTINUE }, { "cref", SPK_CREF },
-        { "destructor", SPK_DESTRUCTOR }, { "do", SPK_DO },
-        { "else", SPK_ELSE }, { "end", SPK_END }, { "enum", SPK_ENUM }, { "export", SPK_EXPORT },
-            { "extension", SPK_EXTENSION },
-        { "false", SPK_FALSE }, { "fn", SPK_FN }, { "for", SPK_FOR }, { "from", SPK_FROM },
-        { "global", SPK_GLOBAL },
-        { "if", SPK_IF }, { "import", SPK_IMPORT }, { "in", SPK_IN }, { "is", SPK_IS },
-        { "let", SPK_LET },
-        { "match", SPK_MATCH }, { "module", SPK_MODULE },
-        { "nil", SPK_NIL },
-        { "operator", SPK_OPERATOR },
-        { "ref", SPK_REF }, { "return", SPK_RETURN},
-        { "self", SPK_SELF }, { "struct", SPK_STRUCT }, { "super", SPK_SUPER },
-        { "then", SPK_THEN }, { "throw", SPK_THROW }, { "trait", SPK_TRAIT }, { "true", SPK_TRUE },
-            { "try", SPK_TRY },{ "typeof", SPK_TYPEOF },
-        { "undefined", SPK_UNDEFINED },
-        { "while", SPK_WHILE },
-        { "yield", SPK_YIELD }
+    const std::unordered_map<std::string_view, TokenType> keywordTokenMap {
+        { "alias", TokenType::Alias }, { "as", TokenType::As },
+        { "break", TokenType::Break },
+        { "case", TokenType::Case }, { "catch", TokenType::Catch }, { "class", TokenType::Class },
+            { "const", TokenType::Const }, { "constructor", TokenType::Constructor },
+            { "continue", TokenType::Continue }, { "cref", TokenType::Cref },
+        { "destructor", TokenType::Destructor }, { "do", TokenType::Do },
+        { "else", TokenType::Else }, { "end", TokenType::End }, { "enum", TokenType::Enum },
+            { "export", TokenType::Export }, { "extension", TokenType::Extension },
+        { "false", TokenType::False }, { "fn", TokenType::Fn }, { "for", TokenType::For },
+            { "from", TokenType::From }, { "global", TokenType::Global },
+        { "if", TokenType::If }, { "import", TokenType::Import }, { "in", TokenType::In },
+            { "is", TokenType::Is },
+        { "let", TokenType::Let },
+        { "match", TokenType::Match }, { "module", TokenType::Module },
+        { "nil", TokenType::Nil },
+        { "operator", TokenType::Operator },
+        { "ref", TokenType::Ref }, { "return", TokenType::Return },
+        { "self", TokenType::Self }, { "struct", TokenType::Struct }, { "super", TokenType::Super },
+        { "then", TokenType::Then }, { "throw", TokenType::Throw }, { "trait", TokenType::Trait },
+            { "true", TokenType::True }, { "try", TokenType::Try }, { "typeof", TokenType::Typeof },
+        { "undefined", TokenType::Undefined },
+        { "while", TokenType::While },
+        { "yield", TokenType::Yield }
     };
 }
 
@@ -39,19 +41,16 @@ void consumeCharacters(LexerState& lstate, size_t n) noexcept {
     lstate.column += n;
 }
 
-TokenType makeToken(std::string_view lexeme, TokenType type, LexerState& lstate) noexcept {
-    yylval = TokenValue(std::string(lexeme), lstate.line, lstate.column);
+TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept {
     lstate.line += lexeme.size();
-    return type;
+    return TokenValue(std::string(lexeme), lstate.line, lstate.column);
 }
 
-TokenType makeWord(std::string_view lexeme, LexerState& lstate) noexcept {
-    yylval = TokenValue(std::string(lexeme), lstate.line, lstate.column);
-    lstate.line += lexeme.size();
-    if (keywordTokenMap.find(lexeme) != keywordTokenMap.end()) {
-        return keywordTokenMap.at(lexeme);
+TokenType classifyWord(std::string_view word) noexcept {
+    if (keywordTokenMap.find(word) != keywordTokenMap.end()) {
+        return keywordTokenMap.at(word);
     }
-    return lexeme == "_" ? SPK_DISCARD : SPK_IDENTIFIER;
+    return word == "_" ? TokenType::Discard : TokenType::Identifier;
 }
 
 } // Spark::FrontEnd
