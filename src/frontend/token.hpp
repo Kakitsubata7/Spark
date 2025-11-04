@@ -5,6 +5,9 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents a token produced by a lexer, containing the type and the value of the token.
+ */
 struct Token {
     TokenType type;
     TokenValue value;
