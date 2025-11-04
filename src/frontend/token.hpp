@@ -9,7 +9,15 @@ struct Token {
     TokenType type;
     TokenValue value;
 
-    Token(TokenType type, TokenValue value) : type(type), value(std::move(value)) { }
+    Token(TokenType type, TokenValue value) noexcept : type(type), value(std::move(value)) { }
+
+    bool operator==(const Token& rhs) noexcept {
+        return type == rhs.type && value == rhs.value;
+    }
+
+    bool operator!=(const Token& rhs) noexcept {
+        return !(*this == rhs);
+    }
 };
 
 } // Spark::FrontEnd
