@@ -11,11 +11,11 @@ struct Token {
 
     Token(TokenType type, TokenValue value) noexcept : type(type), value(std::move(value)) { }
 
-    bool operator==(const Token& rhs) noexcept {
+    bool operator==(const Token& rhs) const noexcept {
         return type == rhs.type && value == rhs.value;
     }
 
-    bool operator!=(const Token& rhs) noexcept {
+    bool operator!=(const Token& rhs) const noexcept {
         return !(*this == rhs);
     }
 };

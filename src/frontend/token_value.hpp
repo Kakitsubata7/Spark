@@ -15,14 +15,12 @@ struct TokenValue {
     TokenValue() noexcept : line(0), column(0) { }
     TokenValue(std::string lexeme, size_t line, size_t column) noexcept
         : lexeme(std::move(lexeme)), line(line), column(column) { }
-    TokenValue(std::string_view lexeme, size_t line, size_t column) noexcept
-        : TokenValue(std::string(lexeme), line, column) { }
 
-    bool operator==(const TokenValue& rhs) noexcept {
+    bool operator==(const TokenValue& rhs) const noexcept {
         return lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
     }
 
-    bool operator!=(const TokenValue& rhs) noexcept {
+    bool operator!=(const TokenValue& rhs) const noexcept {
         return !(*this == rhs);
     }
 };
