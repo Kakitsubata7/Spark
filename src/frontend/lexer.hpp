@@ -21,6 +21,8 @@ public:
 
     Token lex() noexcept;
     std::vector<Token> lexAll() noexcept;
+
+    void switchStream(std::istream& stream) noexcept;
 };
 
 } // Spark::FrontEnd

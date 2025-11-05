@@ -52,6 +52,7 @@ add_library(sparklib
         src/frontend/lexer_utils.cpp
         src/frontend/lexer_utils.hpp
         src/frontend/token.hpp
+        src/frontend/token_type.cpp
         src/frontend/token_type.hpp
         src/frontend/token_value.hpp
 

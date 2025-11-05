@@ -34,4 +34,8 @@ std::vector<Token> Lexer::lexAll() noexcept {
     return tokens;
 }
 
+void Lexer::switchStream(std::istream& stream) noexcept {
+    _lstate.stream = &stream;
+}
+
 } // Spark::FrontEnd

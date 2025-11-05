@@ -21,6 +21,14 @@ struct Token {
     bool operator!=(const Token& rhs) const noexcept {
         return !(*this == rhs);
     }
+
+    friend std::ostream& operator<<(std::ostream& os, const Token& token) {
+        os << "Token(" << token.type << ", "
+                       << "\"" << token.value.lexeme << "\"" << ", "
+                       << token.value.line << ":" << token.value.column
+           << ")";
+        return os;
+    }
 };
 
 } // Spark::FrontEnd

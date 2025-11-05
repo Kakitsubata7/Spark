@@ -21,13 +21,7 @@ let x = "abc" if 'xyz\n' > 0 do x = x + 1 end
             std::cout << "<EOF>" << std::endl;
             break;
         }
-
-        std::cout << "Token("
-                  << token.type << ", "
-                  << token.value.lexeme << ", "
-                  << "line=" << token.value.line << ", "
-                  << "col=" << token.value.column
-                  << ")\n";
+        std::cout << token << "\n";
     }
 
     return EXIT_SUCCESS;
