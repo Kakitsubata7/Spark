@@ -41,6 +41,15 @@ public:
     }
 
     /**
+     * Retrieves a string view to the token being processed.
+     * @return String view to the token being processed.
+     */
+    [[nodiscard]]
+    std::string_view view() const noexcept {
+        return _buffer;
+    }
+
+    /**
      * Appends a string to the buffer.
      * @param sv String to append.
      */
