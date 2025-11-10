@@ -84,6 +84,8 @@ enable_testing()
 
 add_executable(sparktest
         tests/frontend/lexer_test.cpp
+        tests/frontend/utils.cpp
+        tests/frontend/utils.hpp
         tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest

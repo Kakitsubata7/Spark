@@ -4,7 +4,10 @@
 
 #include "frontend/lexer.hpp"
 
+#include "utils.hpp"
+
 using namespace Spark::FrontEnd;
+using namespace Spark::Test::FrontEnd;
 using TT = TokenType;
 
 static void expectTokens(const std::vector<Token>& actual, const std::vector<Token>& expected) {
@@ -194,7 +197,7 @@ let b = /*
 let c = "hello 'world'"
 let d = 'hello "world"' /* This is another block comment */
 )";
-    source.erase(std::remove(source.begin(), source.end(), '\r'), source.end());
+    removeCarriageReturns(source);
     testLexAll(source, {
         {TT::LineComment, {" This is a line comment", 2, 1}},
         {TT::Let, {"let", 3, 1}},
@@ -216,5 +219,78 @@ let d = 'hello "world"' /* This is another block comment */
         {TT::Assign, {"=", 12, 7}},
         {TT::String, {"hello \"world\"", 12, 9}},
         {TT::BlockComment, {" This is another block comment ", 12, 25}}
+    });
+}
+
+TEST(LexerTest, GeneralTest5) {
+    std::string source = R"(
+fn^ foo(n: Int) -> Int do
+    const msg = "Hello /* This is not a comment */ world"
+    const quote = 'What\'s more amazing than a talking dog? A spelling "bee"!'
+
+    // For loop
+    for i in 0..<n do
+        print(msg)
+        print(quote)
+    end
+
+    /* This is a
+       block comment! */
+    return n * n
+end
+)";
+    removeCarriageReturns(source);
+    testLexAll(source, {
+        {TT::Fn, {"fn", 2, 1}},
+        {TT::BitXor, {"^", 2, 3}},
+        {TT::Identifier, {"foo", 2, 5}},
+        {TT::LParen, {"(", 2, 8}},
+        {TT::Identifier, {"n", 2, 9}},
+        {TT::Colon, {":", 2, 10}},
+        {TT::Identifier, {"Int", 2, 12}},
+        {TT::RParen, {")", 2, 15}},
+        {TT::Arrow, {"->", 2, 17}},
+        {TT::Identifier, {"Int", 2, 20}},
+        {TT::Do, {"do", 2, 24}},
+
+        {TT::Const, {"const", 3, 5}},
+        {TT::Identifier, {"msg", 3, 11}},
+        {TT::Assign, {"=", 3, 15}},
+        {TT::String, {"Hello /* This is not a comment */ world", 3, 17}},
+
+        {TT::Const, {"const", 4, 5}},
+        {TT::Identifier, {"quote", 4, 11}},
+        {TT::Assign, {"=", 4, 17}},
+        {TT::String, {"What's more amazing than a talking dog? A spelling \"bee\"!", 4, 19}},
+
+        {TT::LineComment, {" For loop", 6, 5}},
+
+        {TT::For, {"for", 7, 5}},
+        {TT::Identifier, {"i", 7, 9}},
+        {TT::In, {"in", 7, 11}},
+        {TT::Integer, {"0", 7, 14}},
+        {TT::RangeExcl, {"..<", 7, 15}},
+        {TT::Identifier, {"n", 7, 18}},
+        {TT::Do, {"do", 7, 20}},
+
+        {TT::Identifier, {"print", 8, 9}},
+        {TT::LParen, {"(", 8, 14}},
+        {TT::Identifier, {"msg", 8, 15}},
+        {TT::RParen, {")", 8, 18}},
+
+        {TT::Identifier, {"print", 9, 9}},
+        {TT::LParen, {"(", 9, 14}},
+        {TT::Identifier, {"quote", 9, 15}},
+        {TT::RParen, {")", 9, 20}},
+
+        {TT::End, {"end", 10, 5}},
+
+        {TT::BlockComment, {" This is a\n       block comment! ", 12, 5}},
+
+        {TT::Return, {"return", 14, 5}},
+        {TT::Identifier, {"n", 14, 12}},
+        {TT::Mul, {"*", 14, 14}},
+        {TT::Identifier, {"n", 14, 16}},
+        {TT::End, {"end", 15, 1}}
     });
 }
