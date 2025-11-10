@@ -33,7 +33,7 @@ static Lexer testLexAll(std::string_view source, const std::vector<Token>& expec
 
 TEST(LexerTest, GeneralTest1) {
     std::string_view source = R"(let x = 1 if x > 0 do x = x + 1 end)";
-    testLexAll(source, {
+    Lexer lexer = testLexAll(source, {
         {TT::Let, {"let", 1, 1}},
         {TT::Identifier, {"x", 1, 5}},
         {TT::Assign, {"=", 1, 7}},
@@ -50,6 +50,7 @@ TEST(LexerTest, GeneralTest1) {
         {TT::Integer, {"1", 1, 31}},
         {TT::End, {"end", 1, 33}}
     });
+    EXPECT_TRUE(lexer.errors().empty());
 }
 
 TEST(LexerTest, GeneralTest2) {
@@ -60,7 +61,7 @@ struct Vector2 do
     let y: Real
 end
 )";
-    testLexAll(source, {
+    Lexer lexer = testLexAll(source, {
         {TT::At, {"@", 2, 1}},
         {TT::Identifier, {"cstruct", 2, 2}},
         {TT::Struct, {"struct", 3, 1}},
@@ -76,6 +77,7 @@ end
         {TT::Identifier,  {"Real", 5, 12}},
         Token{TT::End,  {"end", 6, 1}}
     });
+    EXPECT_TRUE(lexer.errors().empty());
 }
 
 TEST(LexerTest, GeneralTest3) {
@@ -96,7 +98,7 @@ fn binarySearch(l: List<Int>, target: Int) -> Int do
     return -1
 end
 )";
-    testLexAll(source, {
+    Lexer lexer = testLexAll(source, {
         {TT::Fn, {"fn", 2, 1}},
         {TT::Identifier, {"binarySearch", 2, 4}},
         {TT::LParen, {"(", 2, 16}},
@@ -181,6 +183,7 @@ end
         {TT::Integer, {"1", 15, 13}},
         {TT::End, {"end", 16, 1}}
     });
+    EXPECT_TRUE(lexer.errors().empty());
 }
 
 TEST(LexerTest, GeneralTest4) {
@@ -198,7 +201,7 @@ let c = "hello 'world'"
 let d = 'hello "world"' /* This is another block comment */
 )";
     removeCarriageReturns(source);
-    testLexAll(source, {
+    Lexer lexer = testLexAll(source, {
         {TT::LineComment, {" This is a line comment", 2, 1}},
         {TT::Let, {"let", 3, 1}},
         {TT::Identifier, {"a", 3, 5}},
@@ -220,6 +223,7 @@ let d = 'hello "world"' /* This is another block comment */
         {TT::String, {"hello \"world\"", 12, 9}},
         {TT::BlockComment, {" This is another block comment ", 12, 25}}
     });
+    EXPECT_TRUE(lexer.errors().empty());
 }
 
 TEST(LexerTest, GeneralTest5) {
@@ -240,7 +244,7 @@ fn^ foo(n: Int) -> Int do
 end
 )";
     removeCarriageReturns(source);
-    testLexAll(source, {
+    Lexer lexer = testLexAll(source, {
         {TT::Fn, {"fn", 2, 1}},
         {TT::BitXor, {"^", 2, 3}},
         {TT::Identifier, {"foo", 2, 5}},
@@ -293,4 +297,55 @@ end
         {TT::Identifier, {"n", 14, 16}},
         {TT::End, {"end", 15, 1}}
     });
+    EXPECT_TRUE(lexer.errors().empty());
+}
+
+TEST(LexerTest, BlockCommentTests) {
+    // /* inside the comment
+    std::string source = R"(/* /* ... */)";
+    Lexer lexer = testLexAll(source, {
+        {TT::BlockComment, {" /* ... ", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Two *
+    source = R"(/** ... **/)";
+    lexer = testLexAll(source, {
+        {TT::BlockComment, {"* ... *", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Two */
+    source = R"(/* ... */ */)";
+    lexer = testLexAll(source, {
+        {TT::BlockComment, {" ... ", 1, 1}},
+        {TT::Mul, {"*", 1, 11}},
+        {TT::Div, {"/", 1, 12}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Empty
+    source = R"(/**/)";
+    lexer = testLexAll(source, {
+        {TT::BlockComment, {"", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Unterminated
+    source = R"(/* ...)";
+    lexer = testLexAll(source, {
+        {TT::BlockComment, {" ...", 1, 1}}
+    });
+    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_EQ(lexer.errors()[0].line, 1);
+    EXPECT_EQ(lexer.errors()[0].column, 6);
+
+    // Separated */
+    source = R"(/* ... * /)";
+    lexer = testLexAll(source, {
+        {TT::BlockComment, {" ... * /", 1, 1}},
+    });
+    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_EQ(lexer.errors()[0].line, 1);
+    EXPECT_EQ(lexer.errors()[0].column, 10);
 }

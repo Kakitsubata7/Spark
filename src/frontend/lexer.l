@@ -45,9 +45,7 @@ using namespace Spark::FrontEnd;
 
 %%
 
-"\r\n" { LSTATE.whenNewline(); }
-"\n" { LSTATE.whenNewline(); }
-"\r" { LSTATE.whenNewline(); }
+(\r\n|\r|\n) { LSTATE.whenNewline(); }
 
 [ \t\r]+ {
     LSTATE.consume(YYLENG);
@@ -100,7 +98,7 @@ using namespace Spark::FrontEnd;
         LSTATE.consume(2);
     }
 
-    "\n" {
+    (\r\n|\r|\n) {
         BEGIN(INITIAL);
         RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO);
         LSTATE.whenNewline();
@@ -108,7 +106,8 @@ using namespace Spark::FrontEnd;
     }
 
     <<EOF>> {
-        RAISE_ERROR("unterminated string literal at EOF", YYLINENO, YYCOLUMNNO);
+        BEGIN(INITIAL);
+        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO);
         return TokenType::Error;
     }
 
@@ -137,7 +136,7 @@ using namespace Spark::FrontEnd;
         return TokenType::BlockComment;
     }
 
-    [^*\n]+ {
+    [^*\r\n]+ {
         LBUFFER.append(YYTEXT);
         LSTATE.consume(YYLENG);
     }
@@ -147,13 +146,15 @@ using namespace Spark::FrontEnd;
         LSTATE.consume(1);
     }
 
-    "\n" {
-        LBUFFER.append('\n');
+    (\r\n|\r|\n) {
+        LBUFFER.append(YYTEXT);
         LSTATE.whenNewline();
     }
 
     <<EOF>> {
-        RAISE_ERROR("unterminated block comment", YYLINENO, YYCOLUMNNO);
+        BEGIN(INITIAL);
+        RAISE_ERROR("unterminated block comment", YYLINENO, YYCOLUMNNO - 1);
+        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
         return TokenType::BlockComment;
     }
 }
