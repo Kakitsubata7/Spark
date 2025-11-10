@@ -14,17 +14,23 @@
 #include <sstream>
 #include <string_view>
 
+#include "frontend/lexer_state.hpp"
 #include "frontend/lexer_utils.hpp"
 
 using namespace Spark::FrontEnd;
 
-#define ltext (yyget_text(yyscanner))
-#define lleng (static_cast<size_t>(yyget_leng(yyscanner)))
-#define llval (yyget_lval(yyscanner))
-#define lextra (yyget_extra(yyscanner))
-#define lstate (*static_cast<LexerState*>(yyget_extra(yyscanner)))
+#define YYLENG (static_cast<size_t>(yyget_leng(yyscanner)))
+#define YYTEXT (std::string_view(yyget_text(yyscanner), YYLENG))
+#define YYLVAL (yyget_lval(yyscanner))
 
-#define EMIT_TOKEN() (*llval = makeToken(std::string_view(ltext, lleng), lstate))
+#define LSTATE (*static_cast<LexerState*>(yyget_extra(yyscanner)))
+#define LBUFFER (LSTATE.tokenBuffer)
+
+#define YYLINENO (LSTATE.line)
+#define YYCOLUMNNO (LSTATE.column)
+
+#define EMIT_TOKEN(text, line, column) (*YYLVAL = TokenValue((std::string(text)), (line), (column)))
+#define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
 
 #define YY_INPUT(buf, result, max_size)                                  \
 {                                                                        \
@@ -39,183 +45,185 @@ using namespace Spark::FrontEnd;
 
 %%
 
-"\r\n" { handleNewline(lstate); }
-"\n" { handleNewline(lstate); }
-"\r" { handleNewline(lstate); }
+"\r\n" { LSTATE.whenNewline(); }
+"\n" { LSTATE.whenNewline(); }
+"\r" { LSTATE.whenNewline(); }
 
 [ \t\r]+ {
-    consumeCharacters(lleng, lstate);
+    LSTATE.consume(YYLENG);
 }
 
 [0-9_]*\.[0-9_]+ {
-    *llval = makeToken(std::string_view(ltext, lleng), lstate);
+    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(YYLENG);
     return TokenType::Real;
 }
 
 [0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
-    *llval = makeToken(std::string_view(ltext, lleng), lstate);
+    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(YYLENG);
     return TokenType::Integer;
 }
 
 [A-Za-z_][A-Za-z0-9_]* {
-    std::string_view word(ltext, lleng);
-    *llval = makeToken(word, lstate);
-    return classifyWord(word);
+    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(YYLENG);
+    return classifyWord(YYTEXT);
 }
 
 "//"[^\n]* {
-    *llval = makeToken(std::string_view(ltext, lleng).substr(2), lstate);
+    EMIT_TOKEN(YYTEXT.substr(2), YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(YYLENG);
     return TokenType::LineComment;
 }
 
 ["'] {
-    lstate.tokenColumn = lstate.column;
-    consumeCharacters(1, lstate);
-    lstate.stringDelimiter = ltext[0];
-    clearTokenBuffer(lstate);
+    LBUFFER.reset(YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(1);
+    LSTATE.stringDelimiter = YYTEXT[0];
     BEGIN(IN_STRING);
 }
 
 <IN_STRING>{
-    /* TODO: Record a length of the token instead */
-    "\\n" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\n'); }
-    "\\t" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\t'); }
-    "\\r" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\r'); }
-    "\\\\" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\\'); }
-    "\\\"" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '"'); }
-    "\\\'" { consumeCharacters(1, lstate); appendTokenBuffer(lstate, '\''); }
+    "\\n" { LBUFFER.append('\n'); LSTATE.consume(2); }
+    "\\t" { LBUFFER.append('\t'); LSTATE.consume(2); }
+    "\\r" { LBUFFER.append('\r'); LSTATE.consume(2); }
+    "\\\\" { LBUFFER.append('\\'); LSTATE.consume(2); }
+    "\\\"" { LBUFFER.append('"'); LSTATE.consume(2); }
+    "\\\'" { LBUFFER.append('\''); LSTATE.consume(2); }
 
     "\\." {
-        consumeCharacters(2, lstate);
+        LBUFFER.append(YYTEXT[1]);
         std::ostringstream oss;
-        oss << "unrecognized escape sequence: " << "'" << ltext << "'";
-        raiseError(lstate, oss.str());
+        oss << "unrecognized escape sequence: " << "'" << YYTEXT << "'";
+        RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
+        LSTATE.consume(2);
     }
 
     "\n" {
-        handleNewline(lstate);
-        raiseError(lstate, "unterminated string literal");
         BEGIN(INITIAL);
+        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO);
+        LSTATE.whenNewline();
         return TokenType::Error;
     }
 
     <<EOF>> {
-        raiseError(lstate, "unterminated string literal at EOF");
+        RAISE_ERROR("unterminated string literal at EOF", YYLINENO, YYCOLUMNNO);
         return TokenType::Error;
     }
 
     . {
-        char c = ltext[0];
-        if (c == lstate.stringDelimiter) {
-            consumeCharacters(1, lstate);
-            *llval = makeToken(lstate.tokenBuffer, lstate.tokenColumn, lstate);
+        LSTATE.consume(1);
+        if (YYTEXT[0] == LSTATE.stringDelimiter) {
             BEGIN(INITIAL);
+            EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
             return TokenType::String;
         }
-        appendTokenBuffer(lstate, c);
+        LBUFFER.append(YYTEXT[0]);
     }
 }
 
 "/*" {
-    consumeCharacters(2, lstate);
-    clearTokenBuffer(lstate);
     BEGIN(IN_BLOCK_COMMENT);
+    LBUFFER.reset(YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(2);
 }
 
 <IN_BLOCK_COMMENT>{
     "*/" {
-        consumeCharacters(2, lstate);
-        *llval = makeToken(lstate.tokenBuffer, lstate);
-        clearTokenBuffer(lstate);
         BEGIN(INITIAL);
+        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        LSTATE.consume(2);
         return TokenType::BlockComment;
     }
 
     [^*\n]+ {
-        appendTokenBuffer(lstate, std::string_view(ltext, lleng));
+        LBUFFER.append(YYTEXT);
+        LSTATE.consume(YYLENG);
     }
 
     "*" {
-        consumeCharacters(1, lstate);
-        appendTokenBuffer(lstate, '*');
+        LBUFFER.append('*');
+        LSTATE.consume(1);
     }
 
     "\n" {
-        handleNewline(lstate);
-        appendTokenBuffer(lstate, '\n');
+        LBUFFER.append('\n');
+        LSTATE.whenNewline();
     }
 
     <<EOF>> {
-        raiseError(lstate, "unterminated block comment");
+        RAISE_ERROR("unterminated block comment", YYLINENO, YYCOLUMNNO);
         return TokenType::BlockComment;
     }
 }
 
-"+=" { EMIT_TOKEN(); return TokenType::AddAssign; }
-"+" { EMIT_TOKEN(); return TokenType::Add; }
+"+=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::AddAssign; }
+"+" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Add; }
 
-"->" { EMIT_TOKEN(); return TokenType::Arrow; }
-"-=" { EMIT_TOKEN(); return TokenType::SubAssign; }
-"-" { EMIT_TOKEN(); return TokenType::Sub; }
+"->" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Arrow; }
+"-=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::SubAssign; }
+"-" {  EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Sub; }
 
-"*=" { EMIT_TOKEN(); return TokenType::MulAssign; }
-"*" { EMIT_TOKEN(); return TokenType::Mul; }
+"*=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::MulAssign; }
+"*" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Mul; }
 
-"/=" { EMIT_TOKEN(); return TokenType::DivAssign; }
-"/" { EMIT_TOKEN(); return TokenType::Div; }
+"/=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::DivAssign; }
+"/" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Div; }
 
-"%=" { EMIT_TOKEN(); return TokenType::ModAssign; }
-"%" { EMIT_TOKEN(); return TokenType::Mod; }
+"%=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::ModAssign; }
+"%" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Mod; }
 
-"~" { EMIT_TOKEN(); return TokenType::BitNot; }
+"~" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitNot; }
 
-"&&" { EMIT_TOKEN(); return TokenType::LogAnd; }
-"&=" { EMIT_TOKEN(); return TokenType::BitAndAssign; }
-"&" { EMIT_TOKEN(); return TokenType::BitAnd; }
+"&&" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::LogAnd; }
+"&=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitAndAssign; }
+"&" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitAnd; }
 
-"||" { EMIT_TOKEN(); return TokenType::LogOr; }
-"|=" { EMIT_TOKEN(); return TokenType::BitOrAssign; }
-"|" { EMIT_TOKEN(); return TokenType::BitOr; }
+"||" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::LogOr; }
+"|=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitOrAssign; }
+"|" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitOr; }
 
-"^=" { EMIT_TOKEN(); return TokenType::BitXorAssign; }
-"^" { EMIT_TOKEN(); return TokenType::BitXor; }
+"^=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitXorAssign; }
+"^" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitXor; }
 
-"<<=" { EMIT_TOKEN(); return TokenType::BitShlAssign; }
-"<<" { EMIT_TOKEN(); return TokenType::BitShl; }
-"<=" { EMIT_TOKEN(); return TokenType::Le; }
-"<" { EMIT_TOKEN(); return TokenType::Lt; }
+"<<=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::BitShlAssign; }
+"<<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitShl; }
+"<=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Le; }
+"<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Lt; }
 
-">>=" { EMIT_TOKEN(); return TokenType::BitShrAssign; }
-">>" { EMIT_TOKEN(); return TokenType::BitShr; }
-">=" { EMIT_TOKEN(); return TokenType::Ge; }
-">" { EMIT_TOKEN(); return TokenType::Gt; }
+">>=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::BitShrAssign; }
+">>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitShr; }
+">=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ge; }
+">" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Gt; }
 
-"!=" { EMIT_TOKEN(); return TokenType::Ne; }
-"!" { EMIT_TOKEN(); return TokenType::LogNot; }
+"!=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ne; }
+"!" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LogNot; }
 
-"=>" { EMIT_TOKEN(); return TokenType::FatArrow; }
-"==" { EMIT_TOKEN(); return TokenType::Eq; }
-"=" { EMIT_TOKEN(); return TokenType::Assign; }
+"=>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::FatArrow; }
+"==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Eq; }
+"=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Assign; }
 
-"..<" { EMIT_TOKEN(); return TokenType::RangeExcl; }
-"..." { EMIT_TOKEN(); return TokenType::Range; }
-"." { EMIT_TOKEN(); return TokenType::Dot; }
+"..<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::RangeExcl; }
+"..." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::Range; }
+"." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Dot; }
 
-"," { EMIT_TOKEN(); return TokenType::Comma; }
-":" { EMIT_TOKEN(); return TokenType::Colon; }
-";" { EMIT_TOKEN(); return TokenType::Semicolon; }
-"(" { EMIT_TOKEN(); return TokenType::LParen; }
-")" { EMIT_TOKEN(); return TokenType::RParen; }
-"[" { EMIT_TOKEN(); return TokenType::LBracket; }
-"]" { EMIT_TOKEN(); return TokenType::RBracket; }
-"{" { EMIT_TOKEN(); return TokenType::LBrace; }
-"}" { EMIT_TOKEN(); return TokenType::RBrace; }
+"," { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Comma; }
+":" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Colon; }
+";" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Semicolon; }
+"(" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LParen; }
+")" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RParen; }
+"[" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LBracket; }
+"]" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RBracket; }
+"{" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LBrace; }
+"}" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RBrace; }
 
 . {
     std::ostringstream oss;
-    oss << "unrecognized character: " << "'" << ltext << "'";
-    raiseError(lstate, oss.str());
-    EMIT_TOKEN();
+    oss << "unrecognized character: " << "'" << YYTEXT << "'";
+    RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
+    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
+    LSTATE.consume(1);
     return TokenType::Error;
 }
 

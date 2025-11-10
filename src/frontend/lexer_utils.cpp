@@ -32,47 +32,11 @@ namespace {
     };
 }
 
-void handleNewline(LexerState& lstate) noexcept {
-    ++lstate.line;
-    lstate.column = 1;
-}
-
-void consumeCharacters(size_t n, LexerState& lstate) noexcept {
-    lstate.column += n;
-}
-
-TokenValue makeToken(std::string_view lexeme, LexerState& lstate) noexcept {
-    size_t column = lstate.column;
-    lstate.column += lexeme.size();
-    return TokenValue(std::string(lexeme), lstate.line, column);
-}
-
-TokenValue makeToken(std::string_view lexeme, size_t startColumn, LexerState& lstate) noexcept {
-    lstate.column += lexeme.size();
-    return TokenValue(std::string(lexeme), lstate.line, startColumn);
-}
-
 TokenType classifyWord(std::string_view word) noexcept {
     if (keywordTokenMap.find(word) != keywordTokenMap.end()) {
         return keywordTokenMap.at(word);
     }
     return word == "_" ? TokenType::Discard : TokenType::Identifier;
-}
-
-void clearTokenBuffer(LexerState& lstate) noexcept {
-    lstate.tokenBuffer.clear();
-}
-
-void appendTokenBuffer(LexerState& lstate, std::string_view sv) noexcept {
-    lstate.tokenBuffer.append(sv.data(), sv.size());
-}
-
-void appendTokenBuffer(LexerState& lstate, char c) noexcept {
-    lstate.tokenBuffer.push_back(c);
-}
-
-void raiseError(LexerState& lstate, std::string_view message) noexcept {
-    lstate.errors.emplace_back(std::string(message.data(), message.size()), lstate.line, lstate.column);
 }
 
 } // Spark::FrontEnd

@@ -48,7 +48,7 @@ TEST(LexerTest, GeneralTest1) {
     });
 }
 
-TEST(LexerTest, GeneralCase2) {
+TEST(LexerTest, GeneralTest2) {
     std::string_view source = R"(
 struct Vector2 do
     let x: Real
@@ -56,22 +56,22 @@ struct Vector2 do
 end
 )";
     testLexAll(source, {
-        {TT::Struct, {"struct", 2, 1}},
-        {TT::Identifier, {"Vector2", 2, 8}},
-        {TT::Do, {"do", 2, 16}},
-        {TT::Let, {"let", 3, 5}},
-        {TT::Identifier, {"x", 3, 9}},
-        {TT::Colon, {":", 3, 10}},
-        {TT::Identifier, {"Real", 3, 12}},
-        {TT::Let, {"let", 4, 5}},
-        {TT::Identifier, {"y", 4, 9}},
-        {TT::Colon, {":", 4, 10}},
-        {TT::Identifier, {"Real", 4, 12}},
-        {TT::End, {"end", 5, 1}}
+        Token(TT::Struct,    TokenValue("struct", 2, 1)),
+        Token(TT::Identifier,TokenValue("Vector2", 2, 8)),
+        Token(TT::Do,        TokenValue("do", 2, 16)),
+        Token(TT::Let,       TokenValue("let", 3, 5)),
+        Token(TT::Identifier,TokenValue("x", 3, 9)),
+        Token(TT::Colon,     TokenValue(":", 3, 10)),
+        Token(TT::Identifier,TokenValue("Real", 3, 12)),
+        Token(TT::Let, TokenValue("let", 4, 5)),
+        Token(TT::Identifier, TokenValue("y", 4, 9)),
+        Token(TT::Colon, TokenValue(":", 4, 10)),
+        Token(TT::Identifier, TokenValue("Real", 4, 12)),
+        Token{TT::End, TokenValue("end", 5, 1)}
     });
 }
 
-TEST(LexerTest, GeneralCase3) {
+TEST(LexerTest, GeneralTest3) {
     std::string_view source = R"(
 fn binarySearch(l: List<Int>, target: Int) -> Int do
     let low = 0
@@ -90,88 +90,127 @@ fn binarySearch(l: List<Int>, target: Int) -> Int do
 end
 )";
     testLexAll(source, {
-            {TT::Fn, {"fn", 2, 1}},
-            {TT::Identifier, {"binarySearch", 2, 4}},
-            {TT::LParen, {"(", 2, 16}},
-            {TT::Identifier, {"l", 2, 17}},
-            {TT::Colon, {":", 2, 18}},
-            {TT::Identifier, {"List", 2, 20}},
-            {TT::Lt, {"<", 2, 24}},
-            {TT::Identifier, {"Int", 2, 25}},
-            {TT::Gt, {">", 2, 28}},
-            {TT::Comma, {",", 2, 29}},
-            {TT::Identifier, {"target", 2, 31}},
-            {TT::Colon, {":", 2, 37}},
-            {TT::Identifier, {"Int", 2, 39}},
-            {TT::RParen, {")", 2, 42}},
-            {TT::Arrow, {"->", 2, 44}},
-            {TT::Identifier, {"Int", 2, 47}},
-            {TT::Do, {"do", 2, 51}},
-            {TT::Let, {"let", 3, 5}},
-            {TT::Identifier, {"low", 3, 9}},
-            {TT::Assign, {"=", 3, 13}},
-            {TT::Integer, {"0", 3, 15}},
-            {TT::Let, {"let", 4, 5}},
-            {TT::Identifier, {"high", 4, 9}},
-            {TT::Assign, {"=", 4, 14}},
-            {TT::Identifier, {"l", 4, 16}},
-            {TT::Dot, {".", 4, 17}},
-            {TT::Identifier, {"length", 4, 18}},
-            {TT::LParen, {"(", 4, 24}},
-            {TT::RParen, {")", 4, 25}},
-            {TT::Sub, {"-", 4, 27}},
-            {TT::Integer, {"1", 4, 29}},
-            {TT::While, {"while", 5, 5}},
-            {TT::Identifier, {"low", 5, 11}},
-            {TT::Le, {"<=", 5, 15}},
-            {TT::Identifier, {"high", 5, 18}},
-            {TT::Do, {"do", 5, 23}},
-            {TT::Let, {"let", 6, 9}},
-            {TT::Identifier, {"mid", 6, 13}},
-            {TT::Assign, {"=", 6, 17}},
-            {TT::LParen, {"(", 6, 19}},
-            {TT::Identifier, {"low", 6, 20}},
-            {TT::Add, {"+", 6, 24}},
-            {TT::Identifier, {"high", 6, 26}},
-            {TT::RParen, {")", 6, 30}},
-            {TT::Div, {"/", 6, 32}},
-            {TT::Integer, {"2", 6, 34}},
-            {TT::If, {"if", 7, 9}},
-            {TT::Identifier, {"l", 7, 12}},
-            {TT::LBracket, {"[", 7, 13}},
-            {TT::Identifier, {"mid", 7, 14}},
-            {TT::RBracket, {"]", 7, 17}},
-            {TT::Eq, {"==", 7, 19}},
-            {TT::Identifier, {"target", 7, 22}},
-            {TT::Do, {"do", 7, 29}},
-            {TT::Return, {"return", 8, 13}},
-            {TT::Identifier, {"mid", 8, 20}},
-            {TT::Else, {"else", 9, 9}},
-            {TT::If, {"if", 9, 14}},
-            {TT::Identifier, {"l", 9, 17}},
-            {TT::LBracket, {"[", 9, 18}},
-            {TT::Identifier, {"mid", 9, 19}},
-            {TT::RBracket, {"]", 9, 22}},
-            {TT::Lt, {"<", 9, 24}},
-            {TT::Identifier, {"target", 9, 26}},
-            {TT::Do, {"do", 9, 33}},
-            {TT::Identifier, {"low", 10, 13}},
-            {TT::Assign, {"=", 10, 17}},
-            {TT::Identifier, {"mid", 10, 19}},
-            {TT::Add, {"+", 10, 23}},
-            {TT::Integer, {"1", 10, 25}},
-            {TT::Else, {"else", 11, 9}},
-            {TT::Do, {"do", 11, 14}},
-            {TT::Identifier, {"high", 12, 13}},
-            {TT::Assign, {"=", 12, 18}},
-            {TT::Identifier, {"mid", 12, 20}},
-            {TT::Sub, {"-", 12, 24}},
-            {TT::Integer, {"1", 12, 26}},
-            {TT::End, {"end", 13, 9}},
-            {TT::End, {"end", 14, 5}},
-            {TT::Return, {"return", 15, 5}},
-            {TT::Sub, {"-", 15, 12}},
-            {TT::Integer, {"1", 15, 13}},
-            {TT::End, {"end", 16, 1}}
+        {TT::Fn, {"fn", 2, 1}},
+        {TT::Identifier, {"binarySearch", 2, 4}},
+        {TT::LParen, {"(", 2, 16}},
+        {TT::Identifier, {"l", 2, 17}},
+        {TT::Colon, {":", 2, 18}},
+        {TT::Identifier, {"List", 2, 20}},
+        {TT::Lt, {"<", 2, 24}},
+        {TT::Identifier, {"Int", 2, 25}},
+        {TT::Gt, {">", 2, 28}},
+        {TT::Comma, {",", 2, 29}},
+        {TT::Identifier, {"target", 2, 31}},
+        {TT::Colon, {":", 2, 37}},
+        {TT::Identifier, {"Int", 2, 39}},
+        {TT::RParen, {")", 2, 42}},
+        {TT::Arrow, {"->", 2, 44}},
+        {TT::Identifier, {"Int", 2, 47}},
+        {TT::Do, {"do", 2, 51}},
+        {TT::Let, {"let", 3, 5}},
+        {TT::Identifier, {"low", 3, 9}},
+        {TT::Assign, {"=", 3, 13}},
+        {TT::Integer, {"0", 3, 15}},
+        {TT::Let, {"let", 4, 5}},
+        {TT::Identifier, {"high", 4, 9}},
+        {TT::Assign, {"=", 4, 14}},
+        {TT::Identifier, {"l", 4, 16}},
+        {TT::Dot, {".", 4, 17}},
+        {TT::Identifier, {"length", 4, 18}},
+        {TT::LParen, {"(", 4, 24}},
+        {TT::RParen, {")", 4, 25}},
+        {TT::Sub, {"-", 4, 27}},
+        {TT::Integer, {"1", 4, 29}},
+        {TT::While, {"while", 5, 5}},
+        {TT::Identifier, {"low", 5, 11}},
+        {TT::Le, {"<=", 5, 15}},
+        {TT::Identifier, {"high", 5, 18}},
+        {TT::Do, {"do", 5, 23}},
+        {TT::Let, {"let", 6, 9}},
+        {TT::Identifier, {"mid", 6, 13}},
+        {TT::Assign, {"=", 6, 17}},
+        {TT::LParen, {"(", 6, 19}},
+        {TT::Identifier, {"low", 6, 20}},
+        {TT::Add, {"+", 6, 24}},
+        {TT::Identifier, {"high", 6, 26}},
+        {TT::RParen, {")", 6, 30}},
+        {TT::Div, {"/", 6, 32}},
+        {TT::Integer, {"2", 6, 34}},
+        {TT::If, {"if", 7, 9}},
+        {TT::Identifier, {"l", 7, 12}},
+        {TT::LBracket, {"[", 7, 13}},
+        {TT::Identifier, {"mid", 7, 14}},
+        {TT::RBracket, {"]", 7, 17}},
+        {TT::Eq, {"==", 7, 19}},
+        {TT::Identifier, {"target", 7, 22}},
+        {TT::Do, {"do", 7, 29}},
+        {TT::Return, {"return", 8, 13}},
+        {TT::Identifier, {"mid", 8, 20}},
+        {TT::Else, {"else", 9, 9}},
+        {TT::If, {"if", 9, 14}},
+        {TT::Identifier, {"l", 9, 17}},
+        {TT::LBracket, {"[", 9, 18}},
+        {TT::Identifier, {"mid", 9, 19}},
+        {TT::RBracket, {"]", 9, 22}},
+        {TT::Lt, {"<", 9, 24}},
+        {TT::Identifier, {"target", 9, 26}},
+        {TT::Do, {"do", 9, 33}},
+        {TT::Identifier, {"low", 10, 13}},
+        {TT::Assign, {"=", 10, 17}},
+        {TT::Identifier, {"mid", 10, 19}},
+        {TT::Add, {"+", 10, 23}},
+        {TT::Integer, {"1", 10, 25}},
+        {TT::Else, {"else", 11, 9}},
+        {TT::Do, {"do", 11, 14}},
+        {TT::Identifier, {"high", 12, 13}},
+        {TT::Assign, {"=", 12, 18}},
+        {TT::Identifier, {"mid", 12, 20}},
+        {TT::Sub, {"-", 12, 24}},
+        {TT::Integer, {"1", 12, 26}},
+        {TT::End, {"end", 13, 9}},
+        {TT::End, {"end", 14, 5}},
+        {TT::Return, {"return", 15, 5}},
+        {TT::Sub, {"-", 15, 12}},
+        {TT::Integer, {"1", 15, 13}},
+        {TT::End, {"end", 16, 1}}
+    });
+}
+
+TEST(LexerTest, GeneralTest4) {
+    std::string source = R"(
+// This is a line comment
+let a = "hello"
+let b = /*
+    This
+    is
+    a
+    block
+    comment
+*/ 'world'
+let c = "hello 'world'"
+let d = 'hello "world"' /* This is another block comment */
+)";
+    source.erase(std::remove(source.begin(), source.end(), '\r'), source.end());
+    testLexAll(source, {
+        {TT::LineComment, {" This is a line comment", 2, 1}},
+        {TT::Let, {"let", 3, 1}},
+        {TT::Identifier, {"a", 3, 5}},
+        {TT::Assign, {"=", 3, 7}},
+        {TT::String, {"hello", 3, 9}},
+        {TT::Let, {"let", 4, 1}},
+        {TT::Identifier, {"b", 4, 5}},
+        {TT::Assign, {"=", 4, 7}},
+        {TT::BlockComment, {"\n    This\n    is\n    a\n    block\n    comment\n",
+            4, 9}},
+        {TT::String, {"world", 10, 4}},
+        {TT::Let, {"let", 11, 1}},
+        {TT::Identifier, {"c", 11, 5}},
+        {TT::Assign, {"=", 11, 7}},
+        {TT::String, {"hello 'world'", 11, 9}},
+        {TT::Let, {"let", 12, 1}},
+        {TT::Identifier, {"d", 12, 5}},
+        {TT::Assign, {"=", 12, 7}},
+        {TT::String, {"hello \"world\"", 12, 9}},
+        {TT::BlockComment, {" This is another block comment ", 12, 25}}
     });
 }
