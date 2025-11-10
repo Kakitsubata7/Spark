@@ -21,10 +21,11 @@ static void expectTokens(const std::vector<Token>& actual, const std::vector<Tok
     }
 }
 
-static void testLexAll(std::string_view source, const std::vector<Token>& expectedTokens) {
+static Lexer testLexAll(std::string_view source, const std::vector<Token>& expectedTokens) {
     std::istringstream iss{std::string(source)};
     Lexer lexer(iss);
     expectTokens(lexer.lexAll(), expectedTokens);
+    return lexer;
 }
 
 TEST(LexerTest, GeneralTest1) {
@@ -57,7 +58,7 @@ struct Vector2 do
 end
 )";
     testLexAll(source, {
-        {TT::Annotation, {"@", 2, 1}},
+        {TT::At, {"@", 2, 1}},
         {TT::Identifier, {"cstruct", 2, 2}},
         {TT::Struct, {"struct", 3, 1}},
         {TT::Identifier, {"Vector2", 3, 8}},
