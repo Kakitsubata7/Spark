@@ -90,7 +90,7 @@ using namespace Spark::FrontEnd;
     "\\\"" { LBUFFER.append('"'); LSTATE.consume(2); }
     "\\\'" { LBUFFER.append('\''); LSTATE.consume(2); }
 
-    "\\." {
+    \\. {
         LBUFFER.append(YYTEXT[1]);
         std::ostringstream oss;
         oss << "unrecognized escape sequence: " << "'" << YYTEXT << "'";
@@ -100,15 +100,17 @@ using namespace Spark::FrontEnd;
 
     (\r\n|\r|\n) {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO);
+        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
         LSTATE.whenNewline();
-        return TokenType::Error;
+        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        return TokenType::String;
     }
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO);
-        return TokenType::Error;
+        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
+        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        return TokenType::String;
     }
 
     . {

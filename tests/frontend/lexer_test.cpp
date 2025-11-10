@@ -349,3 +349,80 @@ TEST(LexerTest, BlockCommentTests) {
     EXPECT_EQ(lexer.errors()[0].line, 1);
     EXPECT_EQ(lexer.errors()[0].column, 10);
 }
+
+TEST(LexerTest, StringTests) {
+    // Double-quoted string
+    std::string source = R"("...")";
+    Lexer lexer = testLexAll(source, {
+        {TT::String, {"...", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Single-quoted string
+    source = R"('...')";
+    lexer = testLexAll(source, {
+        {TT::String, {"...", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Escaped quotes inside string
+    source = R"("...\"...\'...")";
+    lexer = testLexAll(source, {
+        {TT::String, {"...\"...\'...", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Escaped backslash
+    source = R"("...\\...")";
+    lexer = testLexAll(source, {
+        {TT::String, {"...\\...", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Escaped sequences
+    source = R"("...\n\t\r...")";
+    lexer = testLexAll(source, {
+        {TT::String, {"...\n\t\r...", 1, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Unrecognized escape sequence
+    source = R"("...\p...")";
+    lexer = testLexAll(source, {
+        {TT::String, {"...p...", 1, 1}}
+    });
+    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_EQ(lexer.errors()[0].line, 1);
+    EXPECT_EQ(lexer.errors()[0].column, 5);
+
+    // Unterminated at EOF
+    source = R"("...)";
+    lexer = testLexAll(source, {
+        {TT::String, {"...", 1, 1}}
+    });
+    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_EQ(lexer.errors()[0].line, 1);
+    EXPECT_EQ(lexer.errors()[0].column, 4);
+
+    // Unterminated by newline
+    source = "\"...\n...\"";
+    lexer = testLexAll(source, {
+        {TT::String, {"...", 1, 1}},
+        {TT::Range, {"...", 2, 1}},
+        {TT::String, {"", 2, 4}}
+    });
+    EXPECT_EQ(lexer.errors().size(), 2);
+    EXPECT_EQ(lexer.errors()[0].line, 1);
+    EXPECT_EQ(lexer.errors()[0].column, 4);
+    EXPECT_EQ(lexer.errors()[1].line, 2);
+    EXPECT_EQ(lexer.errors()[1].column, 4);
+
+    // Token immediately after string
+    source = R"("..."123)";
+    lexer = testLexAll(source, {
+        {TT::String, {"...", 1, 1}},
+        {TT::Integer, {"123", 1, 6}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+}
+
