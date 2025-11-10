@@ -109,5 +109,5 @@ print(potsOfGold({10, 5, 15, 20}))
 
         TT::Identifier, TT::LParen, TT::Identifier, TT::LParen, TT::LBrace, TT::Integer, TT::Comma, TT::Integer, TT::Comma, TT::Integer, TT::Comma, TT::Integer, TT::RBrace, TT::RParen, TT::RParen
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
