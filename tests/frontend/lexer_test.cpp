@@ -57,7 +57,7 @@ struct Vector2 do
 end
 )";
     testLexAll(source, {
-        {TT::Annotate, {"@", 2, 1}},
+        {TT::Annotation, {"@", 2, 1}},
         {TT::Identifier, {"cstruct", 2, 2}},
         {TT::Struct, {"struct", 3, 1}},
         {TT::Identifier, {"Vector2", 3, 8}},
