@@ -50,24 +50,27 @@ TEST(LexerTest, GeneralTest1) {
 
 TEST(LexerTest, GeneralTest2) {
     std::string_view source = R"(
+@cstruct
 struct Vector2 do
     let x: Real
     let y: Real
 end
 )";
     testLexAll(source, {
-        Token(TT::Struct,    TokenValue("struct", 2, 1)),
-        Token(TT::Identifier,TokenValue("Vector2", 2, 8)),
-        Token(TT::Do,        TokenValue("do", 2, 16)),
-        Token(TT::Let,       TokenValue("let", 3, 5)),
-        Token(TT::Identifier,TokenValue("x", 3, 9)),
-        Token(TT::Colon,     TokenValue(":", 3, 10)),
-        Token(TT::Identifier,TokenValue("Real", 3, 12)),
-        Token(TT::Let, TokenValue("let", 4, 5)),
-        Token(TT::Identifier, TokenValue("y", 4, 9)),
-        Token(TT::Colon, TokenValue(":", 4, 10)),
-        Token(TT::Identifier, TokenValue("Real", 4, 12)),
-        Token{TT::End, TokenValue("end", 5, 1)}
+        {TT::Annotate, {"@", 2, 1}},
+        {TT::Identifier, {"cstruct", 2, 2}},
+        {TT::Struct, {"struct", 3, 1}},
+        {TT::Identifier, {"Vector2", 3, 8}},
+        {TT::Do, {"do", 3, 16}},
+        {TT::Let, {"let", 4, 5}},
+        {TT::Identifier, {"x", 4, 9}},
+        {TT::Colon, {":", 4, 10}},
+        {TT::Identifier, {"Real", 4, 12}},
+        {TT::Let, {"let", 5, 5}},
+        {TT::Identifier,  {"y", 5, 9}},
+        {TT::Colon,  {":", 5, 10}},
+        {TT::Identifier,  {"Real", 5, 12}},
+        Token{TT::End,  {"end", 6, 1}}
     });
 }
 
