@@ -59,23 +59,56 @@ TEST(LexerTest, GeneralTest2) {
 struct Vector2 do
     let x: Real
     let y: Real
+
+    constructor(x: Real, y: Real) do
+        $x = x
+        $y = y
+    end
 end
 )";
     Lexer lexer = testLexAll(source, {
         {TT::At, {"@", 2, 1}},
         {TT::Identifier, {"cstruct", 2, 2}},
+
         {TT::Struct, {"struct", 3, 1}},
         {TT::Identifier, {"Vector2", 3, 8}},
         {TT::Do, {"do", 3, 16}},
+
         {TT::Let, {"let", 4, 5}},
         {TT::Identifier, {"x", 4, 9}},
         {TT::Colon, {":", 4, 10}},
         {TT::Identifier, {"Real", 4, 12}},
+
         {TT::Let, {"let", 5, 5}},
         {TT::Identifier,  {"y", 5, 9}},
         {TT::Colon,  {":", 5, 10}},
         {TT::Identifier,  {"Real", 5, 12}},
-        Token{TT::End,  {"end", 6, 1}}
+
+        {TT::Constructor, {"constructor", 7, 5}},
+        {TT::LParen, {"(", 7, 16}},
+        {TT::Identifier, {"x", 7, 17}},
+        {TT::Colon, {":", 7, 18}},
+        {TT::Identifier, {"Real", 7, 20}},
+        {TT::Comma, {",", 7, 24}},
+        {TT::Identifier, {"y", 7, 26}},
+        {TT::Colon, {":", 7, 27}},
+        {TT::Identifier, {"Real", 7, 29}},
+        {TT::RParen, {")", 7, 33}},
+        {TT::Do, {"do", 7, 35}},
+
+        {TT::Dollar, {"$", 8, 9}},
+        {TT::Identifier, {"x", 8, 10}},
+        {TT::Assign, {"=", 8, 12}},
+        {TT::Identifier, {"x", 8, 14}},
+
+        {TT::Dollar, {"$", 9, 9}},
+        {TT::Identifier, {"y", 9, 10}},
+        {TT::Assign, {"=", 9, 12}},
+        {TT::Identifier, {"y", 9, 14}},
+
+        {TT::End, {"end", 10, 5}},
+
+        {TT::End,  {"end", 11, 1}}
     });
     EXPECT_TRUE(lexer.errors().empty());
 }
@@ -425,4 +458,3 @@ TEST(LexerTest, StringTests) {
     });
     EXPECT_TRUE(lexer.errors().empty());
 }
-

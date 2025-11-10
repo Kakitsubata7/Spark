@@ -221,6 +221,7 @@ using namespace Spark::FrontEnd;
 "{" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LBrace; }
 "}" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RBrace; }
 "@" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::At; }
+"$" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Dollar; }
 
 . {
     std::ostringstream oss;

@@ -102,6 +102,8 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::RangeExcl: return "RangeExcl";
         case TokenType::LineComment: return "LineComment";
         case TokenType::BlockComment: return "BlockComment";
+        case TokenType::At: return "At";
+        case TokenType::Dollar: return "Dollar";
         default: return "Unknown";
     }
 }
