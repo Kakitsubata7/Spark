@@ -19,10 +19,17 @@ public:
     explicit Lexer(std::istream& stream) noexcept;
     ~Lexer();
 
+    [[nodiscard]]
+    const std::vector<LexerError>& errors() const noexcept {
+        return _lstate.errors;
+    }
+
     Token lex() noexcept;
     std::vector<Token> lexAll() noexcept;
 
-    void switchStream(std::istream& stream) noexcept;
+    void switchStream(std::istream& stream) noexcept {
+        _lstate.stream = &stream;
+    }
 };
 
 } // Spark::FrontEnd
