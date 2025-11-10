@@ -42,7 +42,7 @@ TEST(TokenValueTest, NeTest) {
     b.lexeme = "baz";
     EXPECT_TRUE(a != b);
 
-    a = TokenValue("zCr__ DASBy0\n", 122990, 4991220);
+    a = TokenValue("zCr__ DASBy0\no", 122990, 4991220);
     b = TokenValue("", 1, 1);
     EXPECT_TRUE(a != b);
 
