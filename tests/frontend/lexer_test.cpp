@@ -458,3 +458,68 @@ TEST(LexerTest, StringTests) {
     });
     EXPECT_TRUE(lexer.errors().empty());
 }
+
+TEST(LexerTest, AnnotationAndUpvalueTests) {
+    // Valid annotation
+    std::string source = R"(@foo.bar.baz)";
+    Lexer lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Identifier, {"bar", 1, 6}},
+        {TT::Dot, {".", 1, 9}},
+        {TT::Identifier, {"baz", 1, 10}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Invalid annotation (checked at parse-time)
+    source = "@ foo.\nbar";
+    lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::Identifier, {"foo", 1, 3}},
+        {TT::Dot, {".", 1, 6}},
+        {TT::Identifier, {"bar", 2, 1}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Double @
+    source = "@@foo";
+    lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::At, {"@", 1, 2}},
+        {TT::Identifier, {"foo", 1, 3}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Valid upvalue
+    source = "$foo.bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Identifier, {"bar", 1, 6}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Invalid upvalue (checked at parse-time)
+    source = "$foo.$bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Dollar, {"$", 1, 6}},
+        {TT::Identifier, {"bar", 1, 7}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+
+    // Double $
+    source = "$$foo.bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Dollar, {"$", 1, 2}},
+        {TT::Identifier, {"foo", 1, 3}},
+        {TT::Dot, {".", 1, 6}},
+        {TT::Identifier, {"bar", 1, 7}}
+    });
+    EXPECT_TRUE(lexer.errors().empty());
+}
