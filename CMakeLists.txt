@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest)
 
 find_package(FLEX REQUIRED)
 find_package(BISON 3.5 REQUIRED)
+find_package(Boost REQUIRED)
 
 # Flex & Bison
 set(FRONTEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend)
@@ -72,6 +73,8 @@ target_include_directories(sparklib
     PUBLIC
         src
         ${FRONTEND_GENERATED_DIR}
+    PRIVATE
+        ${Boost_INCLUDE_DIRS}
 )
 
 # Executable
