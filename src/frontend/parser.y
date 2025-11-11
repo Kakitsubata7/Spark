@@ -33,6 +33,7 @@ void yyerror(yyscan_t, const char* msg);
 %token Semicolon LParen RParen LBracket RBracket LBrace RBrace
 %token Range RangeExcl
 %token At
+%token Dollar
 %token LineComment BlockComment
 
 %token Error

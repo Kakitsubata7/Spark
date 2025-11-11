@@ -50,7 +50,7 @@ TEST(LexerTest, GeneralTest1) {
         {TT::Integer, {"1", 1, 31}},
         {TT::End, {"end", 1, 33}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest2) {
@@ -59,25 +59,58 @@ TEST(LexerTest, GeneralTest2) {
 struct Vector2 do
     let x: Real
     let y: Real
+
+    constructor(x: Real, y: Real) do
+        $x = x
+        $y = y
+    end
 end
 )";
     Lexer lexer = testLexAll(source, {
         {TT::At, {"@", 2, 1}},
         {TT::Identifier, {"cstruct", 2, 2}},
+
         {TT::Struct, {"struct", 3, 1}},
         {TT::Identifier, {"Vector2", 3, 8}},
         {TT::Do, {"do", 3, 16}},
+
         {TT::Let, {"let", 4, 5}},
         {TT::Identifier, {"x", 4, 9}},
         {TT::Colon, {":", 4, 10}},
         {TT::Identifier, {"Real", 4, 12}},
+
         {TT::Let, {"let", 5, 5}},
         {TT::Identifier,  {"y", 5, 9}},
         {TT::Colon,  {":", 5, 10}},
         {TT::Identifier,  {"Real", 5, 12}},
-        Token{TT::End,  {"end", 6, 1}}
+
+        {TT::Constructor, {"constructor", 7, 5}},
+        {TT::LParen, {"(", 7, 16}},
+        {TT::Identifier, {"x", 7, 17}},
+        {TT::Colon, {":", 7, 18}},
+        {TT::Identifier, {"Real", 7, 20}},
+        {TT::Comma, {",", 7, 24}},
+        {TT::Identifier, {"y", 7, 26}},
+        {TT::Colon, {":", 7, 27}},
+        {TT::Identifier, {"Real", 7, 29}},
+        {TT::RParen, {")", 7, 33}},
+        {TT::Do, {"do", 7, 35}},
+
+        {TT::Dollar, {"$", 8, 9}},
+        {TT::Identifier, {"x", 8, 10}},
+        {TT::Assign, {"=", 8, 12}},
+        {TT::Identifier, {"x", 8, 14}},
+
+        {TT::Dollar, {"$", 9, 9}},
+        {TT::Identifier, {"y", 9, 10}},
+        {TT::Assign, {"=", 9, 12}},
+        {TT::Identifier, {"y", 9, 14}},
+
+        {TT::End, {"end", 10, 5}},
+
+        {TT::End,  {"end", 11, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest3) {
@@ -183,7 +216,7 @@ end
         {TT::Integer, {"1", 15, 13}},
         {TT::End, {"end", 16, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest4) {
@@ -223,7 +256,7 @@ let d = 'hello "world"' /* This is another block comment */
         {TT::String, {"hello \"world\"", 12, 9}},
         {TT::BlockComment, {" This is another block comment ", 12, 25}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest5) {
@@ -297,7 +330,7 @@ end
         {TT::Identifier, {"n", 14, 16}},
         {TT::End, {"end", 15, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, BlockCommentTests) {
@@ -306,14 +339,14 @@ TEST(LexerTest, BlockCommentTests) {
     Lexer lexer = testLexAll(source, {
         {TT::BlockComment, {" /* ... ", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Two *
     source = R"(/** ... **/)";
     lexer = testLexAll(source, {
         {TT::BlockComment, {"* ... *", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Two */
     source = R"(/* ... */ */)";
@@ -322,21 +355,21 @@ TEST(LexerTest, BlockCommentTests) {
         {TT::Mul, {"*", 1, 11}},
         {TT::Div, {"/", 1, 12}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Empty
     source = R"(/**/)";
     lexer = testLexAll(source, {
         {TT::BlockComment, {"", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Unterminated
     source = R"(/* ...)";
     lexer = testLexAll(source, {
         {TT::BlockComment, {" ...", 1, 1}}
     });
-    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_TRUE(lexer.hasError());;
     EXPECT_EQ(lexer.errors()[0].line, 1);
     EXPECT_EQ(lexer.errors()[0].column, 6);
 
@@ -345,7 +378,7 @@ TEST(LexerTest, BlockCommentTests) {
     lexer = testLexAll(source, {
         {TT::BlockComment, {" ... * /", 1, 1}},
     });
-    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_TRUE(lexer.hasError());;
     EXPECT_EQ(lexer.errors()[0].line, 1);
     EXPECT_EQ(lexer.errors()[0].column, 10);
 }
@@ -356,42 +389,42 @@ TEST(LexerTest, StringTests) {
     Lexer lexer = testLexAll(source, {
         {TT::String, {"...", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Single-quoted string
     source = R"('...')";
     lexer = testLexAll(source, {
         {TT::String, {"...", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Escaped quotes inside string
     source = R"("...\"...\'...")";
     lexer = testLexAll(source, {
         {TT::String, {"...\"...\'...", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Escaped backslash
     source = R"("...\\...")";
     lexer = testLexAll(source, {
         {TT::String, {"...\\...", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Escaped sequences
     source = R"("...\n\t\r...")";
     lexer = testLexAll(source, {
         {TT::String, {"...\n\t\r...", 1, 1}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 
     // Unrecognized escape sequence
     source = R"("...\p...")";
     lexer = testLexAll(source, {
         {TT::String, {"...p...", 1, 1}}
     });
-    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_TRUE(lexer.hasError());;
     EXPECT_EQ(lexer.errors()[0].line, 1);
     EXPECT_EQ(lexer.errors()[0].column, 5);
 
@@ -400,7 +433,7 @@ TEST(LexerTest, StringTests) {
     lexer = testLexAll(source, {
         {TT::String, {"...", 1, 1}}
     });
-    EXPECT_FALSE(lexer.errors().empty());
+    EXPECT_TRUE(lexer.hasError());;
     EXPECT_EQ(lexer.errors()[0].line, 1);
     EXPECT_EQ(lexer.errors()[0].column, 4);
 
@@ -423,6 +456,70 @@ TEST(LexerTest, StringTests) {
         {TT::String, {"...", 1, 1}},
         {TT::Integer, {"123", 1, 6}}
     });
-    EXPECT_TRUE(lexer.errors().empty());
+    EXPECT_FALSE(lexer.hasError());;
 }
 
+TEST(LexerTest, AnnotationAndUpvalueTests) {
+    // Valid annotation
+    std::string source = R"(@foo.bar.baz)";
+    Lexer lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Identifier, {"bar", 1, 6}},
+        {TT::Dot, {".", 1, 9}},
+        {TT::Identifier, {"baz", 1, 10}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+
+    // Invalid annotation (checked at parse-time)
+    source = "@ foo.\nbar";
+    lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::Identifier, {"foo", 1, 3}},
+        {TT::Dot, {".", 1, 6}},
+        {TT::Identifier, {"bar", 2, 1}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+
+    // Double @
+    source = "@@foo";
+    lexer = testLexAll(source, {
+        {TT::At, {"@", 1, 1}},
+        {TT::At, {"@", 1, 2}},
+        {TT::Identifier, {"foo", 1, 3}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+
+    // Valid upvalue
+    source = "$foo.bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Identifier, {"bar", 1, 6}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+
+    // Invalid upvalue (checked at parse-time)
+    source = "$foo.$bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Identifier, {"foo", 1, 2}},
+        {TT::Dot, {".", 1, 5}},
+        {TT::Dollar, {"$", 1, 6}},
+        {TT::Identifier, {"bar", 1, 7}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+
+    // Double $
+    source = "$$foo.bar";
+    lexer = testLexAll(source, {
+        {TT::Dollar, {"$", 1, 1}},
+        {TT::Dollar, {"$", 1, 2}},
+        {TT::Identifier, {"foo", 1, 3}},
+        {TT::Dot, {".", 1, 6}},
+        {TT::Identifier, {"bar", 1, 7}}
+    });
+    EXPECT_FALSE(lexer.hasError());;
+}

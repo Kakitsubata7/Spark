@@ -20,6 +20,11 @@ public:
     ~Lexer();
 
     [[nodiscard]]
+    bool hasError() const noexcept {
+        return !_lstate.errors.empty();
+    }
+
+    [[nodiscard]]
     const std::vector<LexerError>& errors() const noexcept {
         return _lstate.errors;
     }
