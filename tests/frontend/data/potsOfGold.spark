@@ -1,0 +1,42 @@
+﻿fn potsOfGold(pots: Array<Int>^) -> Int do
+    fn recursion(pots: Array<Int>^, i: Int, j: Int, opt: Array<Array<Int>^>^) -> Int do
+        if i > j do
+            return 0
+        end
+
+        if opt[i][j] != 0 do
+            return opt[i][j]
+        end
+
+        if i == j do
+            opt[i][j] = pots[i]
+            return opt[i][j]
+        end
+
+        const pickLeft = pots[i] + min(
+            recursion(pots, i + 2, j, opt),
+            recursion(pots, i + 1, j - 1, opt)
+        )
+
+        const pickRight = pots[j] + min(
+            recursion(pots, i, j - 2, opt),
+            recursion(pots, i + 1, j - 1, opt)
+        )
+
+        opt[i][j] = max(pickLeft, pickRight)
+        return opt[i][j]
+    end
+
+    const n = pots.size()
+    const opt: Array<Array<Int>^>^ = Array(n)
+    for i in 0...n do
+        opt[i] = Array(n)
+        for j in 0...n do
+            opt[i][j] = 0
+        end
+    end
+
+    return recursion(pots, 0, n - 1, opt)
+end
+
+print(potsOfGold({10, 5, 15, 20}))
