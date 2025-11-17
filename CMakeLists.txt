@@ -46,6 +46,12 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
+        src/frontend/ast/ast.hpp
+        src/frontend/ast/expr.hpp
+        src/frontend/ast/node.hpp
+        src/frontend/ast/node_visitor.hpp
+        src/frontend/ast/stmt.hpp
+
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
         src/frontend/lexer_error.hpp
@@ -67,9 +73,6 @@ add_library(sparklib
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
-
-        src/result.hpp
-        src/error.hpp
 )
 
 target_include_directories(sparklib
