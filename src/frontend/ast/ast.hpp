@@ -24,12 +24,12 @@ public:
     AST& operator=(AST&& other) noexcept = default;
 
     /**
-     * Allocates a `NodeBase` subtype instance and returns its pointer. The lifecycle of the instance is handled by
+     * Allocates a `Node` subtype instance and returns its pointer. The lifecycle of the instance is handled by
      * this class, deallocated in its destructor.
-     * @tparam T A concrete subtype of `NodeBase`.
-     * @tparam Args Type of the arguments to forward to the constructor of the `NodeBase` subtype.
-     * @param args Arguments to forward to the constructor of the `NodeBase` subtype.
-     * @return Pointer to the allocated `NodeBase` subtype instance.
+     * @tparam T A concrete subtype of `Node`.
+     * @tparam Args Type of the arguments to forward to the constructor of the `Node` subtype.
+     * @param args Arguments to forward to the constructor of the `Node` subtype.
+     * @return Pointer to the allocated `Node` subtype instance.
      */
     template <typename T, typename... Args>
     T* make(Args&&... args) {
