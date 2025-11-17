@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "expr.hpp"
-#include "identifier.hpp"
 #include "node.hpp"
 #include "node_visitor.hpp"
+#include "var.hpp"
 
 namespace Spark::FrontEnd::AST {
 
@@ -19,20 +19,7 @@ struct BlockStmt final : Stmt {
 };
 
 struct VarDeclStmt final : Stmt {
-    bool isReassignable = false;
-    bool isImmutable = false;
-    Name varName;
-    std::optional<Path> typePath = std::nullopt;
-    Expr* expr = nullptr;
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-};
-
-struct RefDeclStmt final : Stmt {
-    bool isReassignable = false;
-    bool isImmutable = false;
-    Name varName;
-    std::optional<Path> typePath = std::nullopt;
+    VarDecl var;
     Expr* expr = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -65,7 +52,7 @@ struct MatchStmt final : Stmt {
     };
 
     Expr* scrutinee = nullptr;
-    std::optional<Name> asName = std::nullopt;
+    std::optional<VarDecl> asVar = std::nullopt;
     std::vector<CaseClause> cases;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -79,13 +66,7 @@ struct WhileStmt final : Stmt {
 };
 
 struct ForStmt final : Stmt {
-    struct LoopVar {
-        bool isReassignable = false;
-        bool isImmutable = false;
-        Name name;
-    };
-
-    LoopVar var;
+    VarDecl loopVar;
     Expr* iterator = nullptr;
     BlockStmt* body = nullptr;
 
@@ -97,6 +78,25 @@ struct BreakStmt final : Stmt {
 };
 
 struct ContinueStmt final : Stmt {
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct ThrowStmt final : Stmt {
+    Expr* thrown = nullptr;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct TryCatchStmt final : Stmt {
+    struct CatchClause {
+        Pattern* pattern = nullptr;
+        std::optional<VarDecl> asVar = std::nullopt;
+        BlockStmt* body = nullptr;
+    };
+
+    BlockStmt* tryBody = nullptr;
+    std::vector<CatchClause> catchClauses;
+
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
