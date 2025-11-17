@@ -27,6 +27,7 @@ void yyerror(yyscan_t, const char* msg);
 %token BitNot BitAnd BitOr BitXor BitShl BitShr
 %token LogNot LogAnd LogOr
 %token Eq Ne Lt Gt Le Ge
+%token StrictEq StrictNe
 %token Range RangeExcl
 %token Question Coalesce
 %token Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign BitShlAssign BitShrAssign

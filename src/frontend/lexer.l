@@ -200,9 +200,11 @@ using namespace Spark::FrontEnd;
 ">=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ge; }
 ">" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Gt; }
 
+"!==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictNe; }
 "!=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ne; }
 "!" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LogNot; }
 
+"===" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictEq; }
 "=>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::FatArrow; }
 "==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Eq; }
 "=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Assign; }
