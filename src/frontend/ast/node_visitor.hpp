@@ -7,6 +7,9 @@ struct Node;
 struct Pattern;
 struct VarPattern;
 struct TuplePattern;
+struct CollectionPattern;
+struct FieldPattern;
+struct OrPattern;
 
 struct Expr;
 struct VarExpr;
@@ -39,6 +42,9 @@ public:
     virtual void visit(Pattern& node) { }
     virtual void visit(VarPattern& node) { }
     virtual void visit(TuplePattern& node) { }
+    virtual void visit(CollectionPattern& node) { }
+    virtual void visit(FieldPattern& node) { }
+    virtual void visit(OrPattern& node) { }
 
     virtual void visit(Expr& node) { }
     virtual void visit(VarExpr& node) { }

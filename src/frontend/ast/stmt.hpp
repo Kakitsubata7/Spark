@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <optional>
 #include <vector>
 
 #include "expr.hpp"
