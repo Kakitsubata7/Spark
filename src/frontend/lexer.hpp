@@ -12,12 +12,18 @@ namespace Spark::FrontEnd {
  */
 class Lexer {
 private:
-    yyscan_t _scanner{};
-    LexerState _lstate{};
+    yyscan_t _scanner;
+    LexerState _lstate;
 
 public:
     explicit Lexer(std::istream& stream) noexcept;
     ~Lexer();
+
+    Lexer(const Lexer& other) = delete;
+    Lexer& operator=(const Lexer& other) = delete;
+
+    Lexer(Lexer&& other) noexcept;
+    Lexer& operator=(Lexer&& other) noexcept;
 
     [[nodiscard]]
     bool hasError() const noexcept {

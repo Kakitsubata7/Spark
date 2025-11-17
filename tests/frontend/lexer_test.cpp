@@ -470,7 +470,7 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dot, {".", 1, 9}},
         {TT::Identifier, {"baz", 1, 10}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 
     // Invalid annotation (checked at parse-time)
     source = "@ foo.\nbar";
@@ -480,7 +480,7 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dot, {".", 1, 6}},
         {TT::Identifier, {"bar", 2, 1}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 
     // Double @
     source = "@@foo";
@@ -489,7 +489,7 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::At, {"@", 1, 2}},
         {TT::Identifier, {"foo", 1, 3}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 
     // Valid upvalue
     source = "$foo.bar";
@@ -499,7 +499,7 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dot, {".", 1, 5}},
         {TT::Identifier, {"bar", 1, 6}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 
     // Invalid upvalue (checked at parse-time)
     source = "$foo.$bar";
@@ -510,7 +510,7 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dollar, {"$", 1, 6}},
         {TT::Identifier, {"bar", 1, 7}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 
     // Double $
     source = "$$foo.bar";
@@ -521,5 +521,5 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dot, {".", 1, 6}},
         {TT::Identifier, {"bar", 1, 7}}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    EXPECT_FALSE(lexer.hasError());
 }
