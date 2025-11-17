@@ -48,8 +48,10 @@ add_library(sparklib
 
         src/frontend/ast/ast.hpp
         src/frontend/ast/expr.hpp
+        src/frontend/ast/identifier.hpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp
+        src/frontend/ast/pattern.hpp
         src/frontend/ast/stmt.hpp
 
         src/frontend/lexer.cpp
