@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <optional>
 #include <vector>
 
 #include "identifier.hpp"
@@ -12,10 +13,6 @@ struct Pattern : Node {
     Type* type = nullptr;
 };
 
-/**
- * `x: T` : T
- * `x` : Any
- */
 struct VarPattern final : Pattern {
     Name varName;
     Path typePath;
@@ -23,10 +20,6 @@ struct VarPattern final : Pattern {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-/**
- * `(a: A, b: B, c: C)` : (A, B, C)
- * `(a, b, c)` : (Any, Any, Any)
- */
 struct TuplePattern final : Pattern {
     struct Component {
         Name varName;
@@ -39,14 +32,13 @@ struct TuplePattern final : Pattern {
 };
 
 struct CollectionPattern final : Pattern {
-    
+    std::vector<Expr*> prefix;
+    std::vector<Expr*> suffix;
+    bool hasGap = false;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-/**
- * `T(a: A as x, b: B as y)` : T
- * `T(a: A, b)` : T
- * `Any(a, b)` : Any
- */
 struct FieldPattern final : Pattern {
     struct Field {
         Name fieldName;
@@ -61,7 +53,10 @@ struct FieldPattern final : Pattern {
 };
 
 struct OrPattern final : Pattern {
+    Pattern* left;
+    Pattern* right;
 
+    void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 } // Spark::FrontEnd::AST
