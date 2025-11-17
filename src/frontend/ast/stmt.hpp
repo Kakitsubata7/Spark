@@ -21,7 +21,7 @@ struct VarDeclStmt final : Stmt {
     bool isReassignable = false;
     bool isImmutable = false;
     Name varName;
-    Path typePath;
+    std::optional<Path> typePath = std::nullopt;
     Expr* expr = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -31,7 +31,7 @@ struct RefDeclStmt final : Stmt {
     bool isReassignable = false;
     bool isImmutable = false;
     Name varName;
-    Path typePath;
+    std::optional<Path> typePath = std::nullopt;
     Expr* expr = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -64,7 +64,7 @@ struct MatchStmt final : Stmt {
     };
 
     Expr* scrutinee = nullptr;
-    Name varName;
+    std::optional<Name> asName = std::nullopt;
     std::vector<CaseClause> cases;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -78,7 +78,13 @@ struct WhileStmt final : Stmt {
 };
 
 struct ForStmt final : Stmt {
-    Name varName;
+    struct LoopVar {
+        bool isReassignable = false;
+        bool isImmutable = false;
+        Name name;
+    };
+
+    LoopVar var;
     Expr* iterator = nullptr;
     BlockStmt* body = nullptr;
 

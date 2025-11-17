@@ -75,6 +75,8 @@ add_library(sparklib
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
+
+        src/type.hpp
 )
 
 target_include_directories(sparklib

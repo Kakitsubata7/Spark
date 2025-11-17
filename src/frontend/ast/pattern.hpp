@@ -9,9 +9,13 @@
 namespace Spark::FrontEnd::AST {
 
 struct Pattern : Node {
-    Type type;
+    Type* type = nullptr;
 };
 
+/**
+ * `x: T` : T
+ * `x` : Any
+ */
 struct VarPattern final : Pattern {
     Name varName;
     Path typePath;
@@ -19,10 +23,14 @@ struct VarPattern final : Pattern {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+/**
+ * `(a: A, b: B, c: C)` : (A, B, C)
+ * `(a, b, c)` : (Any, Any, Any)
+ */
 struct TuplePattern final : Pattern {
     struct Component {
         Name varName;
-        Path typePath;
+        std::optional<Path> typePath = std::nullopt;
     };
 
     std::vector<Component> components;
@@ -31,15 +39,29 @@ struct TuplePattern final : Pattern {
 };
 
 struct CollectionPattern final : Pattern {
-
+    
 };
 
+/**
+ * `T(a: A as x, b: B as y)` : T
+ * `T(a: A, b)` : T
+ * `Any(a, b)` : Any
+ */
 struct FieldPattern final : Pattern {
     struct Field {
-        Path typePath;
+        Name fieldName;
+        std::optional<Name> asName = std::nullopt;
+        std::optional<Path> typePath = std::nullopt;
     };
 
     Path typePath;
+    std::vector<Field> fields;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct OrPattern final : Pattern {
+
 };
 
 } // Spark::FrontEnd::AST
