@@ -4,6 +4,8 @@ namespace Spark::FrontEnd::AST {
 
 struct Node;
 
+struct IdentifierNode;
+
 struct UnaryExpr;
 struct BinaryExpr;
 struct IfThenExpr;
@@ -15,12 +17,13 @@ class NodeVisitor {
 public:
     virtual ~NodeVisitor() = default;
 
-    virtual void visit(Node& node) = 0;
-    virtual void visit(UnaryExpr& node) = 0;
-    virtual void visit(BinaryExpr& node) = 0;
-    virtual void visit(IfThenExpr& node) = 0;
-    virtual void visit(BlockStmt& node) = 0;
-    virtual void visit(LetStmt& node) = 0;
+    virtual void visit(Node& node) { }
+    virtual void visit(IdentifierNode& node) { }
+    virtual void visit(UnaryExpr& node) { }
+    virtual void visit(BinaryExpr& node) { }
+    virtual void visit(IfThenExpr& node) { }
+    virtual void visit(BlockStmt& node) { }
+    virtual void visit(LetStmt& node) { }
 };
 
 } // Spark::FrontEnd::AST
