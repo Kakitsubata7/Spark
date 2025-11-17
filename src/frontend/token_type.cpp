@@ -86,6 +86,10 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::BitXorAssign: return "BitXorAssign";
         case TokenType::BitShlAssign: return "BitShlAssign";
         case TokenType::BitShrAssign: return "BitShrAssign";
+        case TokenType::Range: return "Range";
+        case TokenType::RangeExcl: return "RangeExcl";
+        case TokenType::Question: return "Question";
+        case TokenType::Coalesce: return "Coalesce";
         case TokenType::Dot: return "Dot";
         case TokenType::Comma: return "Comma";
         case TokenType::Colon: return "Colon";
@@ -98,8 +102,6 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::RBracket: return "RBracket";
         case TokenType::LBrace: return "LBrace";
         case TokenType::RBrace: return "RBrace";
-        case TokenType::Range: return "Range";
-        case TokenType::RangeExcl: return "RangeExcl";
         case TokenType::LineComment: return "LineComment";
         case TokenType::BlockComment: return "BlockComment";
         case TokenType::At: return "At";
