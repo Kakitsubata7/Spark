@@ -14,7 +14,7 @@ struct VarDecl {
     DeclType declType = DeclType::None;
     bool isImmutable = false;
     Pattern* pattern = nullptr;
-    std::optional<Path> typePath;
+    std::optional<Path> typePath = std::nullopt;
 
     VarDecl(const VarDecl& other) = delete;
     VarDecl& operator=(const VarDecl& other) = delete;
