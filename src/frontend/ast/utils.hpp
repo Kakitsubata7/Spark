@@ -43,4 +43,9 @@ struct VarDecl {
     }
 };
 
+struct ArgDecl {
+    VarDecl var;
+    Expr* def = nullptr;
+};
+
 } // Spark::FrontEnd::AST
