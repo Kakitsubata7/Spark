@@ -127,6 +127,15 @@ struct SubscriptExpr final : Expr {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct RangeExpr final : Expr {
+    Expr* begin = nullptr;
+    Expr* end = nullptr;
+    Expr* step = nullptr;
+    bool isExclusive = false;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct IfThenExpr final : Expr {
     Expr* condition = nullptr;
     Expr* trueExpr = nullptr;
