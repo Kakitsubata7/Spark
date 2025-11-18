@@ -49,21 +49,17 @@ struct VarExpr final : Expr {
 };
 
 struct FnExpr final : Expr {
-    struct Arg {
-
-    };
-
+    std::vector<ArgDecl> args;
     std::optional<Path> returnTypePath = std::nullopt;
+    BlockStmt* body = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct LambdaExpr final : Expr {
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-};
-
-struct SequenceExpr final : Expr {
-    std::vector<Expr*> exprs;
+    std::vector<ArgDecl> args;
+    std::optional<Path> returnTypePath = std::nullopt;
+    std::vector<Node*> body;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -120,7 +116,7 @@ struct BinaryExpr final : Expr {
 
 struct FieldAccessExpr final : Expr {
     Expr* left = nullptr;
-    Expr* right = nullptr;
+    Name right;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
