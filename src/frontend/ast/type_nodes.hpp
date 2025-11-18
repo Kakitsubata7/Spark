@@ -24,10 +24,10 @@ struct TypeSegment final : TypeNode {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct PathType final : TypeNode {
+struct TypePath final : TypeNode {
     std::vector<TypeSegment*> segments;
 
-    PathType(size_t line, size_t column, std::vector<TypeSegment*> segments) noexcept
+    TypePath(size_t line, size_t column, std::vector<TypeSegment*> segments) noexcept
         : TypeNode(line, column), segments(std::move(segments)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
