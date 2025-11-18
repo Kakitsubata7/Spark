@@ -1,14 +1,17 @@
 %require "3.5"
 
+%skeleton "lalr1.cc"
+
 %language "c++"
 %define api.value.type {TokenValue}
 %define api.token.raw
 
 %lex-param { yyscan_t scanner }
-%parse-param { yyscan_t scanner }
+%parse-param { yyscan_t scanner } { ParserContext& ctx }
 
 %code requires {
-#include "frontend/token_value.hpp"
+#include "frontend/semantic_value.hpp"
+#include "frontend/parser_context.hpp"
 
 using namespace Spark::FrontEnd;
 
@@ -17,7 +20,7 @@ typedef void* yyscan_t;
 
 %code {
 int yylex(TokenValue* yylval, yyscan_t scanner);
-void yyerror(yyscan_t, const char* msg);
+void yyerror(yyscan_t scanner, ParserContext& ctx, const char* msg);
 }
 
 %token Identifier Discard
@@ -42,6 +45,8 @@ void yyerror(yyscan_t, const char* msg);
 %token EndOfFile 0
 
 %%
-start:
-;
+%start program;
+
+program:
+
 %%
