@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace Spark::FrontEnd::AST {
 
@@ -13,6 +15,8 @@ struct Name {
 struct Path {
     std::vector<Name> names;
 };
+
+struct Pattern;
 
 struct VarDecl {
     enum class DeclType {
