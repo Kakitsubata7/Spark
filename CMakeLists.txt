@@ -90,7 +90,6 @@ target_include_directories(sparklib
     PUBLIC
         src
         ${FRONTEND_GENERATED_DIR}
-    PRIVATE
         ${Boost_INCLUDE_DIRS}
 )
 
