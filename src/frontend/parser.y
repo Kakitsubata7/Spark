@@ -65,6 +65,7 @@ void yyerror(yyscan_t scanner, ParserContext& ctx, const char* msg);
 %type <Spark::FrontEnd::AST::TypeNode*> type
 %type <Spark::FrontEnd::AST::TypeSegment*> type_segment
 %type <Spark::FrontEnd::AST::TypePath*> type_path
+%type <Spark::FrontEnd::AST::TypeModifiers> type_modifiers
 
 %type <std::vector<Spark::FrontEnd::AST::Node*>> lambda_body
 
@@ -111,6 +112,7 @@ block_stmts:
 
 let_stmt:
 
+    ;
 
 expr:
       primary    { $$ = $1; }
@@ -131,12 +133,16 @@ literal:
     | Nil        { $$->node = ctx.makeNode<NilLiteralExpr>($1.line, $1.column); }
     ;
 
-/*type:
+type:
       type_path    { $$ = $1; }
     ;
 
 type_segment:
-      Identifier segment
+      Identifier type_modifiers
+        {
+            $$ = ctx.makeNode<TypeSegment>($1.line, $1.column, $1.lexeme,
+                $2.isImmutable, $2.isNullable);
+        }
     ;
 
 type_path:
@@ -151,5 +157,28 @@ type_path:
             $1->segments.push_back($3);
             $$ = $1;
         }
-    ;*/
+    ;
+
+type_modifiers:
+      type_modifiers BitXor
+        {
+            $$ = $1;
+            $$.isImmutable = true;
+        }
+    | type_modifiers Question
+        {
+            $$ = $1;
+            $$.isNullable = true;
+        }
+    | type_modifiers Coalesce
+        {
+            $$ = $1;
+            $$.isNullable = true;
+        }
+    | /* empty */
+        {
+            $$.isImmutable = false;
+            $$.isNullable = false;
+        }
+    ;
 %%

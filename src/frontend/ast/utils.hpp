@@ -6,6 +6,14 @@
 
 namespace Spark::FrontEnd::AST {
 
+struct TypeModifiers final {
+    bool isImmutable;
+    bool isNullable;
+
+    constexpr TypeModifiers(bool isImmutable, bool isNullable) noexcept
+        : isImmutable(isImmutable), isNullable(isNullable) { }
+};
+
 struct Name {
     std::string name;
     size_t line = 0;
