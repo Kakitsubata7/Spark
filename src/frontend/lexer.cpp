@@ -4,7 +4,7 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream) noexcept : _lstate{} {
+Lexer::Lexer(std::istream& stream) {
     yylex_init(&_scanner);
     _lstate.line = 1;
     _lstate.column = 1;
@@ -32,13 +32,13 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
     return *this;
 }
 
-Token Lexer::lex() noexcept {
+Token Lexer::lex() {
     TokenValue value;
     TokenType type = static_cast<TokenType>(yylex(&value, _scanner));
     return {type, value};
 }
 
-std::vector<Token> Lexer::lexAll() noexcept {
+std::vector<Token> Lexer::lexAll() {
     std::vector<Token> tokens;
     while (true) {
         Token token = lex();
@@ -48,6 +48,16 @@ std::vector<Token> Lexer::lexAll() noexcept {
         tokens.push_back(token);
     }
     return tokens;
+}
+
+Result<std::vector<Token>, std::vector<LexerError>> Lexer::lexAll(std::istream& stream) {
+    Lexer lexer(stream);
+    std::vector<Token> tokens = lexer.lexAll();
+
+    if (lexer.hasError()) {
+        return Result<std::vector<Token>, std::vector<LexerError>>::err(std::move(lexer._lstate.errors));
+    }
+    return Result<std::vector<Token>, std::vector<LexerError>>::ok(std::move(tokens));
 }
 
 } // Spark::FrontEnd

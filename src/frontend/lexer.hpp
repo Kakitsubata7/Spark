@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "lexer_state.hpp"
+#include "result.hpp"
 #include "token.hpp"
 
 namespace Spark::FrontEnd {
@@ -16,7 +17,7 @@ private:
     LexerState _lstate;
 
 public:
-    explicit Lexer(std::istream& stream) noexcept;
+    explicit Lexer(std::istream& stream);
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;
@@ -35,12 +36,16 @@ public:
         return _lstate.errors;
     }
 
-    Token lex() noexcept;
-    std::vector<Token> lexAll() noexcept;
+    Token lex();
+    std::vector<Token> lexAll();
+
+    static Result<std::vector<Token>, std::vector<LexerError>> lexAll(std::istream& stream);
 
     void switchStream(std::istream& stream) noexcept {
         _lstate.stream = &stream;
     }
+
+    friend class Parser;
 };
 
 } // Spark::FrontEnd
