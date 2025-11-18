@@ -33,6 +33,7 @@ struct BinaryExpr;
 struct FieldAccessExpr;
 struct CallExpr;
 struct SubscriptExpr;
+struct RangeExpr;
 struct IfThenExpr;
 struct MatchExpr;
 struct ThrowExpr;
@@ -41,8 +42,12 @@ struct TryElseExpr;
 struct Stmt;
 struct BlockStmt;
 struct VarDeclStmt;
+struct FnDeclStmt;
+struct LambdaDeclStmt;
 struct RefDeclStmt;
 struct AssignStmt;
+struct CallStmt;
+struct SubscriptStmt;
 struct IfStmt;
 struct MatchStmt;
 struct WhileStmt;
@@ -50,6 +55,7 @@ struct ForStmt;
 struct BreakStmt;
 struct ContinueStmt;
 struct ThrowStmt;
+struct TryStmt;
 struct TryCatchStmt;
 
 class NodeVisitor {
@@ -87,6 +93,7 @@ public:
     virtual void visit(FieldAccessExpr& node) { }
     virtual void visit(CallExpr& node) { }
     virtual void visit(SubscriptExpr& node) { }
+    virtual void visit(RangeExpr& node) { }
     virtual void visit(IfThenExpr& node) { }
     virtual void visit(MatchExpr& node) { }
     virtual void visit(ThrowExpr& node) { }
@@ -95,14 +102,19 @@ public:
     virtual void visit(Stmt& node) { }
     virtual void visit(BlockStmt& node) { }
     virtual void visit(VarDeclStmt& node) { }
+    virtual void visit(FnDeclStmt& node) { }
+    virtual void visit(LambdaDeclStmt& node) { }
     virtual void visit(RefDeclStmt& node) { }
     virtual void visit(AssignStmt& node) { }
+    virtual void visit(CallStmt& node) { }
+    virtual void visit(SubscriptStmt& node) { }
     virtual void visit(IfStmt& node) { }
     virtual void visit(MatchStmt& node) { }
     virtual void visit(WhileStmt& node) { }
     virtual void visit(ForStmt& node) { }
     virtual void visit(BreakStmt& node) { }
     virtual void visit(ContinueStmt& node) { }
+    virtual void visit(TryStmt& node) { }
     virtual void visit(ThrowStmt& node) { }
     virtual void visit(TryCatchStmt& node) { }
 };
