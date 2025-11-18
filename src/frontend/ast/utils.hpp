@@ -28,6 +28,8 @@ struct VarDecl {
     Pattern* pattern = nullptr;
     std::optional<Path> typePath = std::nullopt;
 
+    VarDecl() = default;
+
     VarDecl(const VarDecl& other) = delete;
     VarDecl& operator=(const VarDecl& other) = delete;
 
@@ -46,6 +48,14 @@ struct VarDecl {
 struct ArgDecl {
     VarDecl var;
     Expr* def = nullptr;
+};
+
+enum class AssignType {
+    None,
+    Assign,
+    AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
+    BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
+    CoalesceAssign
 };
 
 } // Spark::FrontEnd::AST

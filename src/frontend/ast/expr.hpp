@@ -65,15 +65,7 @@ struct LambdaExpr final : Expr {
 };
 
 struct AssignExpr final : Expr {
-    enum class OperatorType {
-        None,
-        Assign,
-        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
-        BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
-        CoalesceAssign
-    };
-
-    OperatorType rator = OperatorType::None;
+    AssignType rator = AssignType::None;
     Expr* target = nullptr;
     Expr* expr = nullptr;
 
