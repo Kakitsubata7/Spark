@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "token_type.hpp"
-#include "token_value.hpp"
 
 namespace Spark::FrontEnd {
 
@@ -10,12 +9,15 @@ namespace Spark::FrontEnd {
  */
 struct Token {
     TokenType type;
-    TokenValue value;
+    std::string lexeme;
+    size_t line;
+    size_t column;
 
-    Token(TokenType type, TokenValue value) noexcept : type(type), value(std::move(value)) { }
+    Token(TokenType type, std::string lexeme, size_t line, size_t column) noexcept
+        : type(type), lexeme(std::move(lexeme)), line(line), column(column) { }
 
     bool operator==(const Token& rhs) const noexcept {
-        return type == rhs.type && value == rhs.value;
+        return type == rhs.type && lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
     }
 
     bool operator!=(const Token& rhs) const noexcept {
@@ -24,8 +26,8 @@ struct Token {
 
     friend std::ostream& operator<<(std::ostream& os, const Token& token) {
         os << "Token(" << token.type << ", "
-                       << "\"" << token.value.lexeme << "\"" << ", "
-                       << token.value.line << ":" << token.value.column
+                       << "\"" << token.lexeme << "\"" << ", "
+                       << token.line << ":" << token.column
            << ")";
         return os;
     }

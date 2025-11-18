@@ -3,24 +3,22 @@
 %skeleton "lalr1.cc"
 
 %language "c++"
-%define api.value.type {TokenValue}
+%define api.value.type {Spark::FrontEnd::SemanticValue}
 %define api.token.raw
 
 %lex-param { yyscan_t scanner }
-%parse-param { yyscan_t scanner } { ParserContext& ctx }
+%parse-param { yyscan_t scanner } { Spark::FrontEnd::ParserContext& ctx }
 
 %code requires {
 #include "frontend/semantic_value.hpp"
 #include "frontend/parser_context.hpp"
 
-using namespace Spark::FrontEnd;
-
 typedef void* yyscan_t;
 }
 
 %code {
-int yylex(TokenValue* yylval, yyscan_t scanner);
-void yyerror(yyscan_t scanner, ParserContext& ctx, const char* msg);
+int yylex(Spark::FrontEnd::SemanticValue* yylval, yyscan_t scanner);
+void yyerror(yyscan_t scanner, Spark::FrontEnd::ParserContext& ctx, const char* msg);
 }
 
 %token Identifier Discard

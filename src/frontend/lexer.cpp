@@ -4,7 +4,7 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream) {
+Lexer::Lexer(std::istream& stream) : _scanner{} {
     yylex_init(&_scanner);
     _lstate.line = 1;
     _lstate.column = 1;
@@ -33,9 +33,9 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
 }
 
 Token Lexer::lex() {
-    TokenValue value;
+    SemanticValue value;
     TokenType type = static_cast<TokenType>(yylex(&value, _scanner));
-    return {type, value};
+    return Token{ type, value.lexeme, value.line, value.column };
 }
 
 std::vector<Token> Lexer::lexAll() {

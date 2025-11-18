@@ -60,10 +60,15 @@ add_library(sparklib
         src/frontend/lexer_state.hpp
         src/frontend/lexer_utils.cpp
         src/frontend/lexer_utils.hpp
+        src/frontend/parser.cpp
+        src/frontend/parser.hpp
+        src/frontend/parser_context.hpp
+        src/frontend/parser_error.hpp
+        src/frontend/semantic_value.hpp
         src/frontend/token.hpp
+        src/frontend/token_buffer.hpp
         src/frontend/token_type.cpp
         src/frontend/token_type.hpp
-        src/frontend/token_value.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
