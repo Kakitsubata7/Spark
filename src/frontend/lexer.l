@@ -29,17 +29,23 @@ using namespace Spark::FrontEnd;
 #define YYLINENO (LSTATE.line)
 #define YYCOLUMNNO (LSTATE.column)
 
-#define EMIT_TOKEN(text, line, column) (*YYLVAL = SemanticValue::makeToken((std::string(text)), (line), (column)))
+#define EMIT_TOKEN(text, lineno, columnno) \
+{                                          \
+    YYLVAL->lexeme = std::string((text));  \
+    YYLVAL->line = (lineno);               \
+    YYLVAL->column = (columnno);           \
+}
+
 #define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
 
-#define YY_INPUT(buf, result, max_size)                                  \
-{                                                                        \
-    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner));  \
-    ls.stream->read(reinterpret_cast<char*>(buf), max_size);             \
-    result = ls.stream->gcount();                                        \
-    if (result == 0) {                                                   \
-        result = YY_NULL;                                                \
-    }                                                                    \
+#define YY_INPUT(buf, result, max_size)                                 \
+{                                                                       \
+    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner)); \
+    ls.stream->read(reinterpret_cast<char*>(buf), max_size);            \
+    result = ls.stream->gcount();                                       \
+    if (result == 0) {                                                  \
+        result = YY_NULL;                                               \
+    }                                                                   \
 }
 %}
 
