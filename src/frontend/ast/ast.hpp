@@ -18,7 +18,7 @@ private:
 public:
     [[nodiscard]] constexpr BlockStmt* root() noexcept { return &_root; }
 
-    AST() : _root() {
+    AST() {
         _root.line = 1;
         _root.column = 1;
     }
@@ -38,7 +38,10 @@ public:
      */
     template <typename T, typename... Args>
     T* make(Args&&... args) {
-        return _nodes.emplace_back<T>(std::forward<Args>(args)...);
+        std::unique_ptr<T> ptr = std::make_unique<T>(std::forward<Args>(args)...);
+        T* raw = ptr.get();
+        _nodes.emplace_back(std::move(ptr));
+        return raw;
     }
 };
 
