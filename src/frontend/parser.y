@@ -30,7 +30,7 @@ void yyerror(yyscan_t, const char* msg);
 %token StrictEq StrictNe
 %token Range RangeExcl
 %token Question Coalesce
-%token Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign BitShlAssign BitShrAssign
+%token Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign BitShlAssign BitShrAssign CoalesceAssign
 %token Dot
 %token Comma Colon Arrow FatArrow
 %token Semicolon LParen RParen LBracket RBracket LBrace RBrace

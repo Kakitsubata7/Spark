@@ -86,6 +86,7 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::BitXorAssign: return "BitXorAssign";
         case TokenType::BitShlAssign: return "BitShlAssign";
         case TokenType::BitShrAssign: return "BitShrAssign";
+        case TokenType::CoalesceAssign: return "CoalesceAssign";
         case TokenType::StrictEq: return "StrictEq";
         case TokenType::StrictNe: return "StrictNe";
         case TokenType::Range: return "Range";
