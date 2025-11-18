@@ -81,8 +81,8 @@ struct FieldPattern final : Pattern {
 };
 
 struct OrPattern final : Pattern {
-    Pattern* left;
-    Pattern* right;
+    Pattern* left = nullptr;
+    Pattern* right = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
