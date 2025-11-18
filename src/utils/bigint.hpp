@@ -39,6 +39,11 @@ public:
     std::string str() const {
         return _value.str();
     }
+
+    friend std::ostream& operator<<(std::ostream& os, const BigInt& i) {
+        os << i.str();
+        return os;
+    }
 };
 
 } // Spark
