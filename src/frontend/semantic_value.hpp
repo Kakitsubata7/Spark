@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "ast/node.hpp"
+
 namespace Spark::FrontEnd {
 
 /**
@@ -13,14 +15,16 @@ struct SemanticValue {
 
     std::string lexeme;
 
+    AST::Node* node = nullptr;
+
     SemanticValue() = default;
 
     static SemanticValue makeToken(std::string lexeme, size_t line, size_t column) noexcept {
-        return SemanticValue{ .line = line, .column = column, .lexeme = std::move(lexeme) };
+        return SemanticValue{ .line = line, .column = column, .lexeme = std::move(lexeme), .node = nullptr };
     }
 
     bool operator==(const SemanticValue& rhs) const noexcept {
-        return true; // TODO
+        return line == rhs.line && column == rhs.column && lexeme == rhs.lexeme && node == rhs.node;
     }
 
     bool operator!=(const SemanticValue& rhs) const noexcept {
