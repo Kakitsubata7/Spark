@@ -13,7 +13,7 @@ namespace Spark::FrontEnd::AST {
 struct Stmt : Node { };
 
 struct BlockStmt final : Stmt {
-    std::vector<Stmt> stmts;
+    std::vector<Stmt*> stmts;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -25,9 +25,42 @@ struct VarDeclStmt final : Stmt {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct FnDeclStmt final : Stmt {
+    Name name;
+    std::vector<ArgDecl> args;
+    std::optional<Path> returnTypePath = std::nullopt;
+    BlockStmt* body = nullptr;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct LambdaDeclStmt final : Stmt {
+    Name name;
+    std::vector<ArgDecl> args;
+    std::optional<Path> returnTypePath = std::nullopt;
+    std::vector<Node*> body;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct AssignStmt final : Stmt {
+    AssignType rator = AssignType::None;
     Expr* target = nullptr;
     Expr* expr = nullptr;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct CallStmt final : Stmt {
+    Expr* func = nullptr;
+    std::vector<Expr*> args;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct SubscriptStmt final : Stmt {
+    Expr* expr = nullptr;
+    Expr* index = nullptr;
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -46,9 +79,9 @@ struct IfStmt final : Stmt {
 
 struct MatchStmt final : Stmt {
     struct CaseClause {
-        Pattern* pattern;
-        Expr* guard;
-        BlockStmt* body;
+        Pattern* pattern = nullptr;
+        Expr* guard = nullptr;
+        BlockStmt* body = nullptr;
     };
 
     Expr* scrutinee = nullptr;
@@ -87,13 +120,23 @@ struct ThrowStmt final : Stmt {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct TryCatchStmt final : Stmt {
-    struct CatchClause {
-        Pattern* pattern = nullptr;
-        std::optional<VarDecl> asVar = std::nullopt;
-        BlockStmt* body = nullptr;
-    };
+struct CatchClause {
+    Pattern* pattern = nullptr;
+    std::optional<VarDecl> asVar = std::nullopt;
+    BlockStmt* body = nullptr;
+};
 
+struct TryStmt final : Stmt {
+    VarDecl var;
+    Expr* expr = nullptr;
+    BlockStmt* body = nullptr;
+
+    std::vector<CatchClause> catchClauses;
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct TryCatchStmt final : Stmt {
     BlockStmt* tryBody = nullptr;
     std::vector<CatchClause> catchClauses;
 
