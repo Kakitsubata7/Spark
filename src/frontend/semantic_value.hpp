@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string>
+#include <vector>
 
 #include "ast/node.hpp"
 
@@ -16,20 +17,9 @@ struct SemanticValue {
     std::string lexeme;
 
     AST::Node* node = nullptr;
+    std::vector<AST::Node*> seq;
 
     SemanticValue() = default;
-
-    static SemanticValue makeToken(std::string lexeme, size_t line, size_t column) noexcept {
-        return SemanticValue{ .line = line, .column = column, .lexeme = std::move(lexeme), .node = nullptr };
-    }
-
-    bool operator==(const SemanticValue& rhs) const noexcept {
-        return line == rhs.line && column == rhs.column && lexeme == rhs.lexeme && node == rhs.node;
-    }
-
-    bool operator!=(const SemanticValue& rhs) const noexcept {
-        return !(*this == rhs);
-    }
 };
 
 } // Spark::FrontEnd
