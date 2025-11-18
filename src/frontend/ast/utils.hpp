@@ -2,9 +2,17 @@
 
 #include <optional>
 
-#include "identifier.hpp"
-
 namespace Spark::FrontEnd::AST {
+
+struct Name {
+    std::string name;
+    size_t line = 0;
+    size_t column = 0;
+};
+
+struct Path {
+    std::vector<Name> names;
+};
 
 struct VarDecl {
     enum class DeclType {

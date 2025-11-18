@@ -6,7 +6,7 @@
 #include "expr.hpp"
 #include "node.hpp"
 #include "node_visitor.hpp"
-#include "var.hpp"
+#include "utils.hpp"
 
 namespace Spark::FrontEnd::AST {
 
