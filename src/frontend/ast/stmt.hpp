@@ -10,10 +10,15 @@
 
 namespace Spark::FrontEnd::AST {
 
-struct Stmt : Node { };
+struct Stmt : Node {
+    Stmt(size_t line, size_t column) : Node(line, column) { }
+};
 
 struct BlockStmt final : Stmt {
     std::vector<Stmt*> stmts;
+
+    BlockStmt(size_t line, size_t column, std::vector<Stmt*> stmts = {}) noexcept
+        : Stmt(line, column), stmts(std::move(stmts)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

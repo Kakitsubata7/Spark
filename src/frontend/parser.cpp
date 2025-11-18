@@ -2,6 +2,8 @@
 
 #include <new>
 
+#include <parser.tab.hpp>
+
 #include "ast/ast.hpp"
 #include "lexer.hpp"
 #include "parser_context.hpp"

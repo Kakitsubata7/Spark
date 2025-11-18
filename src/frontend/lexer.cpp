@@ -2,6 +2,8 @@
 
 #include <lex.yy.hpp>
 
+#include "semantic_type.hpp"
+
 namespace Spark::FrontEnd {
 
 Lexer::Lexer(std::istream& stream) : _scanner{} {
@@ -33,8 +35,9 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
 }
 
 Token Lexer::lex() {
-    SemanticValue value;
-    TokenType type = static_cast<TokenType>(yylex(&value, _scanner));
+    SemanticType s;
+    TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
+    TokenValue& value = s.as<TokenValue>();
     return Token{ type, value.lexeme, value.line, value.column };
 }
 

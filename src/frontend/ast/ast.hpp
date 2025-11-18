@@ -18,10 +18,7 @@ private:
 public:
     [[nodiscard]] constexpr BlockStmt* root() noexcept { return &_root; }
 
-    AST() {
-        _root.line = 1;
-        _root.column = 1;
-    }
+    AST() : _root(1, 1, {}) { }
 
     AST(const AST& other) = default;
     AST& operator=(const AST& other) = default;

@@ -4,10 +4,9 @@
 %top {
 #include <parser.tab.hpp>
 
-#include "frontend/semantic_value.hpp"
 #include "frontend/token_type.hpp"
 
-#define YYSTYPE Spark::FrontEnd::SemanticValue
+#define YYSTYPE yy::parser::semantic_type
 }
 
 %{
@@ -29,12 +28,7 @@ using namespace Spark::FrontEnd;
 #define YYLINENO (LSTATE.line)
 #define YYCOLUMNNO (LSTATE.column)
 
-#define EMIT_TOKEN(text, lineno, columnno) \
-{                                          \
-    YYLVAL->lexeme = std::string((text));  \
-    YYLVAL->line = (lineno);               \
-    YYLVAL->column = (columnno);           \
-}
+#define EMIT_TOKEN(text, line, col) (YYLVAL->emplace<TokenValue>(std::string(text), (line), (col)))
 
 #define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
 

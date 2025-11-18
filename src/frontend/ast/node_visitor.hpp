@@ -4,6 +4,8 @@ namespace Spark::FrontEnd::AST {
 
 struct Node;
 
+struct TypeNode; struct TypeSegment; struct TypePath;
+
 struct Pattern;
 struct IntLiteralPattern;
 struct RealLiteralPattern;
@@ -63,6 +65,10 @@ public:
     virtual ~NodeVisitor() = default;
 
     virtual void visit(Node& node) { }
+
+    virtual void visit(TypeNode& node) { }
+    virtual void visit(TypeSegment& node) { }
+    virtual void visit(TypePath& node) { }
 
     virtual void visit(Pattern& node) { }
     virtual void visit(IntLiteralPattern& node) { }

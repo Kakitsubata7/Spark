@@ -7,8 +7,10 @@ namespace Spark::FrontEnd::AST {
 class NodeVisitor;
 
 struct Node {
-    size_t line = 0;
-    size_t column = 0;
+    size_t line;
+    size_t column;
+
+    Node(size_t line, size_t column) noexcept : line(line), column(column) { }
 
     virtual ~Node() = default;
 

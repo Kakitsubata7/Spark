@@ -52,6 +52,7 @@ add_library(sparklib
         src/frontend/ast/node_visitor.hpp
         src/frontend/ast/pattern.hpp
         src/frontend/ast/stmt.hpp
+        src/frontend/ast/type_nodes.hpp
         src/frontend/ast/utils.hpp
 
         src/frontend/lexer.cpp
@@ -64,11 +65,12 @@ add_library(sparklib
         src/frontend/parser.hpp
         src/frontend/parser_context.hpp
         src/frontend/parser_error.hpp
-        src/frontend/semantic_value.hpp
+        src/frontend/semantic_type.hpp
         src/frontend/token.hpp
         src/frontend/token_buffer.hpp
         src/frontend/token_type.cpp
         src/frontend/token_type.hpp
+        src/frontend/token_value.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
