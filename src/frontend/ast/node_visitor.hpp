@@ -26,7 +26,6 @@ struct NilLiteralExpr;
 struct VarExpr;
 struct FnExpr;
 struct LambdaExpr;
-struct SequenceExpr;
 struct AssignExpr;
 struct UnaryExpr;
 struct ForceUnwrapExpr;
@@ -81,7 +80,6 @@ public:
     virtual void visit(VarExpr& node) { }
     virtual void visit(FnExpr& node) { }
     virtual void visit(LambdaExpr& node) { }
-    virtual void visit(SequenceExpr& node) { }
     virtual void visit(AssignExpr& node) { }
     virtual void visit(UnaryExpr& node) { }
     virtual void visit(ForceUnwrapExpr& node) { }
