@@ -61,7 +61,7 @@ struct NilLiteralExpr final : Expr {
 struct VarExpr final : Expr {
     std::string name;
 
-    VarExpr(std::string name, size_t line, size_t column) noexcept
+    VarExpr(size_t line, size_t column, std::string name) noexcept
         : Expr(line, column), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }

@@ -97,8 +97,11 @@ struct MatchStmt final : Stmt {
 };
 
 struct WhileStmt final : Stmt {
-    Expr* condition = nullptr;
-    BlockStmt* body = nullptr;
+    Expr* condition;
+    BlockStmt* body;
+
+    WhileStmt(size_t line, size_t column, Expr* condition, BlockStmt* body) noexcept
+        : Stmt(line, column), condition(condition), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

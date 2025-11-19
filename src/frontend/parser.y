@@ -8,25 +8,28 @@
 %define api.value.type variant
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {Spark::FrontEnd::ParserContext& ctx}
+%parse-param {yyscan_t scanner} {Spark::FrontEnd::LexerState& lstate} {Spark::FrontEnd::ParserContext& ctx}
 
 %code requires {
 #include <vector>
 
+#include "frontend/ast/expr.hpp"
 #include "frontend/ast/node.hpp"
 #include "frontend/ast/stmt.hpp"
+#include "frontend/lexer_state.hpp"
 #include "frontend/parser_context.hpp"
+#include "frontend/parser_error.hpp"
 #include "frontend/token_value.hpp"
 
 typedef void* yyscan_t;
 }
 
 %code {
+using namespace Spark;
 using namespace Spark::FrontEnd;
 using namespace Spark::FrontEnd::AST;
 
 int yylex(yy::parser::semantic_type* yylval, yyscan_t scanner);
-void yyerror(yyscan_t scanner, ParserContext& ctx, const char* msg);
 }
 
 %token <Spark::FrontEnd::TokenValue> Identifier Discard
@@ -53,7 +56,8 @@ void yyerror(yyscan_t scanner, ParserContext& ctx, const char* msg);
 %type <Spark::FrontEnd::AST::Node*> start
 
 %type <Spark::FrontEnd::AST::Stmt*> stmt
-%type <Spark::FrontEnd::AST::VarDeclStmt*> let_stmt
+%type <Spark::FrontEnd::AST::VarDeclStmt*> let
+%type <Spark::FrontEnd::AST::WhileStmt*> while
 
 %type <Spark::FrontEnd::AST::Expr*> expr
 %type <Spark::FrontEnd::AST::Expr*> primary
@@ -87,6 +91,7 @@ start:
 
 stmt:
       block
+      while
     ;
 
 block:
@@ -110,8 +115,14 @@ block_stmts:
         }
     ;
 
-let_stmt:
+let:
+    ;
 
+while:
+      While expr block
+        {
+            $$ = ctx.makeNode<WhileStmt>($1.line, $1.column, $2, $3);
+        }
     ;
 
 expr:
@@ -125,12 +136,12 @@ primary:
     ;
 
 literal:
-      Integer    { $$->node = ctx.makeNode<IntLiteralExpr>($1.line, $1.column, BigInt($1.lexeme)); }
-    | Real       { $$->node = ctx.makeNode<RealLiteralExpr>($1.line, $1.column, BigReal($1.lexeme)); }
-    | String     { $$->node = ctx.makeNode<StringLiteralExpr>($1.line, $1.column, $1.lexeme); }
-    | True       { $$->node = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, true); }
-    | False      { $$->node = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, false); }
-    | Nil        { $$->node = ctx.makeNode<NilLiteralExpr>($1.line, $1.column); }
+      Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.line, $1.column, BigInt($1.lexeme)); }
+    | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.line, $1.column, BigReal($1.lexeme)); }
+    | String     { $$ = ctx.makeNode<StringLiteralExpr>($1.line, $1.column, $1.lexeme); }
+    | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, true); }
+    | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, false); }
+    | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.line, $1.column); }
     ;
 
 type:
@@ -182,3 +193,7 @@ type_modifiers:
         }
     ;
 %%
+
+void yy::parser::error(const std::string& msg) {
+	ctx.error = ParserError(msg, lstate.line, lstate.column);
+}

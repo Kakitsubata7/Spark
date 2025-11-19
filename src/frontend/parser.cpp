@@ -14,7 +14,7 @@ Result<AST::AST, ParserError> Parser::parse(std::istream& stream) {
     AST::AST ast;
     Lexer lexer(stream);
     ParserContext ctx(ast);
-    yy::parser parser(lexer._scanner, ctx);
+    yy::parser parser(lexer._scanner, lexer._lstate, ctx);
 
     int result = parser.parse();
     if (result == 1) {
