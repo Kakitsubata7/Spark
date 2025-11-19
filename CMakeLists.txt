@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest)
 
 find_package(FLEX REQUIRED)
 find_package(BISON 3.5 REQUIRED)
+find_package(Boost REQUIRED)
 
 # Flex & Bison
 set(FRONTEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend)
@@ -45,13 +46,28 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
+        src/frontend/ast/ast.hpp
+        src/frontend/ast/expr.hpp
+        src/frontend/ast/node.hpp
+        src/frontend/ast/node_visitor.hpp
+        src/frontend/ast/pattern.hpp
+        src/frontend/ast/stmt.hpp
+        src/frontend/ast/type_nodes.hpp
+        src/frontend/ast/utils.hpp
+
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
         src/frontend/lexer_error.hpp
         src/frontend/lexer_state.hpp
         src/frontend/lexer_utils.cpp
         src/frontend/lexer_utils.hpp
+        src/frontend/parser.cpp
+        src/frontend/parser.hpp
+        src/frontend/parser_context.hpp
+        src/frontend/parser_error.hpp
+        src/frontend/semantic_type.hpp
         src/frontend/token.hpp
+        src/frontend/token_buffer.hpp
         src/frontend/token_type.cpp
         src/frontend/token_type.hpp
         src/frontend/token_value.hpp
@@ -64,14 +80,17 @@ add_library(sparklib
         src/runtime/thread.hpp
         src/runtime/type.hpp
 
-        src/result.hpp
-        src/error.hpp
+        src/utils/bigint.hpp
+        src/utils/bigreal.hpp
+
+        src/type.hpp
 )
 
 target_include_directories(sparklib
     PUBLIC
         src
         ${FRONTEND_GENERATED_DIR}
+        ${Boost_INCLUDE_DIRS}
 )
 
 # Executable

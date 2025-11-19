@@ -2,6 +2,8 @@
 
 #include <lex.yy.hpp>
 
+#include "semantic_type.hpp"
+
 namespace Spark::FrontEnd {
 
 Lexer::Lexer(std::istream& stream) noexcept : _lstate{} {
@@ -32,13 +34,23 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
     return *this;
 }
 
-Token Lexer::lex() noexcept {
-    TokenValue value;
-    TokenType type = static_cast<TokenType>(yylex(&value, _scanner));
-    return {type, value};
+Lexer& Lexer::operator=(Lexer&& other) noexcept {
+    if (this != &other) {
+        _scanner = other._scanner;
+        other._scanner = nullptr;
+        _lstate = std::move(other._lstate);
+    }
+    return *this;
 }
 
-std::vector<Token> Lexer::lexAll() noexcept {
+Token Lexer::lex() {
+    SemanticType s;
+    TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
+    TokenValue& value = s.as<TokenValue>();
+    return Token{ type, value.lexeme, value.line, value.column };
+}
+
+std::vector<Token> Lexer::lexAll() {
     std::vector<Token> tokens;
     while (true) {
         Token token = lex();
@@ -48,6 +60,16 @@ std::vector<Token> Lexer::lexAll() noexcept {
         tokens.push_back(token);
     }
     return tokens;
+}
+
+Result<std::vector<Token>, std::vector<LexerError>> Lexer::lexAll(std::istream& stream) {
+    Lexer lexer(stream);
+    std::vector<Token> tokens = lexer.lexAll();
+
+    if (lexer.hasError()) {
+        return Result<std::vector<Token>, std::vector<LexerError>>::err(std::move(lexer._lstate.errors));
+    }
+    return Result<std::vector<Token>, std::vector<LexerError>>::ok(std::move(tokens));
 }
 
 } // Spark::FrontEnd

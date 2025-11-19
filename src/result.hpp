@@ -1,103 +1,51 @@
-#pragma once
+﻿#pragma once
 
-#include <stdexcept>
-
-#include "error.hpp"
+#include <variant>
 
 namespace Spark {
 
-template <typename T>
+template <typename T, typename E>
 class Result {
 private:
-    bool _hasError;
-    union {
-        T _value;
-        Error _error;
-    };
+    std::variant<T, E> _data;
+
+    template <typename... Args>
+    explicit Result(std::in_place_index_t<0>, Args&&... args)
+        : _data(std::in_place_index<0>, std::forward<Args>(args)...) {}
+
+    template <typename... Args>
+    explicit Result(std::in_place_index_t<1>, Args&&... args)
+        : _data(std::in_place_index<1>, std::forward<Args>(args)...) {}
 
 public:
-    explicit Result(T value) noexcept(std::is_nothrow_move_constructible_v<T>)
-        : _hasError(false), _value(std::move(value)) { }
-    explicit Result(Error error) noexcept
-        : _hasError(true), _error(std::move(error)) { }
-
-    ~Result() noexcept {
-        if (_hasError) {
-            _error.~Error();
-        } else {
-            _value.~T();
-        }
+    static Result ok(T v) {
+        return Result(std::in_place_index<0>, std::move(v));
     }
 
-    Result(const Result& other) : _hasError(other._hasError) {
-        if (_hasError) {
-            new (&_error) Error(other._error);
-        } else {
-            new (&_value) T(other._value);
-        }
+    static Result err(E e) {
+        return Result(std::in_place_index<1>, std::move(e));
     }
 
-    Result& operator=(const Result& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        this->~Result();
-        new (this) Result(other);
-        return *this;
+    template <typename... Args>
+    static Result ok(Args&&... args) noexcept {
+        return Result(std::in_place_index<0>, T(std::forward<Args>(args)...));
     }
 
-    Result(Result&& other) noexcept(std::is_nothrow_move_constructible_v<T>) : _hasError(other._hasError){
-        if (_hasError) {
-            new (&_error) Error(std::move(other._error));
-        } else {
-            new (&_value) T(std::move(other._value));
-        }
+    template <typename... Args>
+    static Result err(Args&&... args) noexcept {
+        return Result(std::in_place_index<1>, E(std::forward<Args>(args)...));
     }
 
-    Result& operator=(Result&& other) noexcept(std::is_nothrow_move_constructible_v<T>) {
-        if (this == &other) {
-            return *this;
-        }
-
-        this->~Result();
-        new (this) Result(std::move(other));
-        return *this;
+    bool hasValue() const noexcept {
+        return std::holds_alternative<T>(_data);
     }
 
-    [[nodiscard]]
-    constexpr bool hasError() const noexcept { return _hasError; }
-
-    [[nodiscard]]
     const T& value() const {
-        if (_hasError) {
-            throw std::runtime_error("bad result value access");
-        }
-        return _value;
+        return std::get<T>(_data);
     }
 
-    [[nodiscard]]
-    const Error& error() const {
-        if (!_hasError) {
-            throw std::runtime_error("bad result error access");
-        }
-        return _error;
-    }
-
-    bool tryGetValue(T& out) const noexcept {
-        if (_hasError) {
-            return false;
-        }
-        out = _value;
-        return true;
-    }
-
-    bool tryGetError(Error& out) const noexcept {
-        if (!_hasError) {
-            return false;
-        }
-        out = _error;
-        return true;
+    const E& error() const {
+        return std::get<E>(_data);
     }
 };
 

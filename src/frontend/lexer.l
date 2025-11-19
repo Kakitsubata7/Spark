@@ -5,9 +5,8 @@
 #include <parser.tab.hpp>
 
 #include "frontend/token_type.hpp"
-#include "frontend/token_value.hpp"
 
-#define YYSTYPE Spark::FrontEnd::TokenValue
+#define YYSTYPE yy::parser::semantic_type
 }
 
 %{
@@ -29,17 +28,18 @@ using namespace Spark::FrontEnd;
 #define YYLINENO (LSTATE.line)
 #define YYCOLUMNNO (LSTATE.column)
 
-#define EMIT_TOKEN(text, line, column) (*YYLVAL = TokenValue((std::string(text)), (line), (column)))
+#define EMIT_TOKEN(text, line, col) (YYLVAL->emplace<TokenValue>(std::string(text), (line), (col)))
+
 #define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
 
-#define YY_INPUT(buf, result, max_size)                                  \
-{                                                                        \
-    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner));  \
-    ls.stream->read(reinterpret_cast<char*>(buf), max_size);             \
-    result = ls.stream->gcount();                                        \
-    if (result == 0) {                                                   \
-        result = YY_NULL;                                                \
-    }                                                                    \
+#define YY_INPUT(buf, result, max_size)                                 \
+{                                                                       \
+    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner)); \
+    ls.stream->read(reinterpret_cast<char*>(buf), max_size);            \
+    result = ls.stream->gcount();                                       \
+    if (result == 0) {                                                  \
+        result = YY_NULL;                                               \
+    }                                                                   \
 }
 %}
 
@@ -200,9 +200,11 @@ using namespace Spark::FrontEnd;
 ">=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ge; }
 ">" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Gt; }
 
+"!==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictNe; }
 "!=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ne; }
 "!" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LogNot; }
 
+"===" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictEq; }
 "=>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::FatArrow; }
 "==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Eq; }
 "=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Assign; }
@@ -210,6 +212,10 @@ using namespace Spark::FrontEnd;
 "..<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::RangeExcl; }
 "..." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::Range; }
 "." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Dot; }
+
+"??=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::CoalesceAssign; }
+"??" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Coalesce; }
+"?" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Question; }
 
 "," { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Comma; }
 ":" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Colon; }
