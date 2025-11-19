@@ -6,11 +6,8 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream) noexcept : _lstate{} {
+Lexer::Lexer(std::istream& stream) : _lstate(1, 1, &stream) {
     yylex_init(&_scanner);
-    _lstate.line = 1;
-    _lstate.column = 1;
-    _lstate.stream = &stream;
     yyset_extra(&_lstate, _scanner);
 }
 
@@ -23,15 +20,6 @@ Lexer::~Lexer() {
 Lexer::Lexer(Lexer&& other) noexcept
     : _scanner(other._scanner), _lstate(std::move(other._lstate)) {
     other._scanner = nullptr;
-}
-
-Lexer& Lexer::operator=(Lexer&& other) noexcept {
-    if (this != &other) {
-        _scanner = other._scanner;
-        other._scanner = nullptr;
-        _lstate = std::move(other._lstate);
-    }
-    return *this;
 }
 
 Lexer& Lexer::operator=(Lexer&& other) noexcept {
