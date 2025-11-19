@@ -43,6 +43,21 @@ struct LexerState {
     std::vector<LexerError> errors;
 
     /**
+     * Constructs a `LexerState` with the beginning line, column and the stream to read from.
+     * @param line Beginning line.
+     * @param column Beginning column.
+     * @param stream Pointer to the stream to read from.
+     */
+    LexerState(size_t line, size_t column, std::istream* stream)
+        : line(line), column(column), stream(stream) { }
+
+    LexerState(const LexerState& other) = delete;
+    LexerState& operator=(const LexerState& other) = delete;
+
+    LexerState(LexerState&& other) = default;
+    LexerState& operator=(LexerState&& other) = default;
+
+    /**
      * Updates the state when a newline is encountered.
      */
     constexpr void whenNewline() noexcept {
