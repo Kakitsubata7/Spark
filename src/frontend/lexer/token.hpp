@@ -10,6 +10,7 @@ namespace Spark::FrontEnd {
 struct Token {
     TokenType type;
     std::string lexeme;
+    // TODO: Use locations instead
     size_t line;
     size_t column;
 

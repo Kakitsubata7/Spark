@@ -22,7 +22,7 @@ private:
 public:
     [[nodiscard]] constexpr BlockStmt* root() noexcept { return &_root; }
 
-    AST() : _root(1, 1, {}) { }
+    AST() : _root({1, 1}, {1, 1}, {}) { }
 
     AST(const AST& other) = default;
     AST& operator=(const AST& other) = default;

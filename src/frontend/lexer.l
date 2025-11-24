@@ -27,10 +27,26 @@ using namespace Spark::FrontEnd;
 
 #define YYLINENO (LSTATE.lineno())
 #define YYCOLUMNNO (LSTATE.columnno())
+#define YYLOCATION (Location(YYLINENO, YYCOLUMNNO))
 
-#define EMIT_TOK(text, line, col) (YYLVAL->emplace<TokenValue>(std::string(text), (line), (col)))
-#define RETURN_TOK(type) EMIT_TOK(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.advance(YYLENG); return (type);
+/**
+  * Updates yylval to "emit" the token with given lexeme, start and end locations.
+  */
+#define EMIT_TOK(text, start, end) (YYLVAL->emplace<TokenValue>(std::string(text), (start), (end)))
 
+/**
+  * Helper macro to emit and return a single-line token.
+  */
+#define RETURN_TOK(type)                                                                       \
+{                                                                                              \
+    EMIT_TOK(YYTEXT, YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG)); \
+    LSTATE.advance(YYLENG);                                                                    \
+    return (type);                                                                             \
+}
+
+/**
+  * Reports an error to the lexer state.
+  */
 #define RAISE_ERROR(message, start, end) (LSTATE.addError((message), (start), (end)))
 
 #define YY_INPUT(buf, result, max_size)                         \
@@ -70,7 +86,7 @@ using namespace Spark::FrontEnd;
 }
 
 "//"[^\n]* {
-    EMIT_TOK(YYTEXT.substr(2), YYLINENO, YYCOLUMNNO);
+    EMIT_TOK(YYTEXT.substr(2), YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG));
     LSTATE.advance(YYLENG);
     return TokenType::LineComment;
 }
@@ -100,18 +116,18 @@ using namespace Spark::FrontEnd;
 
     (\r\n|\r|\n) {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", Location(LBUFFER.line(), LBUFFER.column()),
-            Location(YYLINENO, YYCOLUMNNO - 1));
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
         LSTATE.whenNewline();
-        EMIT_TOK(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
     }
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", Location(LBUFFER.line(), LBUFFER.column()),
-            Location(YYLINENO, YYCOLUMNNO - 1));
-        EMIT_TOK(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
     }
 
@@ -119,7 +135,7 @@ using namespace Spark::FrontEnd;
         LSTATE.advance(1);
         if (YYTEXT[0] == LSTATE.strDelim()) {
             BEGIN(INITIAL);
-            EMIT_TOK(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+            EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
             return TokenType::String;
         }
         LBUFFER.append(YYTEXT[0]);
@@ -135,7 +151,7 @@ using namespace Spark::FrontEnd;
 <IN_BLOCK_COMMENT>{
     "*/" {
         BEGIN(INITIAL);
-        EMIT_TOK(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
         LSTATE.advance(2);
         return TokenType::BlockComment;
     }
@@ -157,9 +173,9 @@ using namespace Spark::FrontEnd;
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated block comment", Location(YYLINENO, YYCOLUMNNO - 1),
-            Location(YYLINENO, YYCOLUMNNO - 1));
-        EMIT_TOK(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated block comment", end, end);
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::BlockComment;
     }
 }
@@ -235,8 +251,8 @@ using namespace Spark::FrontEnd;
 . {
     std::ostringstream oss;
     oss << "unrecognized character: " << "'" << YYTEXT << "'";
-    RAISE_ERROR(oss.str(), Location(YYLINENO, YYCOLUMNNO), Location(YYLINENO, YYCOLUMNNO));
-    EMIT_TOK(YYTEXT, YYLINENO, YYCOLUMNNO);
+    RAISE_ERROR(oss.str(), YYLOCATION, YYLOCATION);
+    EMIT_TOK(YYTEXT, YYLOCATION, YYLOCATION);
     LSTATE.advance(1);
     return TokenType::Error;
 }

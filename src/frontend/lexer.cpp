@@ -43,7 +43,7 @@ Token Lexer::lex() {
     SemanticType s;
     TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
     const TokenValue& value = s.as<TokenValue>();
-    return Token{type, value.lexeme, value.lineno, value.columnno};
+    return Token{type, value.lexeme, value.start.lineno, value.start.columnno};
 }
 
 std::vector<Token> Lexer::lexAll() {

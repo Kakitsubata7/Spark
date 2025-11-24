@@ -13,14 +13,14 @@ namespace Spark::FrontEnd {
 struct Expr : Node {
     Type* type = nullptr;
 
-    Expr(size_t line, size_t column) noexcept : Node(line, column) { }
+    Expr(Location start, Location end) noexcept : Node(start, end) { }
 };
 
 struct IntLiteralExpr final : Expr {
     BigInt value;
 
-    IntLiteralExpr(size_t line, size_t column, BigInt value)
-        : Expr(line, column), value(std::move(value)) { }
+    IntLiteralExpr(Location start, Location end, BigInt value)
+        : Expr(start, end), value(std::move(value)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -28,8 +28,8 @@ struct IntLiteralExpr final : Expr {
 struct RealLiteralExpr final : Expr {
     BigReal value;
 
-    RealLiteralExpr(size_t line, size_t column, BigReal value)
-        : Expr(line, column), value(std::move(value)) { }
+    RealLiteralExpr(Location start, Location end, BigReal value)
+        : Expr(start, end), value(std::move(value)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -37,8 +37,8 @@ struct RealLiteralExpr final : Expr {
 struct BoolLiteralExpr final : Expr {
     bool value = false;
 
-    BoolLiteralExpr(size_t line, size_t column, bool value) noexcept
-        : Expr(line, column), value(value) { }
+    BoolLiteralExpr(Location start, Location end, bool value) noexcept
+        : Expr(start, end), value(value) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -46,14 +46,14 @@ struct BoolLiteralExpr final : Expr {
 struct StringLiteralExpr final : Expr {
     std::string value;
 
-    StringLiteralExpr(size_t line, size_t column, std::string value) noexcept
-        : Expr(line, column), value(std::move(value)) { }
+    StringLiteralExpr(Location start, Location end, std::string value) noexcept
+        : Expr(start, end), value(std::move(value)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct NilLiteralExpr final : Expr {
-    NilLiteralExpr(size_t line, size_t column) noexcept : Expr(line, column) { }
+    NilLiteralExpr(Location start, Location end) noexcept : Expr(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -61,8 +61,8 @@ struct NilLiteralExpr final : Expr {
 struct VarExpr final : Expr {
     std::string name;
 
-    VarExpr(size_t line, size_t column, std::string name) noexcept
-        : Expr(line, column), name(std::move(name)) { }
+    VarExpr(Location start, Location end, std::string name) noexcept
+        : Expr(start, end), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

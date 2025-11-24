@@ -94,7 +94,7 @@ stmt:
 block:
       Do block_stmts End
         {
-            auto* block = ctx.makeNode<BlockStmt>($1.lineno, $1.columnno);
+            auto* block = ctx.makeNode<BlockStmt>($1.start, $1.end);
             block->stmts.insert(block->stmts.end(), $2.begin(), $2.end());
             $$ = block;
         }
@@ -118,7 +118,7 @@ let:
 while:
       While expr block
         {
-            $$ = ctx.makeNode<WhileStmt>($1.lineno, $1.columnno, $2, $3);
+            $$ = ctx.makeNode<WhileStmt>($1.start, $1.end, $2, $3);
         }
     ;
 
@@ -128,17 +128,17 @@ expr:
 
 primary:
       literal            { $$ = $1; }
-    | Identifier         { $$ = ctx.makeNode<VarExpr>($1.lineno, $1.columnno, $1.lexeme); }
+    | Identifier         { $$ = ctx.makeNode<VarExpr>($1.start, $1.end, $1.lexeme); }
     | LParen expr RParen { $$ = $2; }
     ;
 
 literal:
-      Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.lineno, $1.columnno, BigInt($1.lexeme)); }
-    | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.lineno, $1.columnno, BigReal($1.lexeme)); }
-    | String     { $$ = ctx.makeNode<StringLiteralExpr>($1.lineno, $1.columnno, $1.lexeme); }
-    | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.lineno, $1.columnno, true); }
-    | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.lineno, $1.columnno, false); }
-    | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.lineno, $1.columnno); }
+      Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.start, $1.end, BigReal($1.lexeme)); }
+    | String     { $$ = ctx.makeNode<StringLiteralExpr>($1.start, $1.end, $1.lexeme); }
+    | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.start, $1.end, true); }
+    | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.start, $1.end, false); }
+    | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.start, $1.end); }
     ;
 
 type:
@@ -148,7 +148,7 @@ type:
 type_segment:
       Identifier type_modifiers
         {
-            $$ = ctx.makeNode<TypeSegment>($1.lineno, $1.columnno, $1.lexeme,
+            $$ = ctx.makeNode<TypeSegment>($1.start, $1.end, $1.lexeme,
                 $2.isImmutable, $2.isNullable);
         }
     ;
@@ -156,7 +156,7 @@ type_segment:
 type_path:
       type_segment
         {
-            auto* path = ctx.makeNode<TypePath>($1->lineno, $1->column);
+            auto* path = ctx.makeNode<TypePath>($1->start, $1->column);
             path->segments.push_back($1);
             $$ = path;
         }

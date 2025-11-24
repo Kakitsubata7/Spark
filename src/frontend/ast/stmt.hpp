@@ -11,14 +11,14 @@
 namespace Spark::FrontEnd {
 
 struct Stmt : Node {
-    Stmt(size_t line, size_t column) : Node(line, column) { }
+    Stmt(Location start, Location end) : Node(start, end) { }
 };
 
 struct BlockStmt final : Stmt {
     std::vector<Stmt*> stmts;
 
-    BlockStmt(size_t line, size_t column, std::vector<Stmt*> stmts = {}) noexcept
-        : Stmt(line, column), stmts(std::move(stmts)) { }
+    BlockStmt(Location start, Location end, std::vector<Stmt*> stmts = {}) noexcept
+        : Stmt(start, end), stmts(std::move(stmts)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -100,8 +100,8 @@ struct WhileStmt final : Stmt {
     Expr* condition;
     BlockStmt* body;
 
-    WhileStmt(size_t line, size_t column, Expr* condition, BlockStmt* body) noexcept
-        : Stmt(line, column), condition(condition), body(body) { }
+    WhileStmt(Location start, Location end, Expr* condition, BlockStmt* body) noexcept
+        : Stmt(start, end), condition(condition), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

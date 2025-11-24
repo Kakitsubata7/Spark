@@ -3,6 +3,8 @@
 #include <string>
 #include <string_view>
 
+#include "utils/location.hpp"
+
 namespace Spark::FrontEnd {
 
 /**
@@ -10,25 +12,37 @@ namespace Spark::FrontEnd {
  */
 class TokenBuffer {
 private:
-    size_t _line;
-    size_t _column;
+    Location _start;
     std::string _buffer;
 
 public:
     /**
-     * Constructs a `TokenBuffer` instance with the beginning line and column numbers of the token being processed.
-     * @param line Beginning line number of the token being processed.
-     * @param column Beginning column number of the token being processed.
+     * Constructs a `TokenBuffer` instance with the beginning location of the token being processed.
+     * @param start Beginning location of the token being processed.
      */
-    TokenBuffer(size_t line, size_t column) : _line(line), _column(column) { }
+    explicit TokenBuffer(Location start) : _start(start) { }
+
+    /**
+     * Constructs a `TokenBuffer` instance with the beginning line and column numbers of the token being processed.
+     * @param lineno Beginning line number of the token being processed.
+     * @param columnno Beginning column number of the token being processed.
+     */
+    TokenBuffer(size_t lineno, size_t columnno) : TokenBuffer(Location(lineno, columnno)) { }
+
+    /**
+     * Gets the beginning location of the token being processed.
+     * @return Beginning location of the token being processed.
+     */
+    [[nodiscard]]
+    Location start() const noexcept { return _start; }
 
     /**
      * Gets the beginning line number of the token being processed.
      * @return Line number of the token being processed.
      */
     [[nodiscard]]
-    constexpr size_t line() const noexcept {
-        return _line;
+    constexpr size_t lineno() const noexcept {
+        return _start.lineno;
     }
 
     /**
@@ -36,8 +50,8 @@ public:
      * @return Column number of the token being processed.
      */
     [[nodiscard]]
-    constexpr size_t column() const noexcept {
-        return _column;
+    constexpr size_t columnno() const noexcept {
+        return _start.columnno;
     }
 
     /**
@@ -67,12 +81,11 @@ public:
 
     /**
      * Resets the buffer with a new set of beginning line and column numbers.
-     * @param line Line number of the new token being processed.
-     * @param column Column number of the new token being processed.
+     * @param lineno Line number of the new token being processed.
+     * @param columnno Column number of the new token being processed.
      */
-    void reset(size_t line, size_t column) noexcept {
-        _line = line;
-        _column = column;
+    void reset(size_t lineno, size_t columnno) noexcept {
+        _start = Location(lineno, columnno);
         _buffer.clear();
     }
 };

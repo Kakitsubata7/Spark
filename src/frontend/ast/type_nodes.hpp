@@ -8,7 +8,7 @@
 namespace Spark::FrontEnd {
 
 struct TypeNode : Node {
-    TypeNode(size_t line, size_t column) noexcept : Node(line, column) { }
+    TypeNode(Location start, Location end) noexcept : Node(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -18,8 +18,8 @@ struct TypeSegment final : TypeNode {
     bool isNullable;
     bool isImmutable;
 
-    TypeSegment(size_t line, size_t column, std::string name, bool isImmutable, bool isNullable) noexcept
-        : TypeNode(line, column), name(std::move(name)), isNullable(isNullable), isImmutable(isImmutable) { }
+    TypeSegment(Location start, Location end, std::string name, bool isImmutable, bool isNullable) noexcept
+        : TypeNode(start, end), name(std::move(name)), isNullable(isNullable), isImmutable(isImmutable) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -27,8 +27,8 @@ struct TypeSegment final : TypeNode {
 struct TypePath final : TypeNode {
     std::vector<TypeSegment*> segments;
 
-    TypePath(size_t line, size_t column, std::vector<TypeSegment*> segments) noexcept
-        : TypeNode(line, column), segments(std::move(segments)) { }
+    TypePath(Location start, Location end, std::vector<TypeSegment*> segments) noexcept
+        : TypeNode(start, end), segments(std::move(segments)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

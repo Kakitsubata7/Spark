@@ -3,16 +3,18 @@
 #include <cstddef>
 #include <string>
 
+#include "utils/location.hpp"
+
 namespace Spark::FrontEnd {
 
 struct TokenValue {
     std::string lexeme;
-    size_t lineno = 0;
-    size_t columnno = 0;
+    Location start;
+    Location end;
 
     TokenValue() = default;
-    TokenValue(std::string lexeme, size_t lineno, size_t columnno) noexcept
-        : lexeme(std::move(lexeme)), lineno(lineno), columnno(columnno) { }
+    TokenValue(std::string lexeme, Location start, Location end) noexcept
+        : lexeme(std::move(lexeme)), start(start), end(end) { }
 
     TokenValue(const TokenValue& other) = default;
     TokenValue& operator=(const TokenValue& other) = default;
@@ -21,7 +23,7 @@ struct TokenValue {
     TokenValue& operator=(TokenValue&& other) = default;
 
     bool operator==(const TokenValue& rhs) const noexcept {
-        return lexeme == rhs.lexeme && lineno == rhs.lineno && columnno == rhs.columnno;
+        return lexeme == rhs.lexeme && start == rhs.start && end == rhs.end;
     }
 
     bool operator!=(const TokenValue& rhs) const noexcept {

@@ -1,16 +1,17 @@
 ﻿#pragma once
 
 #include "node_visitor.hpp"
+#include "utils/location.hpp"
 
 namespace Spark::FrontEnd {
 
 class NodeVisitor;
 
 struct Node {
-    size_t line;
-    size_t column;
+    Location start;
+    Location end;
 
-    Node(size_t line, size_t column) noexcept : line(line), column(column) { }
+    Node(Location start, Location end) noexcept : start(start), end(end) { }
 
     virtual ~Node() = default;
 
