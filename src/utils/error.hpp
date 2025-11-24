@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "location.hpp"
+
 namespace Spark {
 
 /**
@@ -9,20 +11,30 @@ namespace Spark {
  */
 struct Error {
     std::string message;
-    size_t line;
-    size_t column;
+    Location start;
+    Location end;
 
     Error() = default;
-    Error(std::string message, size_t line, size_t column) noexcept
-        : message(std::move(message)), line(line), column(column) { }
 
-    bool operator==(const Error& rhs) const noexcept {
-        return message == rhs.message && line == rhs.line && column == rhs.column;
-    }
+    /**
+     * Constructs an `Error` instance with message and locations of the error.
+     * @param message Error message.
+     * @param start Start location.
+     * @param end End location.
+     */
+    Error(std::string message, Location start, Location end) noexcept
+        : message(std::move(message)), start(start), end(end) { }
 
-    bool operator!=(const Error& rhs) const noexcept {
-        return *this == rhs;
-    }
+    /**
+     * Constructs an `Error` instance with message and locations of the error.
+     * @param message Error message.
+     * @param sLineno Start line number.
+     * @param sColumnno Start column number.
+     * @param eLineno End line number.
+     * @param eColumnno End column number.
+     */
+    Error(std::string message, size_t sLineno, size_t sColumnno, size_t eLineno, size_t eColumnno) noexcept
+        : message(std::move(message)), start(sLineno, sColumnno), end(eLineno, eColumnno) { }
 };
 
 } // Spark
