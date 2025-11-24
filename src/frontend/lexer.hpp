@@ -2,12 +2,17 @@
 
 #include <vector>
 
-#include "lexer_state.hpp"
-#include "result.hpp"
+#include "lexer/lexer_error.hpp"
+#include "lexer/lexer_state.hpp"
+#include "lexer/lexer_utils.hpp"
+#include "lexer/token.hpp"
+#include "lexer/token_buffer.hpp"
+#include "lexer/token_type.hpp"
+#include "lexer/token_value.hpp"
+#include "utils/result.hpp"
 #include "source_buffer.hpp"
-#include "token.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Represents a wrapper to Flex's lexer logics.
@@ -57,4 +62,4 @@ public:
     friend class Parser;
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

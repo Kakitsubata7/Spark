@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Represents an error occurred during lexing, containing the error message and the position the error occurred.
@@ -25,4 +25,4 @@ struct LexerError {
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

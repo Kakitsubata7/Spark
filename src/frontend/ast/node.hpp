@@ -2,7 +2,7 @@
 
 #include "node_visitor.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 class NodeVisitor;
 
@@ -17,4 +17,4 @@ struct Node {
     virtual void accept(NodeVisitor& v) = 0;
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

@@ -21,7 +21,7 @@ find_package(BISON 3.5 REQUIRED)
 find_package(Boost REQUIRED)
 
 # Flex & Bison
-set(FRONTEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler)
+set(FRONTEND_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend)
 set(FRONTEND_GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated/compiler)
 file(MAKE_DIRECTORY ${FRONTEND_GENERATED_DIR})
 
@@ -46,32 +46,37 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
-        src/compiler/ast.hpp
-        src/compiler/ast/expr.hpp
-        src/compiler/ast/node.hpp
-        src/compiler/ast/node_visitor.hpp
-        src/compiler/ast/pattern.hpp
-        src/compiler/ast/stmt.hpp
-        src/compiler/ast/type_nodes.hpp
-        src/compiler/ast/utils.hpp
+        src/core/type.hpp
 
-        src/compiler/lexer.cpp
-        src/compiler/lexer.hpp
-        src/compiler/lexer_error.hpp
-        src/compiler/lexer_state.hpp
-        src/compiler/lexer_utils.cpp
-        src/compiler/lexer_utils.hpp
-        src/compiler/parser.cpp
-        src/compiler/parser.hpp
-        src/compiler/parser_context.hpp
-        src/compiler/parser_error.hpp
-        src/compiler/semantic_type.hpp
-        src/compiler/source_buffer.hpp
-        src/compiler/token.hpp
-        src/compiler/token_buffer.hpp
-        src/compiler/token_type.cpp
-        src/compiler/token_type.hpp
-        src/compiler/token_value.hpp
+        src/frontend/ast.hpp
+
+        src/frontend/ast/expr.hpp
+        src/frontend/ast/node.hpp
+        src/frontend/ast/node_visitor.hpp
+        src/frontend/ast/pattern.hpp
+        src/frontend/ast/stmt.hpp
+        src/frontend/ast/type_nodes.hpp
+        src/frontend/ast/utils.hpp
+
+        src/frontend/lexer.cpp
+        src/frontend/lexer.hpp
+        src/frontend/lexer/lexer_error.hpp
+        src/frontend/lexer/lexer_state.hpp
+        src/frontend/lexer/lexer_utils.cpp
+        src/frontend/lexer/lexer_utils.hpp
+        src/frontend/lexer/token.hpp
+        src/frontend/lexer/token_buffer.hpp
+        src/frontend/lexer/token_type.cpp
+        src/frontend/lexer/token_type.hpp
+        src/frontend/lexer/token_value.hpp
+
+        src/frontend/parser.cpp
+        src/frontend/parser.hpp
+        src/frontend/parser/parser_context.hpp
+        src/frontend/parser/parser_error.hpp
+
+        src/frontend/semantic_type.hpp
+        src/frontend/source_buffer.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
@@ -83,8 +88,8 @@ add_library(sparklib
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
-
-        src/type.hpp
+        src/utils/error.hpp
+        src/utils/result.hpp
 )
 
 target_include_directories(sparklib

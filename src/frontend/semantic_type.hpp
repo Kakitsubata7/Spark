@@ -2,8 +2,8 @@
 
 #include <parser.tab.hpp>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 using SemanticType = yy::parser::semantic_type;
 
-} // Spark::Compiler
+} // Spark::FrontEnd

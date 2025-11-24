@@ -1,9 +1,8 @@
-﻿/* TODO
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
-#include "compiler/semantic_value.hpp"
+#include "frontend/lexer/token_value.hpp"
 
-using namespace Spark::Compiler;
+using namespace Spark::FrontEnd;
 
 TEST(TokenValueTest, EqTest) {
     TokenValue a("foo", 1, 2);
@@ -56,4 +55,3 @@ TEST(TokenValueTest, NeTest) {
     b.column = 4991220;
     EXPECT_FALSE(a != b);
 }
-*/

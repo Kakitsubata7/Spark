@@ -1,8 +1,8 @@
 ﻿#include <gtest/gtest.h>
 
-#include "compiler/token_buffer.hpp"
+#include "frontend/lexer/token_buffer.hpp"
 
-using namespace Spark::Compiler;
+using namespace Spark::FrontEnd;
 
 TEST(TokenBufferTest, AppendTest) {
     TokenBuffer buffer(3, 7);

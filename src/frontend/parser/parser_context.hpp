@@ -1,15 +1,15 @@
 ﻿#pragma once
 
-#include "ast.hpp"
+#include "frontend/ast.hpp"
 #include "parser_error.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 struct ParserContext {
-    AST::AST& ast;
+    AST& ast;
     ParserError error;
 
-    explicit ParserContext(AST::AST& ast, ParserError error = {}) noexcept : ast(ast), error(std::move(error)) { }
+    explicit ParserContext(AST& ast, ParserError error = {}) noexcept : ast(ast), error(std::move(error)) { }
 
     template <typename T, typename... Args>
     T* makeNode(Args&&... args) {
@@ -17,4 +17,4 @@ struct ParserContext {
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

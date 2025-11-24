@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <string>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 struct TokenValue {
     std::string lexeme;
@@ -19,6 +19,14 @@ struct TokenValue {
 
     TokenValue(TokenValue&& other) = default;
     TokenValue& operator=(TokenValue&& other) = default;
+
+    bool operator==(const TokenValue& rhs) const noexcept {
+        return lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
+    }
+
+    bool operator!=(const TokenValue& rhs) const noexcept {
+        return !(*this == rhs);
+    }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

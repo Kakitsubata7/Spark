@@ -3,13 +3,13 @@
 #include <optional>
 #include <vector>
 
-#include "type.hpp"
+#include "core/type.hpp"
 #include "node.hpp"
 #include "utils.hpp"
 #include "utils/bigint.hpp"
 #include "utils/bigreal.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct Pattern : Node {
     Type* type = nullptr;
@@ -87,4 +87,4 @@ struct OrPattern final : Pattern {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

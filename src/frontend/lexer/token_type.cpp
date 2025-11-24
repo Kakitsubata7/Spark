@@ -1,6 +1,6 @@
 ﻿#include "token_type.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 std::string_view toString(TokenType type) noexcept {
     switch (type) {
@@ -118,4 +118,4 @@ std::ostream& operator<<(std::ostream& os, TokenType type) {
     return os;
 }
 
-} // Spark::Compiler
+} // Spark::FrontEnd

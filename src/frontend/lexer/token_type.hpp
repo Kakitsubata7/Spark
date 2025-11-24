@@ -1,10 +1,11 @@
 ﻿#pragma once
 
 #include <ostream>
+#include <string_view>
 
 #include <parser.tab.hpp>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Type alias to `yy::parser::token_kind_type`.
@@ -16,4 +17,4 @@ std::string_view toString(TokenType type) noexcept;
 
 std::ostream& operator<<(std::ostream& os, TokenType type);
 
-} // Spark::Compiler
+} // Spark::FrontEnd

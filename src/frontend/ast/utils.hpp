@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct TypeModifiers final {
     bool isImmutable;
@@ -66,4 +66,4 @@ enum class AssignType {
     CoalesceAssign
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

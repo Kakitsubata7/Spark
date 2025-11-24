@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct Node;
 
@@ -125,4 +125,4 @@ public:
     virtual void visit(TryCatchStmt& node) { }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

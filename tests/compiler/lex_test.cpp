@@ -2,9 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "compiler/lexer.hpp"
+#include "frontend/lexer.hpp"
 
-using namespace Spark::Compiler;
+using namespace Spark::FrontEnd;
 using TT = TokenType;
 
 static Lexer testLexAll(std::string_view source, const std::vector<TT>& expected) {

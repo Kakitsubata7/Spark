@@ -8,7 +8,7 @@
 #include "node_visitor.hpp"
 #include "utils.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct Stmt : Node {
     Stmt(size_t line, size_t column) : Node(line, column) { }
@@ -151,4 +151,4 @@ struct TryCatchStmt final : Stmt {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

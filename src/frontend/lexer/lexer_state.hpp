@@ -3,11 +3,35 @@
 #include <string>
 #include <vector>
 
+#include "frontend/source_buffer.hpp"
 #include "lexer_error.hpp"
-#include "source_buffer.hpp"
 #include "token_buffer.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
+
+class LexerState2 {
+private:
+    size_t _lineno;
+    size_t _columnno;
+    std::istream* _streamp;
+    SourceBuffer* _srcbufp;
+    TokenBuffer _tokbuf;
+    char _strDelim = '\0';
+    std::vector<LexerError> _errors;
+
+public:
+    LexerState2(std::istream* streamp, SourceBuffer* srcbufp, size_t lineno, size_t columnno)
+        : _streamp(streamp), _srcbufp(srcbufp), _tokbuf(lineno, columnno) { }
+
+    LexerState2(std::istream* streamp, size_t lineno, size_t columnno)
+        : LexerState2(streamp, nullptr, lineno, columnno) { }
+
+    LexerState2(const LexerState2& other) = delete;
+    LexerState2& operator=(const LexerState2& other) = delete;
+
+    LexerState2(LexerState2&& other) = default;
+    LexerState2& operator=(LexerState2&& other) = default;
+};
 
 /**
  * Represents additional information used by Flex (as `yyextra`).
@@ -86,4 +110,4 @@ struct LexerState {
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

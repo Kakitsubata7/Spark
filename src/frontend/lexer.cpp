@@ -6,7 +6,7 @@
 
 #include "semantic_type.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 Lexer::Lexer(std::istream& stream, SourceBuffer& srcbuf) : Lexer(stream) {
     _lstate.srcbufp = &srcbuf;
@@ -72,4 +72,4 @@ Result<std::vector<Token>, std::vector<LexerError>> Lexer::lexAll(std::istream& 
     return Result<std::vector<Token>, std::vector<LexerError>>::ok(std::move(tokens));
 }
 
-} // Spark::Compiler
+} // Spark::FrontEnd

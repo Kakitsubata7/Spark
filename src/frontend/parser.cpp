@@ -5,24 +5,23 @@
 #include <parser.tab.hpp>
 
 #include "lexer.hpp"
-#include "parser_context.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
-Result<AST::AST, ParserError> Parser::parse(std::istream& stream) {
-    AST::AST ast;
+AST Parser::parse(std::istream& stream) {
+    AST ast;
     Lexer lexer(stream);
     ParserContext ctx(ast);
     yy::parser parser(lexer._scanner, lexer._lstate, ctx);
 
     int result = parser.parse();
     if (result == 1) {
-        return Result<AST::AST, ParserError>::err(std::move(ctx.error));
+        throw std::runtime_error(ctx.error.message); // TODO
     }
     if (result == 2) {
         throw std::bad_alloc();
     }
-    return Result<AST::AST, ParserError>::ok(std::move(ast));
+    return ast;
 }
 
-} // Spark::Compiler
+} // Spark::FrontEnd

@@ -6,9 +6,13 @@
 
 #include "ast/expr.hpp"
 #include "ast/node.hpp"
+#include "ast/node_visitor.hpp"
+#include "ast/pattern.hpp"
 #include "ast/stmt.hpp"
+#include "ast/type_nodes.hpp"
+#include "ast/utils.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 class AST {
 private:
@@ -42,4 +46,4 @@ public:
     }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

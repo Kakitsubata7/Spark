@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 namespace {
     const std::unordered_map<std::string_view, TokenType> keywordTokenMap {
@@ -39,6 +39,6 @@ TokenType classifyWord(std::string_view word) noexcept {
     return word == "_" ? TokenType::Discard : TokenType::Identifier;
 }
 
-} // Spark::Compiler
+} // Spark::FrontEnd
 
 

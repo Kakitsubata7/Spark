@@ -4,7 +4,7 @@
 %top {
 #include <parser.tab.hpp>
 
-#include "compiler/token_type.hpp"
+#include "frontend/lexer/token_type.hpp"
 
 #define YYSTYPE yy::parser::semantic_type
 }
@@ -13,10 +13,9 @@
 #include <sstream>
 #include <string_view>
 
-#include "compiler/lexer_state.hpp"
-#include "compiler/lexer_utils.hpp"
+#include "frontend/lexer.hpp"
 
-using namespace Spark::Compiler;
+using namespace Spark::FrontEnd;
 
 #define YYLENG (static_cast<size_t>(yyget_leng(yyscanner)))
 #define YYTEXT (std::string_view(yyget_text(yyscanner), YYLENG))

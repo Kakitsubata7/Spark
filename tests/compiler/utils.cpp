@@ -1,7 +1,7 @@
 ﻿#include "utils.hpp"
 
-namespace Spark::Test::Compiler {
+namespace Spark::Test::FrontEnd {
 
 
 
-} // Spark::Test::Compiler
+} // Spark::Test::FrontEnd

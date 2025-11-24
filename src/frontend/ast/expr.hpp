@@ -1,14 +1,14 @@
 ﻿#pragma once
 
+#include "core/type.hpp"
 #include "node.hpp"
 #include "node_visitor.hpp"
 #include "pattern.hpp"
-#include "type.hpp"
 #include "utils.hpp"
 #include "utils/bigint.hpp"
 #include "utils/bigreal.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct Expr : Node {
     Type* type = nullptr;
@@ -190,4 +190,4 @@ struct TryElseExpr final : Expr {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

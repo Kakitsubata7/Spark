@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 struct ParserError {
     std::string message;
@@ -23,4 +23,4 @@ struct ParserError {
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

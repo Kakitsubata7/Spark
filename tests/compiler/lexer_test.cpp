@@ -2,12 +2,12 @@
 
 #include <gtest/gtest.h>
 
-#include "compiler/lexer.hpp"
+#include "frontend/lexer.hpp"
 
 #include "utils.hpp"
 
-using namespace Spark::Compiler;
-using namespace Spark::Test::Compiler;
+using namespace Spark::FrontEnd;
+using namespace Spark::Test::FrontEnd;
 using TT = TokenType;
 
 static void expectTokens(const std::vector<Token>& actual, const std::vector<Token>& expected) {

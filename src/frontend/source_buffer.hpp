@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Represents a buffer to store and lookup lines from a compiling file.
@@ -40,4 +40,4 @@ public:
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

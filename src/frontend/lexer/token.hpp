@@ -2,7 +2,7 @@
 
 #include "token_type.hpp"
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Represents a token produced by a lexer, containing the type and the value of the token.
@@ -33,4 +33,4 @@ struct Token {
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd

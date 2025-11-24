@@ -5,7 +5,7 @@
 
 #include "node.hpp"
 
-namespace Spark::Compiler::AST {
+namespace Spark::FrontEnd {
 
 struct TypeNode : Node {
     TypeNode(size_t line, size_t column) noexcept : Node(line, column) { }
@@ -33,4 +33,4 @@ struct TypePath final : TypeNode {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-} // Spark::Compiler::AST
+} // Spark::FrontEnd

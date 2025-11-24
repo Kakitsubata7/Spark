@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace Spark::Compiler {
+namespace Spark::FrontEnd {
 
 /**
  * Represents a buffer used by `LexerState` to store a token currently being processed.
@@ -77,4 +77,4 @@ public:
     }
 };
 
-} // Spark::Compiler
+} // Spark::FrontEnd
