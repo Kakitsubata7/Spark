@@ -2,13 +2,13 @@
 
 #include <vector>
 
-#include "lexer/lexer_error.hpp"
 #include "lexer/lexer_state.hpp"
 #include "lexer/lexer_utils.hpp"
 #include "lexer/token.hpp"
 #include "lexer/token_buffer.hpp"
 #include "lexer/token_type.hpp"
 #include "lexer/token_value.hpp"
+#include "utils/error.hpp"
 #include "utils/result.hpp"
 #include "source_buffer.hpp"
 
@@ -39,14 +39,14 @@ public:
     }
 
     [[nodiscard]]
-    const std::vector<LexerError>& errors() const noexcept {
+    const std::vector<Error>& errors() const noexcept {
         return _lstate.errors;
     }
 
     Token lex();
     std::vector<Token> lexAll();
 
-    static Result<std::vector<Token>, std::vector<LexerError>> lexAll(std::istream& stream);
+    static Result<std::vector<Token>, std::vector<Error>> lexAll(std::istream& stream);
 
     void switchStream(std::istream& stream) noexcept {
         _lstate.streamp = &stream;

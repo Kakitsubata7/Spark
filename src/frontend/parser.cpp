@@ -16,7 +16,7 @@ AST Parser::parse(std::istream& stream) {
 
     int result = parser.parse();
     if (result == 1) {
-        throw std::runtime_error(ctx.error.message); // TODO
+        throw std::runtime_error("TODO"); // TODO
     }
     if (result == 2) {
         throw std::bad_alloc();

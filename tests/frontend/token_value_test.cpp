@@ -23,10 +23,10 @@ TEST(TokenValueTest, EqTest) {
     b.lexeme = "IbOJ6\th0_\n \rB7E";
     EXPECT_FALSE(a == b);
 
-    b.line = 90808990;
+    b.lineno = 90808990;
     EXPECT_FALSE(a == b);
 
-    b.column = 8264291;
+    b.columnno = 8264291;
     EXPECT_TRUE(a == b);
 }
 
@@ -49,9 +49,9 @@ TEST(TokenValueTest, NeTest) {
     b.lexeme = "zCr__ DASBy0\no";
     EXPECT_TRUE(a != b);
 
-    b.line = 122990;
+    b.lineno = 122990;
     EXPECT_TRUE(a != b);
 
-    b.column = 4991220;
+    b.columnno = 4991220;
     EXPECT_FALSE(a != b);
 }

@@ -15,6 +15,7 @@
 
 #include "frontend/lexer.hpp"
 
+using namespace Spark;
 using namespace Spark::FrontEnd;
 
 #define YYLENG (static_cast<size_t>(yyget_leng(yyscanner)))
@@ -29,16 +30,16 @@ using namespace Spark::FrontEnd;
 
 #define EMIT_TOKEN(text, line, col) (YYLVAL->emplace<TokenValue>(std::string(text), (line), (col)))
 
-#define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
+#define RAISE_ERROR(message, start, end) (LSTATE.addError((message), (start), (end)))
 
-#define YY_INPUT(buf, result, max_size)                                 \
-{                                                                       \
-    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner)); \
-    ls.streamp->read(reinterpret_cast<char*>(buf), max_size);           \
-    result = ls.streamp->gcount();                                      \
-    if (result == 0) {                                                  \
-        result = YY_NULL;                                               \
-    }                                                                   \
+#define YY_INPUT(buf, result, max_size)                         \
+{                                                               \
+    LexerState& ls = LSTATE;                                    \
+    ls.streamp->read(reinterpret_cast<char*>(buf), (max_size)); \
+    (result) = ls.streamp->gcount();                            \
+    if ((result) == 0) {                                        \
+        (result) = YY_NULL;                                     \
+    }                                                           \
 }
 %}
 
@@ -93,13 +94,14 @@ using namespace Spark::FrontEnd;
         LBUFFER.append(YYTEXT[1]);
         std::ostringstream oss;
         oss << "unrecognized escape sequence: " << "'" << YYTEXT << "'";
-        RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
+        RAISE_ERROR(oss.str(), Location(YYLINENO, YYCOLUMNNO - 1), Location(YYLINENO, YYCOLUMNNO));
         LSTATE.step(2);
     }
 
     (\r\n|\r|\n) {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", Location(LBUFFER.line(), LBUFFER.column()),
+            Location(YYLINENO, YYCOLUMNNO - 1));
         LSTATE.whenNewline();
         EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
         return TokenType::String;
@@ -107,7 +109,8 @@ using namespace Spark::FrontEnd;
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", Location(LBUFFER.line(), LBUFFER.column()),
+            Location(YYLINENO, YYCOLUMNNO - 1));
         EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
         return TokenType::String;
     }
@@ -154,7 +157,8 @@ using namespace Spark::FrontEnd;
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated block comment", YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated block comment", Location(YYLINENO, YYCOLUMNNO - 1),
+            Location(YYLINENO, YYCOLUMNNO - 1));
         EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
         return TokenType::BlockComment;
     }
@@ -231,7 +235,7 @@ using namespace Spark::FrontEnd;
 . {
     std::ostringstream oss;
     oss << "unrecognized character: " << "'" << YYTEXT << "'";
-    RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
+    RAISE_ERROR(oss.str(), Location(YYLINENO, YYCOLUMNNO), Location(YYLINENO, YYCOLUMNNO));
     EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
     LSTATE.step(1);
     return TokenType::Error;

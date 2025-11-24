@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "frontend/source_buffer.hpp"
-#include "lexer_error.hpp"
 #include "token_buffer.hpp"
+#include "utils/error.hpp"
 
 namespace Spark::FrontEnd {
 
@@ -16,16 +16,29 @@ private:
     std::istream* _streamp;
     SourceBuffer* _srcbufp;
     TokenBuffer _tokbuf;
-    char _strDelim = '\0';
-    std::vector<LexerError> _errors;
+    std::vector<Error> _errors;
 
 public:
-    LexerState2(std::istream* streamp, SourceBuffer* srcbufp, size_t lineno, size_t columnno)
-        : _lineno(lineno), _columnno(columnno), _streamp(streamp), _srcbufp(srcbufp),
+    char _strDelim = '\0';
+
+    [[nodiscard]]
+    constexpr std::istream& stream() noexcept { return *_streamp; }
+
+    [[nodiscard]]
+    constexpr const std::istream& stream() const noexcept { return *_streamp; }
+
+    [[nodiscard]]
+    constexpr TokenBuffer& tokbuf() noexcept { return _tokbuf; }
+
+    [[nodiscard]]
+    constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
+
+    LexerState2(std::istream& streamp, SourceBuffer srcbufp, size_t lineno, size_t columnno)
+        : _lineno(lineno), _columnno(columnno), _streamp(&streamp), _srcbufp(&srcbufp),
           _tokbuf(lineno, columnno) { }
 
-    LexerState2(std::istream* streamp, size_t lineno, size_t columnno)
-        : LexerState2(streamp, nullptr, lineno, columnno) { }
+    // LexerState2(std::istream* streamp, size_t lineno, size_t columnno)
+    //     : LexerState2(streamp, nullptr, lineno, columnno) { }
 
     LexerState2(const LexerState2& other) = delete;
     LexerState2& operator=(const LexerState2& other) = delete;
@@ -33,7 +46,27 @@ public:
     LexerState2(LexerState2&& other) = default;
     LexerState2& operator=(LexerState2&& other) = default;
 
+    void switchStream(std::istream& stream) noexcept {
+        _streamp = &stream;
+    }
 
+    /**
+      * Adds a new error to the state.
+      * @param error `Error` instance to add.
+      */
+    void addError(Error error) noexcept {
+        _errors.push_back(std::move(error));
+    }
+
+    /**
+     * Constructs and adds a new error to the state.
+     * @param message Error message.
+     * @param start Start location where the error occurred.
+     * @param end End location where the error occurred.
+     */
+    void addError(std::string_view message, Location start, Location end) {
+        _errors.emplace_back(std::string(message), start, end);
+    }
 };
 
 /**
@@ -70,7 +103,7 @@ struct LexerState {
     /**
      * Lexing errors encountered by the state.
      */
-    std::vector<LexerError> errors;
+    std::vector<Error> errors;
 
     LexerState(const LexerState& other) = delete;
     LexerState& operator=(const LexerState& other) = delete;
@@ -98,18 +131,18 @@ struct LexerState {
      * Adds a new `LexerError` instance to the state.
      * @param error `LexerError` instance to add.
      */
-    void addError(LexerError error) {
+    void addError(Error error) noexcept {
         errors.push_back(std::move(error));
     }
 
     /**
      * Constructs and adds a new `LexerError` instance to the state.
      * @param message Error message.
-     * @param lineno Line number where the error occurred.
-     * @param columnno Column number where the error occurred.
+     * @param start Start location of the error.
+     * @param end End location of the error.
      */
-    void addError(std::string_view message, size_t lineno, size_t columnno) {
-        errors.emplace_back(std::string(message), lineno, columnno);
+    void addError(std::string_view message, Location start, Location end) {
+        errors.emplace_back(std::string(message), start, end);
     }
 };
 

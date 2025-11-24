@@ -18,7 +18,6 @@
 #include "frontend/lexer/lexer_state.hpp"
 #include "frontend/lexer/token_value.hpp"
 #include "frontend/parser/parser_context.hpp"
-#include "frontend/parser/parser_error.hpp"
 
 typedef void* yyscan_t;
 }
@@ -75,13 +74,13 @@ int yylex(yy::parser::semantic_type* yylval, yyscan_t scanner);
 start:
       /* empty */
         {
-            auto* root = ctx.ast.root();
+            auto* root = ctx.ast().root();
             root->stmts.clear();
             $$ = root;
         }
     | start stmt
         {
-            auto* root = ctx.ast.root();
+            auto* root = ctx.ast().root();
             root->stmts.push_back(static_cast<Stmt*>($2));
             $$ = root;
         }
@@ -95,7 +94,7 @@ stmt:
 block:
       Do block_stmts End
         {
-            auto* block = ctx.makeNode<BlockStmt>($1.line, $1.column);
+            auto* block = ctx.makeNode<BlockStmt>($1.lineno, $1.columnno);
             block->stmts.insert(block->stmts.end(), $2.begin(), $2.end());
             $$ = block;
         }
@@ -119,7 +118,7 @@ let:
 while:
       While expr block
         {
-            $$ = ctx.makeNode<WhileStmt>($1.line, $1.column, $2, $3);
+            $$ = ctx.makeNode<WhileStmt>($1.lineno, $1.columnno, $2, $3);
         }
     ;
 
@@ -129,17 +128,17 @@ expr:
 
 primary:
       literal            { $$ = $1; }
-    | Identifier         { $$ = ctx.makeNode<VarExpr>($1.line, $1.column, $1.lexeme); }
+    | Identifier         { $$ = ctx.makeNode<VarExpr>($1.lineno, $1.columnno, $1.lexeme); }
     | LParen expr RParen { $$ = $2; }
     ;
 
 literal:
-      Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.line, $1.column, BigInt($1.lexeme)); }
-    | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.line, $1.column, BigReal($1.lexeme)); }
-    | String     { $$ = ctx.makeNode<StringLiteralExpr>($1.line, $1.column, $1.lexeme); }
-    | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, true); }
-    | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.line, $1.column, false); }
-    | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.line, $1.column); }
+      Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.lineno, $1.columnno, BigInt($1.lexeme)); }
+    | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.lineno, $1.columnno, BigReal($1.lexeme)); }
+    | String     { $$ = ctx.makeNode<StringLiteralExpr>($1.lineno, $1.columnno, $1.lexeme); }
+    | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.lineno, $1.columnno, true); }
+    | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.lineno, $1.columnno, false); }
+    | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.lineno, $1.columnno); }
     ;
 
 type:
@@ -149,7 +148,7 @@ type:
 type_segment:
       Identifier type_modifiers
         {
-            $$ = ctx.makeNode<TypeSegment>($1.line, $1.column, $1.lexeme,
+            $$ = ctx.makeNode<TypeSegment>($1.lineno, $1.columnno, $1.lexeme,
                 $2.isImmutable, $2.isNullable);
         }
     ;
@@ -157,7 +156,7 @@ type_segment:
 type_path:
       type_segment
         {
-            auto* path = ctx.makeNode<TypePath>($1->line, $1->column);
+            auto* path = ctx.makeNode<TypePath>($1->lineno, $1->column);
             path->segments.push_back($1);
             $$ = path;
         }
@@ -193,5 +192,5 @@ type_modifiers:
 %%
 
 void yy::parser::error(const std::string& msg) {
-	ctx.error = ParserError(msg, lstate.lineno, lstate.columnno);
+    // TODO
 }

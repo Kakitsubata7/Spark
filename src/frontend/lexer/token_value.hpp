@@ -7,12 +7,12 @@ namespace Spark::FrontEnd {
 
 struct TokenValue {
     std::string lexeme;
-    size_t line = 0;
-    size_t column = 0;
+    size_t lineno = 0;
+    size_t columnno = 0;
 
     TokenValue() = default;
-    TokenValue(std::string lexeme, size_t line, size_t column) noexcept
-        : lexeme(std::move(lexeme)), line(line), column(column) { }
+    TokenValue(std::string lexeme, size_t lineno, size_t columnno) noexcept
+        : lexeme(std::move(lexeme)), lineno(lineno), columnno(columnno) { }
 
     TokenValue(const TokenValue& other) = default;
     TokenValue& operator=(const TokenValue& other) = default;
@@ -21,7 +21,7 @@ struct TokenValue {
     TokenValue& operator=(TokenValue&& other) = default;
 
     bool operator==(const TokenValue& rhs) const noexcept {
-        return lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
+        return lexeme == rhs.lexeme && lineno == rhs.lineno && columnno == rhs.columnno;
     }
 
     bool operator!=(const TokenValue& rhs) const noexcept {

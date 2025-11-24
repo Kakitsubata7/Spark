@@ -60,7 +60,6 @@ add_library(sparklib
 
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
-        src/frontend/lexer/lexer_error.hpp
         src/frontend/lexer/lexer_state.hpp
         src/frontend/lexer/lexer_utils.cpp
         src/frontend/lexer/lexer_utils.hpp
@@ -73,9 +72,9 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
         src/frontend/parser/parser_context.hpp
-        src/frontend/parser/parser_error.hpp
 
         src/frontend/semantic_type.hpp
+        src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp
 
         src/runtime/allocator.hpp
@@ -88,6 +87,7 @@ add_library(sparklib
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
         src/utils/error.hpp
+        src/utils/location.hpp
         src/utils/result.hpp
 )
 
@@ -107,13 +107,14 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
-        tests/compiler/lex_test.cpp
-        tests/compiler/lexer_test.cpp
-        tests/compiler/parser_test.cpp
-        tests/compiler/token_buffer_test.cpp
-        tests/compiler/token_value_test.cpp
-        tests/compiler/utils.cpp
-        tests/compiler/utils.hpp
+        tests/frontend/lex_test.cpp
+        tests/frontend/lexer_test.cpp
+        tests/frontend/parser_test.cpp
+        tests/frontend/source_buffer_test.cpp
+        tests/frontend/token_buffer_test.cpp
+        tests/frontend/token_value_test.cpp
+        tests/frontend/utils.cpp
+        tests/frontend/utils.hpp
         tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest
