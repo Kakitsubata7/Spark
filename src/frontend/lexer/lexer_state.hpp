@@ -21,7 +21,8 @@ private:
 
 public:
     LexerState2(std::istream* streamp, SourceBuffer* srcbufp, size_t lineno, size_t columnno)
-        : _streamp(streamp), _srcbufp(srcbufp), _tokbuf(lineno, columnno) { }
+        : _lineno(lineno), _columnno(columnno), _streamp(streamp), _srcbufp(srcbufp),
+          _tokbuf(lineno, columnno) { }
 
     LexerState2(std::istream* streamp, size_t lineno, size_t columnno)
         : LexerState2(streamp, nullptr, lineno, columnno) { }
@@ -31,6 +32,8 @@ public:
 
     LexerState2(LexerState2&& other) = default;
     LexerState2& operator=(LexerState2&& other) = default;
+
+
 };
 
 /**

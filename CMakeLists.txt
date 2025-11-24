@@ -84,7 +84,6 @@ add_library(sparklib
         src/runtime/rc.hpp
         src/runtime/spark.hpp
         src/runtime/thread.hpp
-        src/runtime/type.hpp
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
