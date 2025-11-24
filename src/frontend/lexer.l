@@ -18,8 +18,6 @@
 using namespace Spark;
 using namespace Spark::FrontEnd;
 
-extern yy::parser::location_type yylloc;
-
 #define YYLENG (static_cast<size_t>(yyget_leng(yyscanner)))
 #define YYTEXT (std::string_view(yyget_text(yyscanner), YYLENG))
 #define YYLVAL (yyget_lval(yyscanner))
