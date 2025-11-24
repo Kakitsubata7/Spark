@@ -8,20 +8,16 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream, SourceBuffer& srcbuf) : Lexer(stream) {
-    _lstate.srcbufp = &srcbuf;
-}
-
-Lexer::Lexer(std::istream& stream) : _scanner(nullptr), _lstate{} {
+Lexer::Lexer(std::istream& stream, SourceBuffer& srcbuf)
+    : _scanner(nullptr), _lstate(stream, srcbuf, 1, 1) {
     yylex_init(&_scanner);
     if (_scanner == nullptr) {
         throw std::bad_alloc();
     }
-
-    _lstate.streamp = &stream;
-    _lstate.srcbufp = nullptr;
     yyset_extra(&_lstate, _scanner);
 }
+
+Lexer::Lexer(std::istream& stream) : Lexer(stream, NullSourceBuffer::instance()) { }
 
 Lexer::~Lexer() {
     if (_scanner != nullptr) {
@@ -46,7 +42,7 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
 Token Lexer::lex() {
     SemanticType s;
     TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
-    TokenValue& value = s.as<TokenValue>();
+    const TokenValue& value = s.as<TokenValue>();
     return Token{type, value.lexeme, value.lineno, value.columnno};
 }
 
@@ -62,14 +58,10 @@ std::vector<Token> Lexer::lexAll() {
     return tokens;
 }
 
-Result<std::vector<Token>, std::vector<Error>> Lexer::lexAll(std::istream& stream) {
+std::pair<std::vector<Token>, std::vector<Error>> Lexer::lexAll(std::istream& stream) {
     Lexer lexer(stream);
     std::vector<Token> tokens = lexer.lexAll();
-
-    if (lexer.hasError()) {
-        return Result<std::vector<Token>, std::vector<Error>>::err(std::move(lexer._lstate.errors));
-    }
-    return Result<std::vector<Token>, std::vector<Error>>::ok(std::move(tokens));
+    return std::make_pair(tokens, lexer.errors());
 }
 
 } // Spark::FrontEnd

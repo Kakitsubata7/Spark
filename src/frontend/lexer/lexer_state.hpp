@@ -9,18 +9,20 @@
 
 namespace Spark::FrontEnd {
 
-class LexerState2 {
+/**
+ * Represents the lexer state used by Flex (as `yyextra`).
+ */
+class LexerState {
 private:
+    std::istream* _streamp;
     size_t _lineno;
     size_t _columnno;
-    std::istream* _streamp;
     SourceBuffer* _srcbufp;
     TokenBuffer _tokbuf;
+    char _strDelim = '\0';
     std::vector<Error> _errors;
 
 public:
-    char _strDelim = '\0';
-
     [[nodiscard]]
     constexpr std::istream& stream() noexcept { return *_streamp; }
 
@@ -28,26 +30,63 @@ public:
     constexpr const std::istream& stream() const noexcept { return *_streamp; }
 
     [[nodiscard]]
+    constexpr size_t lineno() const noexcept { return _lineno; }
+
+    [[nodiscard]]
+    constexpr size_t columnno() const noexcept { return _columnno; }
+
+    [[nodiscard]]
+    constexpr SourceBuffer& srcbuf() const noexcept { return *_srcbufp; }
+
+    [[nodiscard]]
     constexpr TokenBuffer& tokbuf() noexcept { return _tokbuf; }
+
+    [[nodiscard]]
+    constexpr char strDelim() const noexcept { return _strDelim; }
 
     [[nodiscard]]
     constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
 
-    LexerState2(std::istream& streamp, SourceBuffer srcbufp, size_t lineno, size_t columnno)
-        : _lineno(lineno), _columnno(columnno), _streamp(&streamp), _srcbufp(&srcbufp),
+    LexerState(std::istream& stream, SourceBuffer& srcbuf, size_t lineno, size_t columnno)
+        : _streamp(&stream), _lineno(lineno), _columnno(columnno), _srcbufp(&srcbuf),
           _tokbuf(lineno, columnno) { }
 
-    // LexerState2(std::istream* streamp, size_t lineno, size_t columnno)
-    //     : LexerState2(streamp, nullptr, lineno, columnno) { }
+    LexerState(const LexerState& other) = delete;
+    LexerState& operator=(const LexerState& other) = delete;
 
-    LexerState2(const LexerState2& other) = delete;
-    LexerState2& operator=(const LexerState2& other) = delete;
+    LexerState(LexerState&& other) = default;
+    LexerState& operator=(LexerState&& other) = default;
 
-    LexerState2(LexerState2&& other) = default;
-    LexerState2& operator=(LexerState2&& other) = default;
+    /**
+     * Updates the state when a newline is encountered.
+     */
+    constexpr void whenNewline() noexcept {
+        ++_lineno;
+        _columnno = 1;
+    }
 
+    /**
+     * Updates the state when @p n characters are advanced.
+     * @param n Number of characters advanced.
+     */
+    constexpr void advance(size_t n) noexcept {
+        _columnno += n;
+    }
+
+    /**
+     * Switches the stream to a new stream.
+     * @param stream New stream.
+     */
     void switchStream(std::istream& stream) noexcept {
         _streamp = &stream;
+    }
+
+    /**
+     * Sets the string delimiter.
+     * @param strDelim New string delimiter.
+     */
+    constexpr void setStrDelim(char strDelim) noexcept {
+        _strDelim = strDelim;
     }
 
     /**
@@ -67,82 +106,13 @@ public:
     void addError(std::string_view message, Location start, Location end) {
         _errors.emplace_back(std::string(message), start, end);
     }
-};
 
-/**
- * Represents additional information used by Flex (as `yyextra`).
- */
-struct LexerState {
     /**
-     * Current line number of the state.
+     * Clears the lexer state.
      */
-    size_t lineno = 1;
-
-    /**
-     * Current column number of the state.
-     */
-    size_t columnno = 1;
-
-    /**
-     * Pointer to the `std::istream` being processed by the state.
-     */
-    std::istream* streamp = nullptr;
-
-    SourceBuffer* srcbufp = nullptr;
-
-    /**
-     * The opening/closing delimiter used by the currently processing string literal.
-     */
-    char stringDelimiter = '\0';
-
-    /**
-      * String buffer to store a currently processing token.
-      */
-    TokenBuffer tokenBuffer{1, 1};
-
-    /**
-     * Lexing errors encountered by the state.
-     */
-    std::vector<Error> errors;
-
-    LexerState(const LexerState& other) = delete;
-    LexerState& operator=(const LexerState& other) = delete;
-
-    LexerState(LexerState&& other) = default;
-    LexerState& operator=(LexerState&& other) = default;
-
-    /**
-     * Updates the state when a newline is encountered.
-     */
-    constexpr void whenNewline() noexcept {
-        ++lineno;
-        columnno = 1;
-    }
-
-    /**
-     * Updates the state when @p n characters are consumed.
-     * @param n Number of characters consumed.
-     */
-    constexpr void step(size_t n) noexcept {
-        columnno += n;
-    }
-
-    /**
-     * Adds a new `LexerError` instance to the state.
-     * @param error `LexerError` instance to add.
-     */
-    void addError(Error error) noexcept {
-        errors.push_back(std::move(error));
-    }
-
-    /**
-     * Constructs and adds a new `LexerError` instance to the state.
-     * @param message Error message.
-     * @param start Start location of the error.
-     * @param end End location of the error.
-     */
-    void addError(std::string_view message, Location start, Location end) {
-        errors.emplace_back(std::string(message), start, end);
+    void clear() {
+        _srcbufp->clear();
+        _tokbuf.reset(1, 1);
     }
 };
 

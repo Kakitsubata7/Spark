@@ -18,7 +18,9 @@ private:
     bool _endedWithNewline = false;
 
 public:
-    virtual ~SourceBuffer() = 0;
+    virtual ~SourceBuffer() = default;
+
+    SourceBuffer& operator=(SourceBuffer&& other) = default;
 
     /**
       * Gets the number of lines in the buffer.
@@ -68,12 +70,18 @@ private:
     }
 };
 
+/**
+ * Represents a null object for the `SourceBuffer` class.
+ */
 class NullSourceBuffer final : public SourceBuffer {
 private:
-    static NullSourceBuffer _instance;
+    std::string _empty;
 
 public:
-    static NullSourceBuffer& instance() noexcept { return _instance; }
+    static NullSourceBuffer& instance() noexcept {
+        static NullSourceBuffer instance;
+        return instance;
+    }
 
     NullSourceBuffer() = default;
 
@@ -81,7 +89,7 @@ public:
     size_t lineNum() const noexcept override { return 0; }
 
     [[nodiscard]]
-    const std::string& getLine(size_t lineno) const override { return ""; }
+    const std::string& getLine(size_t lineno) const override { return _empty; }
 
     void append(std::string_view sv) override { }
 
