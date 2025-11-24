@@ -18,12 +18,14 @@ private:
     bool _endedWithNewline = false;
 
 public:
+    virtual ~SourceBuffer() = 0;
+
     /**
       * Gets the number of lines in the buffer.
       * @return Number of lines in the buffer.
       */
     [[nodiscard]]
-    size_t lineNum() const noexcept {
+    virtual size_t lineNum() const noexcept {
         return _lines.size();
     }
 
@@ -33,7 +35,7 @@ public:
      * @return Line string at @p lineno.
      */
     [[nodiscard]]
-    const std::string& getLine(size_t lineno) const {
+    virtual const std::string& getLine(size_t lineno) const {
         return _lines[lineno - 1];
     }
 
@@ -41,17 +43,17 @@ public:
      * Appends a chunk of string to the buffer.
      * @param sv String to append.
      */
-    void append(std::string_view sv);
+    virtual void append(std::string_view sv);
 
     /**
      * Notifies the buffer EOF is reached or stop expecting more contents.
      */
-    void flush();
+    virtual void flush();
 
     /**
      * Clears the current content of the source buffer.
      */
-    void clear() noexcept {
+    virtual void clear() noexcept {
         _lines.clear();
         _buf.clear();
     }
@@ -64,6 +66,28 @@ private:
     void appendLine(std::string line) noexcept {
         _lines.push_back(std::move(line));
     }
+};
+
+class NullSourceBuffer final : public SourceBuffer {
+private:
+    static NullSourceBuffer _instance;
+
+public:
+    static NullSourceBuffer& instance() noexcept { return _instance; }
+
+    NullSourceBuffer() = default;
+
+    [[nodiscard]]
+    size_t lineNum() const noexcept override { return 0; }
+
+    [[nodiscard]]
+    const std::string& getLine(size_t lineno) const override { return ""; }
+
+    void append(std::string_view sv) override { }
+
+    void flush() override { }
+
+    void clear() noexcept override { }
 };
 
 } // Spark::FrontEnd
