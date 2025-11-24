@@ -31,6 +31,13 @@ public:
     const std::string& getLine(size_t lineno) const {
         return _lines[lineno - 1];
     }
+
+    /**
+     * Clears the current content of the source buffer.
+     */
+    void clear() noexcept {
+        _lines.clear();
+    }
 };
 
 } // Spark::Compiler

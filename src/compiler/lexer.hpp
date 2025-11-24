@@ -4,6 +4,7 @@
 
 #include "lexer_state.hpp"
 #include "result.hpp"
+#include "source_buffer.hpp"
 #include "token.hpp"
 
 namespace Spark::Compiler {
@@ -17,6 +18,7 @@ private:
     LexerState _lstate;
 
 public:
+    Lexer(std::istream& stream, SourceBuffer& srcbuf);
     explicit Lexer(std::istream& stream);
     ~Lexer();
 
@@ -42,7 +44,14 @@ public:
     static Result<std::vector<Token>, std::vector<LexerError>> lexAll(std::istream& stream);
 
     void switchStream(std::istream& stream) noexcept {
-        _lstate.stream = &stream;
+        _lstate.streamp = &stream;
+    }
+
+    void clear() noexcept {
+        if (_lstate.srcbufp != nullptr) {
+            _lstate.srcbufp->clear();
+        }
+        _lstate.tokenBuffer.reset(1, 1);
     }
 
     friend class Parser;

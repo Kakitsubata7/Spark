@@ -46,7 +46,7 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
-        src/compiler/ast/ast.hpp
+        src/compiler/ast.hpp
         src/compiler/ast/expr.hpp
         src/compiler/ast/node.hpp
         src/compiler/ast/node_visitor.hpp
@@ -66,6 +66,7 @@ add_library(sparklib
         src/compiler/parser_context.hpp
         src/compiler/parser_error.hpp
         src/compiler/semantic_type.hpp
+        src/compiler/source_buffer.hpp
         src/compiler/token.hpp
         src/compiler/token_buffer.hpp
         src/compiler/token_type.cpp

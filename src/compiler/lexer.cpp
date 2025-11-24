@@ -1,13 +1,25 @@
 ﻿#include "lexer.hpp"
 
+#include <new>
+
 #include <lex.yy.hpp>
 
 #include "semantic_type.hpp"
 
 namespace Spark::Compiler {
 
-Lexer::Lexer(std::istream& stream) : _lstate(1, 1, &stream) {
+Lexer::Lexer(std::istream& stream, SourceBuffer& srcbuf) : Lexer(stream) {
+    _lstate.srcbufp = &srcbuf;
+}
+
+Lexer::Lexer(std::istream& stream) : _scanner(nullptr), _lstate{} {
     yylex_init(&_scanner);
+    if (_scanner == nullptr) {
+        throw std::bad_alloc();
+    }
+
+    _lstate.streamp = &stream;
+    _lstate.srcbufp = nullptr;
     yyset_extra(&_lstate, _scanner);
 }
 
@@ -35,7 +47,7 @@ Token Lexer::lex() {
     SemanticType s;
     TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
     TokenValue& value = s.as<TokenValue>();
-    return Token{ type, value.lexeme, value.line, value.column };
+    return Token{type, value.lexeme, value.line, value.column};
 }
 
 std::vector<Token> Lexer::lexAll() {

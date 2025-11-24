@@ -196,5 +196,5 @@ type_modifiers:
 %%
 
 void yy::parser::error(const std::string& msg) {
-	ctx.error = ParserError(msg, lstate.line, lstate.column);
+	ctx.error = ParserError(msg, lstate.lineno, lstate.columnno);
 }

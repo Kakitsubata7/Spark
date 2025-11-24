@@ -4,9 +4,9 @@
 #include <utility>
 #include <vector>
 
-#include "expr.hpp"
-#include "node.hpp"
-#include "stmt.hpp"
+#include "ast/expr.hpp"
+#include "ast/node.hpp"
+#include "ast/stmt.hpp"
 
 namespace Spark::Compiler::AST {
 

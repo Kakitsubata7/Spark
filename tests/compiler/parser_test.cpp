@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "compiler/ast/ast.hpp"
+#include "compiler/ast.hpp"
 #include "compiler/parser.hpp"
 #include "compiler/parser_error.hpp"
 #include "result.hpp"
