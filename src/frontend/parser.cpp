@@ -13,8 +13,9 @@ std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
                                                  SourceBuffer& srcbuf) {
     AST ast;
     Lexer lexer(stream, filename, srcbuf);
+    yy::parser::location_type loc;
     ParserContext ctx(ast);
-    yy::parser parser(lexer._scanner, ctx);
+    yy::parser parser(lexer._scanner, &loc, ctx);
 
     int result = parser.parse();
     if (result == 1) {
