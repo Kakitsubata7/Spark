@@ -54,6 +54,10 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
 %type <Spark::FrontEnd::Node*> start
 
+%type <Spark::FrontEnd::Stmt*> call_stmt
+%type <Spark::FrontEnd::Expr*> call_expr
+%type <std::vector<Spark::FrontEnd::Expr*>> call_args
+
 %type <Spark::FrontEnd::Stmt*> stmt
 %type <Spark::FrontEnd::BlockStmt*> block
 %type <std::vector<Spark::FrontEnd::Stmt*>> block_stmts
@@ -104,9 +108,10 @@ start:
     ;
 
 stmt:
-      block
+      block         { $$ = $1; }
     | assign_stmt
     | while
+    | call_stmt
     ;
 
 block:
@@ -144,6 +149,13 @@ while:
       While expr block
         {
             $$ = ctx.makeNode<WhileStmt>($1.start, $1.end, $2, $3);
+        }
+    ;
+
+call_stmt:
+      call_expr
+        {
+            $$ = ctx.makeNode<CallStmt>($1->start, $1->end, $1);
         }
     ;
 
@@ -350,6 +362,32 @@ unary_expr:
 
 postfix_expr:
       primary            { $$ = $1; }
+    | postfix_expr Dot Identifier
+        {
+            $$ = ctx.makeNode<FieldAccessExpr>($1->start, $3.end, $1, $3.lexeme);
+        }
+    | postfix_expr LParen call_args RParen
+        {
+            $$ = ctx.makeNode<CallExpr>($1->start, $4.end, $1, $3);
+        }
+    ;
+
+call_args:
+      /* empty */        { $$.clear(); }
+    | expr
+        {
+            $$.clear();
+            $$.push_back($1);
+        }
+    | call_args Comma expr
+        {
+            $$ = std::move($1);
+            $$.push_back($3);
+        }
+    ;
+
+call_expr:
+      postfix_expr       { $$ = $1; }
     ;
 
 primary:

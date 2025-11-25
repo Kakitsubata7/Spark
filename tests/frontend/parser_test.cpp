@@ -28,3 +28,9 @@ TEST(ParserTest, SimpleTest2) {
     auto [ast, errors] = parse(source);
     EXPECT_TRUE(errors.empty());
 }
+
+TEST(ParserTest, SimpleTest3) {
+    std::string_view source = R"(foo.bar.baz())";
+    auto [ast, errors] = parse(source);
+    EXPECT_TRUE(errors.empty());
+}

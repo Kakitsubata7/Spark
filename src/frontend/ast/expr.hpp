@@ -136,15 +136,21 @@ struct BinaryExpr final : Expr {
 };
 
 struct FieldAccessExpr final : Expr {
-    Expr* left = nullptr;
-    Name right;
+    Expr* target = nullptr;
+    std::string field;
+
+    FieldAccessExpr(Location start, Location end, Expr* target, std::string field) noexcept
+        : Expr(start, end), target(target), field(std::move(field)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct CallExpr final : Expr {
-    Expr* func = nullptr;
+    Expr* callable;
     std::vector<Expr*> args;
+
+    CallExpr(Location start, Location end, Expr* callable, std::vector<Expr*> args = {}) noexcept
+        : Expr(start, end), callable(callable), args(std::move(args)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

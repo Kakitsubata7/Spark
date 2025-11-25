@@ -60,8 +60,11 @@ struct AssignStmt final : Stmt {
 };
 
 struct CallStmt final : Stmt {
-    Expr* func = nullptr;
+    Expr* callable;
     std::vector<Expr*> args;
+
+    CallStmt(Location start, Location end, Expr* callable, std::vector<Expr*> args = {}) noexcept
+        : Stmt(start, end), callable(callable), args(std::move(args)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
