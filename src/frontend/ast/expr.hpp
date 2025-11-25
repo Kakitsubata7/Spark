@@ -88,16 +88,22 @@ struct AssignExpr final : Expr {
     Expr* target = nullptr;
     Expr* expr = nullptr;
 
+    AssignExpr(Location start, Location end, AssignType rator, Expr* target, Expr* expr) noexcept
+        : Expr(start, end), rator(rator), target(target), expr(expr) { }
+
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct UnaryExpr final : Expr {
     enum class OperatorType {
-        None, Neg, BitNot, LogNot, Ref
+        None, Pos, Neg, BitNot, LogNot, Ref
     };
 
     OperatorType rator = OperatorType::None;
     Expr* rand = nullptr;
+
+    UnaryExpr(Location start, Location end, OperatorType rator, Expr* rand) noexcept
+        : Expr(start, end), rator(rator), rand(rand) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -115,12 +121,16 @@ struct BinaryExpr final : Expr {
         BitAnd, BitOr, BitXor, BitShl, BitShr,
         LogAnd, LogOr,
         Eq, Ne, Lt, Gt, Le, Ge,
+        StrictEq, StrictNe,
         Coalesce
     };
 
     OperatorType rator = OperatorType::None;
     Expr* left = nullptr;
     Expr* right = nullptr;
+
+    BinaryExpr(Location start, Location end, OperatorType rator, Expr* left, Expr* right) noexcept
+        : Expr(start, end), rator(rator), left(left), right(right) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -159,6 +169,9 @@ struct IfThenExpr final : Expr {
     Expr* condition = nullptr;
     Expr* trueExpr = nullptr;
     Expr* falseExpr = nullptr;
+
+    IfThenExpr(Location start, Location end, Expr* condition, Expr* trueExpr, Expr* falseExpr) noexcept
+        : Expr(start, end), condition(condition), trueExpr(trueExpr), falseExpr(falseExpr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

@@ -17,8 +17,14 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return parser.parse(iss, std::nullopt, srcbuf);
 }
 
-TEST(ParserTest, GeneralTest1) {
+TEST(ParserTest, SimpleTest1) {
     std::string_view source = R"(while true do end)";
+    auto [ast, errors] = parse(source);
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, SimpleTest2) {
+    std::string_view source = R"(b = if x == 1 then true else false)";
     auto [ast, errors] = parse(source);
     EXPECT_TRUE(errors.empty());
 }

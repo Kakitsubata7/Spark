@@ -34,18 +34,38 @@ using namespace Spark::FrontEnd;
 #define YYLOCATION (Location(YYLINENO, YYCOLUMNNO))
 
 /**
-  * Updates yylval to "emit" the token with given lexeme, start and end locations.
+  * Updates yylval to "emit" the token with given lexeme, start and end locations typed `Spark::Location`.
   */
 #define EMIT_TOK(text, start, end) (YYLVAL->emplace<TokenValue>(std::string(text), (start), (end)))
 
 /**
   * Helper macro to emit and return a single-line token.
   */
-#define RETURN_TOK(type)                                                                       \
-{                                                                                              \
+#define RETURN_TOK(type)                                                   \
+{                                                                          \
     EMIT_TOK(YYTEXT, YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG)); \
-    LSTATE.advance(YYLENG);                                                                    \
-    return (type);                                                                             \
+    LSTATE.advance(YYLENG);                                                \
+    return (type);                                                         \
+}
+
+/**
+  * Sets yylloc to a specific start and end typed `Spark::Location`.
+  */
+#define SET_LOC(s, e)                    \
+{                                        \
+    yylloc->begin.line = (s).lineno;     \
+    yylloc->begin.column = (s).columnno; \
+    yylloc->end.line = (e).lineno;       \
+    yylloc->end.column = (e).columnno;   \
+}
+
+/**
+  * Helper macro to update yylloc for single-line tokens.
+  */
+#define UPDATE_LOC()                             \
+{                                                \
+    Location end(YYLINENO, YYCOLUMNNO + YYLENG); \
+    SET_LOC(YYLOCATION, end)                     \
 }
 
 /**
@@ -70,27 +90,33 @@ using namespace Spark::FrontEnd;
 %}
 
 %%
-
-(\r\n|\r|\n) { LSTATE.whenNewline(); }
+(\r\n|\r|\n) {
+    LSTATE.whenNewline();
+}
 
 [ \t\r]+ {
     LSTATE.advance(YYLENG);
 }
 
 [0-9_]*\.[0-9_]+ {
+    UPDATE_LOC();
     RETURN_TOK(TokenType::Real);
 }
 
 [0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
+    UPDATE_LOC();
     RETURN_TOK(TokenType::Integer);
 }
 
 [A-Za-z_][A-Za-z0-9_]* {
+    UPDATE_LOC();
     RETURN_TOK(classifyWord(YYTEXT));
 }
 
 "//"[^\n]* {
-    EMIT_TOK(YYTEXT.substr(2), YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG));
+    Location end(YYLINENO, YYCOLUMNNO + YYLENG);
+    SET_LOC(YYLOCATION, end);
+    EMIT_TOK(YYTEXT.substr(2), YYLOCATION, end);
     LSTATE.advance(YYLENG);
     return TokenType::LineComment;
 }
@@ -122,6 +148,7 @@ using namespace Spark::FrontEnd;
         BEGIN(INITIAL);
         Location end(YYLINENO, YYCOLUMNNO - 1);
         RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
+        SET_LOC(LBUFFER.start(), end);
         LSTATE.whenNewline();
         EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
@@ -131,6 +158,7 @@ using namespace Spark::FrontEnd;
         BEGIN(INITIAL);
         Location end(YYLINENO, YYCOLUMNNO - 1);
         RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
+        SET_LOC(LBUFFER.start(), end);
         EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
     }
@@ -139,6 +167,7 @@ using namespace Spark::FrontEnd;
         LSTATE.advance(1);
         if (YYTEXT[0] == LSTATE.strDelim()) {
             BEGIN(INITIAL);
+            SET_LOC(LBUFFER.start(), YYLOCATION);
             EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
             return TokenType::String;
         }
@@ -155,6 +184,7 @@ using namespace Spark::FrontEnd;
 <IN_BLOCK_COMMENT>{
     "*/" {
         BEGIN(INITIAL);
+        SET_LOC(LBUFFER.start(), YYLOCATION);
         EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
         LSTATE.advance(2);
         return TokenType::BlockComment;
@@ -179,78 +209,79 @@ using namespace Spark::FrontEnd;
         BEGIN(INITIAL);
         Location end(YYLINENO, YYCOLUMNNO - 1);
         RAISE_ERROR("unterminated block comment", end, end);
+        SET_LOC(LBUFFER.start(), end);
         EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::BlockComment;
     }
 }
 
-"+=" { RETURN_TOK(TokenType::AddAssign); }
-"+" { RETURN_TOK(TokenType::Add); }
+"+=" { UPDATE_LOC(); RETURN_TOK(TokenType::AddAssign); }
+"+" { UPDATE_LOC(); RETURN_TOK(TokenType::Add); }
 
-"->" { RETURN_TOK(TokenType::Arrow); }
-"-=" { RETURN_TOK(TokenType::SubAssign); }
-"-" { RETURN_TOK(TokenType::Sub); }
+"->" { UPDATE_LOC(); RETURN_TOK(TokenType::Arrow); }
+"-=" { UPDATE_LOC(); RETURN_TOK(TokenType::SubAssign); }
+"-" { UPDATE_LOC(); RETURN_TOK(TokenType::Sub); }
 
-"*=" { RETURN_TOK(TokenType::MulAssign); }
-"*" { RETURN_TOK(TokenType::Mul); }
+"*=" { UPDATE_LOC(); RETURN_TOK(TokenType::MulAssign); }
+"*" { UPDATE_LOC(); RETURN_TOK(TokenType::Mul); }
 
-"/=" { RETURN_TOK(TokenType::DivAssign); }
-"/" { RETURN_TOK(TokenType::Div); }
+"/=" { UPDATE_LOC(); RETURN_TOK(TokenType::DivAssign); }
+"/" { UPDATE_LOC(); RETURN_TOK(TokenType::Div); }
 
-"%=" { RETURN_TOK(TokenType::ModAssign); }
-"%" { RETURN_TOK(TokenType::Mod); }
+"%=" { UPDATE_LOC(); RETURN_TOK(TokenType::ModAssign); }
+"%" { UPDATE_LOC(); RETURN_TOK(TokenType::Mod); }
 
-"~" { RETURN_TOK(TokenType::BitNot); }
+"~" { UPDATE_LOC(); RETURN_TOK(TokenType::BitNot); }
 
-"&&" { RETURN_TOK(TokenType::LogAnd); }
-"&=" { RETURN_TOK(TokenType::BitAndAssign); }
-"&" { RETURN_TOK(TokenType::BitAnd); }
+"&&" { UPDATE_LOC(); RETURN_TOK(TokenType::LogAnd); }
+"&=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitAndAssign); }
+"&" { UPDATE_LOC(); RETURN_TOK(TokenType::BitAnd); }
 
-"||" { RETURN_TOK(TokenType::LogOr); }
-"|=" { RETURN_TOK(TokenType::BitOrAssign); }
-"|" { RETURN_TOK(TokenType::BitOr); }
+"||" { UPDATE_LOC(); RETURN_TOK(TokenType::LogOr); }
+"|=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOrAssign); }
+"|" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOr); }
 
-"^=" { RETURN_TOK(TokenType::BitXorAssign); }
-"^" { RETURN_TOK(TokenType::BitXor); }
+"^=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXorAssign); }
+"^" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXor); }
 
-"<<=" { RETURN_TOK(TokenType::BitShlAssign); }
-"<<" { RETURN_TOK(TokenType::BitShl); }
-"<=" { RETURN_TOK(TokenType::Le); }
-"<" { RETURN_TOK(TokenType::Lt); }
+"<<=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShlAssign); }
+"<<" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShl); }
+"<=" { UPDATE_LOC(); RETURN_TOK(TokenType::Le); }
+"<" { UPDATE_LOC(); RETURN_TOK(TokenType::Lt); }
 
-">>=" { RETURN_TOK(TokenType::BitShrAssign); }
-">>" { RETURN_TOK(TokenType::BitShr); }
-">=" { RETURN_TOK(TokenType::Ge); }
-">" { RETURN_TOK(TokenType::Gt); }
+">>=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShrAssign); }
+">>" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShr); }
+">=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ge); }
+">" { UPDATE_LOC(); RETURN_TOK(TokenType::Gt); }
 
-"!==" { RETURN_TOK(TokenType::StrictNe); }
-"!=" { RETURN_TOK(TokenType::Ne); }
-"!" { RETURN_TOK(TokenType::LogNot); }
+"!==" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictNe); }
+"!=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ne); }
+"!" { UPDATE_LOC(); RETURN_TOK(TokenType::LogNot); }
 
-"===" { RETURN_TOK(TokenType::StrictEq); }
-"=>" { RETURN_TOK(TokenType::FatArrow); }
-"==" { RETURN_TOK(TokenType::Eq); }
-"=" { RETURN_TOK(TokenType::Assign); }
+"===" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictEq); }
+"=>" { UPDATE_LOC(); RETURN_TOK(TokenType::FatArrow); }
+"==" { UPDATE_LOC(); RETURN_TOK(TokenType::Eq); }
+"=" { UPDATE_LOC(); RETURN_TOK(TokenType::Assign); }
 
-"..<" { RETURN_TOK(TokenType::RangeExcl); }
-"..." { RETURN_TOK(TokenType::Range); }
-"." { RETURN_TOK(TokenType::Dot); }
+"..<" { UPDATE_LOC(); RETURN_TOK(TokenType::RangeExcl); }
+"..." { UPDATE_LOC(); RETURN_TOK(TokenType::Range); }
+"." { UPDATE_LOC(); RETURN_TOK(TokenType::Dot); }
 
-"??=" { RETURN_TOK(TokenType::CoalesceAssign); }
-"??" { RETURN_TOK(TokenType::Coalesce); }
-"?" { RETURN_TOK(TokenType::Question); }
+"??=" { UPDATE_LOC(); RETURN_TOK(TokenType::CoalesceAssign); }
+"??" { UPDATE_LOC(); RETURN_TOK(TokenType::Coalesce); }
+"?" { UPDATE_LOC(); RETURN_TOK(TokenType::Question); }
 
-"," { RETURN_TOK(TokenType::Comma); }
-":" { RETURN_TOK(TokenType::Colon); }
-";" { RETURN_TOK(TokenType::Semicolon); }
-"(" { RETURN_TOK(TokenType::LParen); }
-")" { RETURN_TOK(TokenType::RParen); }
-"[" { RETURN_TOK(TokenType::LBracket); }
-"]" { RETURN_TOK(TokenType::RBracket); }
-"{" { RETURN_TOK(TokenType::LBrace); }
-"}" { RETURN_TOK(TokenType::RBrace); }
-"@" { RETURN_TOK(TokenType::At); }
-"$" { RETURN_TOK(TokenType::Dollar); }
+"," { UPDATE_LOC(); RETURN_TOK(TokenType::Comma); }
+":" { UPDATE_LOC(); RETURN_TOK(TokenType::Colon); }
+";" { UPDATE_LOC(); RETURN_TOK(TokenType::Semicolon); }
+"(" { UPDATE_LOC(); RETURN_TOK(TokenType::LParen); }
+")" { UPDATE_LOC(); RETURN_TOK(TokenType::RParen); }
+"[" { UPDATE_LOC(); RETURN_TOK(TokenType::LBracket); }
+"]" { UPDATE_LOC(); RETURN_TOK(TokenType::RBracket); }
+"{" { UPDATE_LOC(); RETURN_TOK(TokenType::LBrace); }
+"}" { UPDATE_LOC(); RETURN_TOK(TokenType::RBrace); }
+"@" { UPDATE_LOC(); RETURN_TOK(TokenType::At); }
+"$" { UPDATE_LOC(); RETURN_TOK(TokenType::Dollar); }
 
 . {
     std::ostringstream oss;
@@ -260,5 +291,4 @@ using namespace Spark::FrontEnd;
     LSTATE.advance(1);
     return TokenType::Error;
 }
-
 %%
