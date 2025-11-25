@@ -11,7 +11,7 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {Spark::FrontEnd::ParserContext& ctx}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::ParserContext& ctx}
 
 %code requires {
 #include <vector>
@@ -194,5 +194,7 @@ type_modifiers:
 %%
 
 void yy::parser::error(const yy::location& loc, const std::string& msg) {
-    // TODO
+    Location start(static_cast<size_t>(loc.begin.line), static_cast<size_t>(loc.begin.column));
+    Location end(static_cast<size_t>(loc.end.line), static_cast<size_t>(loc.end.column));
+    ctx.addError(msg, start, end);
 }
