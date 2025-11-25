@@ -8,6 +8,8 @@
 %define api.value.type variant
 %define parse.error verbose
 
+%locations
+
 %lex-param {yyscan_t scanner}
 %parse-param {yyscan_t scanner} {Spark::FrontEnd::ParserContext& ctx}
 
@@ -26,7 +28,7 @@ typedef void* yyscan_t;
 using namespace Spark;
 using namespace Spark::FrontEnd;
 
-int yylex(yy::parser::semantic_type* yylval, yyscan_t scanner);
+int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 }
 
 %token <Spark::FrontEnd::TokenValue> Identifier Discard
@@ -191,6 +193,6 @@ type_modifiers:
     ;
 %%
 
-void yy::parser::error(const std::string& msg) {
+void yy::parser::error(const yy::location& loc, const std::string& msg) {
     // TODO
 }

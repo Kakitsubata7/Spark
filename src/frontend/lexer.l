@@ -7,6 +7,10 @@
 #include "frontend/lexer/token_type.hpp"
 
 #define YYSTYPE yy::parser::semantic_type
+
+#define YY_DECL \
+    int yylex(yy::parser::semantic_type* yylval_param, yy::parser::location_type* yylloc, yyscan_t yyscanner)
+YY_DECL;
 }
 
 %{

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 
@@ -46,8 +47,16 @@ struct Error {
     [[nodiscard]]
     std::string render(std::optional<std::string_view> filename = std::nullopt,
                        const FrontEnd::SourceBuffer& srcbuf = FrontEnd::NullSourceBuffer::instance()) const {
+        std::ostringstream oss;
+
+        if (filename.has_value()) {
+            oss << filename.value() << ':';
+        }
+
+        oss << start.lineno << ':' << start.columnno << ": " << message << '\n';
         // TODO
-        return message;
+
+        return oss.str();
     }
 };
 

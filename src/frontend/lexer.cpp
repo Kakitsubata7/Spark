@@ -39,7 +39,8 @@ Lexer& Lexer::operator=(Lexer&& other) noexcept {
 
 Token Lexer::lex() {
     SemanticType s;
-    TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
+    yy::parser::location_type loc;
+    TokenType type = static_cast<TokenType>(yylex(&s, &loc, _scanner));
     const TokenValue& value = s.as<TokenValue>();
     return Token{type, value.lexeme, value.start.lineno, value.start.columnno};
 }

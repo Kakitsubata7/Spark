@@ -24,7 +24,7 @@ std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
             msg += error.render(filename, srcbuf);
             msg += '\n';
         }
-        throw std::runtime_error("msg");
+        throw std::runtime_error(msg);
     }
     if (result == 2) {
         throw std::bad_alloc();
