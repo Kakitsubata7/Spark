@@ -1,7 +1,10 @@
 ﻿#pragma once
 
+#include <optional>
 #include <string>
+#include <string_view>
 
+#include "frontend/source_buffer.hpp"
 #include "location.hpp"
 
 namespace Spark {
@@ -35,6 +38,17 @@ struct Error {
      */
     Error(std::string message, size_t sLineno, size_t sColumnno, size_t eLineno, size_t eColumnno) noexcept
         : message(std::move(message)), start(sLineno, sColumnno), end(eLineno, eColumnno) { }
+
+    /**
+     * Produces a formatted string print of the error with location, source
+     * @return
+     */
+    [[nodiscard]]
+    std::string render(std::optional<std::string_view> filename = std::nullopt,
+                       const FrontEnd::SourceBuffer& srcbuf = FrontEnd::NullSourceBuffer::instance()) const {
+        // TODO
+        return message;
+    }
 };
 
 } // Spark

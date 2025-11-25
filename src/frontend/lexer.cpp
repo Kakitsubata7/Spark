@@ -8,16 +8,14 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream, SourceBuffer& srcbuf)
-    : _scanner(nullptr), _lstate(stream, srcbuf, 1, 1) {
+Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename, SourceBuffer& srcbuf)
+    : _filename(filename), _scanner(nullptr), _lstate(stream, srcbuf, 1, 1) {
     yylex_init(&_scanner);
     if (_scanner == nullptr) {
         throw std::bad_alloc();
     }
     yyset_extra(&_lstate, _scanner);
 }
-
-Lexer::Lexer(std::istream& stream) : Lexer(stream, NullSourceBuffer::instance()) { }
 
 Lexer::~Lexer() {
     if (_scanner != nullptr) {
@@ -56,12 +54,6 @@ std::vector<Token> Lexer::lexAll() {
         tokens.push_back(token);
     }
     return tokens;
-}
-
-std::pair<std::vector<Token>, std::vector<Error>> Lexer::lexAll(std::istream& stream) {
-    Lexer lexer(stream);
-    std::vector<Token> tokens = lexer.lexAll();
-    return std::make_pair(tokens, lexer.errors());
 }
 
 } // Spark::FrontEnd

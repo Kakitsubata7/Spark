@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <optional>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -20,12 +22,15 @@ namespace Spark::FrontEnd {
  */
 class Lexer {
 private:
+    std::optional<std::string> _filename;
+
     yyscan_t _scanner;
     LexerState _lstate;
 
 public:
-    explicit Lexer(std::istream& stream);
-    Lexer(std::istream& stream, SourceBuffer& srcbuf);
+    explicit Lexer(std::istream& stream,
+                   std::optional<std::string_view> filename = std::nullopt,
+                   SourceBuffer& srcbuf = NullSourceBuffer::instance());
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;
@@ -33,6 +38,9 @@ public:
 
     Lexer(Lexer&& other) noexcept;
     Lexer& operator=(Lexer&& other) noexcept;
+
+    [[nodiscard]]
+    constexpr const std::optional<std::string>& filename() const noexcept { return _filename; }
 
     /**
      * Gets whether the lexer produced any error during lexing.
@@ -63,13 +71,6 @@ public:
      * @return Lexed tokens.
      */
     std::vector<Token> lexAll();
-
-    /**
-     * Lexes all tokens from a stream, returns the result and errors occurred.
-     * @param stream Stream to lex from.
-     * @return Lexed tokens and errors occurred as a pair.
-     */
-    static std::pair<std::vector<Token>, std::vector<Error>> lexAll(std::istream& stream);
 
     /**
      * Switches the lexer's stream to a new stream.

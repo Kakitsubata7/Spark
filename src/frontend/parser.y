@@ -9,7 +9,7 @@
 %define parse.error verbose
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {Spark::FrontEnd::LexerState& lstate} {Spark::FrontEnd::ParserContext& ctx}
+%parse-param {yyscan_t scanner} {Spark::FrontEnd::ParserContext& ctx}
 
 %code requires {
 #include <vector>

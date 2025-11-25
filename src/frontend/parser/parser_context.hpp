@@ -19,8 +19,7 @@ public:
     [[nodiscard]]
     constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
 
-    explicit ParserContext(AST& ast, std::vector<Error> errors = {}) noexcept
-        : _ast(ast), _errors(std::move(errors)) { }
+    explicit ParserContext(AST& ast) noexcept : _ast(ast) { }
 
     template <typename T, typename... Args>
     T* makeNode(Args&&... args) {
