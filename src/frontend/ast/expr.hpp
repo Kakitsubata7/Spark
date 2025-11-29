@@ -156,8 +156,11 @@ struct CallExpr final : Expr {
 };
 
 struct SubscriptExpr final : Expr {
-    Expr* expr = nullptr;
-    Expr* index = nullptr;
+    Expr* expr;
+    Expr* index;
+
+    SubscriptExpr(Location start, Location end, Expr* expr, Expr* index) noexcept
+        : Expr(start, end), expr(expr), index(index) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
