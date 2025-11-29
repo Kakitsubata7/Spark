@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 #include "lexer/lexer_state.hpp"
@@ -25,12 +24,11 @@ private:
     std::optional<std::string> _filename;
 
     yyscan_t _scanner;
+    SourceBuffer _srcbuf;
     LexerState _lstate;
 
 public:
-    explicit Lexer(std::istream& stream,
-                   std::optional<std::string_view> filename = std::nullopt,
-                   SourceBuffer& srcbuf = NullSourceBuffer::instance());
+    explicit Lexer(std::istream& stream, std::optional<std::string_view> filename = std::nullopt);
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;
@@ -56,8 +54,13 @@ public:
      * @return Errors occurred during lexing.
      */
     [[nodiscard]]
-    const std::vector<Error>& errors() const noexcept {
+    constexpr const std::vector<Error>& errors() const noexcept {
         return _lstate.errors();
+    }
+
+    [[nodiscard]]
+    constexpr const SourceBuffer& srcbuf() const noexcept {
+        return _srcbuf;
     }
 
     /**
@@ -71,14 +74,6 @@ public:
      * @return Lexed tokens.
      */
     std::vector<Token> lexAll();
-
-    /**
-     * Switches the lexer's stream to a new stream.
-     * @param stream New stream.
-     */
-    void switchStream(std::istream& stream) noexcept {
-        _lstate.switchStream(stream);
-    }
 
     /**
      * Clears the lexer.

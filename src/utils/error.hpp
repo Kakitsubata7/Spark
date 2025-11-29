@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <optional>
-#include <sstream>
 #include <string>
 #include <string_view>
 
@@ -41,23 +40,14 @@ struct Error {
         : message(std::move(message)), start(sLineno, sColumnno), end(eLineno, eColumnno) { }
 
     /**
-     * Produces a formatted string print of the error with location, source
-     * @return
+     * Produces a formatted string print of the error with location, source, and snippet.
+     * @param srcbuf Source buffer used to get code snippets.
+     * @param filename Name of the file (optional).
+     * @return Formatted string print of the error.
      */
     [[nodiscard]]
-    std::string render(std::optional<std::string_view> filename = std::nullopt,
-                       const FrontEnd::SourceBuffer& srcbuf = FrontEnd::NullSourceBuffer::instance()) const {
-        std::ostringstream oss;
-
-        if (filename.has_value()) {
-            oss << filename.value() << ':';
-        }
-
-        oss << start.lineno << ':' << start.columnno << ": " << message << '\n';
-        // TODO
-
-        return oss.str();
-    }
+    std::string render(const FrontEnd::SourceBuffer& srcbuf,
+                       std::optional<std::string_view> filename = std::nullopt) const;
 };
 
 } // Spark

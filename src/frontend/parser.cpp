@@ -9,10 +9,9 @@
 namespace Spark::FrontEnd {
 
 std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
-                                                 std::optional<std::string_view> filename,
-                                                 SourceBuffer& srcbuf) {
+                                                 std::optional<std::string_view> filename) {
     AST ast;
-    Lexer lexer(stream, filename, srcbuf);
+    Lexer lexer(stream, filename);
     yy::parser::location_type loc;
     ParserContext ctx(ast);
     yy::parser parser(lexer._scanner, &loc, ctx);
@@ -22,7 +21,7 @@ std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
         std::string msg;
         msg += '\n';
         for (const Error& error : ctx.errors()) {
-            msg += error.render(filename, srcbuf);
+            msg += error.render(lexer.srcbuf(), filename);
             msg += '\n';
         }
         throw std::runtime_error(msg);

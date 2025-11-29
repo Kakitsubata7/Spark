@@ -8,13 +8,16 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename, SourceBuffer& srcbuf)
-    : _filename(filename), _scanner(nullptr), _lstate(stream, srcbuf, 1, 1) {
-    yylex_init(&_scanner);
+Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
+    : _filename(filename),
+      _scanner(nullptr),
+      _srcbuf(stream),
+      _lstate(_srcbuf, 1, 1) {
+    yylex_init_extra(&_lstate, &_scanner);
     if (_scanner == nullptr) {
         throw std::bad_alloc();
     }
-    yyset_extra(&_lstate, _scanner);
+    yyset_in(nullptr, _scanner);
 }
 
 Lexer::~Lexer() {
@@ -24,15 +27,31 @@ Lexer::~Lexer() {
 }
 
 Lexer::Lexer(Lexer&& other) noexcept
-    : _scanner(other._scanner), _lstate(std::move(other._lstate)) {
+    : _filename(std::move(other._filename)),
+      _scanner(other._scanner),
+      _srcbuf(std::move(other._srcbuf)),
+      _lstate(std::move(other._lstate)) {
+    if (_scanner != nullptr) {
+        yyset_extra(&_lstate, _scanner);
+    }
+
     other._scanner = nullptr;
 }
 
 Lexer& Lexer::operator=(Lexer&& other) noexcept {
     if (this != &other) {
+        _filename = std::move(other._filename);
+        if (_scanner != nullptr) {
+            yylex_destroy(_scanner);
+        }
         _scanner = other._scanner;
-        other._scanner = nullptr;
+        _srcbuf = std::move(other._srcbuf);
         _lstate = std::move(other._lstate);
+        if (_scanner != nullptr) {
+            yyset_extra(&_lstate, _scanner);
+        }
+
+        other._scanner = nullptr;
     }
     return *this;
 }

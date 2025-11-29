@@ -14,7 +14,6 @@ namespace Spark::FrontEnd {
  */
 class LexerState {
 private:
-    std::istream* _streamp;
     size_t _lineno;
     size_t _columnno;
     SourceBuffer* _srcbufp;
@@ -23,12 +22,6 @@ private:
     std::vector<Error> _errors;
 
 public:
-    [[nodiscard]]
-    constexpr std::istream& stream() noexcept { return *_streamp; }
-
-    [[nodiscard]]
-    constexpr const std::istream& stream() const noexcept { return *_streamp; }
-
     [[nodiscard]]
     constexpr size_t lineno() const noexcept { return _lineno; }
 
@@ -47,8 +40,8 @@ public:
     [[nodiscard]]
     constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
 
-    LexerState(std::istream& stream, SourceBuffer& srcbuf, size_t lineno, size_t columnno)
-        : _streamp(&stream), _lineno(lineno), _columnno(columnno), _srcbufp(&srcbuf),
+    LexerState(SourceBuffer& srcbuf, size_t lineno, size_t columnno)
+        : _lineno(lineno), _columnno(columnno), _srcbufp(&srcbuf),
           _tokbuf(lineno, columnno) { }
 
     LexerState(const LexerState& other) = delete;
@@ -71,14 +64,6 @@ public:
      */
     constexpr void advance(size_t n) noexcept {
         _columnno += n;
-    }
-
-    /**
-     * Switches the stream to a new stream.
-     * @param stream New stream.
-     */
-    void switchStream(std::istream& stream) noexcept {
-        _streamp = &stream;
     }
 
     /**

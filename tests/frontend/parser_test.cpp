@@ -13,8 +13,7 @@ using namespace Spark::FrontEnd;
 std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
     Parser parser;
-    SourceBuffer srcbuf;
-    return parser.parse(iss, std::nullopt, srcbuf);
+    return parser.parse(iss);
 }
 
 TEST(ParserTest, SimpleTest1) {

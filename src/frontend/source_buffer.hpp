@@ -1,7 +1,7 @@
 ﻿#pragma once
 
+#include <istream>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace Spark::FrontEnd {
@@ -13,89 +13,56 @@ class SourceBuffer {
 private:
     std::vector<std::string> _lines;
 
-    std::string _buf;
-    bool _endedWithCr = false;
-    bool _endedWithNewline = false;
+    mutable size_t _lineIndex = 0;
+    mutable size_t _charIndex = 0;
 
 public:
-    virtual ~SourceBuffer() = default;
-
-    SourceBuffer& operator=(SourceBuffer&& other) = default;
+    explicit SourceBuffer(std::istream& stream, size_t chunkSize = 8192) {
+        load(stream, chunkSize);
+    }
+    SourceBuffer() = default;
 
     /**
-      * Gets the number of lines in the buffer.
-      * @return Number of lines in the buffer.
-      */
+     * Number of lines of the source.
+     * @return Number of lines of the source.
+     */
     [[nodiscard]]
-    virtual size_t lineNum() const noexcept {
+    size_t lineNum() const noexcept {
         return _lines.size();
     }
 
     /**
-     * Gets the line string from the buffer with line number @p lineno.
-     * @param lineno Line number.
-     * @return Line string at @p lineno.
+     * Clears the buffer.
      */
-    [[nodiscard]]
-    virtual const std::string& getLine(size_t lineno) const {
-        return _lines[lineno - 1];
-    }
-
-    /**
-     * Appends a chunk of string to the buffer.
-     * @param sv String to append.
-     */
-    virtual void append(std::string_view sv);
-
-    /**
-     * Notifies the buffer EOF is reached or stop expecting more contents.
-     */
-    virtual void flush();
-
-    /**
-     * Clears the current content of the source buffer.
-     */
-    virtual void clear() noexcept {
+    void clear() noexcept {
         _lines.clear();
-        _buf.clear();
+        _lineIndex = 0;
+        _charIndex = 0;
     }
 
-private:
     /**
-     * Appends a line to the buffer.
-     * @param line Line to append.
+     * Reads source into @p buf which has max size of @p maxSize.
+     * @param buf Buffer to write the read content into.
+     * @param maxSize Max size of the buffer.
+     * @return Number of characters read.
      */
-    void appendLine(std::string line) noexcept {
-        _lines.push_back(std::move(line));
-    }
-};
+    size_t readChunk(char* buf, size_t maxSize) const noexcept;
 
-/**
- * Represents a null object for the `SourceBuffer` class.
- */
-class NullSourceBuffer final : public SourceBuffer {
-private:
-    std::string _empty;
-
-public:
-    static NullSourceBuffer& instance() noexcept {
-        static NullSourceBuffer instance;
-        return instance;
+    /**
+     * Retrieves the line (without a trailing newline character) at @p lineno.
+     * @param lineno Number of the line to retrieve.
+     * @return Retrieved line.
+     */
+    const std::string& getLine(size_t lineno) const {
+       return _lines.at(lineno - 1);
     }
 
-    NullSourceBuffer() = default;
-
-    [[nodiscard]]
-    size_t lineNum() const noexcept override { return 0; }
-
-    [[nodiscard]]
-    const std::string& getLine(size_t lineno) const override { return _empty; }
-
-    void append(std::string_view sv) override { }
-
-    void flush() override { }
-
-    void clear() noexcept override { }
+    /**
+     * Loads the entire stream's content by chunks into the source buffer.
+     * @param stream Stream to load from.
+     * @param chunkSize Size of the chunk.
+     */
+    void load(std::istream& stream, size_t chunkSize);
 };
 
 } // Spark::FrontEnd

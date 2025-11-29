@@ -73,19 +73,19 @@ using namespace Spark::FrontEnd;
   */
 #define RAISE_ERROR(message, start, end) (LSTATE.addError((message), (start), (end)))
 
-#define YY_INPUT(buf, result, max_size)                         \
-{                                                               \
-    LexerState& ls = LSTATE;                                    \
-    ls.stream().read(reinterpret_cast<char*>(buf), (max_size)); \
-    (result) = ls.stream().gcount();                            \
-    if ((result) == 0) {                                        \
-        (result) = YY_NULL;                                     \
-    } else {                                                    \
-        ls.srcbuf().append(std::string_view(                    \
-            reinterpret_cast<const char*>(buf),                 \
-            static_cast<size_t>(result)                         \
-        ));                                                     \
-    }                                                           \
+#define YY_INPUT(buf, result, max_size)    \
+{                                          \
+    size_t read =                          \
+    LSTATE.srcbuf().readChunk(             \
+        reinterpret_cast<char*>(buf),      \
+        (max_size)                         \
+    );                                     \
+                                           \
+    if (read == 0) {                       \
+        (result) = YY_NULL;                \
+    } else {                               \
+        (result) = static_cast<int>(read); \
+    }                                      \
 }
 %}
 

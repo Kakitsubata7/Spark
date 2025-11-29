@@ -1,163 +1,155 @@
 ﻿#include <gtest/gtest.h>
 
+#include <string>
+#include <string_view>
+
 #include "frontend/source_buffer.hpp"
 
 using namespace Spark::FrontEnd;
 
+static void testLoad(std::string_view sv, const std::vector<std::string>& expected) {
+    std::istringstream iss{std::string(sv)};
+    SourceBuffer srcbuf(iss);
+    EXPECT_EQ(srcbuf.lineNum(), expected.size());
+    for (size_t i = 0; i < expected.size(); ++i) {
+        EXPECT_EQ(srcbuf.getLine(i + 1), expected[i]);
+    }
+}
+
 TEST(SourceBufferTest, CR) {
-    SourceBuffer srcbuf;
-    srcbuf.append("foo\r");
-    srcbuf.append("\r");
-    srcbuf.append("bar");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 3);
-    EXPECT_EQ(srcbuf.getLine(1), "foo");
-    EXPECT_EQ(srcbuf.getLine(2), "");
-    EXPECT_EQ(srcbuf.getLine(3), "bar");
+    testLoad("foo\r\rbar", {
+        "foo", "", "bar"
+    });
 
-    srcbuf.clear();
-    srcbuf.append("foo\rX");
-    srcbuf.append("Y");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "foo");
-    EXPECT_EQ(srcbuf.getLine(2), "XY");
+    testLoad("foo\rX", {
+        "foo", "X"
+    });
 
-    srcbuf.clear();
-    srcbuf.append("A\r");
-    srcbuf.append("\rB");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 3);
-    EXPECT_EQ(srcbuf.getLine(1), "A");
-    EXPECT_EQ(srcbuf.getLine(2), "");
-    EXPECT_EQ(srcbuf.getLine(3), "B");
+    testLoad("A\r\rB", {
+        "A", "", "B"
+    });
 }
 
 TEST(SourceBufferTest, LF) {
-    SourceBuffer srcbuf;
-    srcbuf.append("hello");
-    srcbuf.append("\n");
-    srcbuf.append("world\n!");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 3);
-    EXPECT_EQ(srcbuf.getLine(1), "hello");
-    EXPECT_EQ(srcbuf.getLine(2), "world");
-    EXPECT_EQ(srcbuf.getLine(3), "!");
+    testLoad("hello\nworld\n!", {
+        "hello", "world", "!"
+    });
 }
 
 TEST(SourceBufferTest, CRLF) {
     // Ends with CRLF
-    SourceBuffer srcbuf;
-    srcbuf.append("What did the 0 say to the 8?\r\n");
-    srcbuf.append("Nice belt!\r\n");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 3);
-    EXPECT_EQ(srcbuf.getLine(1), "What did the 0 say to the 8?");
-    EXPECT_EQ(srcbuf.getLine(2), "Nice belt!");
-    EXPECT_EQ(srcbuf.getLine(3), "");
+    testLoad("What did the 0 say to the 8?\r\nNice belt!\r\n", {
+        "What did the 0 say to the 8?", "Nice belt!", ""
+    });
 
     // Ends with no CRLF
-    srcbuf.clear();
-    srcbuf.append("What do you call a five foot psychic that's escaped from jail?\r\n");
-    srcbuf.append("A small medium at large.");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "What do you call a five foot psychic that's escaped from jail?");
-    EXPECT_EQ(srcbuf.getLine(2), "A small medium at large.");
+    testLoad("What do you call a five foot psychic that's escaped from jail?\r\nA small medium at large.", {
+        "What do you call a five foot psychic that's escaped from jail?", "A small medium at large."
+    });
 
     // Mixed
-    srcbuf.clear();
-    srcbuf.append("1\r \n2\n\r3\r4\n5\r\n");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 8);
-    EXPECT_EQ(srcbuf.getLine(1), "1");
-    EXPECT_EQ(srcbuf.getLine(2), " ");
-    EXPECT_EQ(srcbuf.getLine(3), "2");
-    EXPECT_EQ(srcbuf.getLine(4), "");
-    EXPECT_EQ(srcbuf.getLine(5), "3");
-    EXPECT_EQ(srcbuf.getLine(6), "4");
-    EXPECT_EQ(srcbuf.getLine(7), "5");
-    EXPECT_EQ(srcbuf.getLine(8), "");
+    testLoad("1\r \n2\n\r3\r4\n5\r\n", {
+        "1", " ", "2", "", "3", "4", "5", ""
+    });
 
-    // CRLF split in chunks
-    srcbuf.clear();
-    srcbuf.append("foo\r");
-    srcbuf.append("\nbar");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "foo");
-    EXPECT_EQ(srcbuf.getLine(2), "bar");
+    // CRLF
+    testLoad("foo\r\nbar", {
+        "foo", "bar"
+    });
 
-    // CRLF split in chunks #2
-    srcbuf.clear();
-    srcbuf.append("a\r");
-    srcbuf.append("\nb\r");
-    srcbuf.append("\nc");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 3);
-    EXPECT_EQ(srcbuf.getLine(1), "a");
-    EXPECT_EQ(srcbuf.getLine(2), "b");
-    EXPECT_EQ(srcbuf.getLine(3), "c");
+    // CRLF #2
+    testLoad("a\r\nb\r\nc", {
+        "a", "b", "c"
+    });
 }
 
 TEST(SourceBufferTest, Mixed) {
-    SourceBuffer srcbuf;
+    testLoad("a\r\nb\nc\rd\r\ne\n\r\nf", {
+        "a", "b", "c", "d", "e", "", "f"
+    });
 
-    srcbuf.append("a\r\nb\nc\rd\r\ne\n\r\nf");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 7);
-    EXPECT_EQ(srcbuf.getLine(1), "a");
-    EXPECT_EQ(srcbuf.getLine(2), "b");
-    EXPECT_EQ(srcbuf.getLine(3), "c");
-    EXPECT_EQ(srcbuf.getLine(4), "d");
-    EXPECT_EQ(srcbuf.getLine(5), "e");
-    EXPECT_EQ(srcbuf.getLine(6), "");
-    EXPECT_EQ(srcbuf.getLine(7), "f");
-
-    srcbuf.clear();
-    srcbuf.append("\n\n");
-    srcbuf.append("\r\r\n\n");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 6);
-    EXPECT_EQ(srcbuf.getLine(1), "");
-    EXPECT_EQ(srcbuf.getLine(2), "");
-    EXPECT_EQ(srcbuf.getLine(3), "");
-    EXPECT_EQ(srcbuf.getLine(4), "");
-    EXPECT_EQ(srcbuf.getLine(5), "");
-    EXPECT_EQ(srcbuf.getLine(6), "");
+    testLoad("\n\n\r\r\n\n", {
+        "", "", "", "", "", ""
+    });
 }
 
-TEST(SourceBufferTest, EmptyChunks) {
-    SourceBuffer srcbuf;
-    srcbuf.append("");
-    srcbuf.append("foo\n");
-    srcbuf.append("");
-    srcbuf.append("bar");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "foo");
-    EXPECT_EQ(srcbuf.getLine(2), "bar");
+TEST(SourceBufferTest, Empty) {
+    testLoad("", {
+        ""
+    });
 }
 
 TEST(SourceBufferTest, EndsWithNewline) {
-    SourceBuffer srcbuf;
-    srcbuf.append("foobarbaz\n");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "foobarbaz");
-    EXPECT_EQ(srcbuf.getLine(2), "");
+    testLoad("foobarbaz\n", {
+        "foobarbaz", ""
+    });
 
-    srcbuf.clear();
-    srcbuf.append("What did one snowman say to the other snowman?\r");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "What did one snowman say to the other snowman?");
-    EXPECT_EQ(srcbuf.getLine(2), "");
+    testLoad("What did one snowman say to the other snowman?\r", {
+        "What did one snowman say to the other snowman?", ""
+    });
 
-    srcbuf.clear();
-    srcbuf.append("Smells like carrots.\r\n");
-    srcbuf.flush();
-    EXPECT_EQ(srcbuf.lineNum(), 2);
-    EXPECT_EQ(srcbuf.getLine(1), "Smells like carrots.");
-    EXPECT_EQ(srcbuf.getLine(2), "");
+    testLoad("Smells like carrots.\r\n", {
+        "Smells like carrots.", ""
+    });
+}
+
+TEST(SourceBufferTest, NoNewline) {
+    testLoad("foobar", {
+        "foobar"
+    });
+}
+
+TEST(SourceBufferTest, ReadChunk) {
+    std::istringstream iss("abc\r\ndef");
+    SourceBuffer srcbuf(iss);
+    constexpr size_t maxSize = 4;
+    char buf[maxSize];
+    size_t read = 0;
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, maxSize);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("abc\n"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 3);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("def"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 0);
+
+
+    iss = std::istringstream("foobar\nbaz");
+    srcbuf = SourceBuffer(iss);
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, maxSize);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("foob"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, maxSize);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("ar\nb"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 2);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("az"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 0);
+
+
+    iss = std::istringstream("foobarbaz");
+    srcbuf = SourceBuffer(iss);
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, maxSize);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("foob"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, maxSize);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("arba"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 1);
+    EXPECT_EQ(std::string_view(buf, read), std::string_view("z"));
+
+    read = srcbuf.readChunk(buf, maxSize);
+    EXPECT_EQ(read, 0);
 }
