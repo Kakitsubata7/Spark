@@ -18,6 +18,28 @@ struct Location {
     constexpr bool operator!=(Location rhs) const noexcept {
         return !(*this == rhs);
     }
+
+    constexpr bool operator<(Location rhs) const noexcept {
+        if (lineno < rhs.lineno) {
+            return true;
+        }
+        if (lineno > rhs.lineno) {
+            return false;
+        }
+        return columnno < rhs.columnno;
+    }
+
+    constexpr bool operator>(Location rhs) const noexcept {
+        return rhs < *this;
+    }
+
+    constexpr bool operator<=(Location rhs) const noexcept {
+        return rhs >= *this;
+    }
+
+    bool operator>=(Location rhs) const noexcept {
+        return !(*this < rhs);
+    }
 };
 
 } // Spark
