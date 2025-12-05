@@ -32,11 +32,28 @@ FLEX_TARGET(
         COMPILE_FLAGS "--header-file=${FRONTEND_GENERATED_DIR}/lex.yy.hpp"
 )
 
+add_custom_target(flex
+    DEPENDS
+        ${FLEX_sparklexer_OUTPUTS}
+)
+
 BISON_TARGET(
         sparkparser
         ${FRONTEND_DIR}/parser.y
         ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
         COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
+)
+
+#BISON_TARGET(
+#        sparkparser
+#        ${FRONTEND_DIR}/parser.y
+#        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
+#        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp -Wcounterexamples -Wconflicts-sr"
+#)
+
+add_custom_target(bison
+    DEPENDS
+        ${BISON_sparkparser_OUTPUTS}
 )
 
 add_flex_bison_dependency(sparklexer sparkparser)
@@ -50,6 +67,8 @@ add_library(sparklib
 
         src/frontend/ast.hpp
 
+        src/frontend/ast/equal_visitor.cpp
+        src/frontend/ast/equal_visitor.hpp
         src/frontend/ast/expr.hpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp

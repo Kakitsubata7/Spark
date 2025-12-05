@@ -26,13 +26,14 @@ struct BoolLiteralExpr;
 struct StringLiteralExpr;
 struct NilLiteralExpr;
 struct VarExpr;
+struct UpvalueVarExpr;
 struct FnExpr;
 struct LambdaExpr;
-struct AssignExpr;
 struct UnaryExpr;
 struct ForceUnwrapExpr;
+struct OptionalExpr;
 struct BinaryExpr;
-struct FieldAccessExpr;
+struct MemberAccessExpr;
 struct CallExpr;
 struct SubscriptExpr;
 struct RangeExpr;
@@ -90,13 +91,14 @@ public:
     virtual void visit(StringLiteralExpr& node) { }
     virtual void visit(NilLiteralExpr& node) { }
     virtual void visit(VarExpr& node) { }
+    virtual void visit(UpvalueVarExpr& node) { }
     virtual void visit(FnExpr& node) { }
     virtual void visit(LambdaExpr& node) { }
-    virtual void visit(AssignExpr& node) { }
     virtual void visit(UnaryExpr& node) { }
     virtual void visit(ForceUnwrapExpr& node) { }
+    virtual void visit(OptionalExpr& node) { }
     virtual void visit(BinaryExpr& node) { }
-    virtual void visit(FieldAccessExpr& node) { }
+    virtual void visit(MemberAccessExpr& node) { }
     virtual void visit(CallExpr& node) { }
     virtual void visit(SubscriptExpr& node) { }
     virtual void visit(RangeExpr& node) { }

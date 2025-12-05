@@ -59,10 +59,19 @@ struct NilLiteralExpr final : Expr {
 };
 
 struct VarExpr final : Expr {
-    std::string name;
+    std::string identifier;
 
-    VarExpr(Location start, Location end, std::string name) noexcept
-        : Expr(start, end), name(std::move(name)) { }
+    VarExpr(Location start, Location end, std::string identifier) noexcept
+        : Expr(start, end), identifier(std::move(identifier)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct UpvalueVarExpr final : Expr {
+    std::string identifier;
+
+    UpvalueVarExpr(Location start, Location end, std::string identifier) noexcept
+        : Expr(start, end), identifier(std::move(identifier)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -83,40 +92,40 @@ struct LambdaExpr final : Expr {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct AssignExpr final : Expr {
-    AssignType rator = AssignType::None;
-    Expr* target = nullptr;
-    Expr* expr = nullptr;
-
-    AssignExpr(Location start, Location end, AssignType rator, Expr* target, Expr* expr) noexcept
-        : Expr(start, end), rator(rator), target(target), expr(expr) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-};
-
 struct UnaryExpr final : Expr {
-    enum class OperatorType {
-        None, Pos, Neg, BitNot, LogNot, Ref
+    enum class OpType {
+        Pos, Neg, BitNot, LogNot, Ref
     };
 
-    OperatorType rator = OperatorType::None;
-    Expr* rand = nullptr;
+    OpType rator;
+    Expr* rand;
 
-    UnaryExpr(Location start, Location end, OperatorType rator, Expr* rand) noexcept
+    UnaryExpr(Location start, Location end, OpType rator, Expr* rand) noexcept
         : Expr(start, end), rator(rator), rand(rand) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct ForceUnwrapExpr final : Expr {
-    Expr* expr = nullptr;
+    Expr* expr;
+
+    ForceUnwrapExpr(Location start, Location end, Expr* expr) noexcept
+        : Expr(start, end), expr(expr) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct OptionalExpr final : Expr {
+    Expr* expr;
+
+    OptionalExpr(Location start, Location end, Expr* expr) noexcept
+        : Expr(start, end), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct BinaryExpr final : Expr {
-    enum class OperatorType {
-        None,
+    enum class OpType {
         Add, Sub, Mul, Div, Mod,
         BitAnd, BitOr, BitXor, BitShl, BitShr,
         LogAnd, LogOr,
@@ -125,22 +134,25 @@ struct BinaryExpr final : Expr {
         Coalesce
     };
 
-    OperatorType rator = OperatorType::None;
-    Expr* left = nullptr;
-    Expr* right = nullptr;
+    OpType rator;
+    Expr* left;
+    Expr* right;
 
-    BinaryExpr(Location start, Location end, OperatorType rator, Expr* left, Expr* right) noexcept
+    BinaryExpr(Location start, Location end, OpType rator, Expr* left, Expr* right) noexcept
         : Expr(start, end), rator(rator), left(left), right(right) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct FieldAccessExpr final : Expr {
-    Expr* target = nullptr;
-    std::string field;
+struct MemberAccessExpr final : Expr {
+    Expr* target;
+    std::string member;
+    bool isOptional;
 
-    FieldAccessExpr(Location start, Location end, Expr* target, std::string field) noexcept
-        : Expr(start, end), target(target), field(std::move(field)) { }
+    MemberAccessExpr(Location start, Location end,
+                     Expr* target, std::string member,
+                     bool isOptional = false) noexcept
+        : Expr(start, end), target(target), member(std::move(member)), isOptional(isOptional) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
@@ -148,36 +160,45 @@ struct FieldAccessExpr final : Expr {
 struct CallExpr final : Expr {
     Expr* callable;
     std::vector<Expr*> args;
+    bool isOptional;
 
-    CallExpr(Location start, Location end, Expr* callable, std::vector<Expr*> args = {}) noexcept
-        : Expr(start, end), callable(callable), args(std::move(args)) { }
+    CallExpr(Location start, Location end,
+             Expr* callable, std::vector<Expr*> args = {},
+             bool isOptional = false) noexcept
+        : Expr(start, end), callable(callable), args(std::move(args)), isOptional(isOptional) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct SubscriptExpr final : Expr {
     Expr* expr;
-    Expr* index;
+    std::vector<Expr*> indices;
+    bool isOptional;
 
-    SubscriptExpr(Location start, Location end, Expr* expr, Expr* index) noexcept
-        : Expr(start, end), expr(expr), index(index) { }
+    SubscriptExpr(Location start, Location end,
+                  Expr* expr, std::vector<Expr*> indices = {},
+                  bool isOptional = false) noexcept
+        : Expr(start, end), expr(expr), indices(std::move(indices)), isOptional(isOptional) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct RangeExpr final : Expr {
-    Expr* begin = nullptr;
-    Expr* end = nullptr;
-    Expr* step = nullptr;
-    bool isExclusive = false;
+    Expr* from;
+    Expr* to;
+    Expr* step;
+    bool isExclusive;
+
+    RangeExpr(Location start, Location end, Expr* from, Expr* to, Expr* step, bool isExclusive) noexcept
+        : Expr(start, end), from(from), to(to), step(step), isExclusive(isExclusive) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
 struct IfThenExpr final : Expr {
-    Expr* condition = nullptr;
-    Expr* trueExpr = nullptr;
-    Expr* falseExpr = nullptr;
+    Expr* condition;
+    Expr* trueExpr;
+    Expr* falseExpr;
 
     IfThenExpr(Location start, Location end, Expr* condition, Expr* trueExpr, Expr* falseExpr) noexcept
         : Expr(start, end), condition(condition), trueExpr(trueExpr), falseExpr(falseExpr) { }
@@ -199,15 +220,21 @@ struct MatchExpr final : Expr {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct ThrowExpr final : Expr {
-    Expr* thrown = nullptr;
+struct TryElseExpr final : Expr {
+    Expr* attempt;
+    Expr* fallback;
+
+    TryElseExpr(Location start, Location end, Expr* attempt, Expr* fallback) noexcept
+        : Expr(start, end), attempt(attempt), fallback(fallback) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct TryElseExpr final : Expr {
-    Expr* attempt = nullptr;
-    Expr* fallback = nullptr;
+struct ThrowExpr final : Expr {
+    Expr* thrown;
+
+    ThrowExpr(Location start, Location end, Expr* thrown) noexcept
+        : Expr(start, end), thrown(thrown) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };

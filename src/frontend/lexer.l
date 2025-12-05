@@ -231,11 +231,11 @@ using namespace Spark::FrontEnd;
 "%=" { UPDATE_LOC(); RETURN_TOK(TokenType::ModAssign); }
 "%" { UPDATE_LOC(); RETURN_TOK(TokenType::Mod); }
 
-"~" { UPDATE_LOC(); RETURN_TOK(TokenType::BitNot); }
+"~" { UPDATE_LOC(); RETURN_TOK(TokenType::Tide); }
 
 "&&" { UPDATE_LOC(); RETURN_TOK(TokenType::LogAnd); }
 "&=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitAndAssign); }
-"&" { UPDATE_LOC(); RETURN_TOK(TokenType::BitAnd); }
+"&" { UPDATE_LOC(); RETURN_TOK(TokenType::And); }
 
 "||" { UPDATE_LOC(); RETURN_TOK(TokenType::LogOr); }
 "|=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOrAssign); }
@@ -244,19 +244,15 @@ using namespace Spark::FrontEnd;
 "^=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXorAssign); }
 "^" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXor); }
 
-"<<=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShlAssign); }
-"<<" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShl); }
 "<=" { UPDATE_LOC(); RETURN_TOK(TokenType::Le); }
 "<" { UPDATE_LOC(); RETURN_TOK(TokenType::Lt); }
 
-">>=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShrAssign); }
-">>" { UPDATE_LOC(); RETURN_TOK(TokenType::BitShr); }
 ">=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ge); }
 ">" { UPDATE_LOC(); RETURN_TOK(TokenType::Gt); }
 
 "!==" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictNe); }
 "!=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ne); }
-"!" { UPDATE_LOC(); RETURN_TOK(TokenType::LogNot); }
+"!" { UPDATE_LOC(); RETURN_TOK(TokenType::Bang); }
 
 "===" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictEq); }
 "=>" { UPDATE_LOC(); RETURN_TOK(TokenType::FatArrow); }

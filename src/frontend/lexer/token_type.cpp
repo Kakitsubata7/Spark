@@ -60,13 +60,11 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::Mul: return "Mul";
         case TokenType::Div: return "Div";
         case TokenType::Mod: return "Mod";
-        case TokenType::BitNot: return "BitNot";
-        case TokenType::BitAnd: return "BitAnd";
+        case TokenType::Tide: return "Tide";
+        case TokenType::And: return "And";
         case TokenType::BitOr: return "BitOr";
         case TokenType::BitXor: return "BitXor";
-        case TokenType::BitShl: return "BitShl";
-        case TokenType::BitShr: return "BitShr";
-        case TokenType::LogNot: return "LogNot";
+        case TokenType::Bang: return "Bang";
         case TokenType::LogAnd: return "LogAnd";
         case TokenType::LogOr: return "LogOr";
         case TokenType::Eq: return "Eq";
@@ -84,8 +82,6 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::BitAndAssign: return "BitAndAssign";
         case TokenType::BitOrAssign: return "BitOrAssign";
         case TokenType::BitXorAssign: return "BitXorAssign";
-        case TokenType::BitShlAssign: return "BitShlAssign";
-        case TokenType::BitShrAssign: return "BitShrAssign";
         case TokenType::CoalesceAssign: return "CoalesceAssign";
         case TokenType::StrictEq: return "StrictEq";
         case TokenType::StrictNe: return "StrictNe";

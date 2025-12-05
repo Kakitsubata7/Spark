@@ -29,19 +29,31 @@ using namespace Spark;
 using namespace Spark::FrontEnd;
 
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
+
+inline void raiseError(yy::parser& parser, Location start, Location end, const std::string& msg) {
+    yy::position b;
+    b.line = start.lineno;
+    b.column = start.columnno;
+    yy::position e;
+    e.line = end.lineno;
+    e.column = end.columnno;
+    parser.error(yy::location(b, e), msg);
+}
+
+#define RAISE_ERROR(start, end, msg) raiseError(*this, (start), (end), (msg));
 }
 
 %token <Spark::FrontEnd::TokenValue> Identifier Discard
 %token <Spark::FrontEnd::TokenValue> Integer Real String
 %token <Spark::FrontEnd::TokenValue> Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefined While Yield
 %token <Spark::FrontEnd::TokenValue> Add Sub Mul Div Mod
-%token <Spark::FrontEnd::TokenValue> BitNot BitAnd BitOr BitXor BitShl BitShr
-%token <Spark::FrontEnd::TokenValue> LogNot LogAnd LogOr
+%token <Spark::FrontEnd::TokenValue> Tide And BitOr BitXor
+%token <Spark::FrontEnd::TokenValue> Bang LogAnd LogOr
 %token <Spark::FrontEnd::TokenValue> Eq Ne Lt Gt Le Ge
 %token <Spark::FrontEnd::TokenValue> StrictEq StrictNe
 %token <Spark::FrontEnd::TokenValue> Range RangeExcl
 %token <Spark::FrontEnd::TokenValue> Question Coalesce
-%token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign BitShlAssign BitShrAssign CoalesceAssign
+%token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
 %token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
 %token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace
@@ -54,19 +66,19 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
 %type <Spark::FrontEnd::Node*> start
 
-%type <Spark::FrontEnd::Stmt*> call_stmt
-%type <Spark::FrontEnd::Expr*> call_expr
-%type <std::vector<Spark::FrontEnd::Expr*>> call_args
-
 %type <Spark::FrontEnd::Stmt*> stmt
 %type <Spark::FrontEnd::BlockStmt*> block
 %type <std::vector<Spark::FrontEnd::Stmt*>> block_stmts
-%type <Spark::FrontEnd::Stmt*> assign_stmt
-%type <Spark::FrontEnd::Stmt*> let
+%type <Spark::FrontEnd::Stmt*> assign
+%type <Spark::FrontEnd::Stmt*> call_stmt
+%type <Spark::FrontEnd::CallExpr*> postfix_call
 %type <Spark::FrontEnd::Stmt*> while
 
+%type <Spark::FrontEnd::Expr*> lhs
+%type <Spark::FrontEnd::Expr*> lhs_atom
+
 %type <Spark::FrontEnd::Expr*> expr
-%type <Spark::FrontEnd::Expr*> assign_expr
+%type <Spark::FrontEnd::Expr*> coalesce_expr
 %type <Spark::FrontEnd::Expr*> logical_or_expr
 %type <Spark::FrontEnd::Expr*> logical_and_expr
 %type <Spark::FrontEnd::Expr*> bit_or_expr
@@ -74,24 +86,26 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 %type <Spark::FrontEnd::Expr*> bit_and_expr
 %type <Spark::FrontEnd::Expr*> equality_expr
 %type <Spark::FrontEnd::Expr*> relational_expr
+%type <Spark::FrontEnd::Expr*> range_expr
 %type <Spark::FrontEnd::Expr*> shift_expr
 %type <Spark::FrontEnd::Expr*> additive_expr
 %type <Spark::FrontEnd::Expr*> multiplicative_expr
 %type <Spark::FrontEnd::Expr*> unary_expr
 %type <Spark::FrontEnd::Expr*> postfix_expr
-%type <Spark::FrontEnd::Expr*> lhs_expr
+%type <std::vector<Spark::FrontEnd::Expr*>> call_args
+%type <std::vector<Spark::FrontEnd::Expr*>> subscript_args
 %type <Spark::FrontEnd::Expr*> primary
 %type <Spark::FrontEnd::Expr*> literal
 
+%nonassoc EXPR_BASE
 
-%type <Spark::FrontEnd::TypeNode*> type
-%type <Spark::FrontEnd::TypeSegment*> type_segment
-%type <Spark::FrontEnd::TypePath*> type_path
-%type <Spark::FrontEnd::TypeModifiers> type_modifiers
-
-%type <std::vector<Spark::FrontEnd::Node*>> lambda_body
+%left Lt Gt Le Ge
+%left SHIFTOP
 
 %%
+/*
+ * Root
+ */
 start:
       /* empty */
         {
@@ -102,18 +116,27 @@ start:
     | start stmt
         {
             auto* root = ctx.ast().root();
-            root->stmts.push_back(static_cast<Stmt*>($2));
+            if ($2) {
+                root->stmts.push_back(static_cast<Stmt*>($2));
+            }
             $$ = root;
         }
     ;
 
+/*
+ * Statements
+ */
 stmt:
-      block         { $$ = $1; }
-    | assign_stmt
-    | while
+      Semicolon    { $$ = nullptr; }
+    | block        { $$ = $1; }
     | call_stmt
+    | assign
+    | while
     ;
 
+/**
+  * Block Statement
+  */
 block:
       Do block_stmts End
         {
@@ -124,10 +147,7 @@ block:
     ;
 
 block_stmts:
-      /* empty */
-        {
-            $$.clear();
-        }
+      /* empty */    { $$.clear(); }
     | block_stmts stmt
         {
             $$ = std::move($1);
@@ -135,245 +155,249 @@ block_stmts:
         }
     ;
 
-assign_stmt:
-      lhs_expr Assign assign_expr
+/**
+  * Assignment Statement
+  */
+assign:
+      lhs Assign expr            { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::Assign, $1, $3); }
+    | lhs AddAssign expr         { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::AddAssign, $1, $3); }
+    | lhs SubAssign expr         { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::SubAssign, $1, $3); }
+    | lhs MulAssign expr         { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::MulAssign, $1, $3); }
+    | lhs DivAssign expr         { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::DivAssign, $1, $3); }
+    | lhs ModAssign expr         { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::ModAssign, $1, $3); }
+    | lhs BitAndAssign expr      { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::BitAndAssign, $1, $3); }
+    | lhs BitOrAssign expr       { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::BitOrAssign, $1, $3); }
+    | lhs BitXorAssign expr      { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::BitXorAssign, $1, $3); }
+    | lhs CoalesceAssign expr    { $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignStmt::OpType::CoalesceAssign, $1, $3); }
+    ;
+
+/**
+  * Call Statement
+  */
+call_stmt:
+      postfix_call
         {
-            $$ = ctx.makeNode<AssignStmt>($1->start, $3->end, AssignType::Assign, $1, $3 );
+            $$ = ctx.makeNode<CallStmt>($1->start, $1->end, $1->callable, std::move($1->args));
+            // TODO: Deallocate $1
         }
     ;
 
-let:
+postfix_call:
+      postfix_expr LParen call_args RParen
+        {
+            $$ = ctx.makeNode<CallExpr>($1->start, $4.end, $1, std::move($3), false);
+        }
+    | postfix_expr Question LParen call_args RParen
+        {
+            $$ = ctx.makeNode<CallExpr>($1->start, $5.end, $1, std::move($4), true);
+        }
     ;
 
 while:
-      While expr block
-        {
-            $$ = ctx.makeNode<WhileStmt>($1.start, $1.end, $2, $3);
-        }
+      While expr block    { $$ = ctx.makeNode<WhileStmt>($1.start, $1.end, $2, $3); }
     ;
 
-call_stmt:
-      call_expr
-        {
-            $$ = ctx.makeNode<CallStmt>($1->start, $1->end, $1);
-        }
+/**
+  * L-value Expressions
+  */
+lhs:
+      lhs_atom
+    | lhs Dot Identifier
+    | lhs LBracket subscript_args RBracket
+    | lhs LParen call_args RParen
     ;
 
+lhs_atom:
+      Identifier            { $$ = ctx.makeNode<VarExpr>($1.start, $1.end, $1.lexeme); }
+    | Dollar Identifier
+        {
+            if ($1.end.lineno == $2.start.lineno && $1.end.columnno + 1 == $2.start.columnno) {
+                $$ = ctx.makeNode<UpvalueVarExpr>($1.start, $1.end, $1.lexeme);
+            } else {
+                RAISE_ERROR($1.start, $2.end, "space between '$' and identifier is not allowed");
+                $$ = ctx.makeNode<VarExpr>($2.start, $2.end, $2.lexeme);
+            }
+        }
+    | LParen lhs RParen    { $$ = $2; }
+    ;
+
+/**
+  * Expressions
+  */
 expr:
-      logical_or_expr { $$ = $1; }
+      coalesce_expr    %prec EXPR_BASE
+    | If expr Then expr Else expr      { $$ = ctx.makeNode<IfThenExpr>($1.start, $6->end, $2, $4, $6); }
+    | Try expr Else expr               { $$ = ctx.makeNode<TryElseExpr>($1.start, $4->end, $2, $4); }
     ;
 
-assign_expr:
-      logical_or_expr { $$ = $1; }
-    | lhs_expr Assign assign_expr
+/**
+  * Null-Coalescing Expression
+  */
+coalesce_expr:
+      logical_or_expr
+    | coalesce_expr Coalesce logical_or_expr
         {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::Assign, $1, $3);
-        }
-    | lhs_expr AddAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::AddAssign, $1, $3);
-        }
-    | lhs_expr SubAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::SubAssign, $1, $3);
-        }
-    | lhs_expr MulAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::MulAssign, $1, $3);
-        }
-    | lhs_expr DivAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::DivAssign, $1, $3);
-        }
-    | lhs_expr ModAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::ModAssign, $1, $3);
-        }
-    | lhs_expr BitAndAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::BitAndAssign, $1, $3);
-        }
-    | lhs_expr BitOrAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::BitOrAssign, $1, $3);
-        }
-    | lhs_expr BitXorAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::BitXorAssign, $1, $3);
-        }
-    | lhs_expr BitShlAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::BitShlAssign, $1, $3);
-        }
-    | lhs_expr BitShrAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::BitShrAssign, $1, $3);
-        }
-    | lhs_expr CoalesceAssign assign_expr
-        {
-            $$ = ctx.makeNode<AssignExpr>($1->start, $3->end, AssignType::CoalesceAssign, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Coalesce, $1, $3);
         }
     ;
 
-lhs_expr:
-      Identifier             { $$ = ctx.makeNode<VarExpr>($1.start, $1.end, $1.lexeme); }
-    | LParen lhs_expr RParen { $$ = $2; }
-    ;
-
+/**
+  * Logical Or Expression (||)
+  */
 logical_or_expr:
-      logical_and_expr   { $$ = $1; }
+      logical_and_expr
     | logical_or_expr LogOr logical_and_expr
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::LogOr, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::LogOr, $1, $3);
         }
     ;
 
+/**
+  * Logical And Expression (&&)
+  */
 logical_and_expr:
-      bit_or_expr        { $$ = $1; }
+      bit_or_expr
     | logical_and_expr LogAnd bit_or_expr
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::LogAnd, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::LogAnd, $1, $3);
         }
     ;
 
+/**
+  * Bitwise-Or Expression (|)
+  */
 bit_or_expr:
-      bit_xor_expr       { $$ = $1; }
+      bit_xor_expr
     | bit_or_expr BitOr bit_xor_expr
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::BitOr, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::BitOr, $1, $3);
         }
     ;
 
+/**
+  * Bitwise-Xor Expression (^)
+  */
 bit_xor_expr:
-      bit_and_expr       { $$ = $1; }
+      bit_and_expr
     | bit_xor_expr BitXor bit_and_expr
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::BitXor, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::BitXor, $1, $3);
         }
     ;
 
+/**
+  * Bitwise-And Expression (&)
+  */
 bit_and_expr:
-      equality_expr      { $$ = $1; }
-    | bit_and_expr BitAnd equality_expr
+      equality_expr
+    | bit_and_expr And equality_expr
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::BitAnd, $1, $3);
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::BitAnd, $1, $3);
         }
     ;
 
+/**
+  * Equality Expressions (==, !=, ===, !==)
+  */
 equality_expr:
-      relational_expr    { $$ = $1; }
-    | equality_expr Eq relational_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Eq, $1, $3);
-        }
-    | equality_expr Ne relational_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Ne, $1, $3);
-        }
-    | equality_expr StrictEq relational_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::StrictEq, $1, $3);
-        }
-    | equality_expr StrictNe relational_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::StrictNe, $1, $3);
-        }
+      relational_expr
+    | equality_expr Eq relational_expr          { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Eq, $1, $3); }
+    | equality_expr Ne relational_expr          { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Ne, $1, $3); }
+    | equality_expr StrictEq relational_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::StrictEq, $1, $3); }
+    | equality_expr StrictNe relational_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::StrictNe, $1, $3); }
     ;
 
+/**
+  * Relational Expressions (<, >, <=, >=)
+  */
 relational_expr:
-      shift_expr         { $$ = $1; }
-    | relational_expr Lt shift_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Lt, $1, $3);
-        }
-    | relational_expr Gt shift_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Gt, $1, $3);
-        }
-    | relational_expr Le shift_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Le, $1, $3);
-        }
-    | relational_expr Ge shift_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Ge, $1, $3);
-        }
+      range_expr
+    | relational_expr Lt shift_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Lt, $1, $3); }
+    | relational_expr Gt shift_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Gt, $1, $3); }
+    | relational_expr Le shift_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Le, $1, $3); }
+    | relational_expr Ge shift_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Ge, $1, $3); }
     ;
 
+/**
+  * Range Expressions (..., ..<)
+  */
+range_expr:
+      shift_expr
+    | shift_expr Range shift_expr                         { $$ = ctx.makeNode<RangeExpr>($1->start, $3->end, $1, $3, nullptr, false); }
+    | shift_expr Range shift_expr Colon shift_expr        { $$ = ctx.makeNode<RangeExpr>($1->start, $5->end, $1, $3, $5, false); }
+    | shift_expr RangeExcl shift_expr                     { $$ = ctx.makeNode<RangeExpr>($1->start, $3->end, $1, $3, nullptr, true); }
+    | shift_expr RangeExcl shift_expr Colon shift_expr    { $$ = ctx.makeNode<RangeExpr>($1->start, $5->end, $1, $3, $5, true); }
+    ;
+
+/**
+  * Shift Expressions (<<, >>)
+  */
 shift_expr:
-      additive_expr      { $$ = $1; }
-    | shift_expr BitShl additive_expr
+      additive_expr
+    | shift_expr Lt Lt additive_expr    %prec SHIFTOP
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::BitShl, $1, $3);
+            if ($2.end.lineno != $3.start.lineno || $2.end.columnno + 1 != $3.start.columnno) {
+                RAISE_ERROR($3.start, $3.end, "unexpected <");
+            }
+            $$ = ctx.makeNode<BinaryExpr>($1->start, $4->end, BinaryExpr::OpType::BitShl, $1, $4);
         }
-    | shift_expr BitShr additive_expr
+    | shift_expr Gt Gt additive_expr    %prec SHIFTOP
         {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::BitShr, $1, $3);
+           if ($2.end.lineno != $3.start.lineno || $2.end.columnno + 1 != $3.start.columnno) {
+               RAISE_ERROR($3.start, $3.end, "unexpected >");
+           }
+           $$ = ctx.makeNode<BinaryExpr>($1->start, $4->end, BinaryExpr::OpType::BitShr, $1, $4);
         }
     ;
 
+/**
+  * Additive Expressions (+, -)
+  */
 additive_expr:
-      multiplicative_expr { $$ = $1; }
-    | additive_expr Add multiplicative_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Add, $1, $3);
-        }
-    | additive_expr Sub multiplicative_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Sub, $1, $3);
-        }
+      multiplicative_expr
+    | additive_expr Add multiplicative_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Add, $1, $3); }
+    | additive_expr Sub multiplicative_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Sub, $1, $3); }
     ;
 
+/**
+  * Multiplicative Expressions (*, /, %)
+  */
 multiplicative_expr:
-      unary_expr         { $$ = $1; }
-    | multiplicative_expr Mul unary_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Mul, $1, $3);
-        }
-    | multiplicative_expr Div unary_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Div, $1, $3);
-        }
-    | multiplicative_expr Mod unary_expr
-        {
-            $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OperatorType::Mod, $1, $3);
-        }
+      unary_expr
+    | multiplicative_expr Mul unary_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Mul, $1, $3); }
+    | multiplicative_expr Div unary_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Div, $1, $3); }
+    | multiplicative_expr Mod unary_expr    { $$ = ctx.makeNode<BinaryExpr>($1->start, $3->end, BinaryExpr::OpType::Mod, $1, $3); }
     ;
 
+/**
+  * Unary Expressions (Prefix)
+  */
 unary_expr:
       postfix_expr       { $$ = $1; }
-    | Add unary_expr
-        {
-            $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OperatorType::Pos, $2);
-        }
-    | Sub unary_expr
-        {
-            $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OperatorType::Neg, $2);
-        }
-    | LogNot unary_expr
-        {
-            $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OperatorType::LogNot, $2);
-        }
-    | BitNot unary_expr
-        {
-            $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OperatorType::BitNot, $2);
-        }
+    | Add unary_expr     { $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OpType::Pos, $2); }
+    | Sub unary_expr     { $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OpType::Neg, $2); }
+    | Tide unary_expr    { $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OpType::BitNot, $2); }
+    | Bang unary_expr    { $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OpType::LogNot, $2); }
+    | And unary_expr     { $$ = ctx.makeNode<UnaryExpr>($1.start, $2->end, UnaryExpr::OpType::Ref, $2); }
     ;
 
+/**
+  * Postfix Expressions
+  */
 postfix_expr:
-      primary            { $$ = $1; }
-    | postfix_expr Dot Identifier
-        {
-            $$ = ctx.makeNode<FieldAccessExpr>($1->start, $3.end, $1, $3.lexeme);
-        }
-    | postfix_expr LParen call_args RParen
-        {
-            $$ = ctx.makeNode<CallExpr>($1->start, $4.end, $1, $3);
-        }
+      primary
+    | postfix_expr Dot Identifier                               { $$ = ctx.makeNode<MemberAccessExpr>($1->start, $3.end, $1, $3.lexeme); }
+    | postfix_expr Question Dot Identifier                      { $$ = ctx.makeNode<MemberAccessExpr>($1->start, $4.end, $1, $4.lexeme, true); }
+    | postfix_expr LParen call_args RParen                      { $$ = ctx.makeNode<CallExpr>($1->start, $4.end, $1, std::move($3)); }
+    | postfix_expr Question LParen call_args RParen             { $$ = ctx.makeNode<CallExpr>($1->start, $5.end, $1, std::move($4)); }
+    | postfix_expr LBracket subscript_args RBracket             { $$ = ctx.makeNode<SubscriptExpr>($1->start, $4.end, $1, std::move($3)); }
+    | postfix_expr Question LBracket subscript_args RBracket    { $$ = ctx.makeNode<SubscriptExpr>($1->start, $5.end, $1, std::move($4)); }
+    | postfix_expr Bang                                         { $$ = ctx.makeNode<ForceUnwrapExpr>($1->start, $2.end, $1); }
+    | postfix_expr Question                                     { $$ = ctx.makeNode<OptionalExpr>($1->start, $2.end, $1); }
     ;
 
 call_args:
-      /* empty */        { $$.clear(); }
+      /* empty */    { $$.clear(); }
     | expr
         {
             $$.clear();
@@ -386,20 +410,41 @@ call_args:
         }
     ;
 
-call_expr:
-      postfix_expr       { $$ = $1; }
-    ;
-
-primary:
-      literal            { $$ = $1; }
-    | Identifier         { $$ = ctx.makeNode<VarExpr>($1.start, $1.end, $1.lexeme); }
-    | LParen expr RParen { $$ = $2; }
-    | If expr Then expr Else expr
+subscript_args:
+      expr
         {
-            $$ = ctx.makeNode<IfThenExpr>($1.start, $6->end, $2, $4, $6);
+            $$.clear();
+            $$.push_back($1);
+        }
+    | subscript_args Comma expr
+        {
+            $$ = std::move($1);
+            $$.push_back($3);
         }
     ;
 
+/**
+  * Primary Expressions
+  * Atomic expressions that cannot be reduced further by the parser.
+  */
+primary:
+      literal
+    | Identifier            { $$ = ctx.makeNode<VarExpr>($1.start, $1.end, $1.lexeme); }
+    | Dollar Identifier
+        {
+            if ($1.end.lineno == $2.start.lineno && $1.end.columnno + 1 == $2.start.columnno) {
+                $$ = ctx.makeNode<UpvalueVarExpr>($1.start, $1.end, $1.lexeme);
+            } else {
+                RAISE_ERROR($1.start, $2.end, "space between '$' and identifier is not allowed");
+                $$ = ctx.makeNode<VarExpr>($2.start, $2.end, $2.lexeme);
+            }
+        }
+    | LParen expr RParen    { $$ = $2; }
+    ;
+
+/**
+  * Literals
+  */
 literal:
       Integer    { $$ = ctx.makeNode<IntLiteralExpr>($1.start, $1.end, BigInt($1.lexeme)); }
     | Real       { $$ = ctx.makeNode<RealLiteralExpr>($1.start, $1.end, BigReal($1.lexeme)); }
@@ -407,55 +452,6 @@ literal:
     | True       { $$ = ctx.makeNode<BoolLiteralExpr>($1.start, $1.end, true); }
     | False      { $$ = ctx.makeNode<BoolLiteralExpr>($1.start, $1.end, false); }
     | Nil        { $$ = ctx.makeNode<NilLiteralExpr>($1.start, $1.end); }
-    ;
-
-type:
-      type_path    { $$ = $1; }
-    ;
-
-type_segment:
-      Identifier type_modifiers
-        {
-            $$ = ctx.makeNode<TypeSegment>($1.start, $1.end, $1.lexeme,
-                $2.isImmutable, $2.isNullable);
-        }
-    ;
-
-type_path:
-      type_segment
-        {
-            auto* path = ctx.makeNode<TypePath>($1->start, $1->end);
-            path->segments.push_back($1);
-            $$ = path;
-        }
-    | type_path Dot type_segment
-        {
-            $1->segments.push_back($3);
-            $$ = $1;
-        }
-    ;
-
-type_modifiers:
-      type_modifiers BitXor
-        {
-            $$ = $1;
-            $$.isImmutable = true;
-        }
-    | type_modifiers Question
-        {
-            $$ = $1;
-            $$.isNullable = true;
-        }
-    | type_modifiers Coalesce
-        {
-            $$ = $1;
-            $$.isNullable = true;
-        }
-    | /* empty */
-        {
-            $$.isImmutable = false;
-            $$.isNullable = false;
-        }
     ;
 %%
 

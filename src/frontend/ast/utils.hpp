@@ -58,12 +58,4 @@ struct ArgDecl {
     Expr* def = nullptr;
 };
 
-enum class AssignType {
-    None,
-    Assign,
-    AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
-    BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
-    CoalesceAssign
-};
-
 } // Spark::FrontEnd

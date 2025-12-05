@@ -49,11 +49,18 @@ struct LambdaDeclStmt final : Stmt {
 };
 
 struct AssignStmt final : Stmt {
-    AssignType rator = AssignType::None;
-    Expr* target = nullptr;
-    Expr* expr = nullptr;
+    enum class OpType {
+        Assign,
+        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
+        BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
+        CoalesceAssign
+    };
 
-    AssignStmt(Location start, Location end, AssignType rator, Expr* target, Expr* expr) noexcept
+    OpType rator;
+    Expr* target;
+    Expr* expr;
+
+    AssignStmt(Location start, Location end, OpType rator, Expr* target, Expr* expr) noexcept
         : Stmt(start, end), rator(rator), target(target), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
