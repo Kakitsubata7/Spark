@@ -29,6 +29,13 @@ public:
      * @return Number of characters read.
      */
     size_t readChunk(char* buf, size_t maxSize) noexcept;
+
+    /**
+     * Clears any read states of the reader.
+     */
+    void clear() noexcept {
+        _index = 0;
+    }
 };
 
 } // Spark::FrontEnd
