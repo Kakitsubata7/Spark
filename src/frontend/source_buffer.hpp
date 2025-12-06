@@ -24,6 +24,11 @@ public:
     }
     SourceBuffer() = default;
 
+    SourceBuffer(const SourceBuffer& other) = default;
+    SourceBuffer& operator=(const SourceBuffer& other) = default;
+    SourceBuffer(SourceBuffer&& other) noexcept = default;
+    SourceBuffer& operator=(SourceBuffer&& other) noexcept = default;
+
     /**
      * Number of lines of the source.
      * @return Number of lines of the source.

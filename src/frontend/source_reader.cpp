@@ -7,7 +7,7 @@
 namespace Spark::FrontEnd {
 
 size_t SourceReader::readChunk(char* buf, size_t maxSize) noexcept {
-    const std::string& src = _srcbuf._src;
+    const std::string& src = _srcbufp->_src;
     if (_index >= src.size()) {
         return 0;
     }
