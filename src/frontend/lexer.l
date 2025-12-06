@@ -73,12 +73,12 @@ using namespace Spark::FrontEnd;
   */
 #define RAISE_ERROR(message, start, end) (LSTATE.addError((message), (start), (end)))
 
-#define YY_INPUT(buf, result, max_size)    \
+#define YY_INPUT(buf, result, maxSize)     \
 {                                          \
     size_t read =                          \
     LSTATE.srcbuf().readChunk(             \
         reinterpret_cast<char*>(buf),      \
-        (max_size)                         \
+        (maxSize)                          \
     );                                     \
                                            \
     if (read == 0) {                       \
