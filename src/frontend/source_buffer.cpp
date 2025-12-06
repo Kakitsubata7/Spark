@@ -44,14 +44,13 @@ void SourceBuffer::load(std::istream& stream) {
             lineLen = 0;
         } else if (c == '\r') {
             // CR/CRLF
+            const char* oldLineBegin = lineBegin;
             if (i != _src.size() - 1 && _src[i + 1] == '\n') {
                 // CRLF
                 ++i; // Skip '\n' in the next iteration
                 ++lineBegin; // Pre-skip '\n' for next line
-            } else {
-                // CR
             }
-            _lines.emplace_back(lineBegin, lineLen);
+            _lines.emplace_back(oldLineBegin, lineLen);
             lineBegin += lineLen + 1;
             lineLen = 0;
         } else {
