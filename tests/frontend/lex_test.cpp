@@ -72,8 +72,8 @@ end
 print(potsOfGold({10, 5, 15, 20}))
 )";
     Lexer lexer = testLexAll(source, {
-        TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::BitXor, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
-            TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::BitXor, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::BitXor, TT::Gt, TT::BitXor, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
+        TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
+            TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::Gt, TT::Caret, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
                 TT::If, TT::Identifier, TT::Gt, TT::Identifier, TT::Do,
                     TT::Return, TT::Integer,
                 TT::End,
@@ -97,7 +97,7 @@ print(potsOfGold({10, 5, 15, 20}))
         TT::End,
 
             TT::Const, TT::Identifier, TT::Assign, TT::Identifier, TT::Dot, TT::Identifier, TT::LParen, TT::RParen,
-            TT::Const, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::BitXor, TT::Gt, TT::BitXor, TT::Assign, TT::Identifier, TT::LParen, TT::Identifier, TT::RParen,
+            TT::Const, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::Gt, TT::Caret, TT::Assign, TT::Identifier, TT::LParen, TT::Identifier, TT::RParen,
             TT::For, TT::Identifier, TT::In, TT::Integer, TT::Range, TT::Identifier, TT::Do,
                 TT::Identifier, TT::LBracket, TT::Identifier, TT::RBracket, TT::Assign, TT::Identifier, TT::LParen, TT::Identifier, TT::RParen,
                 TT::For, TT::Identifier, TT::In, TT::Integer, TT::Range, TT::Identifier, TT::Do,

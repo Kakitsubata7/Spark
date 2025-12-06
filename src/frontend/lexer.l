@@ -239,10 +239,10 @@ using namespace Spark::FrontEnd;
 
 "||" { UPDATE_LOC(); RETURN_TOK(TokenType::LogOr); }
 "|=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOrAssign); }
-"|" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOr); }
+"|" { UPDATE_LOC(); RETURN_TOK(TokenType::Pipe); }
 
 "^=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXorAssign); }
-"^" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXor); }
+"^" { UPDATE_LOC(); RETURN_TOK(TokenType::Caret); }
 
 "<=" { UPDATE_LOC(); RETURN_TOK(TokenType::Le); }
 "<" { UPDATE_LOC(); RETURN_TOK(TokenType::Lt); }

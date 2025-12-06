@@ -62,8 +62,8 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::Mod: return "Mod";
         case TokenType::Tide: return "Tide";
         case TokenType::And: return "And";
-        case TokenType::BitOr: return "BitOr";
-        case TokenType::BitXor: return "BitXor";
+        case TokenType::Pipe: return "Pipe";
+        case TokenType::Caret: return "Caret";
         case TokenType::Bang: return "Bang";
         case TokenType::LogAnd: return "LogAnd";
         case TokenType::LogOr: return "LogOr";

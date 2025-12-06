@@ -279,7 +279,7 @@ end
     removeCarriageReturns(source);
     Lexer lexer = testLexAll(source, {
         {TT::Fn, "fn", 2, 1},
-        {TT::BitXor, "^", 2, 3},
+        {TT::Caret, "^", 2, 3},
         {TT::Identifier, "foo", 2, 5},
         {TT::LParen, "(", 2, 8},
         {TT::Identifier, "n", 2, 9},
