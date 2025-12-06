@@ -29,8 +29,8 @@ using namespace Spark::FrontEnd;
 #define LSTATE (*static_cast<LexerState*>(yyget_extra(yyscanner)))
 #define LBUFFER (LSTATE.tokbuf())
 
-#define YYLINENO (LSTATE.lineno())
-#define YYCOLUMNNO (LSTATE.columnno())
+#define YYLINENO (LSTATE.lineno)
+#define YYCOLUMNNO (LSTATE.columnno)
 #define YYLOCATION (Location(YYLINENO, YYCOLUMNNO))
 
 /**
@@ -44,7 +44,7 @@ using namespace Spark::FrontEnd;
 #define RETURN_TOK(type)                                                   \
 {                                                                          \
     EMIT_TOK(YYTEXT, YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG)); \
-    LSTATE.advance(YYLENG);                                                \
+    YYCOLUMNNO += YYLENG;                                                \
     return (type);                                                         \
 }
 
@@ -76,7 +76,7 @@ using namespace Spark::FrontEnd;
 #define YY_INPUT(buf, result, maxSize)     \
 {                                          \
     size_t read =                          \
-    LSTATE.srcbuf().readChunk(             \
+    LSTATE.readChunk(                      \
         reinterpret_cast<char*>(buf),      \
         (maxSize)                          \
     );                                     \
@@ -95,7 +95,7 @@ using namespace Spark::FrontEnd;
 }
 
 [ \t\r]+ {
-    LSTATE.advance(YYLENG);
+    YYCOLUMNNO += YYLENG;
 }
 
 [0-9_]*\.[0-9_]+ {
@@ -117,31 +117,31 @@ using namespace Spark::FrontEnd;
     Location end(YYLINENO, YYCOLUMNNO + YYLENG);
     SET_LOC(YYLOCATION, end);
     EMIT_TOK(YYTEXT.substr(2), YYLOCATION, end);
-    LSTATE.advance(YYLENG);
+    YYCOLUMNNO += YYLENG;
     return TokenType::LineComment;
 }
 
 ["'] {
     LBUFFER.reset(YYLINENO, YYCOLUMNNO);
-    LSTATE.advance(1);
-    LSTATE.setStrDelim(YYTEXT[0]);
+    ++YYCOLUMNNO;
+    LSTATE.strDelim = YYTEXT[0];
     BEGIN(IN_STRING);
 }
 
 <IN_STRING>{
-    "\\n" { LBUFFER.append('\n'); LSTATE.advance(2); }
-    "\\t" { LBUFFER.append('\t'); LSTATE.advance(2); }
-    "\\r" { LBUFFER.append('\r'); LSTATE.advance(2); }
-    "\\\\" { LBUFFER.append('\\'); LSTATE.advance(2); }
-    "\\\"" { LBUFFER.append('"'); LSTATE.advance(2); }
-    "\\\'" { LBUFFER.append('\''); LSTATE.advance(2); }
+    "\\n" { LBUFFER.append('\n'); YYCOLUMNNO += 2; }
+    "\\t" { LBUFFER.append('\t'); YYCOLUMNNO += 2; }
+    "\\r" { LBUFFER.append('\r'); YYCOLUMNNO += 2; }
+    "\\\\" { LBUFFER.append('\\'); YYCOLUMNNO += 2; }
+    "\\\"" { LBUFFER.append('"'); YYCOLUMNNO += 2; }
+    "\\\'" { LBUFFER.append('\''); YYCOLUMNNO += 2; }
 
     \\. {
         LBUFFER.append(YYTEXT[1]);
         std::ostringstream oss;
         oss << "unrecognized escape sequence: " << "'" << YYTEXT << "'";
         RAISE_ERROR(oss.str(), Location(YYLINENO, YYCOLUMNNO - 1), Location(YYLINENO, YYCOLUMNNO));
-        LSTATE.advance(2);
+        YYCOLUMNNO += 2;
     }
 
     (\r\n|\r|\n) {
@@ -164,8 +164,8 @@ using namespace Spark::FrontEnd;
     }
 
     . {
-        LSTATE.advance(1);
-        if (YYTEXT[0] == LSTATE.strDelim()) {
+        ++YYCOLUMNNO;
+        if (YYTEXT[0] == LSTATE.strDelim) {
             BEGIN(INITIAL);
             SET_LOC(LBUFFER.start(), YYLOCATION);
             EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
@@ -178,7 +178,7 @@ using namespace Spark::FrontEnd;
 "/*" {
     BEGIN(IN_BLOCK_COMMENT);
     LBUFFER.reset(YYLINENO, YYCOLUMNNO);
-    LSTATE.advance(2);
+    YYCOLUMNNO += 2;
 }
 
 <IN_BLOCK_COMMENT>{
@@ -186,18 +186,18 @@ using namespace Spark::FrontEnd;
         BEGIN(INITIAL);
         SET_LOC(LBUFFER.start(), YYLOCATION);
         EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
-        LSTATE.advance(2);
+        YYCOLUMNNO += 2;
         return TokenType::BlockComment;
     }
 
     [^*\r\n]+ {
         LBUFFER.append(YYTEXT);
-        LSTATE.advance(YYLENG);
+        YYCOLUMNNO += YYLENG;
     }
 
     "*" {
         LBUFFER.append('*');
-        LSTATE.advance(1);
+        ++YYCOLUMNNO;
     }
 
     (\r\n|\r|\n) {
@@ -284,7 +284,7 @@ using namespace Spark::FrontEnd;
     oss << "unrecognized character: " << "'" << YYTEXT << "'";
     RAISE_ERROR(oss.str(), YYLOCATION, YYLOCATION);
     EMIT_TOK(YYTEXT, YYLOCATION, YYLOCATION);
-    LSTATE.advance(1);
+    ++YYCOLUMNNO;
     return TokenType::Error;
 }
 %%

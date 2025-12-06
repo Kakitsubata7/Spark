@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "frontend/source_buffer.hpp"
+#include "frontend/source_reader.hpp"
 #include "token_buffer.hpp"
 #include "utils/error.hpp"
 
@@ -14,35 +15,27 @@ namespace Spark::FrontEnd {
  */
 class LexerState {
 private:
-    size_t _lineno;
-    size_t _columnno;
     SourceBuffer* _srcbufp;
+    SourceReader _srcreader;
+
     TokenBuffer _tokbuf;
-    char _strDelim = '\0';
+
     std::vector<Error> _errors;
 
 public:
-    [[nodiscard]]
-    constexpr size_t lineno() const noexcept { return _lineno; }
+    size_t lineno;
+    size_t columnno;
 
-    [[nodiscard]]
-    constexpr size_t columnno() const noexcept { return _columnno; }
-
-    [[nodiscard]]
-    constexpr SourceBuffer& srcbuf() const noexcept { return *_srcbufp; }
+    char strDelim = '\0';
 
     [[nodiscard]]
     constexpr TokenBuffer& tokbuf() noexcept { return _tokbuf; }
 
     [[nodiscard]]
-    constexpr char strDelim() const noexcept { return _strDelim; }
-
-    [[nodiscard]]
     constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
 
     LexerState(SourceBuffer& srcbuf, size_t lineno, size_t columnno)
-        : _lineno(lineno), _columnno(columnno), _srcbufp(&srcbuf),
-          _tokbuf(lineno, columnno) { }
+        : _srcbufp(&srcbuf), _srcreader(srcbuf), _tokbuf(lineno, columnno), lineno(lineno), columnno(columnno) { }
 
     LexerState(const LexerState& other) = delete;
     LexerState& operator=(const LexerState& other) = delete;
@@ -54,24 +47,18 @@ public:
      * Updates the state when a newline is encountered.
      */
     constexpr void whenNewline() noexcept {
-        ++_lineno;
-        _columnno = 1;
+        ++lineno;
+        columnno = 1;
     }
 
     /**
-     * Updates the state when @p n characters are advanced.
-     * @param n Number of characters advanced.
+     * Reads a string chunk with a max size of @p maxSize into @p buf. Returns the number of characters read.
+     * @param buf Buffer to write into.
+     * @param maxSize Max size of the buffer.
+     * @return Number of characters read.
      */
-    constexpr void advance(size_t n) noexcept {
-        _columnno += n;
-    }
-
-    /**
-     * Sets the string delimiter.
-     * @param strDelim New string delimiter.
-     */
-    constexpr void setStrDelim(char strDelim) noexcept {
-        _strDelim = strDelim;
+    size_t readChunk(char* buf, size_t maxSize) noexcept {
+        return _srcreader.readChunk(buf, maxSize);
     }
 
     /**
