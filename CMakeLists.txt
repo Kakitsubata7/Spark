@@ -131,6 +131,7 @@ add_executable(sparktest
         tests/frontend/lexer_test.cpp
         tests/frontend/parser_test.cpp
         tests/frontend/source_buffer_test.cpp
+        tests/frontend/source_reader_test.cpp
         tests/frontend/token_buffer_test.cpp
         tests/frontend/token_value_test.cpp
         tests/frontend/utils.cpp
