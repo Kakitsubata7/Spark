@@ -37,7 +37,7 @@ struct Location {
         return rhs >= *this;
     }
 
-    bool operator>=(Location rhs) const noexcept {
+    constexpr bool operator>=(Location rhs) const noexcept {
         return !(*this < rhs);
     }
 };
