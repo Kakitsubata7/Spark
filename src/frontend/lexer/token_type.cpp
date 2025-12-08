@@ -62,7 +62,7 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::Mod: return "Mod";
         case TokenType::Tide: return "Tide";
         case TokenType::And: return "And";
-        case TokenType::Pipe: return "Pipe";
+        case TokenType::VBar: return "VBar";
         case TokenType::Caret: return "Caret";
         case TokenType::Bang: return "Bang";
         case TokenType::LogAnd: return "LogAnd";
@@ -89,6 +89,7 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::RangeExcl: return "RangeExcl";
         case TokenType::Question: return "Question";
         case TokenType::Coalesce: return "Coalesce";
+        case TokenType::Pipe: return "Pipe";
         case TokenType::Dot: return "Dot";
         case TokenType::Comma: return "Comma";
         case TokenType::Colon: return "Colon";
