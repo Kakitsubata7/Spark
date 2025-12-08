@@ -98,15 +98,16 @@ element:
     | block
     | if
     | match
-    | While element block   { $$ = nullptr; }
-    | Break                 { $$ = nullptr; }
-    | Continue              { $$ = nullptr; }
-    | Return                { $$ = nullptr; }
-    | Throw                 { $$ = nullptr; }
-    | Try                   { $$ = nullptr; }
-    | Catch                 { $$ = nullptr; }
-    | LineComment           { }
-    | BlockComment          { }
+    | While element block          { $$ = nullptr; }
+    | For element In element block { $$ = nullptr; }
+    | Break                        { $$ = nullptr; }
+    | Continue                     { $$ = nullptr; }
+    | Return                       { $$ = nullptr; }
+    | Throw                        { $$ = nullptr; }
+    | Try                          { $$ = nullptr; }
+    | Catch                        { $$ = nullptr; }
+    | LineComment                  { }
+    | BlockComment                 { }
     ;
 
 literal:
