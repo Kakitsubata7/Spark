@@ -64,8 +64,118 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
+%type <Spark::FrontEnd::Node*> program node assign unary block literal
+%type <std::vector<Spark::FrontEnd::Node*>> block_list
+
+%right Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
+%right Coalesce
+%left LogAnd LogOr
+%left Eq Ne StrictEq StrictNe
+%left Le Ge Lt Gt
+%left And Pipe Caret
+%left Add Sub
+%left Mul Div Mod
+%left Dot
+%right Tide
+%left LParen LBracket RParen RBracket
+
 %%
-start:
+%start program;
+
+program:
+      %empty
+        {
+            auto* root = ctx.ast().root();
+            root->nodes.clear();
+            $$ = root;
+        }
+    | program node
+        {
+            if ($2 != nullptr) {
+                ctx.ast().root()->nodes.push_back($2);
+            }
+            $$ = $1;
+        }
+    ;
+
+node:
+      literal
+    | Identifier            { $$ = nullptr; }
+    | assign
+    | node Coalesce         { $$ = nullptr; }
+    | node LogAnd node      { $$ = nullptr; }
+    | node LogOr node       { $$ = nullptr; }
+    | node Eq node          { $$ = nullptr; }
+    | node Ne node          { $$ = nullptr; }
+    | node StrictEq node    { $$ = nullptr; }
+    | node StrictNe node    { $$ = nullptr; }
+    | node Le node          { $$ = nullptr; }
+    | node Ge node          { $$ = nullptr; }
+    | node Lt node          { $$ = nullptr; }
+    | node Gt node          { $$ = nullptr; }
+    | node Lt Lt node       { $$ = nullptr; }
+    | node Gt Gt node       { $$ = nullptr; }
+    | node And node         { $$ = nullptr; }
+    | node Pipe node        { $$ = nullptr; }
+    | node Caret node       { $$ = nullptr; }
+    | node Add node         { $$ = nullptr; }
+    | node Sub node         { $$ = nullptr; }
+    | node Mul node         { $$ = nullptr; }
+    | node Div node         { $$ = nullptr; }
+    | node Mod node         { $$ = nullptr; }
+    | LParen node RParen    { $$ = nullptr; }
+    | block                 { $$ = nullptr; }
+    | While node block      { $$ = nullptr; }
+    | Break                 { $$ = nullptr; }
+    | Continue              { $$ = nullptr; }
+    | Return                { $$ = nullptr; }
+    | Throw                 { $$ = nullptr; }
+    ;
+
+assign:
+      node Assign node          { $$ = nullptr; }
+    | node AddAssign node       { $$ = nullptr; }
+    | node SubAssign node       { $$ = nullptr; }
+    | node MulAssign node       { $$ = nullptr; }
+    | node DivAssign node       { $$ = nullptr; }
+    | node ModAssign node       { $$ = nullptr; }
+    | node BitAndAssign node    { $$ = nullptr; }
+    | node BitOrAssign node     { $$ = nullptr; }
+    | node BitXorAssign node    { $$ = nullptr; }
+    | node CoalesceAssign node  { $$ = nullptr; }
+    ;
+
+unary:
+      Add node    { $$ = nullptr; }
+    | Sub node    { $$ = nullptr; }
+    | Bang node   { $$ = nullptr; }
+    ;
+
+block:
+      Do block_list End
+        {
+            auto* block = ctx.makeNode<Block>($1.start, $3.end);
+            block->nodes.insert(block->nodes.end(), $2.begin(), $2.end());
+            $$ = block;
+        }
+    ;
+
+block_list:
+      %empty    { $$.clear(); }
+    | block_list node
+        {
+            $1.push_back($2);
+            $$ = $1;
+        }
+    ;
+
+literal:
+      Integer    { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real       { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True       { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
+    | False      { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
+    | String     { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil        { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
     ;
 %%
 
