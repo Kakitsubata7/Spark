@@ -65,7 +65,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program element literal name basename operators assign block
+%type <Spark::FrontEnd::Node*> program element literal name basename operator assign vardef varmod typedef block
 %type <std::vector<Spark::FrontEnd::Node*>> block_list
 
 %%
@@ -91,14 +91,21 @@ element:
       literal
     | name
     | LParen element RParen { $$ = nullptr; }
-    | operators
+    | operator
+    | If element Then element Else element { $$ = nullptr; }
+    | Try                   { $$ = nullptr; }
     | assign
+    | vardef
+    | typedef
     | block
+    | If element End        { $$ = nullptr; }
+    | Else                  { $$ = nullptr; }
     | While element block   { $$ = nullptr; }
     | Break                 { $$ = nullptr; }
     | Continue              { $$ = nullptr; }
     | Return                { $$ = nullptr; }
     | Throw                 { $$ = nullptr; }
+    | Catch                 { $$ = nullptr; }
     | LineComment           { }
     | BlockComment          { }
     ;
@@ -122,9 +129,10 @@ basename:
     | Discard           { $$ = nullptr; }
     | Dollar Identifier { $$ = nullptr; }
     | Dollar Discard    { $$ = nullptr; }
+    | Global            { $$ = nullptr; }
     ;
 
-operators:
+operator:
       Add       { $$ = nullptr; }
     | Sub       { $$ = nullptr; }
     | Mul       { $$ = nullptr; }
@@ -164,6 +172,27 @@ assign:
     | BitXorAssign   { $$ = nullptr; }
     | CoalesceAssign { $$ = nullptr; }
     ;
+
+vardef:
+      varmod name            { $$ = nullptr; }
+    | varmod name Colon name { $$ = nullptr; }
+    ;
+
+varmod:
+      Let   { $$ = nullptr; }
+    | Const { $$ = nullptr; }
+    | Ref   { $$ = nullptr; }
+    | Cref  { $$ = nullptr; }
+    ;
+
+typedef:
+      Class name block       { $$ = nullptr; }
+    | Struct name block      { $$ = nullptr; }
+    | Enum name block        { $$ = nullptr; }
+    | Enum Class name block  { $$ = nullptr; }
+    | Enum Struct name block { $$ = nullptr; }
+    | Alias name block       { $$ = nullptr; }
+    | Extension name block   { $$ = nullptr; }
 
 block:
       Do block_list End
