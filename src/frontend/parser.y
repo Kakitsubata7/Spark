@@ -65,7 +65,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program element literal name basename operator assign vardef varmod typedef block
+%type <Spark::FrontEnd::Node*> program element literal name basename operator assign vardef varmod typedef block if match cases case
 %type <std::vector<Spark::FrontEnd::Node*>> block_list
 
 %%
@@ -92,19 +92,18 @@ element:
     | name
     | LParen element RParen { $$ = nullptr; }
     | operator
-    | If element Then element Else element { $$ = nullptr; }
-    | Try                   { $$ = nullptr; }
     | assign
     | vardef
     | typedef
     | block
-    | If element End        { $$ = nullptr; }
-    | Else                  { $$ = nullptr; }
+    | if
+    | match
     | While element block   { $$ = nullptr; }
     | Break                 { $$ = nullptr; }
     | Continue              { $$ = nullptr; }
     | Return                { $$ = nullptr; }
     | Throw                 { $$ = nullptr; }
+    | Try                   { $$ = nullptr; }
     | Catch                 { $$ = nullptr; }
     | LineComment           { }
     | BlockComment          { }
@@ -195,7 +194,7 @@ typedef:
     | Extension name block   { $$ = nullptr; }
 
 block:
-      Do block_list End
+      LBrace block_list RBrace
         {
             auto* block = ctx.makeNode<Block>($1.start, $3.end);
             block->nodes.insert(block->nodes.end(), $2.begin(), $2.end());
@@ -210,6 +209,27 @@ block_list:
             $1.push_back($2);
             $$ = $1;
         }
+    ;
+
+if:
+      If element Then element Else element { $$ = nullptr; }
+    | If element block                     { $$ = nullptr; }
+    | Else                                 { $$ = nullptr; }
+    ;
+
+match:
+      Match element LBrace cases RBrace { $$ = nullptr; }
+    ;
+
+cases:
+      /* empty */ { $$ = nullptr;}
+    | cases case  { $$ = nullptr; }
+
+case:
+      Case element FatArrow element    { $$ = nullptr; }
+    | Case If element FatArrow element { $$ = nullptr; }
+    | Case element block               { $$ = nullptr; }
+    | Case If element block            { $$ = nullptr; }
     ;
 %%
 
