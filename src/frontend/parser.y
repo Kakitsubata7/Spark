@@ -116,6 +116,10 @@ term:
     | if
     | match
     | While term block { $$ = nullptr; }
+    | Do block While term
+{
+    $$ = nullptr;
+}
     | For term In term block
         {
             $$ = nullptr;
@@ -287,8 +291,8 @@ fnmod:
     ;
 
 fnbody:
-      block          { $$ = nullptr; }
-    | FatArrow block { $$ = nullptr; }
+      block         { $$ = nullptr; }
+    | FatArrow term { $$ = nullptr; }
 
 vardef:
       varmod Identifier { $$ = nullptr; }
@@ -348,8 +352,8 @@ cases:
 case:
       Case term FatArrow term    { $$ = nullptr; }
     | Case If term FatArrow term { $$ = nullptr; }
-    | Case term block               { $$ = nullptr; }
-    | Case If term block            { $$ = nullptr; }
+    | Case term block            { $$ = nullptr; }
+    | Case If term block         { $$ = nullptr; }
     ;
 %%
 
