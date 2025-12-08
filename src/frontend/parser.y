@@ -65,7 +65,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program element operators assign block literal
+%type <Spark::FrontEnd::Node*> program element literal name basename operators assign block
 %type <std::vector<Spark::FrontEnd::Node*>> block_list
 
 %%
@@ -89,12 +89,9 @@ program:
 
 element:
       literal
-    | Identifier            { $$ = nullptr; }
-    | Discard               { $$ = nullptr; }
-    | Dollar Identifier     { $$ = nullptr; }
-    | Dollar Discard        { $$ = nullptr; }
-    | operators
+    | name
     | LParen element RParen { $$ = nullptr; }
+    | operators
     | assign
     | block
     | While element block   { $$ = nullptr; }
@@ -113,6 +110,18 @@ literal:
     | False   { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
     | String  { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
     | Nil     { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
+    ;
+
+name:
+      basename
+    | name Dot basename { $$ = nullptr; }
+    ;
+
+basename:
+      Identifier        { $$ = nullptr; }
+    | Discard           { $$ = nullptr; }
+    | Dollar Identifier { $$ = nullptr; }
+    | Dollar Discard    { $$ = nullptr; }
     ;
 
 operators:
