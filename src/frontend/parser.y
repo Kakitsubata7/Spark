@@ -65,7 +65,21 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program element literal name basename operator assign vardef varmod typedef block if match cases case
+%type <Spark::FrontEnd::Node*> program
+%type <Spark::FrontEnd::Node*> term
+%type <Spark::FrontEnd::Node*> name basename
+%type <Spark::FrontEnd::Node*> literal
+%type <Spark::FrontEnd::Node*> paren_terms
+%type <Spark::FrontEnd::Node*> tuple collection
+%type <Spark::FrontEnd::Node*> tuple_terms collection_terms
+%type <Spark::FrontEnd::Node*> type_annot
+%type <Spark::FrontEnd::Node*> operator
+%type <Spark::FrontEnd::Node*> assign
+%type <Spark::FrontEnd::Node*> fn fnmod fnbody
+%type <Spark::FrontEnd::Node*> vardef varmod typedef
+%type <Spark::FrontEnd::Node*> block
+%type <Spark::FrontEnd::Node*> if
+%type <Spark::FrontEnd::Node*> match cases case
 %type <std::vector<Spark::FrontEnd::Node*>> block_list
 
 %%
@@ -78,7 +92,7 @@ program:
             root->nodes.clear();
             $$ = root;
         }
-    | program element
+    | program term
         {
             if ($2 != nullptr) {
                 ctx.ast().root()->nodes.push_back($2);
@@ -87,49 +101,116 @@ program:
         }
     ;
 
-element:
-      literal
-    | name
-    | LParen element RParen { $$ = nullptr; }
+term:
+      name
+    | literal
+    | paren_terms
+    | collection
+    | type_annot
     | operator
     | assign
+    | fn
     | vardef
     | typedef
     | block
     | if
     | match
-    | While element block          { $$ = nullptr; }
-    | For element In element block { $$ = nullptr; }
-    | Break                        { $$ = nullptr; }
-    | Continue                     { $$ = nullptr; }
-    | Return                       { $$ = nullptr; }
-    | Throw                        { $$ = nullptr; }
-    | Try                          { $$ = nullptr; }
-    | Catch                        { $$ = nullptr; }
-    | LineComment                  { }
-    | BlockComment                 { }
+    | While term block { $$ = nullptr; }
+    | For term In term block
+        {
+            $$ = nullptr;
+        }
+    | Break            { $$ = nullptr; }
+    | Continue         { $$ = nullptr; }
+    | Return           { $$ = nullptr; }
+    | Throw            { $$ = nullptr; }
+    | Try              { $$ = nullptr; }
+    | Catch            { $$ = nullptr; }
+    | Is               { $$ = nullptr; }
+    | Typeof LParen name RParen
+        {
+            $$ = nullptr;
+        }
+    | Module block     { $$ = nullptr; }
+    | Export term      { $$ = nullptr; }
+    | From term        { $$ = nullptr; }
+    | Import term      { $$ = nullptr; }
+    | At term          { $$ = nullptr; }
+    | Semicolon        { $$ = nullptr; }
+    | LineComment      { $$ = nullptr; }
+    | BlockComment     { $$ = nullptr; }
     ;
 
 literal:
-      Integer { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
-    | Real    { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
-    | True    { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
-    | False   { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
-    | String  { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
-    | Nil     { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
+      Integer   { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real      { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True      { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
+    | False     { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
+    | String    { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil       { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
+    | Undefined { $$ = nullptr; }
     ;
 
+/**
+  * identifier, $identifier.identifier, ...
+  */
 name:
       basename
     | name Dot basename { $$ = nullptr; }
     ;
 
+/**
+  * identifier, _, $identifier, $_, global, self, super
+  */
 basename:
       Identifier        { $$ = nullptr; }
     | Discard           { $$ = nullptr; }
     | Dollar Identifier { $$ = nullptr; }
     | Dollar Discard    { $$ = nullptr; }
     | Global            { $$ = nullptr; }
+    | Self              { $$ = nullptr; }
+    | Super             { $$ = nullptr; }
+    ;
+
+/**
+  * (), (term), (term, term, ...)
+  */
+paren_terms:
+      LParen RParen         { $$ = nullptr; }
+    | LParen term RParen    { $$ = nullptr; }
+    | tuple
+    ;
+
+/**
+  * (term, term, ...)
+  */
+tuple:
+      LParen tuple_terms RParen { $$ = nullptr; }
+    ;
+
+tuple_terms:
+      term Comma term
+    | tuple_terms Comma term
+    ;
+
+/**
+  * [], [term], [term, ...]
+  */
+collection:
+      LBracket collection_terms RBracket { $$ = nullptr; }
+    ;
+
+collection_terms:
+      /* empty */                 { $$ = nullptr; }
+    | term                        { $$ = nullptr; }
+    | collection_terms Comma term { $$ = nullptr; }
+    ;
+
+/**
+  * identifier : name
+  */
+type_annot:
+      Identifier Colon name { $$ = nullptr; }
     ;
 
 operator:
@@ -173,16 +254,53 @@ assign:
     | CoalesceAssign { $$ = nullptr; }
     ;
 
+fn:
+      fnmod paren_terms fnbody
+        {
+            $$ = nullptr;
+        }
+    | fnmod paren_terms Throw fnbody
+        {
+            $$ = nullptr;
+        }
+    | fnmod paren_terms Throw paren_terms fnbody
+        {
+            $$ = nullptr;
+        }
+    | fnmod paren_terms Arrow name fnbody
+        {
+            $$ = nullptr;
+        }
+    | fnmod paren_terms Arrow name Throw fnbody
+        {
+            $$ = nullptr;
+        }
+    | fnmod paren_terms Arrow name Throw paren_terms fnbody
+        {
+            $$ = nullptr;
+        }
+    ;
+
+fnmod:
+      Fn             { $$ = nullptr; }
+    | fnmod operator { $$ = nullptr; }
+    ;
+
+fnbody:
+      block          { $$ = nullptr; }
+    | FatArrow block { $$ = nullptr; }
+
 vardef:
-      varmod name            { $$ = nullptr; }
-    | varmod name Colon name { $$ = nullptr; }
+      varmod Identifier { $$ = nullptr; }
+    | varmod type_annot { $$ = nullptr; }
     ;
 
 varmod:
-      Let   { $$ = nullptr; }
-    | Const { $$ = nullptr; }
-    | Ref   { $$ = nullptr; }
-    | Cref  { $$ = nullptr; }
+      Let             { $$ = nullptr; }
+    | Const           { $$ = nullptr; }
+    | Ref             { $$ = nullptr; }
+    | Cref            { $$ = nullptr; }
+    | varmod operator { $$ = nullptr; }
     ;
 
 typedef:
@@ -191,6 +309,7 @@ typedef:
     | Enum name block        { $$ = nullptr; }
     | Enum Class name block  { $$ = nullptr; }
     | Enum Struct name block { $$ = nullptr; }
+    | Trait name block       { $$ = nullptr; }
     | Alias name block       { $$ = nullptr; }
     | Extension name block   { $$ = nullptr; }
 
@@ -205,7 +324,7 @@ block:
 
 block_list:
       /* empty */    { $$.clear(); }
-    | block_list element
+    | block_list term
         {
             $1.push_back($2);
             $$ = $1;
@@ -213,13 +332,13 @@ block_list:
     ;
 
 if:
-      If element Then element Else element { $$ = nullptr; }
-    | If element block                     { $$ = nullptr; }
+      If term Then term Else term { $$ = nullptr; }
+    | If term block                     { $$ = nullptr; }
     | Else                                 { $$ = nullptr; }
     ;
 
 match:
-      Match element LBrace cases RBrace { $$ = nullptr; }
+      Match term LBrace cases RBrace { $$ = nullptr; }
     ;
 
 cases:
@@ -227,10 +346,10 @@ cases:
     | cases case  { $$ = nullptr; }
 
 case:
-      Case element FatArrow element    { $$ = nullptr; }
-    | Case If element FatArrow element { $$ = nullptr; }
-    | Case element block               { $$ = nullptr; }
-    | Case If element block            { $$ = nullptr; }
+      Case term FatArrow term    { $$ = nullptr; }
+    | Case If term FatArrow term { $$ = nullptr; }
+    | Case term block               { $$ = nullptr; }
+    | Case If term block            { $$ = nullptr; }
     ;
 %%
 
