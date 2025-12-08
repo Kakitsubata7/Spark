@@ -64,7 +64,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program node assign unary block literal
+%type <Spark::FrontEnd::Node*> program node assign binary unary primary literal block
 %type <std::vector<Spark::FrontEnd::Node*>> block_list
 
 %right Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
@@ -76,7 +76,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %left Add Sub
 %left Mul Div Mod
 %left Dot
-%right Tide
+%right Tide Bang
 %left LParen LBracket RParen RBracket
 
 %%
@@ -99,30 +99,59 @@ program:
     ;
 
 node:
+      assign
+    ;
+
+assign:
+      binary
+    | binary Assign assign            { $$ = nullptr; }
+    | binary AddAssign assign         { $$ = nullptr; }
+    | binary SubAssign assign         { $$ = nullptr; }
+    | binary MulAssign assign         { $$ = nullptr; }
+    | binary DivAssign assign         { $$ = nullptr; }
+    | binary ModAssign assign         { $$ = nullptr; }
+    | binary BitAndAssign assign      { $$ = nullptr; }
+    | binary BitOrAssign assign       { $$ = nullptr; }
+    | binary BitXorAssign assign      { $$ = nullptr; }
+    | binary CoalesceAssign assign    { $$ = nullptr; }
+    ;
+
+binary:
+      binary Add binary         { $$ = nullptr; }
+    | binary Sub binary         { $$ = nullptr; }
+    | binary Mul binary         { $$ = nullptr; }
+    | binary Div binary         { $$ = nullptr; }
+    | binary Mod binary         { $$ = nullptr; }
+    | binary And binary         { $$ = nullptr; }
+    | binary Pipe binary        { $$ = nullptr; }
+    | binary Caret binary       { $$ = nullptr; }
+    | binary Lt binary          { $$ = nullptr; }
+    | binary Gt binary          { $$ = nullptr; }
+    | binary Lt Lt binary       { $$ = nullptr; }
+    | binary Gt Gt binary       { $$ = nullptr; }
+    | binary Le binary          { $$ = nullptr; }
+    | binary Ge binary          { $$ = nullptr; }
+    | binary Eq binary          { $$ = nullptr; }
+    | binary Ne binary          { $$ = nullptr; }
+    | binary StrictEq binary    { $$ = nullptr; }
+    | binary StrictNe binary    { $$ = nullptr; }
+    | binary LogAnd binary      { $$ = nullptr; }
+    | binary LogOr binary       { $$ = nullptr; }
+    | binary Coalesce binary    { $$ = nullptr; }
+    | unary
+    ;
+
+unary:
+      Add unary      { $$ = nullptr; }
+    | Sub unary      { $$ = nullptr; }
+    | Bang unary     { $$ = nullptr; }
+    | primary
+    ;
+
+primary:
       literal
     | Identifier            { $$ = nullptr; }
-    | assign
-    | node Coalesce         { $$ = nullptr; }
-    | node LogAnd node      { $$ = nullptr; }
-    | node LogOr node       { $$ = nullptr; }
-    | node Eq node          { $$ = nullptr; }
-    | node Ne node          { $$ = nullptr; }
-    | node StrictEq node    { $$ = nullptr; }
-    | node StrictNe node    { $$ = nullptr; }
-    | node Le node          { $$ = nullptr; }
-    | node Ge node          { $$ = nullptr; }
-    | node Lt node          { $$ = nullptr; }
-    | node Gt node          { $$ = nullptr; }
-    | node Lt Lt node       { $$ = nullptr; }
-    | node Gt Gt node       { $$ = nullptr; }
-    | node And node         { $$ = nullptr; }
-    | node Pipe node        { $$ = nullptr; }
-    | node Caret node       { $$ = nullptr; }
-    | node Add node         { $$ = nullptr; }
-    | node Sub node         { $$ = nullptr; }
-    | node Mul node         { $$ = nullptr; }
-    | node Div node         { $$ = nullptr; }
-    | node Mod node         { $$ = nullptr; }
+    | Dollar Identifier     { $$ = nullptr; }
     | LParen node RParen    { $$ = nullptr; }
     | block                 { $$ = nullptr; }
     | While node block      { $$ = nullptr; }
@@ -132,23 +161,13 @@ node:
     | Throw                 { $$ = nullptr; }
     ;
 
-assign:
-      node Assign node          { $$ = nullptr; }
-    | node AddAssign node       { $$ = nullptr; }
-    | node SubAssign node       { $$ = nullptr; }
-    | node MulAssign node       { $$ = nullptr; }
-    | node DivAssign node       { $$ = nullptr; }
-    | node ModAssign node       { $$ = nullptr; }
-    | node BitAndAssign node    { $$ = nullptr; }
-    | node BitOrAssign node     { $$ = nullptr; }
-    | node BitXorAssign node    { $$ = nullptr; }
-    | node CoalesceAssign node  { $$ = nullptr; }
-    ;
-
-unary:
-      Add node    { $$ = nullptr; }
-    | Sub node    { $$ = nullptr; }
-    | Bang node   { $$ = nullptr; }
+literal:
+      Integer    { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real       { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True       { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
+    | False      { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
+    | String     { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil        { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
     ;
 
 block:
@@ -167,15 +186,6 @@ block_list:
             $1.push_back($2);
             $$ = $1;
         }
-    ;
-
-literal:
-      Integer    { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
-    | Real       { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
-    | True       { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
-    | False      { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
-    | String     { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
-    | Nil        { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
     ;
 %%
 
