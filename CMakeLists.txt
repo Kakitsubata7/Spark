@@ -67,16 +67,10 @@ add_library(sparklib
 
         src/frontend/ast.cpp
         src/frontend/ast.hpp
-
         src/frontend/ast/equal_visitor.cpp
         src/frontend/ast/equal_visitor.hpp
-        src/frontend/ast/expr.hpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp
-        src/frontend/ast/pattern.hpp
-        src/frontend/ast/stmt.hpp
-        src/frontend/ast/type_nodes.hpp
-        src/frontend/ast/utils.hpp
 
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
