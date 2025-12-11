@@ -16,7 +16,7 @@ private:
     std::unordered_set<Node*> _nodes;
 
 public:
-    [[nodiscard]] constexpr Block* root() const noexcept { return _root.get(); }
+    [[nodiscard]] Block* root() const noexcept { return _root.get(); }
 
     AST();
     ~AST();
