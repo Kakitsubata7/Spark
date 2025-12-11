@@ -66,6 +66,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token Error 1
 
 %type <Spark::FrontEnd::Node*> program
+%type <std::vector<Spark::FrontEnd::Node*>> terms
 %type <Spark::FrontEnd::Node*> term
 %type <Spark::FrontEnd::Node*> name basename
 %type <Spark::FrontEnd::Node*> literal
@@ -86,18 +87,16 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %start program;
 
 program:
-      /* empty */
-        {
-            auto* root = ctx.ast().root();
-            root->nodes.clear();
-            $$ = root;
-        }
-    | program term
+     terms { ctx.ast().root()->nodes = std::move($1); }
+    ;
+
+terms:
+      /* empty */ { $$.clear(); }
+    | terms term
         {
             if ($2 != nullptr) {
-                ctx.ast().root()->nodes.push_back($2);
+                $$.push_back($2);
             }
-            $$ = $1;
         }
     ;
 
