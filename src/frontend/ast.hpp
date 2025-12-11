@@ -2,32 +2,27 @@
 
 #include <memory>
 #include <utility>
-#include <vector>
+#include <unordered_set>
 
-#include "ast/expr.hpp"
+#include "ast/equal_visitor.hpp"
 #include "ast/node.hpp"
 #include "ast/node_visitor.hpp"
-#include "ast/pattern.hpp"
-#include "ast/stmt.hpp"
-#include "ast/type_nodes.hpp"
-#include "ast/utils.hpp"
 
 namespace Spark::FrontEnd {
 
 class AST {
 private:
-    BlockStmt _root;
-    std::vector<std::unique_ptr<Node>> _nodes;
+    std::unique_ptr<Block> _root;
+    std::unordered_set<Node*> _nodes;
 
 public:
-    [[nodiscard]] constexpr BlockStmt* root() noexcept { return &_root; }
+    [[nodiscard]] constexpr Block* root() const noexcept { return _root.get(); }
 
-    AST() : _root({1, 1}, {1, 1}, {}) { }
+    AST();
+    ~AST();
 
-    AST(const AST& other) = default;
-    AST& operator=(const AST& other) = default;
-    AST(AST&& other) noexcept = default;
-    AST& operator=(AST&& other) noexcept = default;
+    AST(AST&& other) noexcept;
+    AST& operator=(AST&& other) noexcept;
 
     /**
      * Allocates a `Node` subtype instance and returns its pointer. The lifecycle of the instance is handled by
@@ -39,11 +34,19 @@ public:
      */
     template <typename T, typename... Args>
     T* make(Args&&... args) {
-        std::unique_ptr<T> ptr = std::make_unique<T>(std::forward<Args>(args)...);
-        T* raw = ptr.get();
-        _nodes.emplace_back(std::move(ptr));
-        return raw;
+        T* ptr = new T(std::forward<Args>(args)...);
+        _nodes.insert(ptr);
+        return ptr;
     }
+
+    /**
+     * Deallocates a `Node` subtype instance created with `make`.
+     * @param p Pointer to `Node` instance to deallocate.
+     */
+    void free(Node* p) noexcept;
+
+private:
+    void destruct() noexcept;
 };
 
 } // Spark::FrontEnd
