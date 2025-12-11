@@ -75,7 +75,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %type <Spark::FrontEnd::Node*> type_annot
 %type <Spark::FrontEnd::Node*> operator
 %type <Spark::FrontEnd::Node*> assign
-%type <Spark::FrontEnd::Node*> fn fnmod fnbody
+%type <Spark::FrontEnd::Node*> fn fnmod fnhead fnbody
 %type <Spark::FrontEnd::Node*> vardef varmod typedef
 %type <Spark::FrontEnd::Node*> block
 %type <Spark::FrontEnd::Node*> if
@@ -259,27 +259,27 @@ assign:
     ;
 
 fn:
-      fnmod paren_terms fnbody
+      fnhead fnbody
         {
             $$ = nullptr;
         }
-    | fnmod paren_terms Throw fnbody
+    | fnhead Throw fnbody
         {
             $$ = nullptr;
         }
-    | fnmod paren_terms Throw paren_terms fnbody
+    | fnhead Throw paren_terms fnbody
         {
             $$ = nullptr;
         }
-    | fnmod paren_terms Arrow name fnbody
+    | fnhead Arrow name fnbody
         {
             $$ = nullptr;
         }
-    | fnmod paren_terms Arrow name Throw fnbody
+    | fnhead Arrow name Throw fnbody
         {
             $$ = nullptr;
         }
-    | fnmod paren_terms Arrow name Throw paren_terms fnbody
+    | fnhead Arrow name Throw paren_terms fnbody
         {
             $$ = nullptr;
         }
@@ -287,7 +287,16 @@ fn:
 
 fnmod:
       Fn             { $$ = nullptr; }
+    | Constructor    { $$ = nullptr; }
+    | Destructor     { $$ = nullptr; }
     | fnmod operator { $$ = nullptr; }
+    ;
+
+fnhead:
+      fnmod paren_terms                   { $$ = nullptr; }
+    | fnmod Identifier paren_terms        { $$ = nullptr; }
+    | fnmod Operator operator paren_terms { $$ = nullptr; }
+    | fnmod Operator assign paren_terms   { $$ = nullptr; }
     ;
 
 fnbody:
