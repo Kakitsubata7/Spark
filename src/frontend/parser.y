@@ -40,6 +40,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
     parser.error(yy::location(b, e), msg);
 }
 
+#define ast ctx.ast()
 #define RAISE_ERROR(start, end, msg) raiseError(*this, (start), (end), (msg));
 }
 
@@ -65,114 +66,87 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%type <Spark::FrontEnd::Node*> program
-%type <std::vector<Spark::FrontEnd::Node*>> terms
+%type program
+%type <Spark::FrontEnd::Terms*> terms
 %type <Spark::FrontEnd::Node*> term
-%type <Spark::FrontEnd::Node*> name basename
 %type <Spark::FrontEnd::Node*> literal
 %type <Spark::FrontEnd::Node*> paren_terms
 %type <Spark::FrontEnd::Node*> tuple collection
 %type <Spark::FrontEnd::Node*> tuple_terms collection_terms
-%type <Spark::FrontEnd::Node*> type_annot
 %type <Spark::FrontEnd::Node*> operator
 %type <Spark::FrontEnd::Node*> assign
-%type <Spark::FrontEnd::Node*> fn fnmod fnhead fnbody
-%type <Spark::FrontEnd::Node*> vardef varmod typedef
-%type <Spark::FrontEnd::Node*> block
-%type <Spark::FrontEnd::Node*> if
-%type <Spark::FrontEnd::Node*> match cases case
-%type <std::vector<Spark::FrontEnd::Node*>> block_list
+%type <Spark::FrontEnd::Node*> vardef typedef
+%type <Spark::FrontEnd::Block*> block
 
 %%
 %start program;
 
 program:
-     terms { ctx.ast().root()->nodes = std::move($1); }
+      terms { ast.root()->block->terms->nodes = std::move($1->nodes); }
     ;
 
 terms:
-      /* empty */ { $$.clear(); }
+      /* empty */ { $$->nodes.clear(); }
     | terms term
         {
             if ($2 != nullptr) {
-                $$.push_back($2);
+                $$->nodes.push_back($2);
             }
         }
     ;
 
 term:
-      name
+      Identifier        { $$ = ast.make<Identifier>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard           { $$ = ast.make<Discard>($1.start, $1.end); }
+    | Dollar Identifier { $$ = ast.make<UpvalueIdentifier>($1.start, $1.end, std::move($2.lexeme)); }
+    | Dollar Discard    { $$ = ast.make<Discard>($1.start, $2.end); }
     | literal
     | paren_terms
     | collection
-    | type_annot
     | operator
     | assign
-    | fn
+    | Dot               { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Dot); }
     | vardef
     | typedef
-    | block
-    | if
-    | match
-    | While term block { $$ = nullptr; }
-    | Do block While term
-{
-    $$ = nullptr;
-}
-    | For term In term block
-        {
-            $$ = nullptr;
-        }
-    | Break            { $$ = nullptr; }
-    | Continue         { $$ = nullptr; }
-    | Return           { $$ = nullptr; }
-    | Throw            { $$ = nullptr; }
-    | Try              { $$ = nullptr; }
-    | Catch            { $$ = nullptr; }
-    | Is               { $$ = nullptr; }
-    | Typeof LParen name RParen
-        {
-            $$ = nullptr;
-        }
-    | Module block     { $$ = nullptr; }
-    | Export term      { $$ = nullptr; }
-    | From term        { $$ = nullptr; }
-    | Import term      { $$ = nullptr; }
-    | At term          { $$ = nullptr; }
-    | Semicolon        { $$ = nullptr; }
-    | LineComment      { $$ = nullptr; }
-    | BlockComment     { $$ = nullptr; }
-    ;
-
-literal:
-      Integer   { $$ = ctx.makeNode<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
-    | Real      { $$ = ctx.makeNode<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
-    | True      { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, true); }
-    | False     { $$ = ctx.makeNode<BoolLiteral>($1.start, $1.end, false); }
-    | String    { $$ = ctx.makeNode<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
-    | Nil       { $$ = ctx.makeNode<NilLiteral>($1.start, $1.end); }
-    | Undefined { $$ = nullptr; }
-    ;
-
-/**
-  * identifier, $identifier.identifier, ...
-  */
-name:
-      basename
-    | name Dot basename { $$ = nullptr; }
-    ;
-
-/**
-  * identifier, _, $identifier, $_, global, self, super
-  */
-basename:
-      Identifier        { $$ = nullptr; }
-    | Discard           { $$ = nullptr; }
-    | Dollar Identifier { $$ = nullptr; }
-    | Dollar Discard    { $$ = nullptr; }
     | Global            { $$ = nullptr; }
     | Self              { $$ = nullptr; }
     | Super             { $$ = nullptr; }
+    | block             { $$ = $1; }
+    | If                { $$ = ast.make<IfKeyword>($1.start, $1.end); }
+    | Then              { $$ = ast.make<ThenKeyword>($1.start, $1.end); }
+    | Else              { $$ = ast.make<ElseKeyword>($1.start, $1.end); }
+    | Match             { $$ = ast.make<MatchKeyword>($1.start, $1.end); }
+    | Case              { $$ = ast.make<CaseKeyword>($1.start, $1.end); }
+    | While             { $$ = ast.make<While>($1.start, $1.end, nullptr, nullptr); }
+    | Do                { $$ = ast.make<DoWhile>($1.start, $1.end, nullptr, nullptr); }
+    | For               { $$ = ast.make<For>($1.start, $1.end, nullptr, nullptr, nullptr); }
+    | In                { $$ = ast.make<InKeyword>($1.start, $1.end); }
+    | Break             { $$ = ast.make<Break>($1.start, $1.end); }
+    | Continue          { $$ = ast.make<Continue>($1.start, $1.end); }
+    | Return            { $$ = ast.make<Return>($1.start, $1.end, nullptr); }
+    | Is                { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Is); }
+    | Typeof            { $$ = ast.make<Typeof>($1.start, $1.end, nullptr); }
+    | Throw             { $$ = ast.make<Throw>($1.start, $1.end, nullptr); }
+    | Try               { $$ = ast.make<TryKeyword>($1.start, $1.end); }
+    | Catch             { $$ = ast.make<Catch>($1.start, $1.end, nullptr, nullptr); }
+    | Module block      { $$ = ast.make<Module>($1.start, $2->end, $2); }
+    | Export            { $$ = ast.make<Export>($1.start, $1.end, nullptr); }
+    | From              { $$ = ast.make<From>($1.start, $1.end, nullptr); }
+    | Import            { $$ = ast.make<Import>($1.start, $1.end, nullptr); }
+    | At term           { $$ = ast.make<Annotation>($1.start, $2->end, $2); }
+    | Semicolon         { $$ = ast.make<Semicolon>($1.start, $1.end); }
+    | LineComment       { $$ = nullptr; }
+    | BlockComment      { $$ = nullptr; }
+    ;
+
+literal:
+      Integer   { $$ = ast.make<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real      { $$ = ast.make<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True      { $$ = ast.make<BoolLiteral>($1.start, $1.end, true); }
+    | False     { $$ = ast.make<BoolLiteral>($1.start, $1.end, false); }
+    | String    { $$ = ast.make<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil       { $$ = ast.make<Nil>($1.start, $1.end); }
+    | Undefined { $$ = ast.make<Undefined>($1.start, $1.end); }
     ;
 
 /**
@@ -209,159 +183,68 @@ collection_terms:
     | collection_terms Comma term { $$ = nullptr; }
     ;
 
-/**
-  * identifier : name
-  */
-type_annot:
-      Identifier Colon name { $$ = nullptr; }
-    ;
-
 operator:
-      Add       { $$ = nullptr; }
-    | Sub       { $$ = nullptr; }
-    | Mul       { $$ = nullptr; }
-    | Div       { $$ = nullptr; }
-    | Mod       { $$ = nullptr; }
-    | Tide      { $$ = nullptr; }
-    | And       { $$ = nullptr; }
-    | VBar      { $$ = nullptr; }
-    | Caret     { $$ = nullptr; }
-    | Bang      { $$ = nullptr; }
-    | LogAnd    { $$ = nullptr; }
-    | LogOr     { $$ = nullptr; }
-    | Eq        { $$ = nullptr; }
-    | Ne        { $$ = nullptr; }
-    | Lt        { $$ = nullptr; }
-    | Gt        { $$ = nullptr; }
-    | Le        { $$ = nullptr; }
-    | Ge        { $$ = nullptr; }
-    | StrictEq  { $$ = nullptr; }
-    | StrictNe  { $$ = nullptr; }
-    | Range     { $$ = nullptr; }
-    | RangeExcl { $$ = nullptr; }
-    | Question  { $$ = nullptr; }
-    | Coalesce  { $$ = nullptr; }
-    | Pipe      { $$ = nullptr; }
+      Add       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Add); }
+    | Sub       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Sub); }
+    | Mul       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Mul); }
+    | Div       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Div); }
+    | Mod       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Mod); }
+    | Tide      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Tide); }
+    | And       { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::And); }
+    | VBar      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::VBar); }
+    | Caret     { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Caret); }
+    | Bang      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Bang); }
+    | LogAnd    { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::LogAnd); }
+    | LogOr     { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::LogOr); }
+    | Eq        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Eq); }
+    | Ne        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Ne); }
+    | Lt        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Lt); }
+    | Gt        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Gt); }
+    | Le        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Le); }
+    | Ge        { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Ge); }
+    | StrictEq  { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::StrictEq); }
+    | StrictNe  { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::StrictNe); }
+    | Range     { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Range); }
+    | RangeExcl { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::RangeExcl); }
+    | Question  { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Question); }
+    | Coalesce  { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Coalesce); }
+    | Pipe      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Pipe); }
     ;
 
 assign:
-      Assign         { $$ = nullptr; }
-    | AddAssign      { $$ = nullptr; }
-    | SubAssign      { $$ = nullptr; }
-    | MulAssign      { $$ = nullptr; }
-    | DivAssign      { $$ = nullptr; }
-    | ModAssign      { $$ = nullptr; }
-    | BitAndAssign   { $$ = nullptr; }
-    | BitOrAssign    { $$ = nullptr; }
-    | BitXorAssign   { $$ = nullptr; }
-    | CoalesceAssign { $$ = nullptr; }
+      Assign         { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::Assign); }
+    | AddAssign      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::AddAssign); }
+    | SubAssign      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::SubAssign); }
+    | MulAssign      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::MulAssign); }
+    | DivAssign      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::DivAssign); }
+    | ModAssign      { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::ModAssign); }
+    | BitAndAssign   { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::BitAndAssign); }
+    | BitOrAssign    { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::BitOrAssign); }
+    | BitXorAssign   { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::BitXorAssign); }
+    | CoalesceAssign { $$ = ast.make<Operation>($1.start, $1.end, OperationKind::CoalesceAssign); }
     ;
-
-fn:
-      fnhead fnbody
-        {
-            $$ = nullptr;
-        }
-    | fnhead Throw fnbody
-        {
-            $$ = nullptr;
-        }
-    | fnhead Throw paren_terms fnbody
-        {
-            $$ = nullptr;
-        }
-    | fnhead Arrow name fnbody
-        {
-            $$ = nullptr;
-        }
-    | fnhead Arrow name Throw fnbody
-        {
-            $$ = nullptr;
-        }
-    | fnhead Arrow name Throw paren_terms fnbody
-        {
-            $$ = nullptr;
-        }
-    ;
-
-fnmod:
-      Fn             { $$ = nullptr; }
-    | Constructor    { $$ = nullptr; }
-    | Destructor     { $$ = nullptr; }
-    | fnmod operator { $$ = nullptr; }
-    ;
-
-fnhead:
-      fnmod paren_terms                   { $$ = nullptr; }
-    | fnmod Identifier paren_terms        { $$ = nullptr; }
-    | fnmod Operator operator paren_terms { $$ = nullptr; }
-    | fnmod Operator assign paren_terms   { $$ = nullptr; }
-    ;
-
-fnbody:
-      block         { $$ = nullptr; }
-    | FatArrow term { $$ = nullptr; }
 
 vardef:
-      varmod Identifier { $$ = nullptr; }
-    | varmod type_annot { $$ = nullptr; }
-    ;
-
-varmod:
-      Let             { $$ = nullptr; }
-    | Const           { $$ = nullptr; }
-    | Ref             { $$ = nullptr; }
-    | Cref            { $$ = nullptr; }
-    | varmod operator { $$ = nullptr; }
+      Let   { $$ = ast.make<VarDef>($1.start, $1.end, VarDefKind::Let, false, false, nullptr, nullptr); }
+    | Const { $$ = ast.make<VarDef>($1.start, $1.end, VarDefKind::Const, false, false, nullptr, nullptr); }
+    | Ref   { $$ = ast.make<VarDef>($1.start, $1.end, VarDefKind::Ref, false, false, nullptr, nullptr); }
+    | Cref  { $$ = ast.make<VarDef>($1.start, $1.end, VarDefKind::Cref, false, false, nullptr, nullptr); }
     ;
 
 typedef:
-      Class name block       { $$ = nullptr; }
-    | Struct name block      { $$ = nullptr; }
-    | Enum name block        { $$ = nullptr; }
-    | Enum Class name block  { $$ = nullptr; }
-    | Enum Struct name block { $$ = nullptr; }
-    | Trait name block       { $$ = nullptr; }
-    | Alias name block       { $$ = nullptr; }
-    | Extension name block   { $$ = nullptr; }
+      Struct    { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Struct); }
+    | Class     { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Class); }
+    | Enum      { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Enum); }
+    | Trait     { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Trait); }
+    | Alias     { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Alias); }
+    | Extension { $$ = ast.make<TypeDefKeyword>($1.start, $1.end, TypeDefKind::Extension); }
+    ;
 
 block:
-      LBrace block_list RBrace
+      LBrace terms RBrace
         {
-            auto* block = ctx.makeNode<Block>($1.start, $3.end);
-            block->nodes.insert(block->nodes.end(), $2.begin(), $2.end());
-            $$ = block;
+            $$ = ast.make<Block>($1.start, $3.end, $2);
         }
-    ;
-
-block_list:
-      /* empty */    { $$.clear(); }
-    | block_list term
-        {
-            $1.push_back($2);
-            $$ = $1;
-        }
-    ;
-
-if:
-      If term Then term Else term { $$ = nullptr; }
-    | If term block                     { $$ = nullptr; }
-    | Else                                 { $$ = nullptr; }
-    ;
-
-match:
-      Match term LBrace cases RBrace { $$ = nullptr; }
-    ;
-
-cases:
-      /* empty */ { $$ = nullptr;}
-    | cases case  { $$ = nullptr; }
-
-case:
-      Case term FatArrow term    { $$ = nullptr; }
-    | Case If term FatArrow term { $$ = nullptr; }
-    | Case term block            { $$ = nullptr; }
-    | Case If term block         { $$ = nullptr; }
     ;
 %%
 
