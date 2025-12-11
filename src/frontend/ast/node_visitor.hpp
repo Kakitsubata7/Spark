@@ -4,62 +4,49 @@ namespace Spark::FrontEnd {
 
 struct Node;
 
-struct TypeNode; struct TypeSegment; struct TypePath;
+struct Terms;
 
-struct Pattern;
-struct IntLiteralPattern;
-struct RealLiteralPattern;
-struct BoolLiteralPattern;
-struct StringLiteralPattern;
-struct NilLiteralPattern;
-struct WildcardPattern;
-struct VarPattern;
-struct TuplePattern;
-struct CollectionPattern;
-struct FieldPattern;
-struct OrPattern;
+struct Operation;
 
-struct Expr;
-struct IntLiteralExpr;
-struct RealLiteralExpr;
-struct BoolLiteralExpr;
-struct StringLiteralExpr;
-struct NilLiteralExpr;
-struct VarExpr;
-struct UpvalueVarExpr;
-struct FnExpr;
-struct LambdaExpr;
-struct UnaryExpr;
-struct ForceUnwrapExpr;
-struct OptionalExpr;
-struct BinaryExpr;
-struct MemberAccessExpr;
-struct CallExpr;
-struct SubscriptExpr;
-struct RangeExpr;
-struct IfThenExpr;
-struct MatchExpr;
-struct ThrowExpr;
-struct TryElseExpr;
+struct Identifier;
+struct UpvalueIdentifier;
+struct Discard;
 
-struct Stmt;
-struct BlockStmt;
-struct VarDeclStmt;
-struct FnDeclStmt;
-struct LambdaDeclStmt;
-struct RefDeclStmt;
-struct AssignStmt;
-struct CallStmt;
-struct SubscriptStmt;
-struct IfStmt;
-struct MatchStmt;
-struct WhileStmt;
-struct ForStmt;
-struct BreakStmt;
-struct ContinueStmt;
-struct ThrowStmt;
-struct TryStmt;
-struct TryCatchStmt;
+struct IntLiteral;
+struct RealLiteral;
+struct BoolLiteral;
+struct StringLiteral;
+struct Nil;
+struct Undefined;
+
+struct VarDef;
+struct TypeDef;
+struct Block;
+struct IfKeyword;
+struct ThenKeyword;
+struct ElseKeyword;
+struct MatchKeyword;
+struct CaseKeyword;
+struct While;
+struct DoWhile;
+struct For;
+struct InKeyword;
+struct Break;
+struct Continue;
+struct Return;
+struct Is;
+struct Typeof;
+struct Throw;
+struct TryKeyword;
+struct Catch;
+struct Module;
+struct Export;
+struct From;
+struct Import;
+
+struct Annotation;
+
+struct Semicolon;
 
 class NodeVisitor {
 public:
@@ -67,64 +54,49 @@ public:
 
     virtual void visit(Node& node) { }
 
-    virtual void visit(TypeNode& node) { }
-    virtual void visit(TypeSegment& node) { }
-    virtual void visit(TypePath& node) { }
+    virtual void visit(Terms& terms) { }
 
-    virtual void visit(Pattern& node) { }
-    virtual void visit(IntLiteralPattern& node) { }
-    virtual void visit(RealLiteralPattern& node) { }
-    virtual void visit(BoolLiteralPattern& node) { }
-    virtual void visit(StringLiteralPattern& node) { }
-    virtual void visit(NilLiteralPattern& node) { }
-    virtual void visit(WildcardPattern& node) { }
-    virtual void visit(VarPattern& node) { }
-    virtual void visit(TuplePattern& node) { }
-    virtual void visit(CollectionPattern& node) { }
-    virtual void visit(FieldPattern& node) { }
-    virtual void visit(OrPattern& node) { }
+    virtual void visit(Operation& op) { }
 
-    virtual void visit(Expr& node) { }
-    virtual void visit(IntLiteralExpr& node) { }
-    virtual void visit(RealLiteralExpr& node) { }
-    virtual void visit(BoolLiteralExpr& node) { }
-    virtual void visit(StringLiteralExpr& node) { }
-    virtual void visit(NilLiteralExpr& node) { }
-    virtual void visit(VarExpr& node) { }
-    virtual void visit(UpvalueVarExpr& node) { }
-    virtual void visit(FnExpr& node) { }
-    virtual void visit(LambdaExpr& node) { }
-    virtual void visit(UnaryExpr& node) { }
-    virtual void visit(ForceUnwrapExpr& node) { }
-    virtual void visit(OptionalExpr& node) { }
-    virtual void visit(BinaryExpr& node) { }
-    virtual void visit(MemberAccessExpr& node) { }
-    virtual void visit(CallExpr& node) { }
-    virtual void visit(SubscriptExpr& node) { }
-    virtual void visit(RangeExpr& node) { }
-    virtual void visit(IfThenExpr& node) { }
-    virtual void visit(MatchExpr& node) { }
-    virtual void visit(ThrowExpr& node) { }
-    virtual void visit(TryElseExpr& node) { }
+    virtual void visit(Identifier& ident) { }
+    virtual void visit(UpvalueIdentifier& ident) { }
+    virtual void visit(Discard& discard) { }
 
-    virtual void visit(Stmt& node) { }
-    virtual void visit(BlockStmt& node) { }
-    virtual void visit(VarDeclStmt& node) { }
-    virtual void visit(FnDeclStmt& node) { }
-    virtual void visit(LambdaDeclStmt& node) { }
-    virtual void visit(RefDeclStmt& node) { }
-    virtual void visit(AssignStmt& node) { }
-    virtual void visit(CallStmt& node) { }
-    virtual void visit(SubscriptStmt& node) { }
-    virtual void visit(IfStmt& node) { }
-    virtual void visit(MatchStmt& node) { }
-    virtual void visit(WhileStmt& node) { }
-    virtual void visit(ForStmt& node) { }
-    virtual void visit(BreakStmt& node) { }
-    virtual void visit(ContinueStmt& node) { }
-    virtual void visit(TryStmt& node) { }
-    virtual void visit(ThrowStmt& node) { }
-    virtual void visit(TryCatchStmt& node) { }
+    virtual void visit(IntLiteral& intl) { }
+    virtual void visit(RealLiteral& real) { }
+    virtual void visit(BoolLiteral& booll) { }
+    virtual void visit(StringLiteral& strl) { }
+    virtual void visit(Nil& nil) { }
+    virtual void visit(Undefined& undef) { }
+
+    virtual void visit(VarDef& vdef) { }
+    virtual void visit(TypeDef& tdef) { }
+    virtual void visit(Block& block) { }
+    virtual void visit(IfKeyword& ifk) { }
+    virtual void visit(ThenKeyword& thenk) { }
+    virtual void visit(ElseKeyword& elsek) { }
+    virtual void visit(MatchKeyword& matchk) { }
+    virtual void visit(CaseKeyword& casek) { }
+    virtual void visit(While& whilen) { }
+    virtual void visit(DoWhile& dowhile) { }
+    virtual void visit(For& fors) { }
+    virtual void visit(InKeyword& ink) { }
+    virtual void visit(Break& breaks) { }
+    virtual void visit(Continue& cont) { }
+    virtual void visit(Return& ret) { }
+    virtual void visit(Is& is) { }
+    virtual void visit(Typeof& typeofn) { }
+    virtual void visit(Throw& thrown) { }
+    virtual void visit(TryKeyword& tryk) { }
+    virtual void visit(Catch& catchn) { }
+    virtual void visit(Module& mod) { }
+    virtual void visit(Export& ex) { }
+    virtual void visit(From& from) { }
+    virtual void visit(Import& imp) { }
+
+    virtual void visit(Annotation& node) { }
+
+    virtual void visit(Semicolon& node) { }
 };
 
 } // Spark::FrontEnd
