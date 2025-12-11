@@ -3,14 +3,15 @@
 namespace Spark::FrontEnd {
 
 AST::AST() {
-    _root = std::make_unique<Block>(Location(1, 1), Location(1, 1));
+    Block* block = make<Block>(Location(1, 1), Location(1, 1));
+    _root = make<Module>(Location(1, 1), Location(1, 1), block);
 }
 
 AST::~AST() {
     destruct();
 }
 
-AST::AST(AST&& other) noexcept : _root(std::move(other._root)),
+AST::AST(AST&& other) noexcept : _root(other._root),
                                 _nodes(std::move(other._nodes)) {
     other._root = nullptr;
 }
@@ -19,7 +20,7 @@ AST& AST::operator=(AST&& other) noexcept {
     if (this != &other) {
         destruct();
 
-        _root = std::move(other._root);
+        _root = other._root;
         _nodes = std::move(other._nodes);
 
         other._root = nullptr;

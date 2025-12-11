@@ -12,11 +12,11 @@ namespace Spark::FrontEnd {
 
 class AST {
 private:
-    std::unique_ptr<Block> _root;
+    Module* _root;
     std::unordered_set<Node*> _nodes;
 
 public:
-    [[nodiscard]] Block* root() const noexcept { return _root.get(); }
+    [[nodiscard]] Module* root() const noexcept { return _root; }
 
     AST();
     ~AST();
