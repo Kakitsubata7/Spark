@@ -21,11 +21,6 @@ public:
 
     explicit ParserContext(AST& ast) noexcept : _ast(ast) { }
 
-    template <typename T, typename... Args>
-    T* makeNode(Args&&... args) {
-        return _ast.make<T>(std::forward<Args>(args)...);
-    }
-
     void addError(Error error) noexcept {
         _errors.push_back(std::move(error));
     }
