@@ -3,7 +3,8 @@
 namespace Spark::FrontEnd {
 
 AST::AST() {
-    Block* block = make<Block>(Location(1, 1), Location(1, 1));
+    Terms* terms = make<Terms>(Location(1, 1), Location(1, 1));
+    Block* block = make<Block>(Location(1, 1), Location(1, 1), terms);
     _root = make<Module>(Location(1, 1), Location(1, 1), block);
 }
 
