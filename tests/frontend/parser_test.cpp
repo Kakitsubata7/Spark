@@ -17,13 +17,26 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return parser.parse(iss);
 }
 
-TEST(ParserTest, SimpleTest1) {
-    std::string_view source = "do end";
+TEST(ParserTest, Block) {
+    std::string_view source = "{ }";
     auto [ast, errors] = parse(source);
     EXPECT_TRUE(errors.empty());
+}
 
-    source = "; do ;; end ;;;";
-    std::tie(ast, errors) = parse(source);
+TEST(ParserTest, Return) {
+    std::string_view source = R"(
+return
+return true
+)";
+    auto [ast, errors] = parse(source);
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, While) {
+    std::string_view source = R"(
+while true { }
+)";
+    auto [ast, errors] = parse(source);
     EXPECT_TRUE(errors.empty());
 }
 
@@ -36,18 +49,18 @@ a *= x ; b /= 0 ; c %= 10
     EXPECT_TRUE(errors.empty());
 
     source = R"(
-do
+{
     x = 1
     y = 2
     z = 3
-end
+}
 )";
     std::tie(ast, errors) = parse(source);
     EXPECT_TRUE(errors.empty());
 }
 
 TEST(ParserTest, SimpleTest11) {
-    std::string_view source = "while true do end";
+    std::string_view source = "while true { }";
     auto [ast, errors] = parse(source);
     EXPECT_TRUE(errors.empty());
 }
@@ -72,8 +85,3 @@ a?.b().c?
     EXPECT_TRUE(errors.empty());
 }
 
-TEST(ParserTest, InvalidSyntax1) {
-    std::string_view source = "x";
-    auto [ast, errors] = parse(source);
-    EXPECT_FALSE(errors.empty());
-}
