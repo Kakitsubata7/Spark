@@ -93,10 +93,10 @@ expr:
     | Discard
     | Dollar Identifier
     | Dollar Discard
-    | Identifier LABracket term RABracket
-    | Discard LABracket term RABracket
-    | Dollar Identifier LABracket term RABracket
-    | Dollar Discard LABracket term RABracket
+    | Identifier template
+    | Discard template
+    | Dollar Identifier template
+    | Dollar Discard template
     | literal
     | LParen comma_terms RParen
     | LBracket comma_terms RBracket
@@ -112,6 +112,10 @@ expr:
 comma_terms:
       terms
     | comma_terms Comma terms
+    ;
+
+template:
+      LABracket term RABracket
     ;
 
 /**
