@@ -115,7 +115,12 @@ comma_terms:
     ;
 
 template:
-      LABracket term RABracket
+      LABracket template_terms RABracket
+    ;
+
+template_terms:
+      terms
+    | template_terms Comma terms
     ;
 
 /**
