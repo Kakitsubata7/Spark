@@ -59,7 +59,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
 %token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
-%token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace
+%token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace LABracket RABracket
 %token <Spark::FrontEnd::TokenValue> At
 %token <Spark::FrontEnd::TokenValue> Dollar
 %token <Spark::FrontEnd::TokenValue> LineComment BlockComment
@@ -93,6 +93,10 @@ expr:
     | Discard
     | Dollar Identifier
     | Dollar Discard
+    | Identifier LABracket term RABracket
+    | Discard LABracket term RABracket
+    | Dollar Identifier LABracket term RABracket
+    | Dollar Discard LABracket term RABracket
     | literal
     | LParen comma_terms RParen
     | LBracket comma_terms RBracket
