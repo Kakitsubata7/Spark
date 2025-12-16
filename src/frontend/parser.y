@@ -11,22 +11,27 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::ParserContext& ctx}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::ParserEngine& engine}
 
 %code requires {
 #include <vector>
 
-#include "frontend/ast.hpp"
-#include "frontend/lexer/lexer_state.hpp"
 #include "frontend/lexer/token_value.hpp"
-#include "frontend/parser/parser_context.hpp"
+#include "frontend/parser/parser_engine.hpp"
 
 typedef void* yyscan_t;
 }
 
 %code {
+#include "frontend/parser/term.hpp"
+
 using namespace Spark;
 using namespace Spark::FrontEnd;
+
+using Operation = Term::Operation;
+using Expr = Term::Expr;
+using LBrace = Term::LBrace;
+using RBrace = Term::RBrace;
 
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
@@ -40,7 +45,6 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
     parser.error(yy::location(b, e), msg);
 }
 
-#define ast ctx.ast()
 #define RAISE_ERROR(start, end, msg) raiseError(*this, (start), (end), (msg));
 }
 
@@ -80,12 +84,14 @@ terms:
 
 term:
       expr
-    | prattop
+    | operation
     | delimiter
     | keyword
     | vardef
     | Fn
     | typedef
+    | LBrace    { Term term = Term::make<LBrace>($1.start, $1.end); engine.push(term); }
+    | RBrace    { Term term = Term::make<RBrace>($1.start, $1.end); engine.push(term); }
     ;
 
 expr:
@@ -100,7 +106,6 @@ expr:
     | literal
     | LParen comma_terms RParen
     | LBracket comma_terms RBracket
-    | LBrace terms RBrace
     | Constructor
     | Destructor
     | Operator operator
@@ -160,18 +165,46 @@ operator:
     
 literal:
       Integer
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<BigInt>($1.lexeme));
+            engine.push(term);
+        }
     | Real
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<BigReal>($1.lexeme));
+            engine.push(term);
+        }
     | True
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<bool>(true));
+            engine.push(term);
+        }
     | False
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<bool>(false));
+            engine.push(term);
+        }
     | String
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<std::string>(std::move($1.lexeme)));
+            engine.push(term);
+        }
     | Nil
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<Expr::Nil>());
+            engine.push(term);
+        }
     | Undefined
+        {
+            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<Expr::Undefined>());
+            engine.push(term);
+        }
     ;
 
 /**
-  * Pratt Operations
+  * Operations
   */
-prattop:
+operation:
       Add
     | Sub
     | Mul
@@ -262,5 +295,4 @@ typedef:
 void yy::parser::error(const yy::location& loc, const std::string& msg) {
     Location start(static_cast<size_t>(loc.begin.line), static_cast<size_t>(loc.begin.column));
     Location end(static_cast<size_t>(loc.end.line), static_cast<size_t>(loc.end.column));
-    ctx.addError(msg, start, end);
 }
