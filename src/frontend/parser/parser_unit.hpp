@@ -20,8 +20,19 @@ public:
 };
 
 class BodyParser final : public ParserUnit {
+private:
+    TokenType _terminatorType;
+
 public:
-    BodyParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+    BodyParser(TokenProducer& producer, AST& ast, TokenType terminatorType) noexcept
+        : ParserUnit(producer, ast), _terminatorType(terminatorType) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class ExprParser final : public ParserUnit {
+public:
+    ExprParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
 
     Result<Node*, Error> parse() noexcept override;
 };
@@ -36,6 +47,13 @@ public:
 class VarDefParser final : public ParserUnit {
 public:
     VarDefParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class WhileParser final : public ParserUnit {
+public:
+    WhileParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
 
     Result<Node*, Error> parse() noexcept override;
 };

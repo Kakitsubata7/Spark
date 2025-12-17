@@ -64,4 +64,43 @@ struct BodyNode final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct BlockStmt final : Node {
+    BodyNode* body;
+
+    BlockStmt(Location start, Location end, BodyNode* body) noexcept
+        : Node(start, end), body(body) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct WhileStmt final : Node {
+    Node* condition;
+    BlockStmt* block;
+
+    WhileStmt(Location start, Location end, Node* condition, BlockStmt* block) noexcept
+        : Node(start, end), condition(condition), block(block) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct IfThenExpr final : Node {
+    Node* condition;
+    Node* trueNode;
+    Node* falseNode;
+
+    IfThenExpr(Location start, Location end, Node* condition, Node* trueNode, Node* falseNode) noexcept
+        : Node(start, end), condition(condition), trueNode(trueNode), falseNode(falseNode) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 } // Spark::FrontEnd
