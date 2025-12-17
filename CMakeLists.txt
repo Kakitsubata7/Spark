@@ -85,7 +85,7 @@ add_library(sparklib
 
         src/frontend/parser.cpp
         src/frontend/parser.hpp
-        src/frontend/parser/parser_context.hpp
+        src/frontend/parser/token_producer.hpp
 
         src/frontend/semantic_type.hpp
         src/frontend/source_buffer.cpp
