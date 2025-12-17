@@ -10,22 +10,19 @@ namespace Spark::FrontEnd {
 struct Token {
     TokenType type;
     std::string lexeme;
-    // TODO: Delete `line` and `column` fields
-    size_t line = 0;
-    size_t column = 0;
     Location start;
     Location end;
-
-    // TODO: Delete this constructor
-    Token(TokenType type, std::string lexeme, size_t line, size_t column) noexcept
-        : type(type), lexeme(std::move(lexeme)), line(line), column(column) { }
 
     Token(TokenType type, std::string lexeme, Location start, Location end) noexcept
         : type(type), lexeme(std::move(lexeme)), start(start), end(end) { }
     Token() noexcept : Token(TokenType::EndOfFile, "", {0, 0}, {0, 0}) { }
 
+    // TODO: Delete this constructor
+    Token(TokenType type, std::string lexeme, size_t line, size_t column) noexcept
+        : Token(type, std::move(lexeme), Location(line, column), Location(line, column)) { }
+
     bool operator==(const Token& rhs) const noexcept {
-        return type == rhs.type && lexeme == rhs.lexeme && line == rhs.line && column == rhs.column;
+        return type == rhs.type && lexeme == rhs.lexeme /* TODO: && start == rhs.start && end == rhs.end */;
     }
 
     bool operator!=(const Token& rhs) const noexcept {
@@ -35,7 +32,8 @@ struct Token {
     friend std::ostream& operator<<(std::ostream& os, const Token& token) {
         os << "Token(" << token.type << ", "
                        << "\"" << token.lexeme << "\"" << ", "
-                       << token.line << ":" << token.column
+                       << token.start.lineno << ':' << token.end.columnno << " - "
+                       << token.end.lineno << ':' << token.end.columnno
            << ")";
         return os;
     }
