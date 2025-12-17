@@ -27,8 +27,12 @@ private:
     SourceBuffer _srcbuf;
     LexerState _lstate;
 
+private:
+    explicit Lexer(SourceBuffer srcbuf, std::optional<std::string_view> filename = std::nullopt);
+
 public:
     explicit Lexer(std::istream& stream, std::optional<std::string_view> filename = std::nullopt);
+    explicit Lexer(const std::string& s, std::optional<std::string_view> filename = std::nullopt);
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;

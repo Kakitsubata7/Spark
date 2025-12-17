@@ -1,6 +1,7 @@
 ﻿#include "lexer.hpp"
 
 #include <new>
+#include <sstream>
 
 #include <lex.yy.hpp>
 
@@ -8,10 +9,10 @@
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
+Lexer::Lexer(SourceBuffer srcbuf, std::optional<std::string_view> filename)
     : _filename(filename),
       _scanner(nullptr),
-      _srcbuf(stream),
+      _srcbuf(std::move(srcbuf)),
       _lstate(_srcbuf, 1, 1) {
     yylex_init_extra(&_lstate, &_scanner);
     if (_scanner == nullptr) {
@@ -19,6 +20,12 @@ Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
     }
     yyset_in(nullptr, _scanner);
 }
+
+Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
+    : Lexer(SourceBuffer(stream), filename) { }
+
+Lexer::Lexer(const std::string& s, std::optional<std::string_view> filename)
+    : Lexer(SourceBuffer(s), filename) { }
 
 Lexer::~Lexer() {
     if (_scanner != nullptr) {
