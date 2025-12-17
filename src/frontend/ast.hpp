@@ -22,8 +22,8 @@ public:
     AST(const AST& other) = delete;
     AST& operator=(const AST& other) = delete;
     
-    AST(AST&& other) noexcept;
-    AST& operator=(AST&& other) noexcept;
+    AST(AST&& other) noexcept = default;
+    AST& operator=(AST&& other) = default;
 
     /**
      * Allocates a `Node` subtype instance and returns its pointer. The lifecycle of the instance is handled by
