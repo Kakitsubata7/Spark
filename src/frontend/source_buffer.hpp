@@ -2,6 +2,7 @@
 
 #include <istream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,6 +26,10 @@ protected:
 public:
     explicit SourceBuffer(std::istream& stream) {
         SourceBuffer::load(stream);
+    }
+    explicit SourceBuffer(const std::string& s) {
+        std::istringstream iss(s);
+        SourceBuffer::load(iss);
     }
     SourceBuffer() = default;
 
