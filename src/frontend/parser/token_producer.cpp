@@ -2,9 +2,19 @@
 
 namespace Spark::FrontEnd {
 
+Token lexDropComments(Lexer& lexer) {
+    while (true) {
+        Token token = lexer.lex();
+        if (token.type == TokenType::LineComment || token.type == TokenType::BlockComment) {
+            continue;
+        }
+        return token;
+    }
+}
+
 const Token& LexerTokenProducer::peek()  {
     if (!_peeked) {
-        _token = _lexer.lex();
+        _token = lexDropComments(_lexer);
         _peeked = true;
     }
     return _token;
@@ -15,20 +25,20 @@ const Token& LexerTokenProducer::next() {
         _peeked = false;
         return _token;
     }
-    _token = _lexer.lex();
+    _token = lexDropComments(_lexer);
     return _token;
 }
 
 const Token& RewindLexerTokenProducer::peek() {
     if (_index == _tokens.size()) {
-        _tokens.push_back(_lexer.lex());
+        _tokens.push_back(lexDropComments(_lexer));
     }
     return _tokens[_index];
 }
 
 const Token& RewindLexerTokenProducer::next() {
     if (_index == _tokens.size()) {
-        _tokens.push_back(_lexer.lex());
+        _tokens.push_back(lexDropComments(_lexer));
     }
     ++_index;
     return _tokens[_index - 1];

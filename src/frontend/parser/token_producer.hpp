@@ -6,6 +6,10 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents an abstract token producer for parsers.
+ * A token producer should drop comment tokens (`TokenType::LineComment` and `TokenType::BlockComment`).
+ */
 class TokenProducer {
 public:
     virtual ~TokenProducer() = default;
@@ -14,6 +18,10 @@ public:
     virtual const Token& next() = 0;
 };
 
+/**
+ * Represents a concrete `TokenProducer` implementation that uses a `Lexer` reference and only keep one `Token`
+ * instance alive at once.
+ */
 class LexerTokenProducer final : public TokenProducer {
 private:
     Lexer& _lexer;
@@ -27,6 +35,10 @@ public:
     const Token& next() override;
 };
 
+/**
+ * Represents a concrete `TokenProducer` implementation that uses a `Lexer` reference but keeps all `Token` instances
+ * alive and supports rewinding to first token.
+ */
 class RewindLexerTokenProducer final : public TokenProducer {
 private:
     Lexer& _lexer;
