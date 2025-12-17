@@ -41,6 +41,10 @@ public:
         return std::holds_alternative<T>(_data);
     }
 
+    bool hasError() const noexcept {
+        return std::holds_alternative<E>(_data);
+    }
+
     const T& value() const {
         return std::get<T>(_data);
     }
