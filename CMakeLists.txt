@@ -123,15 +123,14 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
-        tests/frontend/lex_test.cpp
-        tests/frontend/lexer_test.cpp
-        tests/frontend/parser_test.cpp
-        tests/frontend/source_buffer_test.cpp
-        tests/frontend/source_reader_test.cpp
-        tests/frontend/token_buffer_test.cpp
-        tests/frontend/token_value_test.cpp
-        tests/frontend/utils.cpp
-        tests/frontend/utils.hpp
+        tests/frontend/lexer/lex_test.cpp
+        tests/frontend/lexer/lexer_test.cpp
+        tests/frontend/lexer/token_buffer_test.cpp
+        tests/frontend/lexer/token_value_test.cpp
+
+        tests/frontend/parser/parser_test.cpp
+        tests/frontend/parser/token_producer_test.cpp
+
         tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest

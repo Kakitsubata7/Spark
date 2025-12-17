@@ -4,7 +4,7 @@
 
 #include "frontend/lexer.hpp"
 
-#include "utils.hpp"
+#include "../utils.hpp"
 
 using namespace Spark::FrontEnd;
 using namespace Spark::Test::FrontEnd;

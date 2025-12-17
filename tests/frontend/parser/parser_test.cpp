@@ -7,11 +7,13 @@
 
 #include "frontend/ast.hpp"
 #include "frontend/parser.hpp"
+#include "utils/error.hpp"
+#include "utils/result.hpp"
 
 using namespace Spark;
 using namespace Spark::FrontEnd;
 
-std::pair<AST, std::vector<Error>> parse(std::string_view source) {
+Result<AST, Error> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
     Parser parser;
     return parser.parse(iss);
@@ -19,8 +21,8 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
 
 TEST(ParserTest, Block) {
     std::string_view source = "{ }";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, Return) {
@@ -28,16 +30,16 @@ TEST(ParserTest, Return) {
 return
 return true
 )";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, While) {
     std::string_view source = R"(
 while true { }
 )";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, SimpleTest2) {
@@ -45,8 +47,8 @@ TEST(ParserTest, SimpleTest2) {
 x = 1 y += 2 z -= 3;
 a *= x ; b /= 0 ; c %= 10
 )";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 
     source = R"(
 {
@@ -55,20 +57,20 @@ a *= x ; b /= 0 ; c %= 10
     z = 3
 }
 )";
-    std::tie(ast, errors) = parse(source);
-    EXPECT_TRUE(errors.empty());
+    result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, SimpleTest11) {
     std::string_view source = "while true { }";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, SimpleTest12) {
     std::string_view source = "b = if x == 1 then true else false";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
 TEST(ParserTest, SimpleTest13) {
@@ -81,7 +83,7 @@ a?()
 a?.b()
 a?.b().c?
 )";
-    auto [ast, errors] = parse(source);
-    EXPECT_TRUE(errors.empty());
+    Result<AST, Error> result = parse(source);
+    EXPECT_FALSE(result.hasError());
 }
 
