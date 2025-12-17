@@ -97,3 +97,38 @@ TEST(TokenProducerTest, Test2) {
         test2(producer);
     }
 }
+
+TEST(RewindTokenProducerTest, Test1) {
+    Lexer lexer("a b c d e");
+    RewindLexerTokenProducer producer(lexer);
+
+    Token a(TokenType::Identifier, "a", {1, 1}, {1, 1});
+    Token b(TokenType::Identifier, "b", {1, 3}, {1, 3});
+    Token c(TokenType::Identifier, "c", {1, 5}, {1, 5});
+    Token d(TokenType::Identifier, "d", {1, 7}, {1, 7});
+    Token e(TokenType::Identifier, "e", {1, 9}, {1, 9});
+
+    EXPECT_EQ(producer.next(), a);
+    EXPECT_EQ(producer.peek(), b);
+    EXPECT_EQ(producer.next(), b);
+
+    producer.rewind();
+    EXPECT_EQ(producer.next(), a);
+    EXPECT_EQ(producer.next(), b);
+    EXPECT_EQ(producer.next(), c);
+    EXPECT_EQ(producer.next(), d);
+
+    producer.rewind();
+    EXPECT_EQ(producer.next(), a);
+    EXPECT_EQ(producer.next(), b);
+    EXPECT_EQ(producer.next(), c);
+    EXPECT_EQ(producer.next(), d);
+    EXPECT_EQ(producer.peek(), e);
+
+    producer.rewind();
+    EXPECT_EQ(producer.next(), a);
+    EXPECT_EQ(producer.next(), b);
+    EXPECT_EQ(producer.next(), c);
+    EXPECT_EQ(producer.next(), d);
+    EXPECT_EQ(producer.next(), e);
+}
