@@ -27,8 +27,8 @@ public:
     explicit SourceBuffer(std::istream& stream) {
         SourceBuffer::load(stream);
     }
-    explicit SourceBuffer(const std::string& s) {
-        std::istringstream iss(s);
+    explicit SourceBuffer(std::string_view sv) {
+        std::istringstream iss(std::string{sv});
         SourceBuffer::load(iss);
     }
     SourceBuffer() = default;

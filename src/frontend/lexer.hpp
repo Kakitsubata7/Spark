@@ -32,7 +32,7 @@ private:
 
 public:
     explicit Lexer(std::istream& stream, std::optional<std::string_view> filename = std::nullopt);
-    explicit Lexer(const std::string& s, std::optional<std::string_view> filename = std::nullopt);
+    explicit Lexer(std::string_view sv, std::optional<std::string_view> filename = std::nullopt);
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;

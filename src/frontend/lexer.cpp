@@ -24,8 +24,8 @@ Lexer::Lexer(SourceBuffer srcbuf, std::optional<std::string_view> filename)
 Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
     : Lexer(SourceBuffer(stream), filename) { }
 
-Lexer::Lexer(const std::string& s, std::optional<std::string_view> filename)
-    : Lexer(SourceBuffer(s), filename) { }
+Lexer::Lexer(std::string_view sv, std::optional<std::string_view> filename)
+    : Lexer(SourceBuffer(sv), filename) { }
 
 Lexer::~Lexer() {
     if (_scanner != nullptr) {
@@ -46,6 +46,7 @@ Lexer::Lexer(Lexer&& other) noexcept
 }
 
 Lexer& Lexer::operator=(Lexer&& other) noexcept {
+    // TODO: Flex states are not entirely moved
     if (this != &other) {
         _filename = std::move(other._filename);
         if (_scanner != nullptr) {
