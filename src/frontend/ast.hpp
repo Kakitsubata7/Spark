@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <utility>
-#include <unordered_set>
+#include <vector>
 
 #include "ast/equal_visitor.hpp"
 #include "ast/node.hpp"
@@ -12,15 +12,16 @@ namespace Spark::FrontEnd {
 
 class AST {
 private:
-    Module* _root;
-    std::unordered_set<Node*> _nodes;
+    std::vector<std::unique_ptr<Node>> _nodes;
 
 public:
-    [[nodiscard]] Module* root() const noexcept { return _root; }
+    Node* root;
 
-    AST();
-    ~AST();
+    AST() noexcept : root(nullptr) { }
 
+    AST(const AST& other) = delete;
+    AST& operator=(const AST& other) = delete;
+    
     AST(AST&& other) noexcept;
     AST& operator=(AST&& other) noexcept;
 
@@ -34,19 +35,11 @@ public:
      */
     template <typename T, typename... Args>
     T* make(Args&&... args) {
-        T* ptr = new T(std::forward<Args>(args)...);
-        _nodes.insert(ptr);
-        return ptr;
+        auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+        T* raw = ptr.get();
+        _nodes.emplace_back(std::move(ptr));
+        return raw;
     }
-
-    /**
-     * Deallocates a `Node` subtype instance created with `make`.
-     * @param p Pointer to `Node` instance to deallocate.
-     */
-    void free(Node* p) noexcept;
-
-private:
-    void destruct() noexcept;
 };
 
 } // Spark::FrontEnd

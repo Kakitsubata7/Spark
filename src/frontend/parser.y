@@ -11,27 +11,19 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::ParserEngine& engine}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc}
 
 %code requires {
 #include <vector>
 
 #include "frontend/lexer/token_value.hpp"
-#include "frontend/parser/parser_engine.hpp"
 
 typedef void* yyscan_t;
 }
 
 %code {
-#include "frontend/parser/term.hpp"
-
 using namespace Spark;
 using namespace Spark::FrontEnd;
-
-using Operation = Term::Operation;
-using Expr = Term::Expr;
-using LBrace = Term::LBrace;
-using RBrace = Term::RBrace;
 
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
@@ -90,8 +82,8 @@ term:
     | vardef
     | Fn
     | typedef
-    | LBrace    { Term term = Term::make<LBrace>($1.start, $1.end); engine.push(term); }
-    | RBrace    { Term term = Term::make<RBrace>($1.start, $1.end); engine.push(term); }
+    | LBrace
+    | RBrace
     ;
 
 expr:
@@ -165,40 +157,12 @@ operator:
     
 literal:
       Integer
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<BigInt>($1.lexeme));
-            engine.push(term);
-        }
     | Real
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<BigReal>($1.lexeme));
-            engine.push(term);
-        }
     | True
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<bool>(true));
-            engine.push(term);
-        }
     | False
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<bool>(false));
-            engine.push(term);
-        }
     | String
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<std::string>(std::move($1.lexeme)));
-            engine.push(term);
-        }
     | Nil
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<Expr::Nil>());
-            engine.push(term);
-        }
     | Undefined
-        {
-            Term term = Term::make<Expr>($1.start, $1.end, Expr::make<Expr::Undefined>());
-            engine.push(term);
-        }
     ;
 
 /**

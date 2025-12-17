@@ -1,37 +1,17 @@
 ﻿#include "parser.hpp"
 
-#include <new>
-
-#include <parser.tab.hpp>
-
 #include "lexer.hpp"
+#include "parser/parser_unit.hpp"
 
 namespace Spark::FrontEnd {
 
-std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
-                                                 std::optional<std::string_view> filename) {
-    AST ast;
+Result<AST, Error> Parser::parse(std::istream& stream, std::optional<std::string_view> filename) {
     Lexer lexer(stream, filename);
-    yy::parser::location_type loc;
-    ParserContext ctx(ast);
-    yy::parser parser(lexer._scanner, &loc, ctx);
-
-    int result = parser.parse();
-    if (result == 1) {
-        std::string msg;
-        msg += '\n';
-        for (const Error& error : ctx.errors()) {
-            msg += error.render(lexer.srcbuf(), filename);
-            msg += '\n';
-        }
-        throw std::runtime_error(msg);
-    }
-    if (result == 2) {
-        throw std::bad_alloc();
-    }
-
-    return std::make_pair<AST, std::vector<Error>>(std::move(ast),
-        std::move(const_cast<std::vector<Error>&>(ctx.errors())));
+    LexerTokenProducer producer(lexer);
+    AST ast;
+    BodyParser parser(producer, ast);
+    Result<Node*, Error> result = parser.parse();
+    return Result<AST, Error>::ok(std::move(ast));
 }
 
 } // Spark::FrontEnd

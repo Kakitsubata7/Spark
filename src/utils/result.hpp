@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <utility>
 #include <variant>
 
 namespace Spark {
