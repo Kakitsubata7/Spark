@@ -288,4 +288,9 @@ using namespace Spark::FrontEnd;
     ++YYCOLUMNNO;
     return TokenType::Error;
 }
+
+<<EOF>> {
+    EMIT_TOK("", YYLOCATION, YYLOCATION);
+    return TokenType::EndOfFile;
+}
 %%
