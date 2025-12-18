@@ -290,25 +290,30 @@ Result<Node*, Error> PatternParser::parse() noexcept {
             return BindingPatternParser(producer, _ast).parse();
         }
 
-        // Literal pattern
+        // Literal pattern / tuple pattern
         case TokenType::Integer:
         case TokenType::Real:
         case TokenType::True:
         case TokenType::False:
         case TokenType::String:
-        case TokenType::Nil: {
-            Result<Node*, Error> result = LiteralParser(_producer, _ast).parse();
-            if (result.hasValue() && _isLhs) {
-                Node* node = result.value();
-                return Result<Node*, Error>::err("syntax error: literal cannot be used as a binding pattern",
-                    node->start, node->end);
+        case TokenType::Nil:
+        case TokenType::LParen: {
+            // Literal pattern
+            RewindTokenProducer producer(_producer);
+            Result<Node*, Error> result = LiteralParser(producer, _ast).parse();
+            if (result.hasValue()) {
+                if (_isLhs) {
+                    Node* node = result.value();
+                    return Result<Node*, Error>::err("syntax error: literal cannot be used as a binding pattern",
+                        node->start, node->end);
+                }
+                return result;
             }
-            return result;
-        }
 
-        // Tuple pattern
-        case TokenType::LParen:
-            return TuplePatternParser(_producer, _ast, _isLhs).parse();
+            // Tuple pattern
+            producer.rewind();
+            return TuplePatternParser(producer, _ast, _isLhs).parse();
+        }
 
         // Collection pattern
         case TokenType::LBracket:
@@ -526,6 +531,15 @@ Result<Node*, Error> LiteralParser::parse() noexcept {
         case TokenType::Nil:
             node = make<NilLiteral>(token.start, token.end);
             break;
+
+        case TokenType::LParen: {
+            const Token& rParen = next();
+            if (rParen.type == TokenType::RParen) {
+                node = make<VoidLiteral>(token.start, rParen.end);
+                break;
+            }
+            return unexpectedToken(next());
+        }
 
         case TokenType::Undefined:
             node = make<Undefined>(token.start, token.end);
