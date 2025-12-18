@@ -27,6 +27,7 @@ struct RealLiteral;
 struct BoolLiteral;
 struct StringLiteral;
 struct NilLiteral;
+struct VoidLiteral;
 struct Undefined;
 
 class NodeVisitor {
@@ -58,6 +59,7 @@ public:
     virtual void visit(BoolLiteral& node) { }
     virtual void visit(StringLiteral& node) { }
     virtual void visit(NilLiteral& node) { }
+    virtual void visit(VoidLiteral& node) { }
     virtual void visit(Undefined& node) { }
 };
 
