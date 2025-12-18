@@ -100,6 +100,11 @@ bool IfThenExpr::equalsImpl(const Node& rhs) const noexcept {
     return *condition == *o.condition && *trueNode == *o.trueNode && *falseNode == *o.falseNode;
 }
 
+bool UnaryExpr::equalsImpl(const Node& rhs) const noexcept {
+    const UnaryExpr& o = EQ_ASSERT_TYPE(rhs, UnaryExpr);
+    return op == o.op && *expr == *o.expr;
+}
+
 bool BindingModifier::operator==(const BindingModifier& rhs) const noexcept {
     return kind == rhs.kind &&
            isImmutable == rhs.isImmutable &&

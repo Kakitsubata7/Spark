@@ -192,6 +192,27 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+enum class UnaryOp {
+    Pos, Neg, LogNot, BitNot, Ref
+};
+
+struct UnaryExpr final : Node {
+    UnaryOp op;
+    Node* expr;
+
+    UnaryExpr(Location start, Location end, UnaryOp op, Node* expr) noexcept
+         : Node(start, end), op(op), expr(expr) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 enum class VarKind {
     None, Let, Const, Ref, Cref
 };
