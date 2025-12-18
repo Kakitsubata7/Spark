@@ -153,7 +153,7 @@ Result<Node*, Error> LiteralParser::parse() noexcept {
             break;
 
         case TokenType::True:
-            node = _ast.make<BoolLiteral>(node.start, node.end, true);
+            node = _ast.make<BoolLiteral>(token.start, token.end, true);
             break;
 
         case TokenType::False:
@@ -166,6 +166,10 @@ Result<Node*, Error> LiteralParser::parse() noexcept {
 
         case TokenType::Nil:
             node = _ast.make<NilLiteral>(token.start, token.end);
+            break;
+
+        case TokenType::Undefined:
+            node = _ast.make<UndefinedExpr>(token.start, token.end);
             break;
 
         default:
