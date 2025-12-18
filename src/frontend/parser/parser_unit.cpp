@@ -82,7 +82,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
 }
 
 Result<Node*, Error> ExprParser::parse() noexcept {
-
+    // TODO
 }
 
 Result<Node*, Error> BlockParser::parse() noexcept {
@@ -111,7 +111,7 @@ Result<Node*, Error> BlockParser::parse() noexcept {
 }
 
 Result<Node*, Error> VarDefParser::parse() noexcept {
-
+    // TODO
 }
 
 Result<Node*, Error> WhileParser::parse() noexcept {
@@ -138,6 +138,40 @@ Result<Node*, Error> WhileParser::parse() noexcept {
     // Construct AST node
     WhileStmt* whileStmt = _ast.make<WhileStmt>(whileTok.start, block->end, condition, block);
     return Result<Node*, Error>::ok(whileStmt);
+}
+
+Result<Node*, Error> LiteralParser::parse() noexcept {
+    const Token& token = _producer.next();
+    Node* node;
+    switch (token.type) {
+        case TokenType::Integer:
+            node = _ast.make<IntLiteral>(token.start, token.end, BigInt(token.lexeme));
+            break;
+
+        case TokenType::Real:
+            node = _ast.make<RealLiteral>(token.start, token.end, BigReal(token.lexeme));
+            break;
+
+        case TokenType::True:
+            node = _ast.make<BoolLiteral>(node.start, node.end, true);
+            break;
+
+        case TokenType::False:
+            node = _ast.make<BoolLiteral>(token.start, token.end, false);
+            break;
+
+        case TokenType::String:
+            node = _ast.make<StringLiteral>(token.start, token.end, std::move(token.lexeme));
+            break;
+
+        case TokenType::Nil:
+            node = _ast.make<NilLiteral>(token.start, token.end);
+            break;
+
+        default:
+            return unexpectedToken(token);
+    }
+    return Result<Node*, Error>::ok(node);
 }
 
 } // Spark::FrontEnd
