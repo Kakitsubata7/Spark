@@ -12,7 +12,7 @@ Token lexDropComments(Lexer& lexer) {
     }
 }
 
-const Token& LexerTokenProducer::peek()  {
+const Token& SimpleTokenProducer::peek()  {
     if (!_peeked) {
         _token = lexDropComments(_lexer);
         _peeked = true;
@@ -20,7 +20,7 @@ const Token& LexerTokenProducer::peek()  {
     return _token;
 }
 
-const Token& LexerTokenProducer::next() {
+const Token& SimpleTokenProducer::next() {
     if (_peeked) {
         _peeked = false;
         return _token;
@@ -29,14 +29,14 @@ const Token& LexerTokenProducer::next() {
     return _token;
 }
 
-const Token& RewindLexerTokenProducer::peek() {
+const Token& RewindTokenProducer::peek() {
     if (_index == _tokens.size()) {
         _tokens.push_back(lexDropComments(_lexer));
     }
     return _tokens[_index];
 }
 
-const Token& RewindLexerTokenProducer::next() {
+const Token& RewindTokenProducer::next() {
     if (_index == _tokens.size()) {
         _tokens.push_back(lexDropComments(_lexer));
     }
@@ -44,7 +44,7 @@ const Token& RewindLexerTokenProducer::next() {
     return _tokens[_index - 1];
 }
 
-void RewindLexerTokenProducer::rewind() {
+void RewindTokenProducer::rewind() {
     _index = 0;
 }
 
