@@ -78,6 +78,13 @@ public:
     Result<Node*, Error> parse() noexcept override;
 };
 
+class AssignParser final : public ParserUnit {
+public:
+    AssignParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
 class IfElseParser final : public ParserUnit {
 public:
     IfElseParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }

@@ -92,7 +92,58 @@ TEST(ExprParserTest, ValidCases) {
                                 ast.make<Identifier>(_, _, "g")),
                             ast.make<Identifier>(_, _, "h"))))));
     }
+}
 
+TEST(AssignStmtTest, ValidCases) {
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(AssignParser, "let x = y",
+            *ast.make<AssignStmt>(_, _,
+                ast.make<BindingPattern>(_, _, BindingModifier(VarKind::Let),
+                    ast.make<Identifier>(_, _, "x")),
+                ast.make<Identifier>(_, _, "y")));
+    }
+
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(AssignParser, "const^ x = y + z - w",
+            *ast.make<AssignStmt>(_, _,
+                ast.make<BindingPattern>(_, _, BindingModifier(VarKind::Const, true),
+                    ast.make<Identifier>(_, _, "x")),
+                ast.make<BinaryExpr>(_, _, InfixOp::Sub,
+                    ast.make<BinaryExpr>(_, _, InfixOp::Add,
+                        ast.make<Identifier>(_, _, "y"),
+                        ast.make<Identifier>(_, _, "z")),
+                    ast.make<Identifier>(_, _, "w"))));
+    }
+}
+
+TEST(BindingPatternTest, ValidCases) {
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(BindingPatternParser, "x",
+            *ast.make<BindingPattern>(_, _, BindingModifier(VarKind::None),
+                ast.make<Identifier>(_, _, "x")));
+    }
+
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(BindingPatternParser, "let x",
+            *ast.make<BindingPattern>(_, _, BindingModifier(VarKind::Let),
+                ast.make<Identifier>(_, _, "x")));
+    }
+
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(BindingPatternParser, "let^ x",
+            *ast.make<BindingPattern>(_, _, BindingModifier(VarKind::Let, true),
+                ast.make<Identifier>(_, _, "x")));
+    }
 }
 
 TEST(BindingPatternTest, InvalidCases) {

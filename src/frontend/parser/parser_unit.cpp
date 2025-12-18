@@ -89,16 +89,6 @@ Result<Node*, Error> BodyParser::parse() noexcept {
                 break;
             }
 
-            // // Match statement / match expression
-            // case TokenType::Match: {
-            //     // Match statement
-            //
-            //     // Match expression
-            //     if (canExpr) {
-            //
-            //     }
-            // }
-
             // While loop
             case TokenType::While: {
                 node = PARSE_OR_ERROR(WhileParser(_producer, _ast).parse());
@@ -121,8 +111,18 @@ Result<Node*, Error> BodyParser::parse() noexcept {
             case TokenType::Semicolon:
                 break;
 
-            default:
-                return unexpectedToken(token);
+            default: {
+                RewindTokenProducer producer(_producer);
+                Result<Node*, Error> result = AssignParser(_producer, _ast).parse();
+                if (result.hasValue()) {
+                    node = result.value();
+                    break;
+                }
+
+                producer.rewind();
+                node = PARSE_OR_ERROR(ExprParser(producer, _ast).parse());
+                break;
+            }
         }
         nodes.push_back(node);
 
@@ -315,6 +315,14 @@ Result<Node*, Error> ExprBlockParser::parse() noexcept {
     return Result<Node*, Error>::ok(node);
 }
 
+Result<Node*, Error> AssignParser::parse() noexcept {
+    Node* lhs = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast).parse());
+    ASSERT_TOKEN_TYPE(next(), TokenType::Assign);
+    Node* rhs = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
+    Node* node = make<AssignStmt>(lhs->start, rhs->end, lhs, rhs);
+    return Result<Node*, Error>::ok(node);
+}
+
 Result<Node*, Error> IfElseParser::parse() noexcept {
     // Helper
     Location start = peek().start;
@@ -477,18 +485,14 @@ Result<Node*, Error> PatternParser::parse() noexcept {
     const Token& token = peek();
     switch (token.type) {
         // Binding pattern / record pattern
+        case TokenType::Let:
+        case TokenType::Const:
+        case TokenType::Ref:
+        case TokenType::Cref:
         case TokenType::Identifier:
         case TokenType::Discard: {
-            // Record pattern
-            RewindTokenProducer producer(_producer);
-            Result<Node*, Error> result = RecordPatternParser(producer, _ast, _isLhs).parse();
-            if (result.hasValue()) {
-                return result;
-            }
-
             // Binding pattern
-            producer.rewind();
-            return BindingPatternParser(producer, _ast).parse();
+            return BindingPatternParser(_producer, _ast).parse();
         }
 
         // Literal pattern / tuple pattern
