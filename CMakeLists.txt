@@ -93,6 +93,8 @@ add_library(sparklib
         src/frontend/semantic_type.hpp
         src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp
+        src/frontend/source_reader.cpp
+        src/frontend/source_reader.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
