@@ -14,6 +14,7 @@ struct IfThenExpr;
 
 struct BindingPattern;
 struct TuplePattern;
+struct CollectionPattern;
 
 struct Identifier;
 struct Discard;
@@ -41,6 +42,7 @@ public:
 
     virtual void visit(BindingPattern& node) { }
     virtual void visit(TuplePattern& node) { }
+    virtual void visit(CollectionPattern& node) { }
 
     virtual void visit(Identifier& node) { }
     virtual void visit(Discard& node) { }

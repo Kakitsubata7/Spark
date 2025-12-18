@@ -148,10 +148,28 @@ struct BindingPattern final : Node {
 };
 
 struct TuplePattern final : Node {
-    /* notempty */std::vector<Node*> patterns;
+    /* notempty */ std::vector<Node*> patterns;
 
     TuplePattern(Location start, Location end, std::vector<Node*> patterns) noexcept
         : Node(start, end), patterns(std::move(patterns)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct CollectionPattern final : Node {
+    std::vector<Node*> prefix;
+    std::vector<Node*> suffix;
+    bool hasRest;
+
+    CollectionPattern(Location start,
+                      Location end,
+                      std::vector<Node*> prefix = {},
+                      std::vector<Node*> suffix = {},
+                      bool hasRest = false) noexcept
+        : Node(start, end), prefix(std::move(prefix)), suffix(std::move(suffix)), hasRest(hasRest) { }
 
     [[nodiscard]]
     NodeKind kind() const override { return NodeKind::Pattern; }
