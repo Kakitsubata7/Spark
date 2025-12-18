@@ -49,6 +49,19 @@ public:
     ExprParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
 
     Result<Node*, Error> parse() noexcept override;
+
+private:
+    Result<Node*, Error> parse(int minBp) noexcept;
+    Result<Node*, Error> parseNud() noexcept;
+
+    static PrefixOp tokenToPrefix(TokenType t) noexcept;
+    static int prefixBp(PrefixOp op) noexcept;
+
+    static PostfixOp tokenToPostfix(TokenType t) noexcept;
+    static int postfixBp(PostfixOp op) noexcept;
+
+    static InfixOp tokenToInfix(TokenType t) noexcept;
+    static std::pair<int, int> infixBp(InfixOp op) noexcept;
 };
 
 class BlockParser final : public ParserUnit {
@@ -89,6 +102,20 @@ public:
 class IfThenParser final : public ParserUnit {
 public:
     IfThenParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class PrimaryParser final : public ParserUnit {
+public:
+    PrimaryParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class ParenthesisExprParser final : public ParserUnit {
+public:
+    ParenthesisExprParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
 
     Result<Node*, Error> parse() noexcept override;
 };

@@ -10,13 +10,13 @@
  * Otherwise, it gives the value (`Node*`) of the result.
  * @param parser `ParserUnit` instance.
  */
-#define PARSE_OR_ERROR(parse)    \
-({                                \
-    auto&& _r = (parse)(); \
-    if (_r.hasError()) {          \
-        return _r;                \
-    }                             \
-    _r.value();                   \
+#define PARSE_OR_ERROR(parsed) \
+({                             \
+    auto&& _r = (parsed);      \
+    if (_r.hasError()) {       \
+        return _r;             \
+    }                          \
+    _r.value();                \
 })
 
 /**
@@ -66,7 +66,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
         switch (token.type) {
             // Block
             case TokenType::LBrace: {
-                node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse);
+                node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse());
                 break;
             }
 
@@ -83,7 +83,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
                 // If-then expression
                 if (canExpr) {
                     producer.rewind();
-                    node = PARSE_OR_ERROR(IfThenParser(producer, _ast).parse);
+                    node = PARSE_OR_ERROR(IfThenParser(producer, _ast).parse());
                 }
 
                 break;
@@ -101,7 +101,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
 
             // While loop
             case TokenType::While: {
-                node = PARSE_OR_ERROR(WhileParser(_producer, _ast).parse);
+                node = PARSE_OR_ERROR(WhileParser(_producer, _ast).parse());
                 break;
             }
 
@@ -145,12 +145,157 @@ Result<Node*, Error> ExprParser::parse() noexcept {
     return parse(0);
 }
 
+Result<Node*, Error> ExprParser::parse(int minBp) noexcept {
+    // nud
+    Node* lhs = PARSE_OR_ERROR(parseNud());
+
+    // led
+    while (true) {
+        const Token& tok = peek();
+
+        // Postfix
+        if (PostfixOp pop = tokenToPostfix(tok.type); pop != PostfixOp::None) {
+            int lbp = postfixBp(pop);
+            if (lbp < minBp) {
+                break;
+            }
+            advance(); // Consume pop
+
+            lhs = make<PostfixExpr>(lhs->start, tok.end, pop, lhs);
+            continue;
+        }
+
+        // Infix
+        if (InfixOp iop = tokenToInfix(tok.type); iop != InfixOp::None) {
+            auto [lbp, rbp] = infixBp(iop);
+            if (lbp < minBp) {
+                break;
+            }
+            advance(); // Consume iop
+
+            // .
+            if (iop == InfixOp::MemberAccess) {
+                Node* ident = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast).parse());
+                lhs = make<BinaryExpr>(lhs->start, ident->end, iop, lhs, ident);
+                continue;
+            }
+
+            Node* rhs = PARSE_OR_ERROR(parse(rbp));
+            lhs = make<BinaryExpr>(lhs->start, rhs->end, iop, lhs, rhs);
+            continue;
+        }
+
+        break;
+    }
+
+    return Result<Node*, Error>::ok(lhs);
+}
+
+Result<Node*, Error> ExprParser::parseNud() noexcept {
+    // Prefix operator
+    const Token& tok = peek();
+    if (PrefixOp op = tokenToPrefix(tok.type); op != PrefixOp::None) {
+        advance(); // Consume op
+        Node* rhs = PARSE_OR_ERROR(parse(prefixBp(op)));
+        return Result<Node*, Error>::ok(make<PrefixExpr>(tok.start, rhs->end, op, rhs));
+    }
+
+    // Primary
+    Node* primary = PARSE_OR_ERROR(PrimaryParser(_producer, _ast).parse());
+    return Result<Node*, Error>::ok(primary);
+}
+
+PrefixOp ExprParser::tokenToPrefix(TokenType t) noexcept {
+    switch (t) {
+        case TokenType::Add:
+            return PrefixOp::Pos;
+        case TokenType::Sub:
+            return PrefixOp::Neg;
+        case TokenType::Tide:
+            return PrefixOp::BitNot;
+        case TokenType::Bang:
+            return PrefixOp::LogNot;
+        case TokenType::And:
+            return PrefixOp::Ref;
+        default:
+            return PrefixOp::None;
+    }
+}
+
+int ExprParser::prefixBp(PrefixOp op) noexcept {
+    switch (op) {
+        case PrefixOp::Pos:    // +
+        case PrefixOp::Neg:    // -
+        case PrefixOp::BitNot: // ~
+        case PrefixOp::LogNot: // !
+        case PrefixOp::Ref:    // &
+            return 80;
+
+        default:
+            return -1;
+    }
+}
+
+PostfixOp ExprParser::tokenToPostfix(TokenType t) noexcept {
+    switch (t) {
+        case TokenType::Question:
+            return PostfixOp::Optional;
+        case TokenType::Bang:
+            return PostfixOp::ForceUnwrap;
+        default:
+            return PostfixOp::None;
+    }
+}
+
+int ExprParser::postfixBp(PostfixOp op) noexcept {
+    switch (op) {
+        case PostfixOp::Optional:    // ?
+        case PostfixOp::ForceUnwrap: // !
+            return 100;
+
+        default:
+            return -1;
+    }
+}
+
+InfixOp ExprParser::tokenToInfix(TokenType t) noexcept {
+    switch (t) {
+        case TokenType::Add:
+            return InfixOp::Add;
+        case TokenType::Sub:
+            return InfixOp::Sub;
+        case TokenType::Mul:
+            return InfixOp::Mul;
+        case TokenType::Div:
+            return InfixOp::Div;
+        case TokenType::Dot:
+            return InfixOp::MemberAccess;
+        default:
+            return InfixOp::None;
+    }
+}
+
+std::pair<int, int> ExprParser::infixBp(InfixOp op) noexcept {
+    switch (op) {
+        case InfixOp::Add: // +
+        case InfixOp::Sub: // -
+            return {60, 61};
+        case InfixOp::Mul: // *
+        case InfixOp::Div: // /
+            return {70, 71};
+        case InfixOp::MemberAccess: // .
+            return {90, 91};
+        default:
+            return {-1, -1};
+    }
+}
+
 Result<Node*, Error> BlockParser::parse() noexcept {
     // {
     const Token& lBrace = ASSERT_TOKEN_TYPE(next(), TokenType::LBrace);
 
     // Body
-    Body* body = static_cast<Body*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace).parse));
+    Body* body = static_cast<Body*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace).parse()));
 
     // }
     const Token& rBrace = ASSERT_TOKEN_TYPE(next(), TokenType::RBrace);
@@ -163,9 +308,9 @@ Result<Node*, Error> BlockParser::parse() noexcept {
 Result<Node*, Error> ExprBlockParser::parse() noexcept {
     Node* node;
     if (peek().type == TokenType::LBrace) {
-        node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse);
+        node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse());
     } else {
-        node = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+        node = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
     }
     return Result<Node*, Error>::ok(node);
 }
@@ -176,8 +321,8 @@ Result<Node*, Error> IfElseParser::parse() noexcept {
     Location end = start;
     std::vector<IfElseStmt::Branch> branches;
     auto parseBranch = [&]() -> Result<Node*, Error> {
-        Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
-        BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+        Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
+        BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse()));
         branches.push_back({ .condition = cond, .block = block });
         end = block->end;
         return Result<Node*, Error>::ok(nullptr);
@@ -185,7 +330,7 @@ Result<Node*, Error> IfElseParser::parse() noexcept {
 
     // If branch
     ASSERT_TOKEN_TYPE(next(), TokenType::If);
-    PARSE_OR_ERROR(parseBranch);
+    PARSE_OR_ERROR(parseBranch());
 
     // Else if / else branch(es)
     BlockStmt* elseBlock = nullptr;
@@ -194,12 +339,12 @@ Result<Node*, Error> IfElseParser::parse() noexcept {
 
         if (peek().type == TokenType::If) {
             advance(); // Consume if
-            PARSE_OR_ERROR(parseBranch);
+            PARSE_OR_ERROR(parseBranch());
             continue;
         }
 
         // else
-        elseBlock = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+        elseBlock = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse()));
         end = elseBlock->end;
         break;
     }
@@ -215,10 +360,10 @@ Result<Node*, Error> WhileParser::parse() noexcept {
     ASSERT_TOKEN_TYPE(next(), TokenType::While);
 
     // Condition expression
-    Node* condition = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+    Node* condition = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
 
     // Body block
-    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse()));
 
     // Construct AST node
     Node* node = make<WhileStmt>(start, block->end, condition, block);
@@ -231,16 +376,16 @@ Result<Node*, Error> ForParser::parse() noexcept {
     ASSERT_TOKEN_TYPE(next(), TokenType::For);
 
     // Iterator pattern
-    Node* iterator = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast).parse);
+    Node* iterator = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast).parse());
 
     // in
     ASSERT_TOKEN_TYPE(next(), TokenType::In);
 
     // Range expression
-    Node* range = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+    Node* range = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
 
     // Body block
-    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse()));
 
     // Construct AST node
     Node* node = make<ForStmt>(start, block->end, iterator, range, block);
@@ -253,23 +398,79 @@ Result<Node*, Error> IfThenParser::parse() noexcept {
     ASSERT_TOKEN_TYPE(next(), TokenType::If);
 
     // Condition
-    Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+    Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
 
     // then
     ASSERT_TOKEN_TYPE(next(), TokenType::Then);
 
     // True
-    Node* trueNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse);
+    Node* trueNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse());
 
     // else
     ASSERT_TOKEN_TYPE(next(), TokenType::Else);
 
     // False
-    Node* falseNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse);
+    Node* falseNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse());
 
     // Construct AST node
     Node* node = make<IfThenExpr>(start, falseNode->end, cond, trueNode, falseNode);
     return Result<Node*, Error>::ok(node);
+}
+
+Result<Node*, Error> PrimaryParser::parse() noexcept {
+    Node* node;
+    switch (peek().type) {
+        // If-then
+        case TokenType::If:
+            node = PARSE_OR_ERROR(IfThenParser(_producer, _ast).parse());
+            break;
+
+        // Qualified name
+        case TokenType::Identifier:
+        case TokenType::Discard:
+            node = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast).parse());
+            break;
+
+        // Literal / parenthesis expression
+        case TokenType::Integer:
+        case TokenType::Real:
+        case TokenType::True:
+        case TokenType::False:
+        case TokenType::String:
+        case TokenType::Nil:
+        case TokenType::Undefined:
+        case TokenType::LParen: {
+            // Literal
+            RewindTokenProducer producer(_producer);
+            Result<Node*, Error> result = LiteralParser(producer, _ast).parse();
+            if (result.hasValue()) {
+                node = result.value();
+                break;
+            }
+
+            // Parenthesis expression
+            producer.rewind();
+            node = PARSE_OR_ERROR(ParenthesisExprParser(producer, _ast).parse());
+            break;
+        }
+
+        default:
+            return unexpectedToken(next());
+    }
+    return Result<Node*, Error>::ok(node);
+}
+
+Result<Node*, Error> ParenthesisExprParser::parse() noexcept {
+    // (
+    ASSERT_TOKEN_TYPE(next(), TokenType::LParen);
+
+    // Expression
+    Node* expr = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
+
+    // )
+    ASSERT_TOKEN_TYPE(next(), TokenType::RParen);
+
+    return Result<Node*, Error>::ok(expr);
 }
 
 Result<Node*, Error> PatternParser::parse() noexcept {
@@ -378,7 +579,7 @@ Result<Node*, Error> BindingPatternParser::parse() noexcept {
     switch (tok.type) {
         case TokenType::Identifier:
         case TokenType::Discard:
-            bind = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast).parse);
+            bind = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast).parse());
             break;
 
         default:
@@ -393,7 +594,7 @@ Result<Node*, Error> BindingPatternParser::parse() noexcept {
         advance(); // Consume :
 
         // Type expression
-        typeAnnot = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+        typeAnnot = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse());
 
         end = typeAnnot->end; // Update end location
     }
@@ -410,7 +611,7 @@ Result<Node*, Error> TuplePatternParser::parse() noexcept {
 
     // Patterns
     std::vector<Node*> patterns;
-    patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
+    patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse()));
     while (true) {
         // )
         if (peek().type == TokenType::RParen) {
@@ -422,7 +623,7 @@ Result<Node*, Error> TuplePatternParser::parse() noexcept {
         ASSERT_TOKEN_TYPE(next(), TokenType::Comma);
 
         // Pattern
-        patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
+        patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse()));
     }
 
     // Construct AST node
@@ -452,7 +653,7 @@ Result<Node*, Error> CollectionPatternParser::parse() noexcept {
         hasRest = true;
         patterns = &suffix;
     } else {
-        patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
+        patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse()));
     }
 
     // Parse the rest
@@ -477,7 +678,7 @@ Result<Node*, Error> CollectionPatternParser::parse() noexcept {
             hasRest = true;
             patterns = &suffix;
         } else {
-            patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
+            patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse()));
         }
     }
 
