@@ -58,6 +58,13 @@ public:
     Result<Node*, Error> parse() noexcept override;
 };
 
+class IfElseParser final : public ParserUnit {
+public:
+    IfElseParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
 class WhileParser final : public ParserUnit {
 public:
     WhileParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
@@ -68,6 +75,13 @@ public:
 class ForParser final : public ParserUnit {
 public:
     ForParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class IfThenParser final : public ParserUnit {
+public:
+    IfThenParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
 
     Result<Node*, Error> parse() noexcept override;
 };

@@ -6,14 +6,14 @@
 #include "frontend/ast.hpp"
 
 /**
- * Helper macro that takes a `ParserUnit` instance and tries parsing.
+ * Helper macro that takes a callable and tries parsing.
  * If the result is an error, it returns the error in the caller's scope.
  * Otherwise, it gives the value (`Node*`) of the result.
  * @param parser `ParserUnit` instance.
  */
-#define PARSE_OR_ERROR(parser)    \
+#define PARSE_OR_ERROR(parse)    \
 ({                                \
-    auto&& _r = (parser).parse(); \
+    auto&& _r = (parse)(); \
     if (_r.hasError()) {          \
         return _r;                \
     }                             \
@@ -67,17 +67,30 @@ Result<Node*, Error> BodyParser::parse() noexcept {
         switch (token.type) {
             // Block
             case TokenType::LBrace: {
-                node = PARSE_OR_ERROR(BlockParser(_producer, _ast));
+                node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse);
                 break;
             }
 
             // If-else statement / if-then expression
+            case TokenType::If: {
+                // If-else statement
+                RewindTokenProducer producer(_producer);
+                Result<Node*, Error> result = IfElseParser(producer, _ast).parse();
+                if (result.hasValue()) {
+                    return result;
+                }
+
+                // If-then expression
+                producer.rewind();
+                node = PARSE_OR_ERROR(IfThenParser(producer, _ast).parse);
+                break;
+            }
 
             // Match statement / match expression
 
             // While loop
             case TokenType::While: {
-                node = PARSE_OR_ERROR(WhileParser(_producer, _ast));
+                node = PARSE_OR_ERROR(WhileParser(_producer, _ast).parse);
                 break;
             }
 
@@ -126,7 +139,7 @@ Result<Node*, Error> BlockParser::parse() noexcept {
     const Token& lBrace = ASSERT_TOKEN_TYPE(next(), TokenType::LBrace);
 
     // Body
-    Body* body = static_cast<Body*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace)));
+    Body* body = static_cast<Body*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace).parse));
 
     // }
     const Token& rBrace = ASSERT_TOKEN_TYPE(next(), TokenType::RBrace);
@@ -136,16 +149,55 @@ Result<Node*, Error> BlockParser::parse() noexcept {
     return Result<Node*, Error>::ok(block);
 }
 
+Result<Node*, Error> IfElseParser::parse() noexcept {
+    // Helper
+    Location start = peek().start;
+    Location end = start;
+    std::vector<IfElseStmt::Branch> branches;
+    auto parseBranch = [&]() -> Result<Node*, Error> {
+        Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+        BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+        branches.push_back({ .condition = cond, .block = block });
+        end = block->end;
+        return Result<Node*, Error>::ok(nullptr);
+    };
+
+    // If branch
+    ASSERT_TOKEN_TYPE(next(), TokenType::If);
+    PARSE_OR_ERROR(parseBranch);
+
+    // Else if / else branch(es)
+    BlockStmt* elseBlock = nullptr;
+    while (peek().type == TokenType::Else) {
+        advance(); // Consume else
+
+        if (peek().type == TokenType::If) {
+            advance(); // Consume if
+            PARSE_OR_ERROR(parseBranch);
+            continue;
+        }
+
+        // else
+        elseBlock = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
+        end = elseBlock->end;
+        break;
+    }
+
+    // Construct AST node
+    Node* node = make<IfElseStmt>(start, end, std::move(branches), elseBlock);
+    return Result<Node*, Error>::ok(node);
+}
+
 Result<Node*, Error> WhileParser::parse() noexcept {
     // while
     Location start = peek().start;
     ASSERT_TOKEN_TYPE(next(), TokenType::While);
 
     // Condition expression
-    Node* condition = PARSE_OR_ERROR(ExprParser(_producer, _ast));
+    Node* condition = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
 
     // Body block
-    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast)));
+    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
 
     // Construct AST node
     Node* node = make<WhileStmt>(start, block->end, condition, block);
@@ -158,16 +210,16 @@ Result<Node*, Error> ForParser::parse() noexcept {
     ASSERT_TOKEN_TYPE(next(), TokenType::For);
 
     // Iterator pattern
-    Node* iterator = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast));
+    Node* iterator = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast).parse);
 
     // in
     ASSERT_TOKEN_TYPE(next(), TokenType::In);
 
     // Range expression
-    Node* range = PARSE_OR_ERROR(ExprParser(_producer, _ast));
+    Node* range = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
 
     // Body block
-    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast)));
+    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast).parse));
 
     // Construct AST node
     Node* node = make<ForStmt>(start, block->end, iterator, range, block);
@@ -275,7 +327,7 @@ Result<Node*, Error> BindingPatternParser::parse() noexcept {
     switch (tok.type) {
         case TokenType::Identifier:
         case TokenType::Discard:
-            bind = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast));
+            bind = PARSE_OR_ERROR(QualifiedNameParser(_producer, _ast).parse);
             break;
 
         default:
@@ -290,7 +342,7 @@ Result<Node*, Error> BindingPatternParser::parse() noexcept {
         advance(); // Consume :
 
         // Type expression
-        typeAnnot = PARSE_OR_ERROR(ExprParser(_producer, _ast));
+        typeAnnot = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
 
         end = typeAnnot->end; // Update end location
     }
@@ -307,7 +359,7 @@ Result<Node*, Error> TuplePatternParser::parse() noexcept {
 
     // Patterns
     std::vector<Node*> patterns;
-    patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs)));
+    patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
     while (true) {
         // )
         if (peek().type == TokenType::RParen) {
@@ -319,7 +371,7 @@ Result<Node*, Error> TuplePatternParser::parse() noexcept {
         ASSERT_TOKEN_TYPE(next(), TokenType::Comma);
 
         // Pattern
-        patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs)));
+        patterns.push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
     }
 
     // Construct AST node
@@ -349,7 +401,7 @@ Result<Node*, Error> CollectionPatternParser::parse() noexcept {
         hasRest = true;
         patterns = &suffix;
     } else {
-        patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs)));
+        patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
     }
 
     // Parse the rest
@@ -374,7 +426,7 @@ Result<Node*, Error> CollectionPatternParser::parse() noexcept {
             hasRest = true;
             patterns = &suffix;
         } else {
-            patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs)));
+            patterns->push_back(PARSE_OR_ERROR(PatternParser(_producer, _ast, _isLhs).parse));
         }
     }
 
