@@ -50,6 +50,13 @@ struct Node {
     virtual NodeKind kind() const = 0;
 
     virtual void accept(NodeVisitor& v) = 0;
+
+    bool operator==(const Node& rhs) const noexcept;
+    bool operator!=(const Node& rhs) const noexcept;
+
+protected:
+    [[nodiscard]]
+    virtual bool equalsImpl(const Node& rhs) const noexcept = 0;
 };
 
 struct Body final : Node {
@@ -62,6 +69,10 @@ struct Body final : Node {
     NodeKind kind() const override { return NodeKind::Other; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct BlockStmt final : Node {
@@ -74,6 +85,10 @@ struct BlockStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct IfElseStmt final : Node {
@@ -92,6 +107,10 @@ struct IfElseStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct WhileStmt final : Node {
@@ -105,6 +124,10 @@ struct WhileStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct ForStmt final : Node {
@@ -119,6 +142,10 @@ struct ForStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct BreakStmt final : Node {
@@ -128,6 +155,10 @@ struct BreakStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct ContinueStmt final : Node {
@@ -137,6 +168,10 @@ struct ContinueStmt final : Node {
     NodeKind kind() const override { return NodeKind::Stmt; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct IfThenExpr final : Node {
@@ -151,6 +186,10 @@ struct IfThenExpr final : Node {
     NodeKind kind() const override { return NodeKind::Expr; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 enum class VarKind {
@@ -168,6 +207,9 @@ struct BindingModifier {
                          bool isNullable = false,
                          bool isNonNullable = false) noexcept
         : kind(kind), isImmutable(isImmutable), isNullable(isNullable), isNonNullable(isNonNullable) { }
+
+    bool operator==(const BindingModifier& rhs) const noexcept;
+    bool operator!=(const BindingModifier& rhs) const noexcept;
 };
 
 struct BindingPattern final : Node {
@@ -182,6 +224,10 @@ struct BindingPattern final : Node {
     NodeKind kind() const override { return NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct TuplePattern final : Node {
@@ -194,6 +240,10 @@ struct TuplePattern final : Node {
     NodeKind kind() const override { return NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct CollectionPattern final : Node {
@@ -212,6 +262,10 @@ struct CollectionPattern final : Node {
     NodeKind kind() const override { return NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct Identifier final : Node {
@@ -224,6 +278,10 @@ struct Identifier final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct Discard final : Node {
@@ -234,6 +292,10 @@ struct Discard final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct IntLiteral final : Node {
@@ -246,6 +308,10 @@ struct IntLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct RealLiteral final : Node {
@@ -258,6 +324,10 @@ struct RealLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct BoolLiteral final : Node {
@@ -270,6 +340,10 @@ struct BoolLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct StringLiteral final : Node {
@@ -282,6 +356,10 @@ struct StringLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct NilLiteral final : Node {
@@ -291,6 +369,10 @@ struct NilLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct VoidLiteral final : Node {
@@ -300,6 +382,10 @@ struct VoidLiteral final : Node {
     NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 struct Undefined final : Node {
@@ -309,6 +395,10 @@ struct Undefined final : Node {
     NodeKind kind() const override { return NodeKind::Expr; }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 } // Spark::FrontEnd
