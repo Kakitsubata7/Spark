@@ -91,6 +91,23 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+struct AssignStmt final : Node {
+    Node* lhs;
+    Node* rhs;
+
+    AssignStmt(Location start, Location end, Node* lhs, Node* rhs) noexcept
+        : Node(start, end), lhs(lhs), rhs(rhs) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 struct IfElseStmt final : Node {
     struct Branch {
         Node* condition;

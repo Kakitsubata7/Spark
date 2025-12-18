@@ -54,6 +54,11 @@ bool BlockStmt::equalsImpl(const Node& rhs) const noexcept {
     return *body == *o.body;
 }
 
+bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
+    const AssignStmt& o = EQ_ASSERT_TYPE(rhs, AssignStmt);
+    return *lhs == *o.lhs && *this->rhs == *o.rhs;
+}
+
 bool IfElseStmt::equalsImpl(const Node& rhs) const noexcept {
     const IfElseStmt& o = EQ_ASSERT_TYPE(rhs, IfElseStmt);
 
