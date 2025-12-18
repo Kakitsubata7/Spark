@@ -76,6 +76,37 @@ struct BlockStmt final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+enum class VarKind {
+    Let, Const, Ref, Cref
+};
+
+struct VarModifier {
+    VarKind kind;
+    bool isImmutable;
+    bool isNullable;
+    bool isNonNullable;
+
+    explicit VarModifier(VarKind kind = VarKind::Const,
+                         bool isImmutable = false,
+                         bool isNullable = false,
+                         bool isNonNullable = false) noexcept
+        : kind(kind), isImmutable(isImmutable), isNullable(isNullable), isNonNullable(isNonNullable) { }
+};
+
+struct VarDefStmt final : Node {
+    VarModifier mod;
+    Node* lhs;
+    /* nullable */ Node* rhs;
+
+    VarDefStmt(Location start, Location end, VarModifier mod, Node* lhs, Node* rhs = nullptr) noexcept
+        : Node(start, end), mod(mod), lhs(lhs), rhs(rhs) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct WhileStmt final : Node {
     Node* condition;
     BlockStmt* block;

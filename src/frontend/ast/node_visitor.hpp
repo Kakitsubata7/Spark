@@ -7,6 +7,7 @@ struct Node;
 struct Body;
 
 struct BlockStmt;
+struct VarDefStmt;
 struct WhileStmt;
 
 struct IfThenExpr;
@@ -32,6 +33,7 @@ public:
     virtual void visit(Body& node) { }
 
     virtual void visit(BlockStmt& node) { }
+    virtual void visit(VarDefStmt& node) { }
     virtual void visit(WhileStmt& node) { }
 
     virtual void visit(IfThenExpr& node) { }
