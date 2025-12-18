@@ -65,6 +65,13 @@ public:
     Result<Node*, Error> parse() noexcept override;
 };
 
+class ForParser final : public ParserUnit {
+public:
+    ForParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
 class PatternParser final : public ParserUnit {
 private:
     bool _isLhs;

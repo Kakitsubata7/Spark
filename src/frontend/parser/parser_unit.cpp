@@ -71,12 +71,29 @@ Result<Node*, Error> BodyParser::parse() noexcept {
                 break;
             }
 
+            // If-else statement / if-then expression
+
+            // Match statement / match expression
+
             // While loop
             case TokenType::While: {
                 node = PARSE_OR_ERROR(WhileParser(_producer, _ast));
                 break;
             }
 
+            // Break
+            case TokenType::Break: {
+                node = make<BreakStmt>(token.start, token.end);
+                break;
+            }
+
+            // Continue
+            case TokenType::Continue: {
+                node = make<ContinueStmt>(token.start, token.end);
+                break;
+            }
+
+            // ;
             case TokenType::Semicolon:
                 break;
 
@@ -85,7 +102,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
         }
         nodes.push_back(node);
 
-        // Expression can only follow a ';'
+        // Expression can only follow a semicolon
         canExpr = token.type == TokenType::Semicolon;
     }
 
@@ -121,7 +138,8 @@ Result<Node*, Error> BlockParser::parse() noexcept {
 
 Result<Node*, Error> WhileParser::parse() noexcept {
     // while
-    const Token& whileTok = ASSERT_TOKEN_TYPE(next(), TokenType::While);
+    Location start = peek().start;
+    ASSERT_TOKEN_TYPE(next(), TokenType::While);
 
     // Condition expression
     Node* condition = PARSE_OR_ERROR(ExprParser(_producer, _ast));
@@ -130,8 +148,30 @@ Result<Node*, Error> WhileParser::parse() noexcept {
     BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast)));
 
     // Construct AST node
-    WhileStmt* whileStmt = make<WhileStmt>(whileTok.start, block->end, condition, block);
-    return Result<Node*, Error>::ok(whileStmt);
+    Node* node = make<WhileStmt>(start, block->end, condition, block);
+    return Result<Node*, Error>::ok(node);
+}
+
+Result<Node*, Error> ForParser::parse() noexcept {
+    // for
+    Location start = peek().start;
+    ASSERT_TOKEN_TYPE(next(), TokenType::For);
+
+    // Iterator pattern
+    Node* iterator = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast));
+
+    // in
+    ASSERT_TOKEN_TYPE(next(), TokenType::In);
+
+    // Range expression
+    Node* range = PARSE_OR_ERROR(ExprParser(_producer, _ast));
+
+    // Body block
+    BlockStmt* block = static_cast<BlockStmt*>(PARSE_OR_ERROR(BlockParser(_producer, _ast)));
+
+    // Construct AST node
+    Node* node = make<ForStmt>(start, block->end, iterator, range, block);
+    return Result<Node*, Error>::ok(node);
 }
 
 Result<Node*, Error> PatternParser::parse() noexcept {
