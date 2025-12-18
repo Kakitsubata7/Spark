@@ -21,7 +21,7 @@ struct RealLiteral;
 struct BoolLiteral;
 struct StringLiteral;
 struct NilLiteral;
-struct UndefinedExpr;
+struct Undefined;
 
 class NodeVisitor {
 public:
@@ -46,7 +46,7 @@ public:
     virtual void visit(BoolLiteral& node) { }
     virtual void visit(StringLiteral& node) { }
     virtual void visit(NilLiteral& node) { }
-    virtual void visit(UndefinedExpr& node) { }
+    virtual void visit(Undefined& node) { }
 };
 
 } // Spark::FrontEnd

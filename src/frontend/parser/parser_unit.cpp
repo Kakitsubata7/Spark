@@ -242,7 +242,7 @@ Result<Node*, Error> LiteralParser::parse() noexcept {
             break;
 
         case TokenType::Undefined:
-            node = _ast.make<UndefinedExpr>(token.start, token.end);
+            node = _ast.make<Undefined>(token.start, token.end);
             break;
 
         default:
