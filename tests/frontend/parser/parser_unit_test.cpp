@@ -19,10 +19,16 @@ using namespace Spark::FrontEnd;
     EXPECT_TRUE(result.hasError());               \
 }
 
-TEST(BindingPatternTest, Invalid1) {
+TEST(BindingPatternTest, InvalidCases) {
     EXPECT_ERROR(BindingPatternParser, "(x)");
     EXPECT_ERROR(BindingPatternParser, "1");
     EXPECT_ERROR(BindingPatternParser, "(x): T");
     EXPECT_ERROR(BindingPatternParser, "x:");
     EXPECT_ERROR(BindingPatternParser, "1: T");
+}
+
+TEST(LiteralParserTest, InvalidCases) {
+    EXPECT_ERROR(LiteralParser, "null");
+    EXPECT_ERROR(LiteralParser, "x");
+    EXPECT_ERROR(LiteralParser, "(1)");
 }
