@@ -58,6 +58,27 @@ public:
     Result<Node*, Error> parse() noexcept override;
 };
 
+class PatternParser final : public ParserUnit {
+public:
+    PatternParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class BindingPatternParser final : public ParserUnit {
+public:
+    BindingPatternParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class QualifiedNameParser final : public ParserUnit {
+public:
+    QualifiedNameParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
 class LiteralParser final : public ParserUnit {
 public:
     LiteralParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
