@@ -1,7 +1,6 @@
 ﻿#include "parser_unit.hpp"
 
 #include <string>
-#include <typeinfo>
 
 #include "frontend/ast.hpp"
 
@@ -77,16 +76,28 @@ Result<Node*, Error> BodyParser::parse() noexcept {
                 RewindTokenProducer producer(_producer);
                 Result<Node*, Error> result = IfElseParser(producer, _ast).parse();
                 if (result.hasValue()) {
-                    return result;
+                    node = result.value();
+                    break;
                 }
 
                 // If-then expression
-                producer.rewind();
-                node = PARSE_OR_ERROR(IfThenParser(producer, _ast).parse);
+                if (canExpr) {
+                    producer.rewind();
+                    node = PARSE_OR_ERROR(IfThenParser(producer, _ast).parse);
+                }
+
                 break;
             }
 
-            // Match statement / match expression
+            // // Match statement / match expression
+            // case TokenType::Match: {
+            //     // Match statement
+            //
+            //     // Match expression
+            //     if (canExpr) {
+            //
+            //     }
+            // }
 
             // While loop
             case TokenType::While: {
@@ -131,8 +142,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
 }
 
 Result<Node*, Error> ExprParser::parse() noexcept {
-    // TODO
-    return Result<Node*, Error>::ok(make<IntLiteral>(Location(), Location(), BigInt()));
+    return parse(0);
 }
 
 Result<Node*, Error> BlockParser::parse() noexcept {
@@ -148,6 +158,16 @@ Result<Node*, Error> BlockParser::parse() noexcept {
     // Construct AST node
     BlockStmt* block = make<BlockStmt>(lBrace.start, rBrace.end, body);
     return Result<Node*, Error>::ok(block);
+}
+
+Result<Node*, Error> ExprBlockParser::parse() noexcept {
+    Node* node;
+    if (peek().type == TokenType::LBrace) {
+        node = PARSE_OR_ERROR(BlockParser(_producer, _ast).parse);
+    } else {
+        node = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+    }
+    return Result<Node*, Error>::ok(node);
 }
 
 Result<Node*, Error> IfElseParser::parse() noexcept {
@@ -239,33 +259,13 @@ Result<Node*, Error> IfThenParser::parse() noexcept {
     ASSERT_TOKEN_TYPE(next(), TokenType::Then);
 
     // True
-    Node* trueNode;
-    {
-        RewindTokenProducer producer(_producer);
-        Result<Node*, Error> result = BlockParser(producer, _ast).parse();
-        if (result.hasValue()) {
-            trueNode = result.value();
-        } else {
-            producer.rewind();
-            trueNode = PARSE_OR_ERROR(ExprParser(producer, _ast).parse);
-        }
-    }
+    Node* trueNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse);
 
     // else
     ASSERT_TOKEN_TYPE(next(), TokenType::Else);
 
     // False
-    Node* falseNode;
-    {
-        RewindTokenProducer producer(_producer);
-        Result<Node*, Error> result = BlockParser(producer, _ast).parse();
-        if (result.hasValue()) {
-            falseNode = result.value();
-        } else {
-            producer.rewind();
-            falseNode = PARSE_OR_ERROR(ExprParser(producer, _ast).parse);
-        }
-    }
+    Node* falseNode = PARSE_OR_ERROR(ExprBlockParser(_producer, _ast).parse);
 
     // Construct AST node
     Node* node = make<IfThenExpr>(start, falseNode->end, cond, trueNode, falseNode);
@@ -494,7 +494,7 @@ Result<Node*, Error> RecordPatternParser::parse() noexcept {
 Result<Node*, Error> QualifiedNameParser::parse() noexcept {
     const Token& token = next();
     if (token.type == TokenType::Identifier) {
-        Node* node = make<Identifier>(token.start, token.end, std::move(token.lexeme));
+        Node* node = make<Identifier>(token.start, token.end, token.lexeme);
         return Result<Node*, Error>::ok(node);
     }
     if (token.type == TokenType::Discard) {
@@ -525,7 +525,7 @@ Result<Node*, Error> LiteralParser::parse() noexcept {
             break;
 
         case TokenType::String:
-            node = make<StringLiteral>(token.start, token.end, std::move(token.lexeme));
+            node = make<StringLiteral>(token.start, token.end, token.lexeme);
             break;
 
         case TokenType::Nil:
