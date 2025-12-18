@@ -104,7 +104,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
         start = nodes.front()->start;
         end = nodes.back()->end;
     }
-    Node* node = _ast.make<BodyNode>(start, end, std::move(nodes));
+    Node* node = _ast.make<Body>(start, end, std::move(nodes));
     return Result<Node*, Error>::ok(node);
 }
 
@@ -117,7 +117,7 @@ Result<Node*, Error> BlockParser::parse() noexcept {
     const Token& lBrace = ASSERT_TOKEN_TYPE(_producer.next(), TokenType::LBrace);
 
     // Body
-    BodyNode* body = static_cast<BodyNode*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace)));
+    Body* body = static_cast<Body*>(PARSE_OR_ERROR(BodyParser(_producer, _ast, TokenType::RBrace)));
 
     // }
     const Token& rBrace = ASSERT_TOKEN_TYPE(_producer.next(), TokenType::RBrace);

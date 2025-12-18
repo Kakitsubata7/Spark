@@ -52,10 +52,10 @@ struct Node {
     virtual void accept(NodeVisitor& v) = 0;
 };
 
-struct BodyNode final : Node {
+struct Body final : Node {
     std::vector<Node*> nodes;
 
-    BodyNode(Location start, Location end, std::vector<Node*> nodes = {}) noexcept
+    Body(Location start, Location end, std::vector<Node*> nodes = {}) noexcept
         : Node(start, end), nodes(std::move(nodes)) { }
 
     [[nodiscard]]
@@ -65,9 +65,9 @@ struct BodyNode final : Node {
 };
 
 struct BlockStmt final : Node {
-    BodyNode* body;
+    Body* body;
 
-    BlockStmt(Location start, Location end, BodyNode* body) noexcept
+    BlockStmt(Location start, Location end, Body* body) noexcept
         : Node(start, end), body(body) { }
 
     [[nodiscard]]
