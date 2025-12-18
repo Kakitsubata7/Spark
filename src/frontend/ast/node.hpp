@@ -147,6 +147,18 @@ struct BindingPattern final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct TuplePattern final : Node {
+    /* notempty */std::vector<Node*> patterns;
+
+    TuplePattern(Location start, Location end, std::vector<Node*> patterns) noexcept
+        : Node(start, end), patterns(std::move(patterns)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct Identifier final : Node {
     std::string name;
 
