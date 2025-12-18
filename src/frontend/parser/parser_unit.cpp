@@ -132,6 +132,7 @@ Result<Node*, Error> BodyParser::parse() noexcept {
 
 Result<Node*, Error> ExprParser::parse() noexcept {
     // TODO
+    return Result<Node*, Error>::ok(make<IntLiteral>(Location(), Location(), BigInt()));
 }
 
 Result<Node*, Error> BlockParser::parse() noexcept {
@@ -223,6 +224,51 @@ Result<Node*, Error> ForParser::parse() noexcept {
 
     // Construct AST node
     Node* node = make<ForStmt>(start, block->end, iterator, range, block);
+    return Result<Node*, Error>::ok(node);
+}
+
+Result<Node*, Error> IfThenParser::parse() noexcept {
+    // if
+    Location start = peek().start;
+    ASSERT_TOKEN_TYPE(next(), TokenType::If);
+
+    // Condition
+    Node* cond = PARSE_OR_ERROR(ExprParser(_producer, _ast).parse);
+
+    // then
+    ASSERT_TOKEN_TYPE(next(), TokenType::Then);
+
+    // True
+    Node* trueNode;
+    {
+        RewindTokenProducer producer(_producer);
+        Result<Node*, Error> result = BlockParser(producer, _ast).parse();
+        if (result.hasValue()) {
+            trueNode = result.value();
+        } else {
+            producer.rewind();
+            trueNode = PARSE_OR_ERROR(ExprParser(producer, _ast).parse);
+        }
+    }
+
+    // else
+    ASSERT_TOKEN_TYPE(next(), TokenType::Else);
+
+    // False
+    Node* falseNode;
+    {
+        RewindTokenProducer producer(_producer);
+        Result<Node*, Error> result = BlockParser(producer, _ast).parse();
+        if (result.hasValue()) {
+            falseNode = result.value();
+        } else {
+            producer.rewind();
+            falseNode = PARSE_OR_ERROR(ExprParser(producer, _ast).parse);
+        }
+    }
+
+    // Construct AST node
+    Node* node = make<IfThenExpr>(start, falseNode->end, cond, trueNode, falseNode);
     return Result<Node*, Error>::ok(node);
 }
 
