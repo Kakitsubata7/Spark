@@ -71,18 +71,6 @@ Result<Node*, Error> BodyParser::parse() noexcept {
                 break;
             }
 
-            // Variable definition
-            case TokenType::Let:
-            case TokenType::Const:
-            case TokenType::Ref:
-            case TokenType::Cref:
-            case TokenType::LParen:
-            case TokenType::LBracket:
-            case TokenType::Identifier: {
-                node = PARSE_OR_ERROR(VarDefParser(_producer, _ast));
-                break;
-            }
-
             // While loop
             case TokenType::While: {
                 node = PARSE_OR_ERROR(WhileParser(_producer, _ast));
@@ -129,30 +117,6 @@ Result<Node*, Error> BlockParser::parse() noexcept {
     // Construct AST node
     BlockStmt* block = make<BlockStmt>(lBrace.start, rBrace.end, body);
     return Result<Node*, Error>::ok(block);
-}
-
-Result<Node*, Error> VarDefParser::parse() noexcept {
-    // LHS pattern
-    Node* lhs = PARSE_OR_ERROR(LhsPatternParser(_producer, _ast));
-    if (auto* p = dynamic_cast<TuplePatternParser*>(lhs)) {
-
-    } else {
-
-    }
-
-    // = (optional assignment part)
-    Location start = lhs->start;
-    Location end = lhs->end;
-    Node* rhs = nullptr;
-    if (peek().type == TokenType::Assign) {
-        advance(); // Consume =
-        rhs = PARSE_OR_ERROR(ExprParser(_producer, _ast));
-        end = rhs->end;
-    }
-
-    // Construct AST node
-    Node* node = make<VarDefStmt>(start, end, lhs, rhs);
-    return Result<Node*, Error>::ok(node);
 }
 
 Result<Node*, Error> WhileParser::parse() noexcept {

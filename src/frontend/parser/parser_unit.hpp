@@ -58,13 +58,6 @@ public:
     Result<Node*, Error> parse() noexcept override;
 };
 
-class VarDefParser final : public ParserUnit {
-public:
-    VarDefParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
-
-    Result<Node*, Error> parse() noexcept override;
-};
-
 class WhileParser final : public ParserUnit {
 public:
     WhileParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }

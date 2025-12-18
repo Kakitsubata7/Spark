@@ -76,19 +76,6 @@ struct BlockStmt final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct VarDefStmt final : Node {
-    Node* pattern;
-    /* nullable */ Node* rhs;
-
-    VarDefStmt(Location start, Location end, Node* pattern, Node* rhs = nullptr) noexcept
-        : Node(start, end), pattern(pattern), rhs(rhs) { }
-
-    [[nodiscard]]
-    NodeKind kind() const override { return NodeKind::Stmt; }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-};
-
 struct WhileStmt final : Node {
     Node* condition;
     BlockStmt* block;
