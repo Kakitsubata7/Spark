@@ -37,18 +37,22 @@ public:
         return Result(std::in_place_index<1>, E(std::forward<Args>(args)...));
     }
 
+    [[nodiscard]]
     bool hasValue() const noexcept {
         return std::holds_alternative<T>(_data);
     }
 
+    [[nodiscard]]
     bool hasError() const noexcept {
         return std::holds_alternative<E>(_data);
     }
 
+    [[nodiscard]]
     const T& value() const {
         return std::get<T>(_data);
     }
 
+    [[nodiscard]]
     const E& error() const {
         return std::get<E>(_data);
     }
