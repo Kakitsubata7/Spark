@@ -100,8 +100,13 @@ bool IfThenExpr::equalsImpl(const Node& rhs) const noexcept {
     return *condition == *o.condition && *trueNode == *o.trueNode && *falseNode == *o.falseNode;
 }
 
-bool UnaryExpr::equalsImpl(const Node& rhs) const noexcept {
-    const UnaryExpr& o = EQ_ASSERT_TYPE(rhs, UnaryExpr);
+bool PrefixExpr::equalsImpl(const Node& rhs) const noexcept {
+    const PrefixExpr& o = EQ_ASSERT_TYPE(rhs, PrefixExpr);
+    return op == o.op && *expr == *o.expr;
+}
+
+bool PostfixExpr::equalsImpl(const Node& rhs) const noexcept {
+    const PostfixExpr& o = EQ_ASSERT_TYPE(rhs, PostfixExpr);
     return op == o.op && *expr == *o.expr;
 }
 

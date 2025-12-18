@@ -192,15 +192,36 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-enum class UnaryOp {
-    Pos, Neg, LogNot, BitNot, Ref
+enum class PrefixOp {
+    None, Pos, Neg, BitNot, LogNot, Ref
 };
 
-struct UnaryExpr final : Node {
-    UnaryOp op;
+struct PrefixExpr final : Node {
+    PrefixOp op;
     Node* expr;
 
-    UnaryExpr(Location start, Location end, UnaryOp op, Node* expr) noexcept
+    PrefixExpr(Location start, Location end, PrefixOp op, Node* expr) noexcept
+         : Node(start, end), op(op), expr(expr) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+enum class PostfixOp {
+    None, Optional, ForceUnwrap
+};
+
+struct PostfixExpr final : Node {
+    PostfixOp op;
+    Node* expr;
+
+    PostfixExpr(Location start, Location end, PostfixOp op, Node* expr) noexcept
          : Node(start, end), op(op), expr(expr) { }
 
     [[nodiscard]]
