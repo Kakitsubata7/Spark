@@ -76,6 +76,24 @@ struct BlockStmt final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct IfElseStmt final : Node {
+    struct Branch {
+        Node* condition;
+        BlockStmt* block;
+    };
+
+    std::vector<Branch> ifBranches;
+    /* nullable */ BlockStmt* elseBlock;
+
+    IfElseStmt(Location start, Location end, std::vector<Branch> ifBranches, BlockStmt* elseBlock = nullptr) noexcept
+        : Node(start, end), ifBranches(std::move(ifBranches)), elseBlock(elseBlock) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct WhileStmt final : Node {
     Node* condition;
     BlockStmt* block;

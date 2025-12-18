@@ -7,6 +7,7 @@ struct Node;
 struct Body;
 
 struct BlockStmt;
+struct IfElseStmt;
 struct WhileStmt;
 struct ForStmt;
 struct BreakStmt;
@@ -37,6 +38,7 @@ public:
     virtual void visit(Body& node) { }
 
     virtual void visit(BlockStmt& node) { }
+    virtual void visit(IfElseStmt& node) { }
     virtual void visit(WhileStmt& node) { }
     virtual void visit(ForStmt& node) { }
     virtual void visit(BreakStmt& node) { }
