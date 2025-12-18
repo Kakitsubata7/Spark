@@ -286,9 +286,9 @@ struct BindingModifier {
     bool isNonNullable;
 
     explicit BindingModifier(VarKind kind = VarKind::None,
-                         bool isImmutable = false,
-                         bool isNullable = false,
-                         bool isNonNullable = false) noexcept
+                             bool isImmutable = false,
+                             bool isNullable = false,
+                             bool isNonNullable = false) noexcept
         : kind(kind), isImmutable(isImmutable), isNullable(isNullable), isNonNullable(isNonNullable) { }
 
     bool operator==(const BindingModifier& rhs) const noexcept;
