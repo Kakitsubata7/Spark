@@ -103,4 +103,70 @@ struct IfThenExpr final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct IntLiteral final : Node {
+    BigInt value;
+
+    IntLiteral(Location start, Location end, BigInt value) noexcept
+        : Node(start, end), value(std::move(value)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct RealLiteral final : Node {
+    BigReal value;
+
+    RealLiteral(Location start, Location end, BigReal value) noexcept
+        : Node(start, end), value(std::move(value)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct BoolLiteral final : Node {
+    bool value;
+
+    BoolLiteral(Location start, Location end, bool value) noexcept
+        : Node(start, end), value(value) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct StringLiteral final : Node {
+    std::string value;
+
+    StringLiteral(Location start, Location end, std::string value) noexcept
+        : Node(start, end), value(std::move(value)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct NilLiteral final : Node {
+    NilLiteral(Location start, Location end) noexcept : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct UndefinedExpr final : Node {
+    UndefinedExpr(Location start, Location end) noexcept : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 } // Spark::FrontEnd
