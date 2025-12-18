@@ -32,6 +32,69 @@ using namespace Spark::FrontEnd;
     EXPECT_TRUE(result.hasError());               \
 }
 
+TEST(ExprParserTest, ValidCases) {
+    // !x!
+    // !(x!)
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(ExprParser, "!x!",
+            *ast.make<PrefixExpr>(_, _, PrefixOp::LogNot,
+                ast.make<PostfixExpr>(_, _, PostfixOp::ForceUnwrap,
+                    ast.make<Identifier>(_, _, "x"))));
+    }
+
+    // a + b * c
+    // a + (b * c)
+    {
+        Location _;
+        AST ast;
+        EXPECT_VALID(ExprParser, "a + b * c",
+            *ast.make<BinaryExpr>(_, _, InfixOp::Add,
+                ast.make<Identifier>(_, _, "a"),
+                ast.make<BinaryExpr>(_, _, InfixOp::Mul,
+                    ast.make<Identifier>(_, _, "b"),
+                    ast.make<Identifier>(_, _, "c"))));
+    }
+
+    // !a.b + c * -d.e? / f.g.h!
+    // (!a.b) + ((c * (-(d.e?))) / (f.g.h!))
+    {
+        Location _;
+        AST ast;
+
+        EXPECT_VALID(ExprParser,
+            "!a.b + c * -d.e? / f.g.h!",
+            *ast.make<BinaryExpr>(_, _, InfixOp::Add,
+                // !a.b
+                ast.make<PrefixExpr>(_, _, PrefixOp::LogNot,
+                    ast.make<BinaryExpr>(_, _, InfixOp::MemberAccess,
+                        ast.make<Identifier>(_, _, "a"),
+                        ast.make<Identifier>(_, _, "b"))),
+
+                // c * -d.e? / f.g.h!
+                ast.make<BinaryExpr>(_, _, InfixOp::Div,
+
+                    // c * -d.e?
+                    ast.make<BinaryExpr>(_, _, InfixOp::Mul,
+                        ast.make<Identifier>(_, _, "c"),
+                        ast.make<PrefixExpr>(_, _, PrefixOp::Neg,
+                            ast.make<PostfixExpr>(_, _, PostfixOp::Optional,
+                                ast.make<BinaryExpr>(_, _, InfixOp::MemberAccess,
+                                    ast.make<Identifier>(_, _, "d"),
+                                    ast.make<Identifier>(_, _, "e"))))),
+
+                    // f.g.h!
+                    ast.make<PostfixExpr>(_, _, PostfixOp::ForceUnwrap,
+                        ast.make<BinaryExpr>(_, _, InfixOp::MemberAccess,
+                            ast.make<BinaryExpr>(_, _, InfixOp::MemberAccess,
+                                ast.make<Identifier>(_, _, "f"),
+                                ast.make<Identifier>(_, _, "g")),
+                            ast.make<Identifier>(_, _, "h"))))));
+    }
+
+}
+
 TEST(BindingPatternTest, InvalidCases) {
     EXPECT_ERROR(BindingPatternParser, "(x)");
     EXPECT_ERROR(BindingPatternParser, "1");
@@ -56,7 +119,7 @@ TEST(QualifiedNameParserTest, InvalidCases) {
 
 TEST(LiteralParserTest, ValidCases) {
     EXPECT_VALID(LiteralParser, "37", IntLiteral({}, {}, BigInt(37)));
-    // EXPECT_VALID(LiteralParser, "3.14", RealLiteral({}, {}, BigReal("3.14")));
+    // TODO: EXPECT_VALID(LiteralParser, "3.14", RealLiteral({}, {}, BigReal("3.14")));
     EXPECT_VALID(LiteralParser, "true", BoolLiteral({}, {}, true));
     EXPECT_VALID(LiteralParser, "false", BoolLiteral({}, {}, false));
     EXPECT_VALID(LiteralParser, "'foo'", StringLiteral({}, {}, "foo"));
