@@ -89,6 +89,38 @@ struct WhileStmt final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct ForStmt final : Node {
+    Node* iterator;
+    Node* range;
+    BlockStmt* block;
+
+    ForStmt(Location start, Location end, Node* iterator, Node* range, BlockStmt* block) noexcept
+        : Node(start, end), iterator(iterator), range(range), block(block) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct BreakStmt final : Node {
+    BreakStmt(Location start, Location end) noexcept : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct ContinueStmt final : Node {
+    ContinueStmt(Location start, Location end) noexcept : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Stmt; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct IfThenExpr final : Node {
     Node* condition;
     Node* trueNode;

@@ -8,6 +8,9 @@ struct Body;
 
 struct BlockStmt;
 struct WhileStmt;
+struct ForStmt;
+struct BreakStmt;
+struct ContinueStmt;
 
 struct IfThenExpr;
 
@@ -35,6 +38,9 @@ public:
 
     virtual void visit(BlockStmt& node) { }
     virtual void visit(WhileStmt& node) { }
+    virtual void visit(ForStmt& node) { }
+    virtual void visit(BreakStmt& node) { }
+    virtual void visit(ContinueStmt& node) { }
 
     virtual void visit(IfThenExpr& node) { }
 
