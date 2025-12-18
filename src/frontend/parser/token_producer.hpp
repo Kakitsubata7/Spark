@@ -11,25 +11,30 @@ namespace Spark::FrontEnd {
  * A token producer should drop comment tokens (`TokenType::LineComment` and `TokenType::BlockComment`).
  */
 class TokenProducer {
+protected:
+    Lexer& _lexer;
+
 public:
+    explicit TokenProducer(Lexer& lexer) noexcept : _lexer(lexer) { }
     virtual ~TokenProducer() = default;
 
     virtual const Token& peek() = 0;
     virtual const Token& next() = 0;
+
+    friend class RewindTokenProducer;
 };
 
 /**
  * Represents a concrete `TokenProducer` implementation that uses a `Lexer` reference and only keep one `Token`
  * instance alive at once.
  */
-class LexerTokenProducer final : public TokenProducer {
+class SimpleTokenProducer final : public TokenProducer {
 private:
-    Lexer& _lexer;
     Token _token;
     bool _peeked = false;
 
 public:
-    explicit LexerTokenProducer(Lexer& lexer) noexcept : _lexer(lexer) { }
+    explicit SimpleTokenProducer(Lexer& lexer) noexcept : TokenProducer(lexer) { }
 
     const Token& peek() override;
     const Token& next() override;
@@ -39,15 +44,15 @@ public:
  * Represents a concrete `TokenProducer` implementation that uses a `Lexer` reference but keeps all `Token` instances
  * alive and supports rewinding to first token.
  */
-class RewindLexerTokenProducer final : public TokenProducer {
+class RewindTokenProducer final : public TokenProducer {
 private:
-    Lexer& _lexer;
     std::vector<Token> _tokens;
     bool _peeked = false;
     size_t _index = 0;
 
 public:
-    explicit RewindLexerTokenProducer(Lexer& lexer) noexcept : _lexer(lexer) { }
+    explicit RewindTokenProducer(Lexer& lexer) noexcept : TokenProducer(lexer) { }
+    explicit RewindTokenProducer(const TokenProducer& producer) noexcept : TokenProducer(producer._lexer) { }
 
     const Token& peek() override;
     const Token& next() override;
