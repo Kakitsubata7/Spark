@@ -110,6 +110,11 @@ bool PostfixExpr::equalsImpl(const Node& rhs) const noexcept {
     return op == o.op && *expr == *o.expr;
 }
 
+bool BinaryExpr::equalsImpl(const Node& rhs) const noexcept {
+    const BinaryExpr& o = EQ_ASSERT_TYPE(rhs, BinaryExpr);
+    return op == o.op && *lhs == *o.lhs && *this->rhs == *o.rhs;
+}
+
 bool BindingModifier::operator==(const BindingModifier& rhs) const noexcept {
     return kind == rhs.kind &&
            isImmutable == rhs.isImmutable &&

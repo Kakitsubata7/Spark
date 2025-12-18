@@ -234,6 +234,30 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+enum class InfixOp {
+    None,
+    Add, Sub, Mul, Div,
+    MemberAccess
+};
+
+struct BinaryExpr final : Node {
+    InfixOp op;
+    Node* lhs;
+    Node* rhs;
+
+    BinaryExpr(Location start, Location end, InfixOp op, Node* lhs, Node* rhs) noexcept
+         : Node(start, end), op(op), lhs(lhs), rhs(rhs) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 enum class VarKind {
     None, Let, Const, Ref, Cref
 };
