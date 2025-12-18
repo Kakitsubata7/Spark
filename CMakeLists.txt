@@ -65,10 +65,10 @@ add_library(sparklib
 
         src/core/type.hpp
 
-        src/frontend/ast.cpp
         src/frontend/ast.hpp
         src/frontend/ast/equal_visitor.cpp
         src/frontend/ast/equal_visitor.hpp
+        src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp
 
@@ -85,6 +85,8 @@ add_library(sparklib
 
         src/frontend/parser.cpp
         src/frontend/parser.hpp
+        src/frontend/parser/parser_unit.cpp
+        src/frontend/parser/parser_unit.hpp
         src/frontend/parser/token_producer.cpp
         src/frontend/parser/token_producer.hpp
 
