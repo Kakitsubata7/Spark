@@ -103,7 +103,22 @@ using namespace Spark::FrontEnd;
     RETURN_TOK(TokenType::Real);
 }
 
-[0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
+[0-9][0-9_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[bB][01][01_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[oO][0-7][0-7_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[xX][0-9A-Fa-f][0-9A-Fa-f_]* {
     UPDATE_LOC();
     RETURN_TOK(TokenType::Integer);
 }
