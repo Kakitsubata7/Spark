@@ -103,6 +103,41 @@ struct IfThenExpr final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct BindingPattern final : Node {
+    Node* bind;
+    /* nullable */ Node* typeAnnot;
+
+    BindingPattern(Location start, Location end, Node* bind, Node* typeAnnot = nullptr) noexcept
+        : Node(start, end), bind(bind), typeAnnot(typeAnnot) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct IdentifierExpr final : Node {
+    std::string name;
+
+    IdentifierExpr(Location start, Location end, std::string name) noexcept
+        : Node(start, end), name(std::move(name)) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
+struct DiscardExpr final : Node {
+    DiscardExpr(Location start, Location end) noexcept
+        : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct IntLiteral final : Node {
     BigInt value;
 

@@ -11,6 +11,11 @@ struct WhileStmt;
 
 struct IfThenExpr;
 
+struct BindingPattern;
+
+struct Identifier;
+struct Discard;
+
 struct IntLiteral;
 struct RealLiteral;
 struct BoolLiteral;
@@ -30,6 +35,11 @@ public:
     virtual void visit(WhileStmt& node) { }
 
     virtual void visit(IfThenExpr& node) { }
+
+    virtual void visit(BindingPattern& node) { }
+
+    virtual void visit(Identifier& node) { }
+    virtual void visit(Discard& node) { }
 
     virtual void visit(IntLiteral& node) { }
     virtual void visit(RealLiteral& node) { }
