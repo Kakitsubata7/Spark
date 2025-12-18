@@ -116,10 +116,10 @@ struct BindingPattern final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct IdentifierExpr final : Node {
+struct Identifier final : Node {
     std::string name;
 
-    IdentifierExpr(Location start, Location end, std::string name) noexcept
+    Identifier(Location start, Location end, std::string name) noexcept
         : Node(start, end), name(std::move(name)) { }
 
     [[nodiscard]]
@@ -128,8 +128,8 @@ struct IdentifierExpr final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct DiscardExpr final : Node {
-    DiscardExpr(Location start, Location end) noexcept
+struct Discard final : Node {
+    Discard(Location start, Location end) noexcept
         : Node(start, end) { }
 
     [[nodiscard]]
