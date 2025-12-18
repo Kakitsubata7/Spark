@@ -17,6 +17,20 @@ public:
     virtual ~ParserUnit() = default;
 
     virtual Result<Node*, Error> parse() noexcept = 0;
+
+protected:
+    void advance() const { _producer.next(); }
+
+    [[nodiscard]]
+    const Token& next() const { return _producer.next(); }
+
+    [[nodiscard]]
+    const Token& peek() const { return _producer.peek(); }
+
+    template <typename T, typename... Args>
+    T* make(Args&&... args) {
+        return _ast.make<T>(std::forward<Args>(args)...);
+    }
 };
 
 class BodyParser final : public ParserUnit {
@@ -59,15 +73,70 @@ public:
 };
 
 class PatternParser final : public ParserUnit {
+private:
+    bool _isLhs;
+
 public:
-    PatternParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+    PatternParser(TokenProducer& producer, AST& ast, bool isLhs = false) noexcept
+        : ParserUnit(producer, ast), _isLhs(isLhs) { }
 
     Result<Node*, Error> parse() noexcept override;
 };
 
+class LhsPatternParser final : public ParserUnit {
+public:
+    LhsPatternParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+/**
+ * Represents a parser for patterns like: x: T, _: T, let x: T, const^ x: T.\n
+ * If no modifier is explicitly specified, it defaults to const^ (non-reassignable, immutable).
+ * Patterns produced by this parser are guaranteed to be LHS patterns.\n
+ * Not allowed:\n
+ * (x): T\n
+ * (x: T) <- This is a parenthesis pattern
+ */
 class BindingPatternParser final : public ParserUnit {
 public:
     BindingPatternParser(TokenProducer& producer, AST& ast) noexcept : ParserUnit(producer, ast) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class TuplePatternParser final : public ParserUnit {
+private:
+    bool _isLhs;
+
+public:
+    TuplePatternParser(TokenProducer& producer, AST& ast, bool isLhs = false) noexcept
+        : ParserUnit(producer, ast), _isLhs(isLhs) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+/**
+ * [...], [x, ...], [..., x], [x, ..., y]
+ */
+class CollectionPatternParser final : public ParserUnit {
+private:
+    bool _isLhs;
+
+public:
+    CollectionPatternParser(TokenProducer& producer, AST& ast, bool isLhs = false) noexcept
+        : ParserUnit(producer, ast), _isLhs(isLhs) { }
+
+    Result<Node*, Error> parse() noexcept override;
+};
+
+class RecordPatternParser final : public ParserUnit {
+private:
+    bool _isLhs;
+
+public:
+    RecordPatternParser(TokenProducer& producer, AST& ast, bool isLhs = false) noexcept
+        : ParserUnit(producer, ast), _isLhs(isLhs) { }
 
     Result<Node*, Error> parse() noexcept override;
 };
