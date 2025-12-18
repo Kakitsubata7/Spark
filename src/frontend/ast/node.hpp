@@ -293,6 +293,15 @@ struct NilLiteral final : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
+struct VoidLiteral final : Node {
+    VoidLiteral(Location start, Location end) noexcept : Node(start, end) { }
+
+    [[nodiscard]]
+    NodeKind kind() const override { return NodeKind::Expr | NodeKind::Pattern; }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+};
+
 struct Undefined final : Node {
     Undefined(Location start, Location end) noexcept : Node(start, end) { }
 
