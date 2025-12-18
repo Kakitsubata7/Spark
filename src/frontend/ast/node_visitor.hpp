@@ -4,7 +4,7 @@ namespace Spark::FrontEnd {
 
 struct Node;
 
-struct BodyNode;
+struct Body;
 
 struct BlockStmt;
 struct WhileStmt;
@@ -29,7 +29,7 @@ public:
 
     virtual void visit(Node& node) { }
 
-    virtual void visit(BodyNode& node) { }
+    virtual void visit(Body& node) { }
 
     virtual void visit(BlockStmt& node) { }
     virtual void visit(WhileStmt& node) { }
