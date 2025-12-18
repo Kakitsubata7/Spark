@@ -14,7 +14,7 @@ private:
 
 public:
     BigReal() noexcept : _value(0) { }
-    explicit BigReal(std::string_view sv) : _value(sv) { }
+    explicit BigReal(std::string_view sv) : _value(sv) { } // TODO: cpp_rational constructor doesn't support decimal string
 
     BigReal operator+(const BigReal& rhs) const { return BigReal(_value + rhs._value); }
     BigReal operator-(const BigReal& rhs) const { return BigReal(_value - rhs._value); }
