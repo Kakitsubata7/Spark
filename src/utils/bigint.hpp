@@ -15,6 +15,7 @@ private:
 public:
     BigInt() noexcept : _value(0) { }
     explicit BigInt(std::string_view sv) : _value(sv) { }
+    explicit BigInt(int i) : _value(i) { }
 
     BigInt operator+(const BigInt& rhs) const { return BigInt(_value + rhs._value); }
     BigInt operator-(const BigInt& rhs) const { return BigInt(_value - rhs._value); }
