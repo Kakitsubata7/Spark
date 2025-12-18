@@ -129,6 +129,7 @@ add_executable(sparktest
         tests/frontend/lexer/token_value_test.cpp
 
         tests/frontend/parser/parser_test.cpp
+        tests/frontend/parser/parser_unit_test.cpp
         tests/frontend/parser/token_producer_test.cpp
 
         tests/runtime/drc_test.cpp

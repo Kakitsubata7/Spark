@@ -31,13 +31,13 @@ void test1(TokenProducer& producer) {
 TEST(TokenProducerTest, Test1) {
     {
         Lexer lexer(test1Code);
-        LexerTokenProducer producer(lexer);
+        SimpleTokenProducer producer(lexer);
         test1(producer);
     }
 
     {
         Lexer lexer(test1Code);
-        RewindLexerTokenProducer producer(lexer);
+        RewindTokenProducer producer(lexer);
         test1(producer);
     }
 }
@@ -87,20 +87,20 @@ void test2(TokenProducer& producer) {
 TEST(TokenProducerTest, Test2) {
     {
         Lexer lexer(test2Code);
-        LexerTokenProducer producer(lexer);
+        SimpleTokenProducer producer(lexer);
         test2(producer);
     }
 
     {
         Lexer lexer(test2Code);
-        RewindLexerTokenProducer producer(lexer);
+        RewindTokenProducer producer(lexer);
         test2(producer);
     }
 }
 
 TEST(RewindTokenProducerTest, Test1) {
     Lexer lexer("a b c d e");
-    RewindLexerTokenProducer producer(lexer);
+    RewindTokenProducer producer(lexer);
 
     Token a(TokenType::Identifier, "a", {1, 1}, {1, 1});
     Token b(TokenType::Identifier, "b", {1, 3}, {1, 3});
