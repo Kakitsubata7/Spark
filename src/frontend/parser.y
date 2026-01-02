@@ -55,7 +55,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
 %token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
-%token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace LABracket RABracket
+%token <Spark::FrontEnd::TokenValue> Semicolon Newline LParen RParen LBracket RBracket LBrace RBrace LABracket RABracket
 %token <Spark::FrontEnd::TokenValue> At
 %token <Spark::FrontEnd::TokenValue> Dollar
 %token <Spark::FrontEnd::TokenValue> LineComment BlockComment
@@ -67,94 +67,311 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %start program;
 
 program:
-      terms
-    ;
-
-terms:
-      /* empty */
-    | terms term
-
-term:
-      expr
-    | operation
-    | delimiter
-    | keyword
-    | vardef
-    | Fn
-    | typedef
-    | LBrace
-    | RBrace
-    ;
-
-expr:
-      Identifier
-    | Discard
-    | Dollar Identifier
-    | Dollar Discard
-    | Identifier template
-    | Discard template
-    | Dollar Identifier template
-    | Dollar Discard template
-    | literal
-    | LParen comma_terms RParen
-    | LBracket comma_terms RBracket
-    | Constructor
-    | Destructor
-    | Operator operator
-    | Global
-    | Self
-    | Super
-    ;
-
-comma_terms:
-      terms
-    | comma_terms Comma terms
-    ;
-
-template:
-      LABracket template_terms RABracket
-    ;
-
-template_terms:
-      terms
-    | template_terms Comma terms
+      stmts
     ;
 
 /**
-  * Overloadable Operator
-  */
-operator:
-      Add
-    | Sub
-    | Mul
-    | Div
-    | Mod
-    | Tide
-    | And
-    | VBar
-    | Caret
-    | Bang
-    | LogAnd
-    | LogOr
-    | Eq
-    | Ne
-    | Lt
-    | Le
-    | Gt
-    | Ge
-    | Assign
-    | AddAssign
-    | SubAssign
-    | MulAssign
-    | DivAssign
-    | ModAssign
-    | BitAndAssign
-    | BitOrAssign
-    | BitXorAssign
-    | LParen RParen
-    | LBracket RBracket
+ * Zero or more statements, separated by at least one statement terminator.
+ */
+stmts:
+      /* empty */
+    | some_stmt
+    | some_stmt terminator
     ;
-    
+
+/**
+ * One or more statements, separated by a statement terminator.
+ */
+some_stmt:
+      stmt
+    | some_stmt terminator stmt
+    ;
+
+terminator:
+      Newline
+    | Semicolon
+    ;
+
+return:
+      Return
+    | Return expr
+    ;
+
+throw:
+      Throw expr
+    ;
+
+stmt:
+      block
+    | assign
+    | typedef
+    | ifelse
+    | match_stmt
+    | While expr block
+    | Do block While expr
+    | For pattern In expr block
+    | Break
+    | Continue
+    | return
+    | throw
+    | trycatch_stmt
+    ;
+
+block:
+      LBrace stmts RBrace
+    ;
+
+assign:
+      pattern Assign expr
+/* TODO:    | lhs AddAssign expr
+    | lhs SubAssign expr
+    | lhs MulAssign expr
+    | lhs DivAssign expr
+    | lhs ModAssign expr
+    | lhs BitAndAssign expr
+    | lhs BitOrAssign expr
+    | lhs BitXorAssign expr
+    | lhs CoalesceAssign expr*/
+    ;
+
+typedef:
+      typemod Identifier block
+    | typemod Identifier Colon postfixes block
+    ;
+
+typemod:
+      Struct
+    | Class
+    | Enum
+    | Enum Struct
+    | Enum Class
+    | Alias
+    | Extension
+    | typemod Caret
+    ;
+
+ifelse:
+      If expr block elseifs
+    | If expr block elseifs Else block
+    ;
+
+elseifs:
+      /* empty */
+    | elseifs Else If expr block
+    ;
+
+match_stmt:
+      Match expr LBrace case_stmts RBrace
+    | Match pattern Assign expr LBrace case_stmts RBrace
+    ;
+
+/**
+ * One or more case statements.
+ */
+case_stmts:
+      case_stmt
+    | case_stmts case_stmt
+    ;
+
+case_stmt:
+      Case pattern block
+    | Case pattern If expr block
+    ;
+
+trycatch_stmt:
+      Try block catch_stmts
+    ;
+
+/**
+ * One or more catch statements.
+ */
+catch_stmts:
+      catch_stmt
+    | catch_stmts catch_stmt
+    ;
+
+catch_stmt:
+      Catch pattern block
+    | Catch pattern If expr block
+    ;
+
+
+
+expr:
+      If expr Then expr Else expr
+    | match_expr
+    | Try expr Else expr
+    | trycatch_expr
+    | throw
+    | assign_expr
+    ;
+
+match_expr:
+      Match expr LBrace case_exprs RBrace
+    | Match pattern Assign expr LBrace case_exprs RBrace
+    ;
+
+/**
+ * One or more case expressions.
+ */
+case_exprs:
+      case_expr
+    | case_exprs case_expr
+    ;
+
+case_expr:
+      Case pattern FatArrow expr
+    | Case pattern If expr FatArrow expr
+    ;
+
+trycatch_expr:
+      Try expr LBrace catch_exprs RBrace
+    ;
+
+/**
+ * One or more catch expressions.
+ */
+catch_exprs:
+      catch_expr
+    | catch_exprs catch_expr
+    ;
+
+catch_expr:
+      Catch pattern FatArrow expr
+    | Catch pattern If expr FatArrow expr
+    ;
+
+assign_expr:
+      // TODO: lhs Assign assign_expr
+      binary
+    ;
+
+binary:
+      binary Add prefix
+    | binary Sub prefix
+    | prefix
+    ;
+
+prefix:
+      Add prefix
+    | Sub prefix
+    | Tide prefix
+    | Bang prefix
+    | And prefix
+    | postfix
+    ;
+
+postfix:
+      primary postfix_ops
+    ;
+
+/**
+ * One or more postfix expressions, separated by ','.
+ */
+postfixes:
+      postfix
+    | postfixes Comma postfix
+    ;
+
+postfix_ops:
+      /* empty */
+    | postfix_ops postfix_op
+    ;
+
+postfix_op:
+      Caret
+    | Question
+    | Bang
+    | Dot Identifier
+    | Dot Discard
+    | LParen args RParen
+    | LBracket args RBracket
+    ;
+
+args:
+      /* empty */
+    | expr
+    | args Comma expr
+    ;
+
+primary:
+      literal
+    | Identifier
+    | Discard
+    | Dollar Identifier
+    | Dollar Discard
+    | LParen expr RParen
+    | Typeof LParen expr RParen
+    | seq
+    ;
+
+seq:
+      LBrace seq_exprs RBrace
+    ;
+
+/**
+ * One or more expr, separated by ';'.
+ */
+seq_exprs:
+      expr
+    | seq_exprs Semicolon expr
+    ;
+
+
+
+pattern:
+      postfix
+    | binding
+    | LParen pattern Comma patterns RParen
+    | collection_pattern
+    ;
+
+/**
+ * One or more patterns, separated by commas.
+ */
+patterns:
+      pattern
+    | patterns Comma pattern
+    ;
+
+binding:
+      varmod Identifier
+    | varmod Discard
+    | varmod Identifier Colon expr
+    | varmod Discard Colon expr
+    ;
+
+varmod:
+      Let
+    | Const
+    | Ref
+    | Cref
+    | varmod Caret
+    | varmod Question
+    | varmod Coalesce
+    | varmod Bang
+    ;
+
+/**
+ * [], [...], [patterns], [..., patterns], [patterns, ...], [patterns, ..., patterns]
+ */
+collection_pattern:
+      // []
+      LBracket RBracket
+      // [...]
+    | LBracket Range RBracket
+      // [patterns]
+    | LBracket patterns RBracket
+      // [..., patterns]
+    | LBracket Range Comma patterns RBracket
+      // [patterns, ...]
+    | LBracket patterns Comma Range RBracket
+      // [patterns, ..., patterns]
+    | LBracket patterns Comma Range Comma patterns RBracket
+    ;
+
+
+
 literal:
       Integer
     | Real
@@ -162,97 +379,54 @@ literal:
     | False
     | String
     | Nil
-    | Undefined
+    | LParen RParen
+    ;
+
+
+
+lhs:
+      lhs_expr
+    | binding
+    | LParen lhs Comma lhses RParen
+    | lhs_collection
+    ;
+
+lhs_expr:
+      lhs_primary postfix_ops
+    ;
+
+lhs_primary:
+      Identifier
+    | Discard
+    | Dollar Identifier
+    | Dollar Discard
+    | LParen lhs RParen
     ;
 
 /**
-  * Operations
-  */
-operation:
-      Add
-    | Sub
-    | Mul
-    | Div
-    | Mod
-    | Tide
-    | And
-    | VBar
-    | Caret
-    | Bang
-    | LogAnd
-    | LogOr
-    | Eq
-    | Ne
-    | Lt
-    | Le
-    | Gt
-    | Ge
-    | StrictEq
-    | StrictNe
-    | Shl
-    | Shr
-    | Range
-    | RangeExcl
-    | Question
-    | Coalesce
-    | Pipe
-    | Is
-    | Dot
-    | Colon
-    | Arrow
-    | Assign
-    | AddAssign
-    | SubAssign
-    | MulAssign
-    | DivAssign
-    | ModAssign
-    | BitAndAssign
-    | BitOrAssign
-    | BitXorAssign
-    | CoalesceAssign
+ * One or more left-hand-side patterns, separated by commas.
+ */
+lhses:
+      lhs
+    | lhses Comma lhs
     ;
 
-delimiter:
-      FatArrow
-    | Semicolon
-    ;
-
-keyword:
-      Break
-    | Case
-    | Catch
-    | Continue
-    | Do
-    | Else
-    | Export
-    | For
-    | From
-    | If
-    | Import
-    | In
-    | Match
-    | Module
-    | Return
-    | Then
-    | Throw
-    | Try
-    | Typeof
-    | While
-    ;
-
-vardef:
-      Let
-    | Const
-    | Ref
-    | Cref
-    ;
-
-typedef:
-      Struct
-    | Class
-    | Enum
-    | Alias
-    | Extension
+/**
+ * [], [...], [lhses], [..., lhses], [lhses, ...], [lhses, ..., lhses]
+ */
+lhs_collection:
+      // []
+      LBracket RBracket
+      // [...]
+    | LBracket Range RBracket
+      // [lhses]
+    | LBracket lhses RBracket
+      // [..., lhses]
+    | LBracket Range Comma lhses RBracket
+      // [lhses, ...]
+    | LBracket lhses Comma Range RBracket
+      // [lhses, ..., lhses]
+    | LBracket lhses Comma Range Comma lhses RBracket
     ;
 %%
 
