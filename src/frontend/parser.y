@@ -18,7 +18,7 @@
 
 #include "frontend/lexer/token_value.hpp"
 
-typedef void* yyscan_t;
+typedef_stmt void* yyscan_t;
 }
 
 %code {
@@ -63,6 +63,9 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
+%right Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign
+%right CoalesceAssign
+
 %%
 %start program;
 
@@ -70,21 +73,15 @@ program:
       stmts
     ;
 
-/**
- * Zero or more statements, separated by at least one statement terminator.
- */
 stmts:
       /* empty */
-    | some_stmt
-    | some_stmt terminator
+    | some_stmts
+    | some_stmts terminators
     ;
 
-/**
- * One or more statements, separated by a statement terminator.
- */
-some_stmt:
+some_stmts:
       stmt
-    | some_stmt terminator stmt
+    | some_stmts terminators stmt
     ;
 
 terminator:
@@ -92,49 +89,33 @@ terminator:
     | Semicolon
     ;
 
-return:
-      Return
-    | Return expr
-    ;
-
-throw:
-      Throw expr
+terminators:
+      terminator
+    | terminators terminator
     ;
 
 stmt:
-      block
-    | assign
-    | typedef
-    | ifelse
-    | match_stmt
+      if_stmt
+    | typedef_stmt
     | While expr block
-    | Do block While expr
-    | For pattern In expr block
     | Break
     | Continue
-    | return
-    | throw
-    | trycatch_stmt
+    | Return
+    | Return expr
+    | expr
     ;
 
-block:
-      LBrace stmts RBrace
+if_stmt:
+      If expr block elseif_stmts
+    | If expr block elseif_stmts Else block
     ;
 
-assign:
-      pattern Assign expr
-/* TODO:    | lhs AddAssign expr
-    | lhs SubAssign expr
-    | lhs MulAssign expr
-    | lhs DivAssign expr
-    | lhs ModAssign expr
-    | lhs BitAndAssign expr
-    | lhs BitOrAssign expr
-    | lhs BitXorAssign expr
-    | lhs CoalesceAssign expr*/
+elseif_stmts:
+      /* empty */
+    | elseif_stmts Else If expr block
     ;
 
-typedef:
+typedef_stmt:
       typemod Identifier block
     | typemod Identifier Colon postfixes block
     ;
@@ -150,100 +131,52 @@ typemod:
     | typemod Caret
     ;
 
-ifelse:
-      If expr block elseifs
-    | If expr block elseifs Else block
-    ;
-
-elseifs:
-      /* empty */
-    | elseifs Else If expr block
-    ;
-
-match_stmt:
-      Match expr LBrace case_stmts RBrace
-    | Match pattern Assign expr LBrace case_stmts RBrace
-    ;
-
-/**
- * One or more case statements.
- */
-case_stmts:
-      case_stmt
-    | case_stmts case_stmt
-    ;
-
-case_stmt:
-      Case pattern block
-    | Case pattern If expr block
-    ;
-
-trycatch_stmt:
-      Try block catch_stmts
-    ;
-
-/**
- * One or more catch statements.
- */
-catch_stmts:
-      catch_stmt
-    | catch_stmts catch_stmt
-    ;
-
-catch_stmt:
-      Catch pattern block
-    | Catch pattern If expr block
-    ;
-
-
-
 expr:
       If expr Then expr Else expr
-    | match_expr
-    | Try expr Else expr
-    | trycatch_expr
-    | throw
-    | assign_expr
+    | match
+    | trycatch
+    | Throw expr
+    | block
+    | binary
     ;
 
-match_expr:
-      Match expr LBrace case_exprs RBrace
-    | Match pattern Assign expr LBrace case_exprs RBrace
+block:
+      LBrace stmts RBrace
+    ;
+
+match:
+      Match expr LBrace cases RBrace
+    | Match pattern Assign expr LBrace cases RBrace
     ;
 
 /**
  * One or more case expressions.
  */
-case_exprs:
-      case_expr
-    | case_exprs case_expr
+cases:
+      case
+    | cases case
     ;
 
-case_expr:
+case:
       Case pattern FatArrow expr
     | Case pattern If expr FatArrow expr
     ;
 
-trycatch_expr:
-      Try expr LBrace catch_exprs RBrace
+trycatch:
+      Try expr LBrace catches RBrace
     ;
 
 /**
  * One or more catch expressions.
  */
-catch_exprs:
-      catch_expr
-    | catch_exprs catch_expr
+catches:
+      catch
+    | catches catch
     ;
 
-catch_expr:
+catch:
       Catch pattern FatArrow expr
     | Catch pattern If expr FatArrow expr
-    ;
-
-assign_expr:
-      // TODO: lhs Assign assign_expr
-      binary
     ;
 
 binary:
@@ -302,25 +235,12 @@ primary:
     | Dollar Discard
     | LParen expr RParen
     | Typeof LParen expr RParen
-    | seq
-    ;
-
-seq:
-      LBrace seq_exprs RBrace
-    ;
-
-/**
- * One or more expr, separated by ';'.
- */
-seq_exprs:
-      expr
-    | seq_exprs Semicolon expr
     ;
 
 
 
 pattern:
-      postfix
+      expr
     | binding
     | LParen pattern Comma patterns RParen
     | collection_pattern
@@ -372,6 +292,15 @@ collection_pattern:
 
 
 
+lhs:
+      postfix
+    | binding
+    | LParen pattern Comma patterns RParen
+    | collection_pattern
+    ;
+
+
+
 literal:
       Integer
     | Real
@@ -380,53 +309,6 @@ literal:
     | String
     | Nil
     | LParen RParen
-    ;
-
-
-
-lhs:
-      lhs_expr
-    | binding
-    | LParen lhs Comma lhses RParen
-    | lhs_collection
-    ;
-
-lhs_expr:
-      lhs_primary postfix_ops
-    ;
-
-lhs_primary:
-      Identifier
-    | Discard
-    | Dollar Identifier
-    | Dollar Discard
-    | LParen lhs RParen
-    ;
-
-/**
- * One or more left-hand-side patterns, separated by commas.
- */
-lhses:
-      lhs
-    | lhses Comma lhs
-    ;
-
-/**
- * [], [...], [lhses], [..., lhses], [lhses, ...], [lhses, ..., lhses]
- */
-lhs_collection:
-      // []
-      LBracket RBracket
-      // [...]
-    | LBracket Range RBracket
-      // [lhses]
-    | LBracket lhses RBracket
-      // [..., lhses]
-    | LBracket Range Comma lhses RBracket
-      // [lhses, ...]
-    | LBracket lhses Comma Range RBracket
-      // [lhses, ..., lhses]
-    | LBracket lhses Comma Range Comma lhses RBracket
     ;
 %%
 
