@@ -50,7 +50,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token <Spark::FrontEnd::TokenValue> StrictEq StrictNe
 %token <Spark::FrontEnd::TokenValue> Shl Shr
 %token <Spark::FrontEnd::TokenValue> Range RangeExcl
-%token <Spark::FrontEnd::TokenValue> Question Coalesce
+%token <Spark::FrontEnd::TokenValue> Backtick Question Coalesce
 %token <Spark::FrontEnd::TokenValue> Pipe
 %token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
@@ -98,6 +98,7 @@ stmt:
       if_stmt
     | typedef_stmt
     | While expr block
+    | For pattern In expr block
     | Break
     | Continue
     | Return
@@ -128,7 +129,7 @@ typemod:
     | Enum Class
     | Alias
     | Extension
-    | typemod Caret
+    | typemod Backtick
     ;
 
 expr:
@@ -146,7 +147,6 @@ block:
 
 match:
       Match expr LBrace cases RBrace
-    | Match pattern Assign expr LBrace cases RBrace
     ;
 
 /**
@@ -159,6 +159,7 @@ cases:
 
 case:
       Case pattern FatArrow expr
+    | Case If expr FatArrow expr
     | Case pattern If expr FatArrow expr
     ;
 
@@ -176,12 +177,86 @@ catches:
 
 catch:
       Catch pattern FatArrow expr
+    | Catch If expr FatArrow expr
     | Catch pattern If expr FatArrow expr
     ;
 
 binary:
-      binary Add prefix
-    | binary Sub prefix
+      binary_assign
+    ;
+
+binary_assign:
+      pattern Assign binary_assign
+    | binary_is
+    ;
+
+binary_is:
+      binary_type Is binary_type
+    | binary_type
+    ;
+
+binary_type:
+      binary_logor Arrow binary_type
+    | binary_logor
+    ;
+
+binary_logor:
+      binary_logor LogOr binary_logand
+    | binary_logand
+    ;
+
+binary_logand:
+      binary_logand LogAnd binary_bitor
+    | binary_bitor
+    ;
+
+binary_bitor:
+      binary_bitor VBar binary_bitxor
+    | binary_bitxor
+    ;
+
+binary_bitxor:
+      binary_bitxor Caret binary_bitand
+    | binary_bitand
+    ;
+
+binary_bitand:
+      binary_bitand And binary_eq
+    | binary_eq
+    ;
+
+binary_eq:
+      binary_compare Eq binary_compare
+    | binary_compare Ne binary_compare
+    | binary_compare StrictEq binary_compare
+    | binary_compare StrictNe binary_compare
+    | binary_compare
+    ;
+
+binary_compare:
+      binary_bitshift Lt binary_bitshift
+    | binary_bitshift Le binary_bitshift
+    | binary_bitshift Gt binary_bitshift
+    | binary_bitshift Ge binary_bitshift
+    | binary_bitshift
+    ;
+
+binary_bitshift:
+      binary_bitshift Shl binary_additive
+    | binary_bitshift Shr binary_additive
+    | binary_additive
+    ;
+
+binary_additive:
+      binary_additive Add binary_multiplicative
+    | binary_additive Sub binary_multiplicative
+    | binary_multiplicative
+    ;
+
+binary_multiplicative:
+      binary_multiplicative Mul prefix
+    | binary_multiplicative Div prefix
+    | binary_multiplicative Mod prefix
     | prefix
     ;
 
@@ -212,7 +287,7 @@ postfix_ops:
     ;
 
 postfix_op:
-      Caret
+      Backtick
     | Question
     | Bang
     | Dot Identifier
@@ -229,19 +304,25 @@ args:
 
 primary:
       literal
-    | Identifier
-    | Discard
-    | Dollar Identifier
-    | Dollar Discard
+    | identifier
     | LParen expr RParen
     | Typeof LParen expr RParen
+    ;
+
+identifier:
+      dollars Identifier
+    | dollars Discard
+    ;
+
+dollars:
+      /* empty */
+    | dollars Dollar
     ;
 
 
 
 pattern:
-      expr
-    | binding
+      binding
     | LParen pattern Comma patterns RParen
     | collection_pattern
     ;
@@ -266,7 +347,7 @@ varmod:
     | Const
     | Ref
     | Cref
-    | varmod Caret
+    | varmod Backtick
     | varmod Question
     | varmod Coalesce
     | varmod Bang
