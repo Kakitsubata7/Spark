@@ -145,6 +145,7 @@ fndef_stmt:
 
 fn_name:
       identifier
+    | Constructor
     ;
 
 fn:
