@@ -97,8 +97,11 @@ stmt:
       binding
     | assign_stmt
     | fndef_stmt
+    | annotations fndef_stmt
     | typedef_stmt
+    | annotations typedef_stmt
     | enumcase_stmt
+    | annotations enumcase_stmt
     | if_stmt
     | While expr block
     | For expr In expr block
@@ -106,7 +109,8 @@ stmt:
     | Continue
     | Return
     | Return expr
-    | Module postfix block
+    | module_stmt
+    | annotations module_stmt
     | Export stmt
     | import_stmt
     | Undefine postfix
@@ -159,6 +163,11 @@ param_list:
     ;
 
 param:
+      param_element
+    | annotations param_element
+    ;
+
+param_element:
       identifier
     | identifier Colon type
     | varmod identifier
@@ -226,6 +235,10 @@ named_adt_member:
       identifier Colon type
     ;
 
+module_stmt:
+      Module postfix block
+    ;
+
 if_stmt:
       If expr block elseif_stmts
     | If expr block elseif_stmts Else block
@@ -264,6 +277,7 @@ import:
 
 expr:
       lambda
+    | annotations lambda
     | If expr Then expr Else expr
     | match
     | trycatch
@@ -530,6 +544,11 @@ patterns:
     ;
 
 binding:
+      bind
+    | annotations bind
+    ;
+
+bind:
       varmod identifier
     | varmod identifier Colon type
     ;
@@ -548,12 +567,11 @@ varmod:
 
 
 annotation:
-      At identifier
-    | At identifier LParen call_args RParen
+      At postfix
     ;
 
 annotations:
-      /* empty */
+      annotation
     | annotations annotation
     ;
 %%
