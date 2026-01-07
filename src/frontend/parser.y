@@ -140,8 +140,7 @@ fndef_stmt:
     ;
 
 fn_name:
-      Identifier
-    | Discard
+      identifier
     ;
 
 fn:
@@ -160,15 +159,10 @@ param_list:
     ;
 
 param:
-      param_name
-    | param_name Colon type
-    | varmod param_name
-    | varmod param_name Colon type
-    ;
-
-param_name:
-      Identifier
-    | Discard
+      identifier
+    | identifier Colon type
+    | varmod identifier
+    | varmod identifier Colon type
     ;
 
 captures:
@@ -444,8 +438,7 @@ postfix_op:
       Backtick
     | Question
     | Bang
-    | Dot Identifier
-    | Dot Discard
+    | Dot identifier
     | LParen call_args RParen
     | LBracket subscript_args RBracket
     ;
