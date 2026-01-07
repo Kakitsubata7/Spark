@@ -537,10 +537,8 @@ patterns:
     ;
 
 binding:
-      varmod Identifier
-    | varmod Discard
-    | varmod Identifier Colon type
-    | varmod Discard Colon type
+      varmod identifier
+    | varmod identifier Colon type
     ;
 
 varmod:
