@@ -146,6 +146,8 @@ fndef_stmt:
 fn_name:
       identifier
     | Constructor
+    | Destructor
+    | Operator overloadables
     ;
 
 fn:
@@ -489,6 +491,9 @@ primary:
     | identifier
     | Self
     | Global
+    | Constructor
+    | Destructor
+    | Operator overloadables
     | LParen expr RParen
     | tuple
     | collection
@@ -568,12 +573,55 @@ varmod:
 
 
 annotation:
-      At postfix
+      At annot_name
+    | At annot_name LParen call_args RParen
     ;
 
 annotations:
       annotation
     | annotations annotation
+    ;
+
+annot_name:
+      identifier
+    | annot_name Dot identifier
+    ;
+
+
+
+overloadables:
+      Add
+    | Sub
+    | Mul
+    | Div
+    | Mod
+    | Tide
+    | And
+    | VBar
+    | Caret
+    | Shl
+    | Shr
+    | Bang
+    | LogAnd
+    | LogOr
+    | Eq
+    | Ne
+    | Lt
+    | Le
+    | Gt
+    | Ge
+    | Range
+    | RangeExcl
+    | LParen RParen
+    | Assign
+    | AddAssign
+    | SubAssign
+    | MulAssign
+    | DivAssign
+    | ModAssign
+    | BitAndAssign
+    | BitOrAssign
+    | BitXorAssign
     ;
 %%
 
