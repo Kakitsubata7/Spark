@@ -42,12 +42,11 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 
 %token <Spark::FrontEnd::TokenValue> Identifier Discard
 %token <Spark::FrontEnd::TokenValue> Integer Real String
-%token <Spark::FrontEnd::TokenValue> Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefined While Yield
+%token <Spark::FrontEnd::TokenValue> Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefine While
 %token <Spark::FrontEnd::TokenValue> Add Sub Mul Div Mod
 %token <Spark::FrontEnd::TokenValue> Tide And VBar Caret
 %token <Spark::FrontEnd::TokenValue> Bang LogAnd LogOr
-%token <Spark::FrontEnd::TokenValue> Eq Ne Lt Le Gt Ge
-%token <Spark::FrontEnd::TokenValue> StrictEq StrictNe
+%token <Spark::FrontEnd::TokenValue> Eq Ne StrictEq StrictNe Lt Le Gt Ge
 %token <Spark::FrontEnd::TokenValue> Shl Shr
 %token <Spark::FrontEnd::TokenValue> Range RangeExcl
 %token <Spark::FrontEnd::TokenValue> Backtick Question Coalesce
@@ -55,7 +54,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
 %token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
-%token <Spark::FrontEnd::TokenValue> Semicolon Newline LParen RParen LBracket RBracket LBrace RBrace LABracket RABracket
+%token <Spark::FrontEnd::TokenValue> Semicolon Newline LParen RParen LBracket RBracket LBrace RBrace
 %token <Spark::FrontEnd::TokenValue> At
 %token <Spark::FrontEnd::TokenValue> Dollar
 %token <Spark::FrontEnd::TokenValue> LineComment BlockComment
@@ -75,13 +74,13 @@ program:
 
 stmts:
       /* empty */
-    | some_stmts
-    | some_stmts terminators
+    | stmt_list
+    | stmt_list terminators
     ;
 
-some_stmts:
+stmt_list:
       stmt
-    | some_stmts terminators stmt
+    | stmt_list terminators stmt
     ;
 
 terminator:
@@ -95,15 +94,142 @@ terminators:
     ;
 
 stmt:
-      if_stmt
+      binding
+    | assign_stmt
+    | fndef_stmt
     | typedef_stmt
+    | enumcase_stmt
+    | if_stmt
     | While expr block
-    | For pattern In expr block
+    | For expr In expr block
     | Break
     | Continue
     | Return
     | Return expr
+    | Module postfix block
+    | Export stmt
+    | import_stmt
+    | Undefine postfix
     | expr
+    ;
+
+assign_stmt:
+      pattern Assign expr
+    | pattern Assign assign_stmt
+    | pattern AddAssign expr
+    | pattern AddAssign assign_stmt
+    | pattern SubAssign expr
+    | pattern SubAssign assign_stmt
+    | pattern MulAssign expr
+    | pattern MulAssign assign_stmt
+    | pattern DivAssign expr
+    | pattern DivAssign assign_stmt
+    | pattern ModAssign expr
+    | pattern ModAssign assign_stmt
+    | pattern BitAndAssign expr
+    | pattern BitAndAssign assign_stmt
+    | pattern BitOrAssign expr
+    | pattern BitOrAssign assign_stmt
+    | pattern CoalesceAssign expr
+    | pattern CoalesceAssign assign_stmt
+    ;
+
+fndef_stmt:
+      fn fn_name params captures fn_ret fn_throw block
+    | fn fn_name params captures fn_ret fn_throw FatArrow expr
+    ;
+
+fn_name:
+      Identifier
+    | Discard
+    ;
+
+fn:
+      Fn
+    | fn Backtick
+    ;
+
+params:
+      LParen RParen
+    | LParen param_list RParen
+    ;
+
+param_list:
+      param
+    | param_list Comma param
+    ;
+
+param:
+      param_name
+    | param_name Colon type
+    | varmod param_name
+    | varmod param_name Colon type
+    ;
+
+param_name:
+      Identifier
+    | Discard
+    ;
+
+captures:
+      LBracket RBracket
+    | LBracket capture_list RBracket
+    ;
+
+capture_list:
+      capture
+    | capture_list Comma capture
+    ;
+
+capture:
+      postfix
+    | varmod postfix
+    | Range
+    | varmod Range
+    ;
+
+fn_ret:
+      /* empty */
+    | Arrow type
+    | Arrow Ref type
+    | Arrow Cref type
+    ;
+
+fn_throw:
+      /* empty */
+    | Throw
+    | Throw type
+    ;
+
+typedef_stmt:
+      typemod Identifier block
+    | typemod Identifier Colon exprs block
+    ;
+
+enumcase_stmt:
+      Case identifier
+    | Case identifier Assign expr
+    | Case adt_constructor
+    ;
+
+adt_constructor:
+      identifier LParen RParen
+    | identifier LParen positional_adt_members RParen
+    | identifier LParen named_adt_members RParen
+    ;
+
+positional_adt_members:
+      type
+    | positional_adt_members Comma type
+    ;
+
+named_adt_members:
+      named_adt_member
+    | named_adt_members Comma named_adt_member
+    ;
+
+named_adt_member:
+      identifier Colon type
     ;
 
 if_stmt:
@@ -114,11 +240,6 @@ if_stmt:
 elseif_stmts:
       /* empty */
     | elseif_stmts Else If expr block
-    ;
-
-typedef_stmt:
-      typemod Identifier block
-    | typemod Identifier Colon postfixes block
     ;
 
 typemod:
@@ -132,8 +253,24 @@ typemod:
     | typemod Backtick
     ;
 
+import_stmt:
+      From postfix Import imports
+    | From postfix Import Mul
+    ;
+
+imports:
+      import
+    | imports Comma import
+    ;
+
+import:
+      postfix
+    | postfix As Identifier
+    ;
+
 expr:
-      If expr Then expr Else expr
+      lambda
+    | If expr Then expr Else expr
     | match
     | trycatch
     | Throw expr
@@ -141,8 +278,17 @@ expr:
     | binary
     ;
 
-block:
-      LBrace stmts RBrace
+exprs:
+      expr
+    | exprs Comma expr
+    ;
+
+type:
+      binary
+    ;
+
+lambda:
+      fn params captures fn_ret fn_throw FatArrow expr
     ;
 
 match:
@@ -181,22 +327,38 @@ catch:
     | Catch pattern If expr FatArrow expr
     ;
 
-binary:
-      binary_assign
+block:
+      LBrace stmts RBrace
     ;
 
-binary_assign:
-      pattern Assign binary_assign
-    | binary_is
+binary:
+      binary_is
     ;
 
 binary_is:
-      binary_type Is binary_type
+      binary_pipe Is binding
+    | binary_pipe Is binary_pipe
+    | binary_pipe
+    ;
+
+binary_pipe:
+      binary_type Pipe binary_pipe
     | binary_type
     ;
 
 binary_type:
-      binary_logor Arrow binary_type
+      binary_range Arrow binary_type
+    | binary_range
+    ;
+
+binary_range:
+      binary_coalesce Range binary_coalesce
+    | binary_coalesce RangeExcl binary_coalesce
+    | binary_coalesce
+    ;
+
+binary_coalesce:
+      binary_logor Coalesce binary_coalesce
     | binary_logor
     ;
 
@@ -265,20 +427,12 @@ prefix:
     | Sub prefix
     | Tide prefix
     | Bang prefix
-    | And prefix
+    | Dollar prefix
     | postfix
     ;
 
 postfix:
       primary postfix_ops
-    ;
-
-/**
- * One or more postfix expressions, separated by ','.
- */
-postfixes:
-      postfix
-    | postfixes Comma postfix
     ;
 
 postfix_ops:
@@ -292,71 +446,70 @@ postfix_op:
     | Bang
     | Dot Identifier
     | Dot Discard
-    | LParen args RParen
-    | LBracket args RBracket
+    | LParen call_args RParen
+    | LBracket subscript_args RBracket
     ;
 
-args:
+call_args:
       /* empty */
-    | expr
-    | args Comma expr
+    | positional_args
+    | positional_args Comma named_args
+    | named_args
+    ;
+
+positional_args:
+      pattern
+    | positional_args Comma pattern
+    ;
+
+named_args:
+      named_arg
+    | named_args Comma named_arg
+    ;
+
+named_arg:
+      identifier Colon pattern
+    ;
+
+subscript_args:
+      expr
+    | expr Comma expr
     ;
 
 primary:
       literal
     | identifier
+    | Self
+    | Global
     | LParen expr RParen
+    | tuple
+    | collection
     | Typeof LParen expr RParen
     ;
 
+literal:
+      Integer
+    | Real
+    | True
+    | False
+    | String
+    | Nil
+    | LParen RParen
+    ;
+
 identifier:
-      dollars Identifier
-    | dollars Discard
+      Identifier
+    | Discard
     ;
 
-dollars:
-      /* empty */
-    | dollars Dollar
-    ;
-
-
-
-pattern:
-      binding
-    | LParen pattern Comma patterns RParen
-    | collection_pattern
-    ;
-
-/**
- * One or more patterns, separated by commas.
- */
-patterns:
-      pattern
-    | patterns Comma pattern
-    ;
-
-binding:
-      varmod Identifier
-    | varmod Discard
-    | varmod Identifier Colon expr
-    | varmod Discard Colon expr
-    ;
-
-varmod:
-      Let
-    | Const
-    | Ref
-    | Cref
-    | varmod Backtick
-    | varmod Question
-    | varmod Coalesce
-    | varmod Bang
+tuple:
+      LParen pattern Comma patterns RParen
     ;
 
 /**
  * [], [...], [patterns], [..., patterns], [patterns, ...], [patterns, ..., patterns]
  */
-collection_pattern:
+collection:
       // []
       LBracket RBracket
       // [...]
@@ -373,23 +526,44 @@ collection_pattern:
 
 
 
-lhs:
-      postfix
-    | binding
-    | LParen pattern Comma patterns RParen
-    | collection_pattern
+pattern:
+      binding
+    | expr
+    ;
+
+patterns:
+      pattern
+    | patterns Comma pattern
+    ;
+
+binding:
+      varmod Identifier
+    | varmod Discard
+    | varmod Identifier Colon type
+    | varmod Discard Colon type
+    ;
+
+varmod:
+      Let
+    | Const
+    | Ref
+    | Cref
+    | varmod Backtick
+    | varmod Question
+    | varmod Coalesce
+    | varmod Bang
     ;
 
 
 
-literal:
-      Integer
-    | Real
-    | True
-    | False
-    | String
-    | Nil
-    | LParen RParen
+annotation:
+      At identifier
+    | At identifier LParen call_args RParen
+    ;
+
+annotations:
+      /* empty */
+    | annotations annotation
     ;
 %%
 
