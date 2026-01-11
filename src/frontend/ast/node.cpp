@@ -7,7 +7,7 @@
     if (typeid(v) != typeid(Type)) { \
         return false;                \
     }                                \
-    static_cast<const Type&>(v);     \
+    static_cast<const Type&>(v); /* NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) */ \
 })
 
 namespace Spark::FrontEnd {
@@ -26,7 +26,7 @@ bool Node::operator==(const Node& rhs) const noexcept {
     if (this == &rhs) {
         return true;
     }
-    if (kind() != rhs.kind() /* TODO: || start != rhs.start || end != rhs.end */) {
+    if (false /* TODO: || start != rhs.start || end != rhs.end */) {
         return false;
     }
     return equalsImpl(rhs);
@@ -36,73 +36,150 @@ bool Node::operator!=(const Node& rhs) const noexcept {
     return !(*this == rhs);
 }
 
-bool Body::equalsImpl(const Node& rhs) const noexcept {
-    const Body& o = EQ_ASSERT_TYPE(rhs, Body);
-    if (nodes.size() != o.nodes.size()) {
+bool Assign::equalsImpl(const Node& rhs) const noexcept {
+    const Assign& o = EQ_ASSERT_TYPE(rhs, Assign);
+    return *lhs == *o.lhs && *this->rhs == *o.rhs && op == o.op;
+}
+
+bool TypeDef::equalsImpl(const Node& rhs) const noexcept {
+    const TypeDef& o = EQ_ASSERT_TYPE(rhs, TypeDef);
+    if (kind != o.kind || isImmutable != o.isImmutable || *decl != *o.decl || *body != *o.body) {
         return false;
     }
-    for (size_t i = 0; i < nodes.size(); ++i) {
-        if (*nodes[i] != *o.nodes[i]) {
+    if (bases.size() != o.bases.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < bases.size(); ++i) {
+        if (*bases[i] != *o.bases[i]) {
             return false;
         }
     }
     return true;
 }
 
-bool BlockStmt::equalsImpl(const Node& rhs) const noexcept {
-    const BlockStmt& o = EQ_ASSERT_TYPE(rhs, BlockStmt);
-    return *body == *o.body;
+bool IfElse::equalsImpl(const Node& rhs) const noexcept {
+    const IfElse& o = EQ_ASSERT_TYPE(rhs, IfElse);
+    return *condition == *o.condition && *thenBody == *o.thenBody && *elseBody == *o.elseBody;
 }
 
-bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
-    const AssignStmt& o = EQ_ASSERT_TYPE(rhs, AssignStmt);
-    return *lhs == *o.lhs && *this->rhs == *o.rhs;
+bool While::equalsImpl(const Node& rhs) const noexcept {
+    const While& o = EQ_ASSERT_TYPE(rhs, While);
+    return *condition == *o.condition && *body == *o.body;
 }
 
-bool IfElseStmt::equalsImpl(const Node& rhs) const noexcept {
-    const IfElseStmt& o = EQ_ASSERT_TYPE(rhs, IfElseStmt);
+bool For::equalsImpl(const Node& rhs) const noexcept {
+    const For& o = EQ_ASSERT_TYPE(rhs, For);
+    return *iterator == *o.iterator && *range == *o.range && *body == *o.body;
+}
 
-    if (ifBranches.size() != o.ifBranches.size()) {
+bool Break::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Break);
+    return true;
+}
+
+bool Continue::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Continue);
+    return true;
+}
+
+bool Return::equalsImpl(const Node& rhs) const noexcept {
+    const Return& o = EQ_ASSERT_TYPE(rhs, Return);
+    return *expr == *o.expr;
+}
+
+bool Module::equalsImpl(const Node& rhs) const noexcept {
+    const Module& o = EQ_ASSERT_TYPE(rhs, Module);
+    if (*body != *o.body) {
         return false;
     }
-    for (size_t i = 0; i < ifBranches.size(); ++i) {
-        const Branch& b = ifBranches[i];
-        const Branch& ob = o.ifBranches[i];
-        if (*b.condition != *ob.condition || *b.block != *ob.block) {
+    if (names.size() != o.names.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < names.size(); ++i) {
+        if (*names[i] != *o.names[i]) {
             return false;
         }
     }
+    return false;
+}
 
-    if (!ptrEq(elseBlock, o.elseBlock)) {
+bool Export::equalsImpl(const Node& rhs) const noexcept {
+    const Export& o = EQ_ASSERT_TYPE(rhs, Export);
+    return *stmt == *o.stmt;
+}
+
+bool Undefine::equalsImpl(const Node& rhs) const noexcept {
+    const Undefine& o = EQ_ASSERT_TYPE(rhs, Undefine);
+    return *var == *o.var;
+}
+
+bool IfThen::equalsImpl(const Node& rhs) const noexcept {
+    const IfThen& o = EQ_ASSERT_TYPE(rhs, IfThen);
+    return *condition == *o.condition && *thenExpr == *o.thenExpr && *elseExpr == *o.elseExpr;
+}
+
+bool TryElse::equalsImpl(const Node& rhs) const noexcept {
+    const TryElse& o = EQ_ASSERT_TYPE(rhs, TryElse);
+    return *tryExpr == *o.tryExpr && *elseExpr == *o.elseExpr;
+}
+
+bool Match::equalsImpl(const Node& rhs) const noexcept {
+    const Match& o = EQ_ASSERT_TYPE(rhs, Match);
+    if (*binding != *o.binding || *scrutinee != *o.scrutinee) {
         return false;
     }
-
+    if (cases.size() != o.cases.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < cases.size(); ++i) {
+        const Case& lc = cases[i];
+        const Case& rc = o.cases[i];
+        if (*lc.pattern != *rc.pattern || *lc.guard != *rc.guard || *lc.body != *rc.body) {
+            return false;
+        }
+    }
     return true;
 }
 
-bool WhileStmt::equalsImpl(const Node& rhs) const noexcept {
-    const WhileStmt& o = EQ_ASSERT_TYPE(rhs, WhileStmt);
-    return *condition == *o.condition && *block == *o.block;
-}
-
-bool ForStmt::equalsImpl(const Node& rhs) const noexcept {
-    const ForStmt& o = EQ_ASSERT_TYPE(rhs, ForStmt);
-    return *iterator == *o.iterator && *range == *o.range && *block == *o.block;
-}
-
-bool BreakStmt::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, BreakStmt);
+bool TryCatch::equalsImpl(const Node& rhs) const noexcept {
+    const TryCatch& o = EQ_ASSERT_TYPE(rhs, TryCatch);
+    if (*expr != *o.expr) {
+        return false;
+    }
+    if (catches.size() != o.catches.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < catches.size(); ++i) {
+        const Catch& lc = catches[i];
+        const Catch& rc = o.catches[i];
+        if (*lc.pattern != *rc.pattern || *lc.guard != *rc.guard || *lc.body != *rc.body) {
+            return false;
+        }
+    }
     return true;
 }
 
-bool ContinueStmt::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, ContinueStmt);
+bool Throw::equalsImpl(const Node& rhs) const noexcept {
+    const Throw& o = EQ_ASSERT_TYPE(rhs, Throw);
+    return *expr == *o.expr;
+}
+
+bool Block::equalsImpl(const Node& rhs) const noexcept {
+    const Block& o = EQ_ASSERT_TYPE(rhs, Block);
+    if (elements.size() != o.elements.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < elements.size(); ++i) {
+        if (*elements[i] != *o.elements[i]) {
+            return false;
+        }
+    }
     return true;
 }
 
-bool IfThenExpr::equalsImpl(const Node& rhs) const noexcept {
-    const IfThenExpr& o = EQ_ASSERT_TYPE(rhs, IfThenExpr);
-    return *condition == *o.condition && *trueNode == *o.trueNode && *falseNode == *o.falseNode;
+bool BinaryExpr::equalsImpl(const Node& rhs) const noexcept {
+    const BinaryExpr& o = EQ_ASSERT_TYPE(rhs, BinaryExpr);
+    return op == o.op && *lhs == *o.lhs && *this->rhs == *o.rhs;
 }
 
 bool PrefixExpr::equalsImpl(const Node& rhs) const noexcept {
@@ -115,65 +192,24 @@ bool PostfixExpr::equalsImpl(const Node& rhs) const noexcept {
     return op == o.op && *expr == *o.expr;
 }
 
-bool BinaryExpr::equalsImpl(const Node& rhs) const noexcept {
-    const BinaryExpr& o = EQ_ASSERT_TYPE(rhs, BinaryExpr);
-    return op == o.op && *lhs == *o.lhs && *this->rhs == *o.rhs;
+bool MemberAccess::equalsImpl(const Node& rhs) const noexcept {
+    const MemberAccess& o = EQ_ASSERT_TYPE(rhs, MemberAccess);
+    return *member == *o.member;
 }
 
-bool BindingModifier::operator==(const BindingModifier& rhs) const noexcept {
-    return kind == rhs.kind &&
-           isImmutable == rhs.isImmutable &&
-           isNullable == rhs.isNullable &&
-           isNonNullable == rhs.isNonNullable;
-}
-
-bool BindingModifier::operator!=(const BindingModifier& rhs) const noexcept {
-    return !(*this == rhs);
-}
-
-bool BindingPattern::equalsImpl(const Node& rhs) const noexcept {
-    const BindingPattern& o = EQ_ASSERT_TYPE(rhs, BindingPattern);
-    return mod == o.mod && *bind == *o.bind && ptrEq(typeAnnot, o.typeAnnot);
-}
-
-bool TuplePattern::equalsImpl(const Node& rhs) const noexcept {
-    const TuplePattern& o = EQ_ASSERT_TYPE(rhs, TuplePattern);
-    if (patterns.size() != o.patterns.size()) {
+bool Subscript::equalsImpl(const Node& rhs) const noexcept {
+    const Subscript& o = EQ_ASSERT_TYPE(rhs, Subscript);
+    if (*callee != *o.callee) {
         return false;
     }
-    for (size_t i = 0; i < patterns.size(); ++i) {
-        if (*patterns[i] != *o.patterns[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool CollectionPattern::equalsImpl(const Node& rhs) const noexcept {
-    const CollectionPattern& o = EQ_ASSERT_TYPE(rhs, CollectionPattern);
-    if (hasRest != o.hasRest || prefix.size() != o.prefix.size() || suffix.size() != o.suffix.size()) {
+    if (indices.size() != o.indices.size()) {
         return false;
     }
-    for (size_t i = 0; i < prefix.size(); ++i) {
-        if (*prefix[i] != *o.prefix[i]) {
+    for (size_t i = 0; i < indices.size(); ++i) {
+        if (*indices[i] != *o.indices[i]) {
             return false;
         }
     }
-    for (size_t i = 0; i < suffix.size(); ++i) {
-        if (*suffix[i] != *o.suffix[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Identifier::equalsImpl(const Node& rhs) const noexcept {
-    const Identifier& o = EQ_ASSERT_TYPE(rhs, Identifier);
-    return name == o.name;
-}
-
-bool Discard::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Discard);
     return true;
 }
 
@@ -207,9 +243,39 @@ bool VoidLiteral::equalsImpl(const Node& rhs) const noexcept {
     return true;
 }
 
-bool Undefined::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Undefined);
+bool Identifier::equalsImpl(const Node& rhs) const noexcept {
+    const Identifier& o = EQ_ASSERT_TYPE(rhs, Identifier);
+    return name == o.name;
+}
+
+bool Wildcard::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Wildcard);
     return true;
+}
+
+bool Upvalue::equalsImpl(const Node& rhs) const noexcept {
+    const Upvalue& o = EQ_ASSERT_TYPE(rhs, Upvalue);
+    return level == o.level && *var == *o.var;
+}
+
+bool Global::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Global);
+    return true;
+}
+
+bool Self::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Self);
+    return true;
+}
+
+bool OverloadableOp::equalsImpl(const Node& rhs) const noexcept {
+    const OverloadableOp& o = EQ_ASSERT_TYPE(rhs, OverloadableOp);
+    return op == o.op;
+}
+
+bool BindingModifier::equalsImpl(const Node& rhs) const noexcept {
+    const BindingModifier& o = EQ_ASSERT_TYPE(rhs, BindingModifier);
+    return kind == o.kind && isImmutable == o.isImmutable && opt == o.opt;
 }
 
 } // Spark::FrontEnd

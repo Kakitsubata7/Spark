@@ -26,9 +26,8 @@ namespace {
         { "self", TokenType::Self }, { "struct", TokenType::Struct }, { "super", TokenType::Super },
         { "then", TokenType::Then }, { "throw", TokenType::Throw }, { "trait", TokenType::Trait },
             { "true", TokenType::True }, { "try", TokenType::Try }, { "typeof", TokenType::Typeof },
-        { "undefined", TokenType::Undefined },
+        { "undefine", TokenType::Undefine },
         { "while", TokenType::While },
-        { "yield", TokenType::Yield }
     };
 }
 

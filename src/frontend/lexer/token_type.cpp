@@ -52,9 +52,8 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::True: return "True";
         case TokenType::Try: return "Try";
         case TokenType::Typeof: return "Typeof";
-        case TokenType::Undefined: return "Undefined";
+        case TokenType::Undefine: return "Undefine";
         case TokenType::While: return "While";
-        case TokenType::Yield: return "Yield";
         case TokenType::Add: return "Add";
         case TokenType::Sub: return "Sub";
         case TokenType::Mul: return "Mul";
@@ -88,6 +87,7 @@ std::string_view toString(TokenType type) noexcept {
         case TokenType::Range: return "Range";
         case TokenType::RangeExcl: return "RangeExcl";
         case TokenType::Question: return "Question";
+        case TokenType::NonNull: return "NonNull";
         case TokenType::Coalesce: return "Coalesce";
         case TokenType::Pipe: return "Pipe";
         case TokenType::Dot: return "Dot";

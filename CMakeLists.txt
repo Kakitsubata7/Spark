@@ -37,19 +37,19 @@ add_custom_target(flex
         ${FLEX_sparklexer_OUTPUTS}
 )
 
-BISON_TARGET(
-        sparkparser
-        ${FRONTEND_DIR}/parser.y
-        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
-        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
-)
-
 #BISON_TARGET(
 #        sparkparser
 #        ${FRONTEND_DIR}/parser.y
 #        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
-#        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp -Wcounterexamples -Wconflicts-sr"
+#        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
 #)
+
+BISON_TARGET(
+        sparkparser
+        ${FRONTEND_DIR}/parser.y
+        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
+        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp -Wcounterexamples -Wconflicts-sr"
+)
 
 add_custom_target(bison
     DEPENDS
@@ -85,10 +85,6 @@ add_library(sparklib
 
         src/frontend/parser.cpp
         src/frontend/parser.hpp
-        src/frontend/parser/parser_unit.cpp
-        src/frontend/parser/parser_unit.hpp
-        src/frontend/parser/token_producer.cpp
-        src/frontend/parser/token_producer.hpp
 
         src/frontend/semantic_type.hpp
         src/frontend/source_buffer.cpp
@@ -133,8 +129,6 @@ add_executable(sparktest
         tests/frontend/lexer/token_value_test.cpp
 
         tests/frontend/parser/parser_test.cpp
-        tests/frontend/parser/parser_unit_test.cpp
-        tests/frontend/parser/token_producer_test.cpp
 
         tests/runtime/drc_test.cpp
 )
