@@ -26,12 +26,12 @@ public:
     BigReal& operator*=(const BigReal& rhs) { _value *= rhs._value; return *this; }
     BigReal& operator/=(const BigReal& rhs) { _value /= rhs._value; return *this; }
 
-    bool operator==(const BigReal& rhs) const noexcept { return _value == rhs._value; }
-    bool operator!=(const BigReal& rhs) const noexcept { return _value != rhs._value; }
-    bool operator<(const BigReal& rhs)  const noexcept { return _value <  rhs._value; }
-    bool operator<=(const BigReal& rhs) const noexcept { return _value <= rhs._value; }
-    bool operator>(const BigReal& rhs)  const noexcept { return _value >  rhs._value; }
-    bool operator>=(const BigReal& rhs) const noexcept { return _value >= rhs._value; }
+    bool operator==(const BigReal& rhs) const { return _value == rhs._value; }
+    bool operator!=(const BigReal& rhs) const { return _value != rhs._value; }
+    bool operator<(const BigReal& rhs)  const { return _value <  rhs._value; }
+    bool operator<=(const BigReal& rhs) const { return _value <= rhs._value; }
+    bool operator>(const BigReal& rhs)  const { return _value >  rhs._value; }
+    bool operator>=(const BigReal& rhs) const { return _value >= rhs._value; }
 
     [[nodiscard]]
     std::string str() const {

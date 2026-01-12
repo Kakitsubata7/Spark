@@ -29,12 +29,12 @@ public:
     BigInt& operator/=(const BigInt& rhs) { _value /= rhs._value; return *this; }
     BigInt& operator%=(const BigInt& rhs) { _value %= rhs._value; return *this; }
 
-    bool operator==(const BigInt& rhs) const noexcept { return _value == rhs._value; }
-    bool operator!=(const BigInt& rhs) const noexcept { return _value != rhs._value; }
-    bool operator<(const BigInt& rhs)  const noexcept { return _value <  rhs._value; }
-    bool operator<=(const BigInt& rhs) const noexcept { return _value <= rhs._value; }
-    bool operator>(const BigInt& rhs)  const noexcept { return _value >  rhs._value; }
-    bool operator>=(const BigInt& rhs) const noexcept { return _value >= rhs._value; }
+    bool operator==(const BigInt& rhs) const { return _value == rhs._value; }
+    bool operator!=(const BigInt& rhs) const { return _value != rhs._value; }
+    bool operator<(const BigInt& rhs)  const { return _value <  rhs._value; }
+    bool operator<=(const BigInt& rhs) const { return _value <= rhs._value; }
+    bool operator>(const BigInt& rhs)  const { return _value >  rhs._value; }
+    bool operator>=(const BigInt& rhs) const { return _value >= rhs._value; }
 
     [[nodiscard]]
     std::string str() const {
