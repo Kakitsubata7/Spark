@@ -13,6 +13,10 @@ namespace Spark::FrontEnd {
 
 class NodeVisitor;
 
+struct Expr;
+struct Literal;
+struct Identifier;
+
 struct Node {
     Location start;
     Location end;
@@ -30,6 +34,12 @@ struct Node {
 protected:
     [[nodiscard]]
     virtual bool equalsImpl(const Node& rhs) const noexcept = 0;
+};
+
+struct Stmt : Node {
+    Stmt(Location start, Location end) : Node(start, end) { }
+
+    void accept(NodeVisitor &v) override { v.visit(*this); }
 };
 
 struct Assign final : Node {
@@ -120,8 +130,8 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Break final : Node {
-    Break(Location start, Location end) noexcept : Node(start, end) { }
+struct BreakStmt final : Stmt {
+    BreakStmt(Location start, Location end) noexcept : Stmt(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -130,8 +140,8 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Continue final : Node {
-    Continue(Location start, Location end) noexcept : Node(start, end) { }
+struct ContinueStmt final : Stmt {
+    ContinueStmt(Location start, Location end) noexcept : Stmt(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -140,11 +150,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Return final : Node {
+struct ReturnStmt final : Stmt {
     /* nullable */ Node* expr;
 
-    Return(Location start, Location end, Node* expr) noexcept
-        : Node(start, end), expr(expr) { }
+    ReturnStmt(Location start, Location end, Node* expr) noexcept
+        : Stmt(start, end), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -193,12 +203,57 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct IfThen final : Node {
-    Node* condition;
-    Node* thenExpr;
-    Node* elseExpr;
+struct ExprStmt : Stmt {
+    Expr& expr;
 
-    IfThen(Location start, Location end, Node* condition, Node* thenExpr, Node* elseExpr) noexcept
+    ExprStmt(Location start, Location end, Expr& expr) noexcept
+        : Stmt(start, end), expr(expr) { }
+
+    void accept(NodeVisitor &v) override { v.visit(*this); }
+
+protected:
+    bool equalsImpl(const Spark::FrontEnd::Node &rhs) const noexcept override;
+};
+
+struct Expr : Node {
+    Expr(Location start, Location end) : Node(start, end) { }
+
+    void accept(NodeVisitor &v) override { v.visit(*this); }
+};
+
+struct Lambda final : Node {
+    bool isImmutable;
+    std::vector<Node*> params;
+    std::vector<Node*> captures;
+    std::vector<Node*> rets;
+    bool isThrowing;
+    std::vector<Node*> throws;
+
+    Lambda(Location start, Location end,
+           bool isImmutable,
+           std::vector<Node*> params,
+           std::vector<Node*> captures,
+           std::vector<Node*> rets,
+           bool isThrowing, std::vector<Node*> throws) noexcept
+        : Node(start, end),
+          isImmutable(isImmutable),
+          params(std::move(params)),
+          captures(std::move(captures)),
+          rets(std::move(rets)),
+          isThrowing(isThrowing), throws(std::move(throws)) { }
+
+    void accept(Spark::FrontEnd::NodeVisitor &v) override { v.visit(*this); }
+
+protected:
+    bool equalsImpl(const Spark::FrontEnd::Node &rhs) const noexcept override;
+};
+
+struct IfThenExpr final : Node {
+    Expr& condition;
+    Expr& thenExpr;
+    Expr& elseExpr;
+
+    IfThenExpr(Location start, Location end, Expr& condition, Expr& thenExpr, Expr& elseExpr) noexcept
         : Node(start, end), condition(condition), thenExpr(thenExpr), elseExpr(elseExpr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -208,11 +263,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct TryElse final : Node {
-    Node* tryExpr;
-    Node* elseExpr;
+struct TryElseExpr final : Node {
+    Expr& tryExpr;
+    Expr& elseExpr;
 
-    TryElse(Location start, Location end, Node* tryExpr, Node* elseExpr) noexcept
+    TryElseExpr(Location start, Location end, Expr& tryExpr, Expr& elseExpr) noexcept
         : Node(start, end), tryExpr(tryExpr), elseExpr(elseExpr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -269,11 +324,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Throw final : Node {
-    Node* expr;
+struct ThrowExpr final : Expr {
+    Expr* expr;
 
-    Throw(Location start, Location end, Node* expr) noexcept
-        : Node(start, end), expr(expr) { }
+    ThrowExpr(Location start, Location end, Expr* expr) noexcept
+        : Expr(start, end), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -282,11 +337,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Block final : Node {
-    std::vector<Node*> elements;
+struct BlockExpr final : Node {
+    std::vector<Stmt*> stmts;
 
-    Block(Location start, Location end, std::vector<Node*> elements) noexcept
-        : Node(start, end), elements(std::move(elements)) { }
+    BlockExpr(Location start, Location end, std::vector<Stmt*> stmts) noexcept
+        : Node(start, end), stmts(std::move(stmts)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -376,11 +431,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Subscript final : Node {
-    Node* callee;
-    std::vector<Node*> indices;
+struct SubscriptExpr final : Node {
+    Expr* callee;
+    std::vector<Expr*> indices;
 
-    Subscript(Location start, Location end, Node* callee, std::vector<Node*> indices) noexcept
+    SubscriptExpr(Location start, Location end, Expr* callee, std::vector<Expr*> indices) noexcept
         : Node(start, end), callee(callee), indices(std::move(indices)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -390,11 +445,24 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct IntLiteral final : Node {
-    BigInt value;
+struct LiteralExpr : Expr {
+    Literal& literal;
 
-    IntLiteral(Location start, Location end, BigInt value) noexcept
-        : Node(start, end), value(std::move(value)) { }
+    LiteralExpr(Location start, Location end, Literal& literal) noexcept
+        : Expr(start, end), literal(literal) { }
+
+    void accept(NodeVisitor &v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node &rhs) const noexcept override;
+};
+
+struct IdentifierExpr : Expr {
+    Identifier& identifier;
+
+    IdentifierExpr(Location start, Location end, Identifier& identifier) noexcept
+        : Expr(start, end), identifier(identifier) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -403,11 +471,18 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct RealLiteral final : Node {
-    BigReal value;
+struct SelfExpr : Expr {
+    SelfExpr(Location start, Location end) noexcept : Expr(start, end) { }
 
-    RealLiteral(Location start, Location end, BigReal value) noexcept
-        : Node(start, end), value(std::move(value)) { }
+    void accept(NodeVisitor &v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct ConstructorExpr : Expr {
+    ConstructorExpr(Location start, Location end) noexcept : Expr(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -416,11 +491,8 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct BoolLiteral final : Node {
-    bool value;
-
-    BoolLiteral(Location start, Location end, bool value) noexcept
-        : Node(start, end), value(value) { }
+struct DestructorExpr : Expr {
+    DestructorExpr(Location start, Location end) noexcept : Expr(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -429,21 +501,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct StringLiteral final : Node {
-    std::string value;
+struct TypeofExpr : Expr {
+    Expr& expr;
 
-    StringLiteral(Location start, Location end, std::string value) noexcept
-        : Node(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct NilLiteral final : Node {
-    NilLiteral(Location start, Location end) noexcept : Node(start, end) { }
+    TypeofExpr(Location start, Location end, Expr& expr) noexcept
+        : Expr(start, end), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -452,28 +514,7 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct VoidLiteral final : Node {
-    VoidLiteral(Location start, Location end) noexcept : Node(start, end) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct Identifier final : Node {
-    std::string name;
-
-    Identifier(Location start, Location end, std::string name) noexcept
-        : Node(start, end), name(std::move(name)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
 
 struct Wildcard final : Node {
     Wildcard(Location start, Location end) noexcept : Node(start, end) { }
@@ -554,6 +595,98 @@ struct BindingModifier final : Node {
 
     BindingModifier(Location start, Location end, BindingKind kind, bool isImmutable, Optionality opt) noexcept
         : Node(start, end), kind(kind), isImmutable(isImmutable), opt(opt) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct Literal : Node {
+    Literal(Location start, Location end) noexcept
+            : Node(start, end) { }
+
+    void accept(NodeVisitor &v) override { v.visit(*this); }
+};
+
+struct IntLiteral final : Literal {
+    BigInt value;
+
+    IntLiteral(Location start, Location end, BigInt value) noexcept
+            : Literal(start, end), value(std::move(value)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct RealLiteral final : Literal {
+    BigReal value;
+
+    RealLiteral(Location start, Location end, BigReal value) noexcept
+            : Literal(start, end), value(std::move(value)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct BoolLiteral final : Literal {
+    bool value;
+
+    BoolLiteral(Location start, Location end, bool value) noexcept
+            : Literal(start, end), value(value) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct StringLiteral final : Literal {
+    std::string value;
+
+    StringLiteral(Location start, Location end, std::string value) noexcept
+            : Literal(start, end), value(std::move(value)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct NilLiteral final : Literal {
+    NilLiteral(Location start, Location end) noexcept : Literal(start, end) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct VoidLiteral final : Literal {
+    VoidLiteral(Location start, Location end) noexcept : Literal(start, end) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct Identifier final : Node {
+    std::string name;
+
+    Identifier(Location start, Location end, std::string name) noexcept
+            : Node(start, end), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

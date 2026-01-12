@@ -72,18 +72,18 @@ bool For::equalsImpl(const Node& rhs) const noexcept {
     return *iterator == *o.iterator && *range == *o.range && *body == *o.body;
 }
 
-bool Break::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Break);
+bool BreakStmt::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, BreakStmt);
     return true;
 }
 
-bool Continue::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Continue);
+bool ContinueStmt::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, ContinueStmt);
     return true;
 }
 
-bool Return::equalsImpl(const Node& rhs) const noexcept {
-    const Return& o = EQ_ASSERT_TYPE(rhs, Return);
+bool ReturnStmt::equalsImpl(const Node& rhs) const noexcept {
+    const ReturnStmt& o = EQ_ASSERT_TYPE(rhs, ReturnStmt);
     return *expr == *o.expr;
 }
 
@@ -113,14 +113,19 @@ bool Undefine::equalsImpl(const Node& rhs) const noexcept {
     return *var == *o.var;
 }
 
-bool IfThen::equalsImpl(const Node& rhs) const noexcept {
-    const IfThen& o = EQ_ASSERT_TYPE(rhs, IfThen);
-    return *condition == *o.condition && *thenExpr == *o.thenExpr && *elseExpr == *o.elseExpr;
+bool ExprStmt::equalsImpl(const Node& rhs) const noexcept {
+    const ExprStmt& o = EQ_ASSERT_TYPE(rhs, ExprStmt);
+    return expr == o.expr;
 }
 
-bool TryElse::equalsImpl(const Node& rhs) const noexcept {
-    const TryElse& o = EQ_ASSERT_TYPE(rhs, TryElse);
-    return *tryExpr == *o.tryExpr && *elseExpr == *o.elseExpr;
+bool IfThenExpr::equalsImpl(const Node& rhs) const noexcept {
+    const IfThenExpr& o = EQ_ASSERT_TYPE(rhs, IfThenExpr);
+    return condition == o.condition && thenExpr == o.thenExpr && elseExpr == o.elseExpr;
+}
+
+bool TryElseExpr::equalsImpl(const Node& rhs) const noexcept {
+    const TryElseExpr& o = EQ_ASSERT_TYPE(rhs, TryElseExpr);
+    return tryExpr == o.tryExpr && elseExpr == o.elseExpr;
 }
 
 bool Match::equalsImpl(const Node& rhs) const noexcept {
@@ -159,18 +164,18 @@ bool TryCatch::equalsImpl(const Node& rhs) const noexcept {
     return true;
 }
 
-bool Throw::equalsImpl(const Node& rhs) const noexcept {
-    const Throw& o = EQ_ASSERT_TYPE(rhs, Throw);
+bool ThrowExpr::equalsImpl(const Node& rhs) const noexcept {
+    const ThrowExpr& o = EQ_ASSERT_TYPE(rhs, ThrowExpr);
     return *expr == *o.expr;
 }
 
-bool Block::equalsImpl(const Node& rhs) const noexcept {
-    const Block& o = EQ_ASSERT_TYPE(rhs, Block);
-    if (elements.size() != o.elements.size()) {
+bool BlockExpr::equalsImpl(const Node& rhs) const noexcept {
+    const BlockExpr& o = EQ_ASSERT_TYPE(rhs, BlockExpr);
+    if (stmts.size() != o.stmts.size()) {
         return false;
     }
-    for (size_t i = 0; i < elements.size(); ++i) {
-        if (*elements[i] != *o.elements[i]) {
+    for (size_t i = 0; i < stmts.size(); ++i) {
+        if (*stmts[i] != *o.stmts[i]) {
             return false;
         }
     }
@@ -197,8 +202,8 @@ bool MemberAccess::equalsImpl(const Node& rhs) const noexcept {
     return *member == *o.member;
 }
 
-bool Subscript::equalsImpl(const Node& rhs) const noexcept {
-    const Subscript& o = EQ_ASSERT_TYPE(rhs, Subscript);
+bool SubscriptExpr::equalsImpl(const Node& rhs) const noexcept {
+    const SubscriptExpr& o = EQ_ASSERT_TYPE(rhs, SubscriptExpr);
     if (*callee != *o.callee) {
         return false;
     }
@@ -211,6 +216,68 @@ bool Subscript::equalsImpl(const Node& rhs) const noexcept {
         }
     }
     return true;
+}
+
+bool LiteralExpr::equalsImpl(const Node& rhs) const noexcept {
+    const LiteralExpr& o = EQ_ASSERT_TYPE(rhs, LiteralExpr);
+    return literal == o.literal;
+}
+
+bool IdentifierExpr::equalsImpl(const Node& rhs) const noexcept {
+    const IdentifierExpr& o = EQ_ASSERT_TYPE(rhs, IdentifierExpr);
+    return identifier == o.identifier;
+}
+
+bool SelfExpr::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, SelfExpr);
+    return true;
+}
+
+bool ConstructorExpr::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, ConstructorExpr);
+    return true;
+}
+
+bool DestructorExpr::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, DestructorExpr);
+    return true;
+}
+
+bool TypeofExpr::equalsImpl(const Node& rhs) const noexcept {
+    const TypeofExpr& o = EQ_ASSERT_TYPE(rhs, TypeofExpr);
+    return expr == o.expr;
+}
+
+
+
+bool Wildcard::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Wildcard);
+    return true;
+}
+
+bool Upvalue::equalsImpl(const Node& rhs) const noexcept {
+    const Upvalue& o = EQ_ASSERT_TYPE(rhs, Upvalue);
+    return level == o.level && *var == *o.var;
+}
+
+bool Global::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Global);
+    return true;
+}
+
+bool Self::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, Self);
+    return true;
+}
+
+bool OverloadableOp::equalsImpl(const Node& rhs) const noexcept {
+    const OverloadableOp& o = EQ_ASSERT_TYPE(rhs, OverloadableOp);
+    return op == o.op;
+}
+
+bool BindingModifier::equalsImpl(const Node& rhs) const noexcept {
+    const BindingModifier& o = EQ_ASSERT_TYPE(rhs, BindingModifier);
+    return kind == o.kind && isImmutable == o.isImmutable && opt == o.opt;
 }
 
 bool IntLiteral::equalsImpl(const Node& rhs) const noexcept {
@@ -246,36 +313,6 @@ bool VoidLiteral::equalsImpl(const Node& rhs) const noexcept {
 bool Identifier::equalsImpl(const Node& rhs) const noexcept {
     const Identifier& o = EQ_ASSERT_TYPE(rhs, Identifier);
     return name == o.name;
-}
-
-bool Wildcard::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Wildcard);
-    return true;
-}
-
-bool Upvalue::equalsImpl(const Node& rhs) const noexcept {
-    const Upvalue& o = EQ_ASSERT_TYPE(rhs, Upvalue);
-    return level == o.level && *var == *o.var;
-}
-
-bool Global::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Global);
-    return true;
-}
-
-bool Self::equalsImpl(const Node& rhs) const noexcept {
-    EQ_ASSERT_TYPE(rhs, Self);
-    return true;
-}
-
-bool OverloadableOp::equalsImpl(const Node& rhs) const noexcept {
-    const OverloadableOp& o = EQ_ASSERT_TYPE(rhs, OverloadableOp);
-    return op == o.op;
-}
-
-bool BindingModifier::equalsImpl(const Node& rhs) const noexcept {
-    const BindingModifier& o = EQ_ASSERT_TYPE(rhs, BindingModifier);
-    return kind == o.kind && isImmutable == o.isImmutable && opt == o.opt;
 }
 
 } // Spark::FrontEnd
