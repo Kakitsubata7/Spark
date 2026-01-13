@@ -281,14 +281,14 @@ fndef_stmt:
       Fn opt_immut fn_name opt_template param_clause capture_clause ret_clause throw_clause block
         {
             auto [isThrowing, throwExpr] = $8;
-            ast.make<FnDefStmt>($1.start, $9->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
-                                isThrowing, throwExpr, $9);
+            $$ = ast.make<FnDefStmt>($1.start, $9->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
+                                     isThrowing, throwExpr, $9);
         }
     | Fn opt_immut fn_name opt_template param_clause capture_clause ret_clause throw_clause FatArrow expr
         {
             auto [isThrowing, throwExpr] = $8;
-            ast.make<FnDefStmt>($1.start, $10->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
-                                isThrowing, throwExpr, $10);
+            $$ = ast.make<FnDefStmt>($1.start, $10->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
+                                     isThrowing, throwExpr, $10);
         }
     ;
 
