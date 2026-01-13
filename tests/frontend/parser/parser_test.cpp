@@ -225,3 +225,21 @@ TEST(ParserTest, AssignTest2) {
     );
     EXPECT_EQ(*ast.root, *root);
 }
+
+TEST(ParserTest, AssignTest3) {
+    // Making sure assignment is right-associative
+    auto [ast, errors] = parse("a = b += c *= d");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        ASSIGN(ASSIGN_OP::Assign,
+            IDENT("a"),
+            ASSIGN(ASSIGN_OP::AddAssign,
+                IDENT("b"),
+                ASSIGN(ASSIGN_OP::MulAssign, IDENT("c"), IDENT("d"))
+            )
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
