@@ -540,3 +540,88 @@ TEST(ParserTest, VarDefTest4) {
     );
     EXPECT_EQ(*ast.root, *root);
 }
+
+TEST(ParserTest, IfStmtTest1) {
+    auto [ast, errors] = parse("if a { b }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(IfStmt,
+            IDENT("a"),
+            BLOCK(
+                EXPR_STMT(IDENT("b"))
+            ),
+            /* elseBody */ nullptr
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, IfStmtTest2) {
+    auto [ast, errors] = parse("if a { b } else { c }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(IfStmt,
+            IDENT("a"),
+            BLOCK(
+                EXPR_STMT(IDENT("b"))
+            ),
+            BLOCK(
+                EXPR_STMT(IDENT("c"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, IfStmtTest3) {
+    auto [ast, errors] = parse("if a { b } else if c { d }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(IfStmt,
+            IDENT("a"),
+            BLOCK(
+                EXPR_STMT(IDENT("b"))
+            ),
+            BLOCK(
+               MAKE(IfStmt,
+                   IDENT("c"),
+                   BLOCK(
+                       EXPR_STMT(IDENT("d"))
+                   ),
+                   /* elseBody */ nullptr
+               )
+           )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, IfStmtTest4) {
+    auto [ast, errors] = parse("if a { b } else if c { d } else { e }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(IfStmt,
+            IDENT("a"),
+            BLOCK(
+                EXPR_STMT(IDENT("b"))
+            ),
+            BLOCK(
+                MAKE(IfStmt,
+                    IDENT("c"),
+                    BLOCK(
+                        EXPR_STMT(IDENT("d"))
+                    ),
+                    BLOCK(
+                        EXPR_STMT(IDENT("e"))
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
