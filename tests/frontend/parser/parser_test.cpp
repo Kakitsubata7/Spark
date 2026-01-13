@@ -56,12 +56,28 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return Parser::parse(iss);
 }
 
-TEST(ParserTest, BlockTest) {
+TEST(ParserTest, BlockTest1) {
     auto [ast, errors] = parse("{ }");
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
         EXPR_STMT(BLOCK())
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, BlockTest2) {
+    auto [ast, errors] = parse("{ a; b; c }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            BLOCK(
+                EXPR_STMT(IDENT("a")),
+                EXPR_STMT(IDENT("b")),
+                EXPR_STMT(IDENT("c"))
+            )
+        )
     );
     EXPECT_EQ(*ast.root, *root);
 }
