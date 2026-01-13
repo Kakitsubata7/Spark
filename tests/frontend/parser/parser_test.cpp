@@ -32,7 +32,11 @@
 #define POSTFIX(op, expr) MAKE(PostfixExpr, op, expr)
 #define POSTFIX_OP PostfixExpr::OpKind
 
+#define CALL(callee, ...) MAKE(CallExpr, callee, std::vector<CallArg*>{__VA_ARGS__})
+
 #define IDENT(name) MAKE(IdentifierExpr, name)
+
+#define IDENT_NAME(name) MAKE(IdentifierName, name)
 
 using namespace Spark;
 using namespace Spark::FrontEnd;
@@ -48,6 +52,20 @@ TEST(ParserTest, BlockTest) {
 
     Node* root = BLOCK(
         EXPR_STMT(BLOCK())
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, IfThenTest) {
+    auto [ast, errors] = parse("if foo() then a else b");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MAKE(IfThenExpr,
+                CALL(IDENT("foo")), IDENT("a"), IDENT("b")
+            )
+        )
     );
     EXPECT_EQ(*ast.root, *root);
 }

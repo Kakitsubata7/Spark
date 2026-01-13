@@ -459,19 +459,25 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+struct CallArg final : Node {
+    /* nullable */ IdentifierName* name;
+    Expr* expr;
+
+    CallArg(Location start, Location end, IdentifierName* name, Expr* expr) noexcept
+        : Node(start, end), name(name), expr(expr) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 struct CallExpr final : Expr {
-    struct Arg {
-        /* nullable */ IdentifierName* name;
-        Expr* expr;
-
-        Arg() noexcept = default;
-        Arg(IdentifierName* name, Expr* expr) noexcept : name(name), expr(expr) { }
-    };
-
     Expr* callee;
-    std::vector<Arg> args;
+    std::vector<CallArg*> args;
 
-    CallExpr(Location start, Location end, Expr* callee, std::vector<Arg> args) noexcept
+    CallExpr(Location start, Location end, Expr* callee, std::vector<CallArg*> args) noexcept
         : Expr(start, end), callee(callee), args(std::move(args)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }

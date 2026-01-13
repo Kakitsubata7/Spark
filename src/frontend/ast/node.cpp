@@ -189,6 +189,11 @@ bool MemberAccessExpr::equalsImpl(const Node& rhs) const noexcept {
     return *base == *o.base && *member == *o.member;
 }
 
+bool CallArg::equalsImpl(const Node& rhs) const noexcept {
+    const CallArg& o = EQ_ASSERT_TYPE(rhs, CallArg);
+    return ptrEq(name, o.name) && *expr == *o.expr;
+}
+
 bool CallExpr::equalsImpl(const Node& rhs) const noexcept {
     const CallExpr& o = EQ_ASSERT_TYPE(rhs, CallExpr);
     if (*callee != *o.callee) {
@@ -198,9 +203,7 @@ bool CallExpr::equalsImpl(const Node& rhs) const noexcept {
         return false;
     }
     for (size_t i = 0; i < args.size(); ++i) {
-        auto [lName, lExpr] = args[i];
-        auto [rName, rExpr] = o.args[i];
-        if (!ptrEq(lName, rName) || *lExpr != *rExpr) {
+        if (*args[i] != *o.args[i]) {
             return false;
         }
     }

@@ -140,8 +140,8 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %type <Spark::FrontEnd::Expr*> binary_multiplicative
 %type <Spark::FrontEnd::Expr*> prefix
 %type <Spark::FrontEnd::Expr*> postfix
-%type <std::vector<Spark::FrontEnd::CallExpr::Arg>> call_args
-%type <Spark::FrontEnd::CallExpr::Arg> call_arg
+%type <std::vector<Spark::FrontEnd::CallArg*>> call_args
+%type <Spark::FrontEnd::CallArg*> call_arg
 %type <Spark::FrontEnd::IdentifierName*> arg_label
 %type <Spark::FrontEnd::Expr*> primary
 %type <Spark::FrontEnd::Expr*> literal_expr
@@ -822,8 +822,8 @@ call_args:
     ;
 
 call_arg:
-      expr                  { $$ = CallExpr::Arg(nullptr, $1); }
-    | arg_label Colon expr  { $$ = CallExpr::Arg($1, $3); }
+      expr                  { $$ = ast.make<CallArg>($1->start, $1->end, nullptr, $1); }
+    | arg_label Colon expr  { $$ = ast.make<CallArg>($1->start, $3->end, $1, $3); }
     ;
 
 arg_label:
