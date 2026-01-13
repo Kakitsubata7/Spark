@@ -396,10 +396,10 @@ struct BinaryExpr final : Expr {
     };
 
     OpKind op;
-    Node* lhs;
-    Node* rhs;
+    Expr* lhs;
+    Expr* rhs;
 
-    BinaryExpr(Location start, Location end, OpKind op, Node* lhs, Node* rhs) noexcept
+    BinaryExpr(Location start, Location end, OpKind op, Expr* lhs, Expr* rhs) noexcept
         : Expr(start, end), op(op), lhs(lhs), rhs(rhs) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -415,9 +415,9 @@ struct PrefixExpr final : Expr {
     };
 
     OpKind op;
-    Node* expr;
+    Expr* expr;
 
-    PrefixExpr(Location start, Location end, OpKind op, Node* expr) noexcept
+    PrefixExpr(Location start, Location end, OpKind op, Expr* expr) noexcept
         : Expr(start, end), op(op), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -433,9 +433,9 @@ struct PostfixExpr final : Expr {
     };
 
     OpKind op;
-    Node* expr;
+    Expr* expr;
 
-    PostfixExpr(Location start, Location end, OpKind op, Node* expr) noexcept
+    PostfixExpr(Location start, Location end, OpKind op, Expr* expr) noexcept
         : Expr(start, end), op(op), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
