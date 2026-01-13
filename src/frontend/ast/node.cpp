@@ -43,6 +43,11 @@ bool IdentifierName::equalsImpl(const Node& rhs) const noexcept {
     return name == o.name;
 }
 
+bool DiscardName::equalsImpl(const Node& rhs) const noexcept {
+    EQ_ASSERT_TYPE(rhs, DiscardName);
+    return true;
+}
+
 bool ConstructorName::equalsImpl(const Node& rhs) const noexcept {
     EQ_ASSERT_TYPE(rhs, ConstructorName);
     return true;
