@@ -10,6 +10,10 @@
 #include "utils/error.hpp"
 
 #define MAKE(type, ...) ast.make<type>(Location(0, 0), Location(0, 0), __VA_ARGS__)
+#define VARMOD(kind, isImmut, opt) MAKE(VarModifier, kind, isImmut, opt)
+#define VARKIND VarModifier::VarKind
+#define VAROPT VarModifier::Optionality
+#define VARDEF(mod, pattern, ...) MAKE(VarDefStmt, mod, pattern, __VA_ARGS__)
 #define ASSIGN(op, lhs, rhs) MAKE(AssignStmt, op, lhs, rhs)
 #define ASSIGN_OP AssignStmt::OpKind
 #define EXPR_STMT(expr) MAKE(ExprStmt, expr)
@@ -238,6 +242,69 @@ TEST(ParserTest, AssignTest3) {
                 IDENT("b"),
                 ASSIGN(ASSIGN_OP::MulAssign, IDENT("c"), IDENT("d"))
             )
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, VarDefTest1) {
+    auto [ast, errors] = parse("let x: T = y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        VARDEF(
+            VARMOD(VARKIND::Let, false, VAROPT::None),
+            MAKE(BindingPattern, "x"),
+            IDENT("T"),
+            IDENT("y")
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, VarDefTest2) {
+    auto [ast, errors] = parse("const^ x: T = y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        VARDEF(
+            VARMOD(VARKIND::Const, true, VAROPT::None),
+            MAKE(BindingPattern, "x"),
+            IDENT("T"),
+            IDENT("y")
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, VarDefTest3) {
+    auto [ast, errors] = parse("let? x: T");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        VARDEF(
+            VARMOD(VARKIND::Let, false, VAROPT::Optional),
+            MAKE(BindingPattern, "x"),
+            IDENT("T")
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, VarDefTest4) {
+    auto [ast, errors] = parse("ref x = y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        VARDEF(
+            VARMOD(VARKIND::Ref, false, VAROPT::None),
+            MAKE(BindingPattern, "x"),
+            nullptr,
+            IDENT("y")
         )
     );
 
