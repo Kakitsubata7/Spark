@@ -541,6 +541,97 @@ TEST(ParserTest, VarDefTest4) {
     EXPECT_EQ(*ast.root, *root);
 }
 
+TEST(ParserTest, TypeDefTest1) {
+    auto [ast, errors] = parse("struct Foo { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Struct,
+            /* isImmutable */ false,
+            IDENT_NAME("Foo"),
+            /* template */ std::vector<Expr*>(),
+            /* bases */ std::vector<Expr*>(),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, TypeDefTest2) {
+    auto [ast, errors] = parse("class^ Foo { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Class,
+            /* isImmutable */ true,
+            IDENT_NAME("Foo"),
+            /* template */ std::vector<Expr*>(),
+            /* bases */ std::vector<Expr*>(),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, TypeDefTest3) {
+    auto [ast, errors] = parse("struct Foo : Bar, Baz { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Struct,
+            /* isImmutable */ false,
+            IDENT_NAME("Foo"),
+            /* template */ std::vector<Expr*>(),
+            /* bases */ std::vector<Expr*>{
+                IDENT("Bar"),
+                IDENT("Baz")
+            },
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, TypeDefTest4) {
+    auto [ast, errors] = parse("enum class Color { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::EnumClass,
+            /* isImmutable */ false,
+            IDENT_NAME("Color"),
+            /* template */ std::vector<Expr*>(),
+            /* bases */ std::vector<Expr*>(),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, TypeDefTest5) {
+    auto [ast, errors] = parse("struct Foo[T, U] { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Struct,
+            /* isImmutable */false,
+            IDENT_NAME("Foo"),
+            std::vector<Expr*>{
+                IDENT("T"),
+                IDENT("U")
+            },
+            /* bases */ std::vector<Expr*>(),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
 TEST(ParserTest, IfStmtTest1) {
     auto [ast, errors] = parse("if a { b }");
     EXPECT_TRUE(errors.empty());
