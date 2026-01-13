@@ -790,11 +790,11 @@ protected:
 };
 
 struct IfStmt final : Stmt {
-    Node* condition;
-    Node* thenBody;
-    /* nullable */ Node* elseBody;
+    Expr* condition;
+    BlockExpr* thenBody;
+    /* nullable */ BlockExpr* elseBody;
 
-    IfStmt(Location start, Location end, Node* condition, Node* thenBody, Node* elseBody) noexcept
+    IfStmt(Location start, Location end, Expr* condition, BlockExpr* thenBody, BlockExpr* elseBody) noexcept
         : Stmt(start, end), condition(condition), thenBody(thenBody), elseBody(elseBody) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }

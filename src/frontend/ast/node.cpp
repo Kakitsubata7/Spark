@@ -417,7 +417,7 @@ bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool IfStmt::equalsImpl(const Node& rhs) const noexcept {
     const IfStmt& o = EQ_ASSERT_TYPE(rhs, IfStmt);
-    return *condition == *o.condition && *thenBody == *o.thenBody && *elseBody == *o.elseBody;
+    return *condition == *o.condition && *thenBody == *o.thenBody && ptrEq(elseBody, o.elseBody);
 }
 
 bool WhileStmt::equalsImpl(const Node& rhs) const noexcept {

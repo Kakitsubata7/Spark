@@ -512,12 +512,12 @@ regular_rhs:
     ;
 
 if_stmt:
-      If expr block else_clause  { $$ = ast.make<IfStmt>($1.start, $4->end, $2, $3, $4); }
+      If expr block              { $$ = ast.make<IfStmt>($1.start, $3->end, $2, $3, nullptr); }
+    | If expr block else_clause  { $$ = ast.make<IfStmt>($1.start, $4->end, $2, $3, $4); }
     ;
 
 else_clause:
-      /* empty */   { $$ = nullptr; }
-    | Else block    { $$ = $2; }
+      Else block    { $$ = std::move($2); }
     | Else if_stmt
         {
             std::vector<Stmt*> stmts;
