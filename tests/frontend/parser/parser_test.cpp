@@ -22,6 +22,8 @@
 #define EXPR_STMT(expr) MAKE(ExprStmt, expr)
 
 #define BLOCK(...) MAKE(BlockExpr, std::vector<Stmt*>{__VA_ARGS__})
+#define MATCH(scrutinee, ...) MAKE(MatchExpr, scrutinee, std::vector<MatchCase*>{__VA_ARGS__})
+#define MATCH_CASE(...) MAKE(MatchCase, __VA_ARGS__)
 #define THROW(expr) MAKE(ThrowExpr, expr)
 
 #define BINARY(op, lhs, rhs) MAKE(BinaryExpr, op, lhs, rhs)
@@ -91,6 +93,84 @@ TEST(ParserTest, TryElseTest) {
                     EXPR_STMT(THROW(CALL(IDENT("Error"))))
                 ),
                 INT(BigInt(1))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, MatchTest1) {
+    auto [ast, errors] = parse("match x { case y => z }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MATCH(
+                IDENT("x"),
+                MATCH_CASE(
+                    MAKE(BindingPattern, "y"),
+                    /* guard */ nullptr,
+                    IDENT("z")
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, MatchTest2) {
+    auto [ast, errors] = parse("match x { case if cond => y }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MATCH(
+                IDENT("x"),
+                MATCH_CASE(
+                    /* pattern */ nullptr,
+                    IDENT("cond"),
+                    IDENT("y")
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, MatchTest3) {
+    auto [ast, errors] = parse("match x { case y if cond => z }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MATCH(
+                IDENT("x"),
+                MATCH_CASE(
+                    MAKE(BindingPattern, "y"),
+                    IDENT("cond"),
+                    IDENT("z")
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, Match_MultipleCases) {
+    auto [ast, errors] = parse(R"(
+match x {
+    case a => b
+    case c if d => e
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MATCH(
+                IDENT("x"),
+                MATCH_CASE(MAKE(BindingPattern, "a"), nullptr, IDENT("b")),
+                MATCH_CASE(MAKE(BindingPattern, "c"), IDENT("d"), IDENT("e"))
             )
         )
     );
