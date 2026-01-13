@@ -80,9 +80,6 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token EndOfFile 0
 %token Error 1
 
-%right Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign
-%right CoalesceAssign
-
 %type <std::vector<Spark::FrontEnd::Stmt*>> stmts stmt_list
 %type <Spark::FrontEnd::Stmt*> stmt
 %type <Spark::FrontEnd::VarModifier*> varmod
@@ -107,8 +104,9 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %type <Symbol<Spark::FrontEnd::TypeDefStmt::TypeKind>> typedef_kind
 %type <Spark::FrontEnd::Name*> typedef_name
 %type <Spark::FrontEnd::AssignStmt*> assign_stmt
-%type <Spark::FrontEnd::AssignStmt::OpKind> assign_op
 %type <Spark::FrontEnd::Node*> assign_rhs
+%type <Spark::FrontEnd::AssignStmt*> regular_assign
+%type <Spark::FrontEnd::Node*> regular_rhs
 %type <Spark::FrontEnd::IfStmt*> if_stmt
 %type <Spark::FrontEnd::BlockExpr*> else_clause
 %type <Spark::FrontEnd::ModuleStmt*> module_stmt
@@ -453,27 +451,64 @@ named_adt_member:
     ;
 
 assign_stmt:
-      expr assign_op assign_rhs  { $$ = ast.make<AssignStmt>($1->start, $3->end, $2, $1, $3); }
-    ;
-
-assign_op:
-      Assign          { $$ = AssignStmt::OpKind::Assign; }
-    | AddAssign       { $$ = AssignStmt::OpKind::AddAssign; }
-    | SubAssign       { $$ = AssignStmt::OpKind::SubAssign; }
-    | MulAssign       { $$ = AssignStmt::OpKind::MulAssign; }
-    | DivAssign       { $$ = AssignStmt::OpKind::DivAssign; }
-    | ModAssign       { $$ = AssignStmt::OpKind::ModAssign; }
-    | BitAndAssign    { $$ = AssignStmt::OpKind::BitAndAssign; }
-    | BitOrAssign     { $$ = AssignStmt::OpKind::BitOrAssign; }
-    | BitXorAssign    { $$ = AssignStmt::OpKind::BitXorAssign; }
-    | ShlAssign       { $$ = AssignStmt::OpKind::BitShrAssign; }
-    | ShrAssign       { $$ = AssignStmt::OpKind::BitShlAssign; }
-    | CoalesceAssign  { $$ = AssignStmt::OpKind::CoalesceAssign; }
+      regular_assign CoalesceAssign assign_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::CoalesceAssign, $1, $3);
+        }
+    | regular_assign
     ;
 
 assign_rhs:
       expr         { $$ = $1; }
     | assign_stmt  { $$ = $1; }
+    ;
+
+regular_assign:
+      expr Assign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::Assign, $1, $3);
+        }
+    | expr AddAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::AddAssign, $1, $3);
+        }
+    | expr SubAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::SubAssign, $1, $3);
+        }
+    | expr MulAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::MulAssign, $1, $3);
+        }
+    | expr DivAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::DivAssign, $1, $3);
+        }
+    | expr ModAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::ModAssign, $1, $3);
+        }
+    | expr BitAndAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::BitAndAssign, $1, $3);
+        }
+    | expr BitOrAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::BitOrAssign, $1, $3);
+        }
+    | expr ShlAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::BitShlAssign, $1, $3);
+        }
+    | expr ShrAssign regular_rhs
+        {
+            $$ = ast.make<AssignStmt>($1->start, $3->end, AssignStmt::OpKind::BitShrAssign, $1, $3);
+        }
+    ;
+
+regular_rhs:
+      expr
+    | regular_assign
     ;
 
 if_stmt:
