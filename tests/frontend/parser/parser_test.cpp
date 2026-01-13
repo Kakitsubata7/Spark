@@ -22,6 +22,7 @@
 #define EXPR_STMT(expr) MAKE(ExprStmt, expr)
 
 #define BLOCK(...) MAKE(BlockExpr, std::vector<Stmt*>{__VA_ARGS__})
+#define THROW(expr) MAKE(ThrowExpr, expr)
 
 #define BINARY(op, lhs, rhs) MAKE(BinaryExpr, op, lhs, rhs)
 #define BINARY_OP BinaryExpr::OpKind
@@ -35,6 +36,8 @@
 #define CALL(callee, ...) MAKE(CallExpr, callee, std::vector<CallArg*>{__VA_ARGS__})
 
 #define IDENT(name) MAKE(IdentifierExpr, name)
+
+#define INT(v) MAKE(IntLiteralExpr, v)
 
 #define IDENT_NAME(name) MAKE(IdentifierName, name)
 
@@ -64,6 +67,25 @@ TEST(ParserTest, IfThenTest) {
         EXPR_STMT(
             MAKE(IfThenExpr,
                 CALL(IDENT("foo")), IDENT("a"), IDENT("b")
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, TryElseTest) {
+    auto [ast, errors] = parse("x = try { foo(); throw Error() } else 1");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        ASSIGN(ASSIGN_OP::Assign,
+            IDENT("x"),
+            MAKE(TryElseExpr,
+                BLOCK(
+                    EXPR_STMT(CALL(IDENT("foo"))),
+                    EXPR_STMT(THROW(CALL(IDENT("Error"))))
+                ),
+                INT(BigInt(1))
             )
         )
     );
