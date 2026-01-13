@@ -716,10 +716,10 @@ struct AssignStmt final : Stmt {
     };
 
     OpKind op;
-    Expr* lhs;
+    Node* lhs;
     Node* rhs;
 
-    AssignStmt(Location start, Location end, OpKind op, Expr* lhs, Node* rhs) noexcept
+    AssignStmt(Location start, Location end, OpKind op, Node* lhs, Node* rhs) noexcept
         : Stmt(start, end), op(op), lhs(lhs), rhs(rhs) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
