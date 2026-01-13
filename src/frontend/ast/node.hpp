@@ -465,6 +465,8 @@ struct CallArg final : Node {
 
     CallArg(Location start, Location end, IdentifierName* name, Expr* expr) noexcept
         : Node(start, end), name(name), expr(expr) { }
+    CallArg(Location start, Location end, Expr* expr) noexcept
+        : CallArg(start, end, nullptr, expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

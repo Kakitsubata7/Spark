@@ -33,7 +33,12 @@
 #define POSTFIX(op, expr) MAKE(PostfixExpr, op, expr)
 #define POSTFIX_OP PostfixExpr::OpKind
 
+#define MEMBER(base, member) MAKE(MemberAccessExpr, base, member)
+
 #define CALL(callee, ...) MAKE(CallExpr, callee, std::vector<CallArg*>{__VA_ARGS__})
+#define CALL_ARG(...) MAKE(CallArg, __VA_ARGS__)
+
+#define SUBSCRIPT(base, ...) MAKE(SubscriptExpr, base, std::vector<Expr*>{__VA_ARGS__})
 
 #define IDENT(name) MAKE(IdentifierExpr, name)
 
@@ -300,6 +305,25 @@ TEST(ParserTest, OperatorTest14) {
             )
         )
     );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, OperatorTest15) {
+    auto [ast, errors] = parse("a.b(c)[d]");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            SUBSCRIPT(
+                CALL(
+                    MEMBER(IDENT("a"), IDENT_NAME("b")),
+                    CALL_ARG(IDENT("c"))
+                ),
+                IDENT("d")
+            )
+        )
+    );
+
     EXPECT_EQ(*ast.root, *root);
 }
 
