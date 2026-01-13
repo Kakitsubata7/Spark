@@ -82,20 +82,65 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 
 %type <std::vector<Spark::FrontEnd::Stmt*>> stmts stmt_list
 %type <Spark::FrontEnd::Stmt*> stmt
-%type <Spark::FrontEnd::Assign*> assign
-%type <Spark::FrontEnd::Assign::OpKind> assign_op
-%type <Spark::FrontEnd::TypeDef*> typedef
-%type <Spark::FrontEnd::TypeDef::TypeKind> typedef_kind
+%type <Symbol<Spark::FrontEnd::VarModifier>> varmod
+%type <Symbol<Spark::FrontEnd::VarModifier::VarKind>> varkind
+%type <Spark::FrontEnd::VarDefStmt*> vardef_stmt
+%type <bool> opt_immut
+%type <std::vector<Spark::FrontEnd::Expr*>> opt_template
+%type <Spark::FrontEnd::TypeDefStmt*> typedef_stmt
+%type <Symbol<Spark::FrontEnd::TypeDefStmt::TypeKind>> typedef_kind
+%type <Spark::FrontEnd::Name*> typedef_name
+%type <Spark::FrontEnd::AssignStmt*> assign_stmt
+%type <Spark::FrontEnd::AssignStmt::OpKind> assign_op
+%type <Spark::FrontEnd::Node*> assign_rhs
+%type <Spark::FrontEnd::IfStmt*> if_stmt
+%type <Spark::FrontEnd::BlockExpr*> else_clause
+%type <Spark::FrontEnd::ModuleStmt*> module_stmt
+%type <std::vector<Spark::FrontEnd::Name*>> module_path
+%type <Spark::FrontEnd::Name*> module_name
+
 %type <Spark::FrontEnd::Expr*> expr
-%type <Spark::FrontEnd::LambdaExpr*> lambda
+%type <std::vector<Spark::FrontEnd::Expr*>> exprs
+%type <Spark::FrontEnd::MatchExpr*> match
+%type <std::vector<Spark::FrontEnd::MatchCase*>> cases
+%type <Spark::FrontEnd::MatchCase*> case
+%type <Spark::FrontEnd::TryCatchExpr*> trycatch
+%type <std::vector<Spark::FrontEnd::CatchClause*>> catches
+%type <Spark::FrontEnd::CatchClause*> catch
 %type <Spark::FrontEnd::BlockExpr*> block
-%type <std::vector<Spark::FrontEnd::Expr*>> subscript_args
+%type <Spark::FrontEnd::Expr*> binary
+%type <Spark::FrontEnd::Expr*> binary_pipe
+%type <Spark::FrontEnd::Expr*> binary_type
+%type <Spark::FrontEnd::Expr*> binary_range
+%type <Spark::FrontEnd::Expr*> binary_coalesce
+%type <Spark::FrontEnd::Expr*> binary_logor
+%type <Spark::FrontEnd::Expr*> binary_logand
+%type <Spark::FrontEnd::Expr*> binary_bitor
+%type <Spark::FrontEnd::Expr*> binary_bitxor
+%type <Spark::FrontEnd::Expr*> binary_bitand
+%type <Spark::FrontEnd::Expr*> binary_eq
+%type <Spark::FrontEnd::Expr*> binary_compare
+%type <Spark::FrontEnd::Expr*> binary_bitshift
+%type <Spark::FrontEnd::Expr*> binary_additive
+%type <Spark::FrontEnd::Expr*> binary_multiplicative
 %type <Spark::FrontEnd::Expr*> prefix
 %type <Spark::FrontEnd::Expr*> postfix
+%type <std::vector<Spark::FrontEnd::CallExpr::Arg>> call_args
+%type <Spark::FrontEnd::CallExpr::Arg> call_arg
+%type <Spark::FrontEnd::IdentifierName*> arg_label
 %type <Spark::FrontEnd::Expr*> primary
-%type <Spark::FrontEnd::Identifier*> identifier
-%type <Spark::FrontEnd::Literal*> literal
+%type <Spark::FrontEnd::Expr*> literal_expr
+%type <Spark::FrontEnd::UpvalueExpr*> upvalue_expr
 %type <Symbol<uint64_t>> dollars
+%type <Spark::FrontEnd::TupleExpr*> tuple_expr
+%type <Spark::FrontEnd::CollectionExpr*> collection_expr
+
+%type <Spark::FrontEnd::Pattern*> pattern
+%type <std::vector<Spark::FrontEnd::Pattern*>> patterns
+%type <Spark::FrontEnd::CollectionPattern*> collection_pattern
+
+%type <Spark::FrontEnd::Name*> name
+%type <Symbol<Spark::FrontEnd::OverloadableOpKind>> overloadable_op
 
 %%
 %start program;
@@ -105,14 +150,14 @@ program:
     ;
 
 stmts:
-      /* empty */            { $$.clear(); }
+      /* empty */            { $$ = {}; }
     | stmt_list
     | stmt_list terminators
     ;
 
 stmt_list:
-      stmt                        { $$.push_back($1); }
-    | stmt_list terminators stmt  { $1.push_back($3); }
+      stmt                        { $$ = {}; $$.push_back($1); }
+    | stmt_list terminators stmt  { $$ = std::move($1); $$.push_back($3); }
     ;
 
 terminator:
@@ -126,47 +171,86 @@ terminators:
     ;
 
 stmt:
-    //  binding
-    //| assign
+      vardef_stmt                  { $$ = $1; }
     //| fndef
-    //| typedef
+    | typedef_stmt
+        {
+            if ($1->kind == TypeDefStmt::TypeKind::Alias) {
+                if ($1->bases.size() != 1) {
+                    RAISE_ERROR($1->start, $1->bases.back()->end, "alias requires exactly one base type");
+                }
+            } else if ($1->kind == TypeDefStmt::TypeKind::Extension) {
+                if ($1->bases.size() != 1) {
+                    RAISE_ERROR($1->start, $1->bases.back()->end, "extension requires exactly one base type");
+                }
+            }
+            $$ = $1;
+        }
     //| enumcase_stmt
-      if_stmt
-    | While expr block             { $$ = ast.make<While>($1.start, $3.end, $2, $3); }
-    //| For pattern In expr block  //{ $$ = ast.make<For>($1.start, $5.end, $2, $4, $5); }
+    | assign_stmt                  { $$ = $1; }
+    | if_stmt                      { $$ = $1; }
+    | While expr block             { $$ = ast.make<WhileStmt>($1.start, $3->end, $2, $3); }
+    | For pattern In expr block    { $$ = ast.make<ForStmt>($1.start, $5->end, $2, $4, $5); }
     | Break                        { $$ = ast.make<BreakStmt>($1.start, $1.end); }
     | Continue                     { $$ = ast.make<ContinueStmt>($1.start, $1.end); }
     | Return                       { $$ = ast.make<ReturnStmt>($1.start, $1.end, nullptr); }
-    | Return expr                //{ $$ = ast.make<Return>($1.start, $2.end, $2); }
-    //| module_stmt
+    | Return expr                  { $$ = ast.make<ReturnStmt>($1.start, $2->end, $2); }
+    | module_stmt                  { $$ = $1; }
     //| Export stmt                //{ $$ = ast.make<Export>($1.start, $2.end, $2); }
     //| import_stmt
     //| Undefine postfix           //{ $$ = ast.make<Undefine>($1.start, $2.end, $2); }
-    | expr                         { $$ = ast.make<ExprStmt>($1.start, $1.end, $1); }
+    | expr                         { $$ = ast.make<ExprStmt>($1->start, $1->end, $1); }
     ;
 
-assign:
-      pattern assign_op assign_rhs  //{ $$ = ast.make<Assign>($1->start, $3->end, $1, $3, $2); }
+varmod:
+      varkind Caret
+        {
+            $$ = Symbol($1.start, $2.end, VarModifier($1.value, true, VarModifier::Optionality::None));
+        }
+    | varkind Question
+        {
+            $$ = Symbol($1.start, $2.end, VarModifier($1.value, false, VarModifier::Optionality::Optional));
+        }
+    | varkind NonNull
+        {
+            $$ = Symbol($1.start, $2.end, VarModifier($1.value, false, VarModifier::Optionality::OptionalNonNull));
+        }
     ;
 
-assign_op:
-      Assign          //{ $$ = Assign::OpKind::Assign; }
-    | AddAssign       //{ $$ = Assign::OpKind::AddAssign; }
-    | SubAssign       //{ $$ = Assign::OpKind::SubAssign; }
-    | MulAssign       //{ $$ = Assign::OpKind::MulAssign; }
-    | DivAssign       //{ $$ = Assign::OpKind::DivAssign; }
-    | ModAssign       //{ $$ = Assign::OpKind::ModAssign; }
-    | BitAndAssign    //{ $$ = Assign::OpKind::BitAndAssign; }
-    | BitOrAssign     //{ $$ = Assign::OpKind::BitOrAssign; }
-    | BitXorAssign    //{ $$ = Assign::OpKind::BitXorAssign; }
-    | ShlAssign       //{ $$ = Assign::OpKind::BitShrAssign; }
-    | ShrAssign       //{ $$ = Assign::OpKind::BitShlAssign; }
-    | CoalesceAssign  //{ $$ = Assign::OpKind::CoalesceAssign; }
+varkind:
+      Let    { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Let); }
+    | Const  { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Const); }
+    | Ref    { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Ref); }
+    | Cref   { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Cref); }
     ;
 
-assign_rhs:
-      expr
-    | assign
+vardef_stmt:
+      varmod pattern
+        {
+            $$ = ast.make<VarDefStmt>($1.start, $2->end, $1.value, $2, nullptr, nullptr);
+        }
+    | varmod pattern Colon expr
+        {
+            $$ = ast.make<VarDefStmt>($1.start, $4->end, $1.value, $2, $4, nullptr);
+        }
+    | varmod pattern Assign assign_rhs
+        {
+            $$ = ast.make<VarDefStmt>($1.start, $4->end, $1.value, $2, nullptr, $4);
+        }
+    | varmod pattern Colon expr Assign assign_rhs
+        {
+            $$ = ast.make<VarDefStmt>($1.start, $6->end, $1.value, $2, $4, $6);
+        }
+    ;
+
+opt_immut:
+      /* empty */  { $$ = false; }
+    | Caret        { $$ = true; }
+    ;
+
+opt_template:
+      /* empty */              { $$ = {}; }
+    | LBracket exprs RBracket  { $$ = std::move($2); }
     ;
 
 fndef:
@@ -180,7 +264,8 @@ fn:
     ;
 
 fn_name:
-      identifier
+      Identifier
+    | Discard
     | Constructor
     | Destructor
     | overloadable_op
@@ -198,14 +283,13 @@ param_list:
 
 param:
       param_element
-    | annotations param_element
     ;
 
 param_element:
-      identifier
-    | identifier Colon expr
-    | binding_mod identifier
-    | binding_mod identifier Colon expr
+      Identifier
+    | Identifier Colon expr
+    //| binding_mod Identifier
+    //| binding_mod Identifier Colon expr
     ;
 
 captures:
@@ -220,9 +304,9 @@ capture_list:
 
 capture:
       postfix
-    | binding_mod postfix
+    //| binding_mod postfix
     | Range
-    | binding_mod Range
+    //| binding_mod Range
     ;
 
 fn_ret:
@@ -247,42 +331,35 @@ fn_throw:
     | Throw expr
     ;
 
-typedef:
-      typedef_kind typedef_name block
-        //{
-        //    $$ = ast.make<TypeDef>($1.start, $3->end, $1.value, false, $2, {}, $3);
-        //}
-    | typedef_kind Caret typedef_name block
-        //{
-        //    $$ = ast.make<TypeDef>($1.start, $4->end, $1.value, true, $3, {}, $4);
-        //}
-    | typedef_kind typedef_name Colon exprs block // TODO: Decide whether type should be expr or binary
-        //{
-        //    $$ = ast.make<TypeDef>($1.start, $5->end, $1.value, false, $2, std::move($4), $5);
-        //}
-    | typedef_kind Caret typedef_name Colon exprs block
-        //{
-        //    $$ = ast.make<TypeDef>($1.start, $6->end, $1.value, true, $3, std::move($5), $6);
-        //}
+typedef_stmt:
+      typedef_kind opt_immut typedef_name opt_template block
+        {
+            $$ = ast.make<TypeDefStmt>($1.start, $5->end, $1.value, $2, $3, std::move($4), std::vector<Expr*>(), $5);
+        }
+    | typedef_kind opt_immut typedef_name opt_template Colon exprs block
+        {
+            $$ = ast.make<TypeDefStmt>($1.start, $7->end, $1.value, $2, $3, std::move($4), std::move($6), $7);
+        }
     ;
 
 typedef_kind:
-      Struct       //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Struct); }
-    | Class        //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Class); }
-    | Enum         //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Enum); }
-    | Enum Struct  //{ $$ = Symbol($1.start, $2.end, TypeDef::TypeKind::EnumStruct); }
-    | Enum Class   //{ $$ = Symbol($1.start, $2.end, TypeDef::TypeKind::EnumClass); }
-    | Trait        //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Trait); }
-    | Alias        //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Alias); }
-    | Extension    //{ $$ = Symbol($1.start, $1.end, TypeDef::TypeKind::Extension); }
+      Struct       { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Struct); }
+    | Class        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Class); }
+    | Enum         { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Enum); }
+    | Enum Struct  { $$ = Symbol($1.start, $2.end, TypeDefStmt::TypeKind::EnumStruct); }
+    | Enum Class   { $$ = Symbol($1.start, $2.end, TypeDefStmt::TypeKind::EnumClass); }
+    | Trait        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Trait); }
+    | Alias        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Alias); }
+    | Extension    { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Extension); }
     ;
 
 typedef_name:
-      identifier
-    | discard
-    | constructor
-    | destructor
-    | overloadable_op
+      Identifier       { $$ = ast.make<IdentifierName>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard          { $$ = ast.make<DiscardName>($1.start, $1.end); }
+    | Constructor      { RAISE_ERROR($1.start, $1.end, "`constructor` cannot be used as a type definition name"); YYERROR; }
+    | Destructor       { RAISE_ERROR($1.start, $1.end, "`destructor` cannot be used as a type definition name"); YYERROR; }
+    | overloadable_op  { RAISE_ERROR($1.start, $1.end, "`operator` cannot be used as atype definition name"); YYERROR; }
+    | Self             { RAISE_ERROR($1.start, $1.end, "`self` cannot be used as a type definition name"); YYERROR; }
     ;
 
 enumcase_stmt:
@@ -292,14 +369,14 @@ enumcase_stmt:
     ;
 
 case_name:
-      identifier
-    | discard
+      Identifier
+    | Discard
     ;
 
 adt_constructor:
-      identifier LParen RParen
-    | identifier LParen positional_adt_members RParen
-    | identifier LParen named_adt_members RParen
+      Identifier LParen RParen
+    | Identifier LParen positional_adt_members RParen
+    | Identifier LParen named_adt_members RParen
     ;
 
 positional_adt_members:
@@ -313,21 +390,31 @@ named_adt_members:
     ;
 
 named_adt_member:
-      identifier Colon expr
+      Identifier Colon expr
     ;
 
-module_stmt:
-      Module module_path block  //{ $$ = ast.make<Module>($1.start, $3->end, std::move($2), $3); }
+assign_stmt:
+      expr assign_op assign_rhs  { $$ = ast.make<AssignStmt>($1->start, $3->end, $2, $1, $3); }
     ;
 
-module_path:
-      module_name                  //{ $$.clear(); $$.push_back($1); }
-    | module_path Dot module_name  //{ $$.push_back($3); }
+assign_op:
+      Assign          { $$ = AssignStmt::OpKind::Assign; }
+    | AddAssign       { $$ = AssignStmt::OpKind::AddAssign; }
+    | SubAssign       { $$ = AssignStmt::OpKind::SubAssign; }
+    | MulAssign       { $$ = AssignStmt::OpKind::MulAssign; }
+    | DivAssign       { $$ = AssignStmt::OpKind::DivAssign; }
+    | ModAssign       { $$ = AssignStmt::OpKind::ModAssign; }
+    | BitAndAssign    { $$ = AssignStmt::OpKind::BitAndAssign; }
+    | BitOrAssign     { $$ = AssignStmt::OpKind::BitOrAssign; }
+    | BitXorAssign    { $$ = AssignStmt::OpKind::BitXorAssign; }
+    | ShlAssign       { $$ = AssignStmt::OpKind::BitShrAssign; }
+    | ShrAssign       { $$ = AssignStmt::OpKind::BitShlAssign; }
+    | CoalesceAssign  { $$ = AssignStmt::OpKind::CoalesceAssign; }
     ;
 
-module_name:
-      identifier
-    | discard
+assign_rhs:
+      expr         { $$ = $1; }
+    | assign_stmt  { $$ = $1; }
     ;
 
 if_stmt:
@@ -335,9 +422,32 @@ if_stmt:
     ;
 
 else_clause:
-      /* empty */  { $$ = nullptr; }
-    | Else block   { $$ = $2; }
-    | Else ifelse  { $$ = $2; }
+      /* empty */   { $$ = nullptr; }
+    | Else block    { $$ = $2; }
+    | Else if_stmt
+        {
+            std::vector<Stmt*> stmts;
+            stmts.push_back($2);
+            $$ = ast.make<BlockExpr>($2->start, $2->end, std::move(stmts));
+        }
+    ;
+
+module_stmt:
+      Module module_path block  { $$ = ast.make<ModuleStmt>($1.start, $3->end, std::move($2), $3); }
+    ;
+
+module_path:
+      module_name                  { $$ = {}; $$.push_back($1); }
+    | module_path Dot module_name  { $$ = std::move($1); $$.push_back($3); }
+    ;
+
+module_name:
+      Identifier       { $$ = ast.make<IdentifierName>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard          { $$ = ast.make<DiscardName>($1.start, $1.end); }
+    | Constructor      { RAISE_ERROR($1.start, $1.end, "`constructor` cannot be used as a module definition name"); YYERROR; }
+    | Destructor       { RAISE_ERROR($1.start, $1.end, "`destructor` cannot be used as a module definition name"); YYERROR; }
+    | overloadable_op  { RAISE_ERROR($1.start, $1.end, "`operator` cannot be used as a module definition name"); YYERROR; }
+    | Self             { RAISE_ERROR($1.start, $1.end, "`self` cannot be used as a module definition name"); YYERROR; }
     ;
 
 import_stmt:
@@ -355,230 +465,221 @@ import:
     | postfix As Identifier
     ;
 
+
+
 expr:
       //lambda
-      If expr Then expr Else expr  { $$ = ast.make<IfThenExpr>($1.start, $6.end, $2, $4, $6); }
-    | Try expr Else expr           { $$ = ast.make<TryElseEXpr>($1.start, $4.end, $2, $4); }
-    //| match
-    //| trycatch
-    | Throw expr                   { $$ = ast.make<ThrowExpr>($1.start, $2.end, $2); }
-    | block
-    //| binary
+      If expr Then expr Else expr   { $$ = ast.make<IfThenExpr>($1.start, $6->end, $2, $4, $6); }
+    | Try expr Else expr            { $$ = ast.make<TryElseExpr>($1.start, $4->end, $2, $4); }
+    | match                         { $$ = $1; }
+    | trycatch                      { $$ = $1; }
+    | Throw expr                    { $$ = ast.make<ThrowExpr>($1.start, $2->end, $2); }
+    | block                         { $$ = $1; }
+    | binary Is expr                { $$ = ast.make<IsExpr>($1->start, $3->end, $1, $3); }
+    | binary As pattern Colon expr  { $$ = ast.make<AsExpr>($1->start, $5->end, $1, $3, $5); }
+    | binary
     ;
 
 exprs:
-      expr
-    | exprs Comma expr
+      expr              { $$ = {}; $$.push_back($1); }
+    | exprs Comma expr  { $$ = std::move($1); $$.push_back($3); }
     ;
 
 lambda:
-      fn params captures fn_ret fn_throw FatArrow expr
+      fn params captures fn_ret fn_throw FatArrow expr  {}
     ;
 
 match:
-      Match expr LBrace cases RBrace
-        //{
-        //    $$ = ast.make<Match>($1.start, $5.end, nullptr, $2, std::move($4));
-        //}
-    | Match pattern Assign expr LBrace cases RBrace
-        //{
-        //    $$ = ast.make<Match>($1.start, $7.end, $2, $4, std::move($6););
-        //}
+      Match expr LBrace cases RBrace  { $$ = ast.make<MatchExpr>($1.start, $5.end, $2, std::move($4)); }
     ;
 
 cases:
-      case        //{ $$.clear(); $$.push_back($1); }
-    | cases case  //{ $$.push_back($2); }
+      case        { $$ = {}; $$.push_back($1); }
+    | cases case  { $$ = std::move($1); $$.push_back($2); }
     ;
 
 case:
-      Case pattern FatArrow expr          //{ $$ = Match::Case($2, nullptr, $4); }
-    | Case If expr FatArrow expr          //{ $$ = Match::Case(nullptr, $3, $5); }
-    | Case pattern If expr FatArrow expr  //{ $$ = Match::Case($2, $4, $6); }
+      Case pattern FatArrow expr          { $$ = ast.make<MatchCase>($1.start, $4->end, $2, nullptr, $4); }
+    | Case If expr FatArrow expr          { $$ = ast.make<MatchCase>($1.start, $5->end, nullptr, $3, $5); }
+    | Case pattern If expr FatArrow expr  { $$ = ast.make<MatchCase>($1.start, $6->end, $2, $4, $6); }
     ;
 
 trycatch:
-      Try expr LBrace catches RBrace  //{ $$ = ast.make<TryCatch>($1.start, $5.end, $2, std::move($4)); }
+      Try expr LBrace catches RBrace  { $$ = ast.make<TryCatchExpr>($1.start, $5.end, $2, std::move($4)); }
     ;
 
 catches:
-      catch          //{ $$.clear(); $$.push_back($1); }
-    | catches catch  //{ $$.push_back($2); }
+      catch          { $$ = {}; $$.push_back($1); }
+    | catches catch  { $$ = std::move($1); $$.push_back($2); }
     ;
 
 catch:
-      Catch pattern FatArrow expr          //{ $$ = TryCatch::Catch($2, nullptr, $4); }
-    | Catch If expr FatArrow expr          //{ $$ = TryCatch::Catch(nullptr, $3, $5); }
-    | Catch pattern If expr FatArrow expr  //{ $$ = TryCatch::Catch($2, $4, $6); }
+      Catch pattern FatArrow expr          { $$ = ast.make<CatchClause>($1.start, $4->end, $2, nullptr, $4); }
+    | Catch If expr FatArrow expr          { $$ = ast.make<CatchClause>($1.start, $5->end, nullptr, $3, $5); }
+    | Catch pattern If expr FatArrow expr  { $$ = ast.make<CatchClause>($1.start, $6->end, $2, $4, $6); }
     ;
 
 block:
-      LBrace stmts RBrace  { $$ = make<BlockExpr>($1.start, $3.end, std::move($2)); }
+      LBrace stmts RBrace  { $$ = ast.make<BlockExpr>($1.start, $3.end, std::move($2)); }
     ;
 
 binary:
-      binary_is
-    ;
-
-binary_is:
-      binary_pipe Is pattern
-    | binary_pipe Is binary_pipe
-    | binary_pipe
+      binary_pipe
     ;
 
 binary_pipe:
       binary_type Pipe binary_pipe
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Pipe);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Pipe, $1, $3);
+        }
     | binary_type
     ;
 
 binary_type:
       binary_range Arrow binary_type
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::FuncType);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::FuncType, $1, $3);
+        }
     | binary_range
     ;
 
 binary_range:
       binary_coalesce Range binary_coalesce
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Range);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Range, $1, $3);
+        }
     | binary_coalesce RangeExcl binary_coalesce
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::RangeExcl);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::RangeExcl, $1, $3);
+        }
     | binary_coalesce
     ;
 
 binary_coalesce:
       binary_logor Coalesce binary_coalesce
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Coalesce);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Coalesce, $1, $3);
+        }
     | binary_logor
     ;
 
 binary_logor:
       binary_logor LogOr binary_logand
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::LogOr);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::LogOr, $1, $3);
+        }
     | binary_logand
     ;
 
 binary_logand:
       binary_logand LogAnd binary_bitor
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::LogAnd);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::LogAnd, $1, $3);
+        }
     | binary_bitor
     ;
 
 binary_bitor:
       binary_bitor VBar binary_bitxor
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::BitOr);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::BitOr, $1, $3);
+        }
     | binary_bitxor
     ;
 
 binary_bitxor:
       binary_bitxor Caret binary_bitand
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::BitXor);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::BitXor, $1, $3);
+        }
     | binary_bitand
     ;
 
 binary_bitand:
       binary_bitand And binary_eq
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::BitAnd);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::BitAnd, $1, $3);
+        }
     | binary_eq
     ;
 
 binary_eq:
       binary_compare Eq binary_compare
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Eq);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Eq, $1, $3);
+        }
     | binary_compare Ne binary_compare
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Ne);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Ne, $1, $3);
+        }
     | binary_compare StrictEq binary_compare
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::StrictEq);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::StrictEq, $1, $3);
+        }
     | binary_compare StrictNe binary_compare
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::StrictNe);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::StrictNe, $1, $3);
+        }
     | binary_compare
     ;
 
 binary_compare:
       binary_bitshift Lt binary_bitshift
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Lt);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Lt, $1, $3);
+        }
     | binary_bitshift Le binary_bitshift
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Le);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Le, $1, $3);
+        }
     | binary_bitshift Gt binary_bitshift
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Gt);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Gt, $1, $3);
+        }
     | binary_bitshift Ge binary_bitshift
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Ge);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Ge, $1, $3);
+        }
     | binary_bitshift
     ;
 
 binary_bitshift:
       binary_bitshift Shl binary_additive
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::BitShl);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::BitShl, $1, $3);
+        }
     | binary_bitshift Shr binary_additive
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::BitShr);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::BitShr, $1, $3);
+        }
     | binary_additive
     ;
 
 binary_additive:
       binary_additive Add binary_multiplicative
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Add);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Add, $1, $3);
+        }
     | binary_additive Sub binary_multiplicative
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Sub);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Sub, $1, $3);
+        }
     | binary_multiplicative
     ;
 
 binary_multiplicative:
       binary_multiplicative Mul prefix
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Mul);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Mul, $1, $3);
+        }
     | binary_multiplicative Div prefix
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Div);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Div, $1, $3);
+        }
     | binary_multiplicative Mod prefix
-        /*{
-            $$ = ast.make<BinaryExpr>($1->start, $3->end, $1, $3, BinaryExpr::OpKind::Mod);
-        }*/
+        {
+            $$ = ast.make<BinaryExpr>($1->start, $3->end, BinaryExpr::OpKind::Mod, $1, $3);
+        }
     | prefix
     ;
 
@@ -592,245 +693,199 @@ prefix:
     ;
 
 postfix:
-      primary
-    | postfix Question         //{ $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::Optional, $1); }
-    | postfix NonNull          //{ $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::NonNull, $1); }
-    | postfix Bang             //{ $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::ForceUnwrap, $1); }
-    | postfix Dot member_name  //{ $$ = ast.make<MemberAccess>($1->start, $3->end, $1, $3); }
-    | Global Dot member_name   //{}
-    | postfix LParen call_args RParen
-    | postfix LBracket subscript_args RBracket
+      postfix Question  { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::Optional, $1); }
+    | postfix NonNull   { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::NonNull, $1); }
+    | postfix Bang      { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::ForceUnwrap, $1); }
+    | postfix Dot name
         {
-            $$ = ast.make<SubscriptExpr>($1.start, $4.end, $1, std::move($3));
+            if (dynamic_cast<DiscardName*>($3) != nullptr) {
+                RAISE_ERROR($3->start, $3->end, "`_` cannot be used as an expression");
+                YYERROR;
+            }
+            $$ = ast.make<MemberAccessExpr>($1->start, $3->end, $1, $3);
         }
-    ;
-
-member_name:
-      identifier
-    | constructor
-    | destructor
-    | overloadable_op
+    | postfix LParen call_args RParen
+        {
+            $$ = ast.make<CallExpr>($1->start, $4.end, $1, std::move($3));
+        }
+    | postfix LBracket exprs RBracket
+        {
+            $$ = ast.make<SubscriptExpr>($1->start, $4.end, $1, std::move($3));
+        }
+    | primary
     ;
 
 call_args:
-      /* empty */
-    | positional_args
-    | positional_args Comma named_args
-    | named_args
+      /* empty */               { $$ = {}; }
+    | call_arg                  { $$ = {}; $$.push_back($1); }
+    | call_args Comma call_arg  { $$ = $1; $$.push_back($3); }
     ;
 
-positional_args:
-      pattern
-    | positional_args Comma pattern
+call_arg:
+      expr  { $$ = CallExpr::Arg(nullptr, $1); }
+    | arg_label Colon expr  { $$ = CallExpr::Arg($1, $3); }
     ;
 
-named_args:
-      named_arg
-    | named_args Comma named_arg
-    ;
-
-named_arg:
-      identifier Colon pattern
-    ;
-
-subscript_args:
-      expr                       { $$.clear(); $$.push_back($1); }
-    | subscript_args Comma expr  { $$.push_back($3); }
+arg_label:
+      Identifier       { $$ = ast.make<IdentifierName>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard          { RAISE_ERROR($1.start, $1.end, "`_` cannot be used for module definition"); YYERROR; }
+    | Constructor      { RAISE_ERROR($1.start, $1.end, "`constructor` cannot be used for module definition"); YYERROR; }
+    | Destructor       { RAISE_ERROR($1.start, $1.end, "`destructor` cannot be used for module definition"); YYERROR; }
+    | overloadable_op  { RAISE_ERROR($1.start, $1.end, "`operator` cannot be used for module definition"); YYERROR; }
+    | Self             { RAISE_ERROR($1.start, $1.end, "`self` cannot be used for module definition"); YYERROR; }
     ;
 
 primary:
-      literal                    { $$ = ast.make<LiteralExpr>($1.start, $1.end, $1); }
-    | identifier                 { $$ = ast.make<IdentifierExpr>($1.start, $1.end, $1); }
-    | Discard
-        {
-            RAISE_ERROR($1.start, $1.end, "`_` cannot be used as an expression");
-            YYERROR;
-        }
-    | Self                       { $$ = ast.make<SelfExpr>($1.start, $1.end); }
+      literal_expr
+    | Identifier                 { $$ = ast.make<IdentifierExpr>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard                    { RAISE_ERROR($1.start, $1.end, "`_` cannot be used as an expression"); YYERROR; }
     | Constructor                { $$ = ast.make<ConstructorExpr>($1.start, $1.end); }
     | Destructor                 { $$ = ast.make<DestructorExpr>($1.start, $1.end); }
-    | overloadable_op
-    | upvalue
+    | overloadable_op            { $$ = ast.make<OverloadableOpExpr>($1.start, $1.end, $1.value); }
+    | Self                       { $$ = ast.make<SelfExpr>($1.start, $1.end); }
+    | Global Dot name            { $$ = ast.make<GlobalAccessExpr>($1.start, $3->end, $3); }
+    | upvalue_expr               { $$ = $1; }
     | LParen expr RParen         { $$ = $2; }
-    | tuple
-    | collection
+    | tuple_expr                 { $$ = $1; }
+    | collection_expr            { $$ = $1; }
     | Typeof LParen expr RParen  { $$ = ast.make<TypeofExpr>($1.start, $4.end, $3); }
     ;
 
-literal:
-      Integer        { $$ = ast.make<IntLiteral>($1.start, $1.end, BigInt($1.lexeme)); }
-    | Real           { $$ = ast.make<RealLiteral>($1.start, $1.end, BigReal($1.lexeme)); }
-    | True           { $$ = ast.make<BoolLiteral>($1.start, $1.end, true); }
-    | False          { $$ = ast.make<BoolLiteral>($1.start, $1.end, false); }
-    | String         { $$ = ast.make<StringLiteral>($1.start, $1.end, std::move($1.lexeme)); }
-    | Nil            { $$ = ast.make<NilLiteral>($1.start, $1.end); }
-    | LParen RParen  { $$ = ast.make<VoidLiteral>($1.start, $1.end); }
+literal_expr:
+      Integer        { $$ = ast.make<IntLiteralExpr>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real           { $$ = ast.make<RealLiteralExpr>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True           { $$ = ast.make<BoolLiteralExpr>($1.start, $1.end, true); }
+    | False          { $$ = ast.make<BoolLiteralExpr>($1.start, $1.end, false); }
+    | String         { $$ = ast.make<StringLiteralExpr>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil            { $$ = ast.make<NilLiteralExpr>($1.start, $1.end); }
+    | LParen RParen  { $$ = ast.make<VoidLiteralExpr>($1.start, $1.end); }
     ;
 
-identifier:
-      Identifier  { $$ = ast.make<Identifier>($1.start, $1.end, std::move($1.lexeme)); }
-    ;
-
-discard:
-      Discard  //{ $$ = ast.make<Discard>($1.start, $1.end); }
-    ;
-
-global:
-      Global  //{ $$ = ast.make<Global>($1.start, $1.end); }
-    ;
-
-self:
-      Self  //{ $$ = ast.make<Self>($1.start, $1.end); }
-    ;
-
-constructor:
-      Constructor  //{ $$ = ast.make<Constructor>($1.start, $1.end); }
-    ;
-
-destructor:
-      Destructor  //{ $$ = ast.make<Destructor>($1.start, $1.end); }
-    ;
-
-overloadable_op:
-      Operator Add            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Add); }
-    | Operator Sub            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Sub); }
-    | Operator Mul            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Mul); }
-    | Operator Div            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Div); }
-    | Operator Mod            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Mod); }
-    | Operator Tide           //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitNot); }
-    | Operator And            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitAnd); }
-    | Operator VBar           //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitOr); }
-    | Operator Caret          //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitXor); }
-    | Operator Shl            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitShl); }
-    | Operator Shr            //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitShr); }
-    | Operator Bang           //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::LogNot); }
-    | Operator LogAnd         //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::LogAnd); }
-    | Operator LogOr          //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::LogOr); }
-    | Operator Eq             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Eq); }
-    | Operator Ne             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Ne); }
-    | Operator Lt             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Lt); }
-    | Operator Le             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Le); }
-    | Operator Gt             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Gt); }
-    | Operator Ge             //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Ge); }
-    | Operator Range          //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::Range); }
-    | Operator RangeExcl      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::RangeExcl); }
-    | Operator LParen RParen  //{ $$ = ast.make<OverloadableOp>($1.start, $3.end, OverloadableOp::OpKind::Call); }
-    | Operator LBracket RBracket
-        //{
-        //    $$ = ast.make<OverloadableOp>($1.start, $3.end, OverloadableOp::OpKind::Subscript);
-        //}
-    | Operator AddAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::AddAssign); }
-    | Operator SubAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::SubAssign); }
-    | Operator MulAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::MulAssign); }
-    | Operator DivAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::DivAssign); }
-    | Operator ModAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::ModAssign); }
-    | Operator BitAndAssign   //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitAndAssign); }
-    | Operator BitOrAssign    //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitOrAssign); }
-    | Operator BitXorAssign   //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitXorAssign); }
-    | Operator ShlAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitShlAssign); }
-    | Operator ShrAssign      //{ $$ = ast.make<OverloadableOp>($1.start, $2.end, OverloadableOp::OpKind::BitShrAssign); }
-    ;
-
-upvalue:
-      dollars identifier       //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
-    | dollars discard          //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
-    | dollars self             //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
-    | dollars constructor      //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
-    | dollars destructor       //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
-    | dollars overloadable_op  //{ $$ = ast.make<Upvalue>($1.start, $2->end, $1.value, $2); }
+upvalue_expr:
+      dollars name
+        {
+            if (dynamic_cast<DiscardName*>($2) != nullptr) {
+                RAISE_ERROR($2->start, $2->end, "`_` cannot be used as an expression");
+                YYERROR;
+            }
+            $$ = ast.make<UpvalueExpr>($1.start, $2->end, $1.value, $2);
+        }
     ;
 
 dollars:
-      Dollar          { $$ = Symbol(1); }
+      Dollar          { $$ = Symbol<uint64_t>($1.start, $1.end, 1); }
     | dollars Dollar  { ++($$.value); $$.end = $2.end; }
     ;
 
-tuple:
-      LParen pattern Comma patterns RParen
+tuple_expr:
+      LParen expr Comma exprs RParen
+        {
+            $4.insert($4.begin(), $2);
+            $$ = ast.make<TupleExpr>($1.start, $5.end, std::move($4));
+        }
     ;
 
-/**
- * [], [...], [patterns], [..., patterns], [patterns, ...], [patterns, ..., patterns]
- */
-collection:
-      // []
-      LBracket RBracket
-      // [...]
-    | LBracket Range RBracket
-      // [patterns]
-    | LBracket patterns RBracket
-      // [..., patterns]
-    | LBracket Range Comma patterns RBracket
-      // [patterns, ...]
-    | LBracket patterns Comma Range RBracket
-      // [patterns, ..., patterns]
-    | LBracket patterns Comma Range Comma patterns RBracket
+collection_expr:
+      LBracket exprs RBracket  { $$ = ast.make<CollectionExpr>($1.start, $3.end, std::move($2)); }
     ;
 
 
 
 pattern:
-      binding
-    | expr
+      Integer             { $$ = ast.make<IntLiteralPattern>($1.start, $1.end, BigInt($1.lexeme)); }
+    | Real                { $$ = ast.make<RealLiteralPattern>($1.start, $1.end, BigReal($1.lexeme)); }
+    | True                { $$ = ast.make<BoolLiteralPattern>($1.start, $1.end, true); }
+    | False               { $$ = ast.make<BoolLiteralPattern>($1.start, $1.end, false); }
+    | String              { $$ = ast.make<StringLiteralPattern>($1.start, $1.end, std::move($1.lexeme)); }
+    | Nil                 { $$ = ast.make<NilLiteralPattern>($1.start, $1.end); }
+    | LParen RParen       { $$ = ast.make<VoidLiteralPattern>($1.start, $1.end); }
+    | Identifier          { $$ = ast.make<BindingPattern>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard             { $$ = ast.make<WildcardPattern>($1.start, $1.end); }
+    | LParen patterns RParen
+        {
+            $$ = ast.make<TuplePattern>($1.start, $3.end, std::move($2));
+        }
+    | collection_pattern  { $$ = $1; }
     ;
 
 patterns:
-      pattern
-    | patterns Comma pattern
+      pattern                 { $$ = {}; $$.push_back($1); }
+    | patterns Comma pattern  { $$ = std::move($1); $$.push_back($3); }
     ;
 
-binding:
-      bind
-    | annotations bind
-    ;
-
-bind:
-      binding_mod identifier
-    | binding_mod identifier Colon expr
-    ;
-
-binding_mod:
-      binding_kind
-        //{
-        //    $$ = ast.make<BindingModifier>($1.start, $1.end, $1.value, false, BindingModifier::Optionality::None);
-        //}
-    | binding_kind Caret
-        //{
-        //    $$ = ast.make<BindingModifier>($1.start, $2.end, $1.value, true, BindingModifier::Optionality::None);
-        //}
-    | binding_kind Question
-        //{
-        //    $$ = ast.make<BindingModifier>($1.start, $2.end, $1.value, false, BindingModifier::Optionality::Optional);
-        //}
-    | binding_kind NonNull
-        //{
-        //    $$ = ast.make<BindingModifier>($1.start, $2.end, $1.value, false,
-        //                                   BindingModifier::Optionality::OptionalNonNull);
-        //}
-    ;
-
-binding_kind:
-      Let    //{ $$ = Symbol($1.start, $1.end, BindingModifier::BindingKind::Let); }
-    | Const  //{ $$ = Symbol($1.start, $1.end, BindingModifier::BindingKind::Const); }
-    | Ref    //{ $$ = Symbol($1.start, $1.end, BindingModifier::BindingKind::Ref); }
-    | Cref   //{ $$ = Symbol($1.start, $1.end. BindingModifier::BindingKind::Cref); }
+collection_pattern:
+      LBracket RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $2.end, std::vector<Pattern*>(), std::vector<Pattern*>(), true);
+        }
+    | LBracket Range RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $3.end, std::vector<Pattern*>(), std::vector<Pattern*>(), false);
+        }
+    | LBracket patterns RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $3.end, std::move($2), std::vector<Pattern*>(), true);
+        }
+    | LBracket Range Comma patterns RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $5.end, std::vector<Pattern*>(), std::move($4), false);
+        }
+    | LBracket patterns Comma Range RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $5.end, std::move($2), std::vector<Pattern*>(), false);
+        }
+    | LBracket patterns Comma Range Comma patterns RBracket
+        {
+            $$ = ast.make<CollectionPattern>($1.start, $7.end, std::move($2), std::move($6), false);
+        }
     ;
 
 
 
-annotation:
-      At annot_name
-    | At annot_name LParen call_args RParen
+name:
+      Identifier       { $$ = ast.make<IdentifierName>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard          { $$ = ast.make<DiscardName>($1.start, $1.end); }
+    | Constructor      { $$ = ast.make<ConstructorName>($1.start, $1.end); }
+    | Destructor       { $$ = ast.make<DestructorName>($1.start, $1.end); }
+    | overloadable_op  { $$ = ast.make<OverloadableOpName>($1.start, $1.end, $1.value); }
+    | Self             { $$ = ast.make<SelfName>($1.start, $1.end); }
     ;
 
-annotations:
-      annotation
-    | annotations annotation
-    ;
-
-annot_name:
-      identifier
-    | annot_name Dot identifier
+overloadable_op:
+      Operator Add                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Add); }
+    | Operator Sub                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Sub); }
+    | Operator Mul                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Mul); }
+    | Operator Div                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Div); }
+    | Operator Mod                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Mod); }
+    | Operator Tide               { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitNot); }
+    | Operator And                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitAnd); }
+    | Operator VBar               { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitOr); }
+    | Operator Caret              { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitXor); }
+    | Operator Shl                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitShl); }
+    | Operator Shr                { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitShr); }
+    | Operator Bang               { $$ = Symbol($1.start, $2.end, OverloadableOpKind::LogNot); }
+    | Operator LogAnd             { $$ = Symbol($1.start, $2.end, OverloadableOpKind::LogAnd); }
+    | Operator LogOr              { $$ = Symbol($1.start, $2.end, OverloadableOpKind::LogOr); }
+    | Operator Eq                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Eq); }
+    | Operator Ne                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Ne); }
+    | Operator Lt                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Lt); }
+    | Operator Le                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Le); }
+    | Operator Gt                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Gt); }
+    | Operator Ge                 { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Ge); }
+    | Operator Range              { $$ = Symbol($1.start, $2.end, OverloadableOpKind::Range); }
+    | Operator RangeExcl          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::RangeExcl); }
+    | Operator LParen RParen      { $$ = Symbol($1.start, $3.end, OverloadableOpKind::Call); }
+    | Operator LBracket RBracket  { $$ = Symbol($1.start, $3.end, OverloadableOpKind::Subscript); }
+    | Operator AddAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::AddAssign); }
+    | Operator SubAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::SubAssign); }
+    | Operator MulAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::MulAssign); }
+    | Operator DivAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::DivAssign); }
+    | Operator ModAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::ModAssign); }
+    | Operator BitAndAssign       { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitAndAssign); }
+    | Operator BitOrAssign        { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitOrAssign); }
+    | Operator BitXorAssign       { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitXorAssign); }
+    | Operator ShlAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitShlAssign); }
+    | Operator ShrAssign          { $$ = Symbol($1.start, $2.end, OverloadableOpKind::BitShrAssign); }
     ;
 %%
 
