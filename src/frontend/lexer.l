@@ -281,6 +281,7 @@ using namespace Spark::FrontEnd;
 
 "??=" { UPDATE_LOC(); RETURN_TOK(TokenType::CoalesceAssign); }
 "??" { UPDATE_LOC(); RETURN_TOK(TokenType::Coalesce); }
+"?!" { UPDATE_LOC(); RETURN_TOK(TokenType::NonNull); }
 "?" { UPDATE_LOC(); RETURN_TOK(TokenType::Question); }
 
 "," { UPDATE_LOC(); RETURN_TOK(TokenType::Comma); }
