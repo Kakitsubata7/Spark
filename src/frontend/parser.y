@@ -38,6 +38,8 @@ namespace yy {
 }
 
 %code {
+#include <typeinfo>
+
 using namespace Spark;
 using namespace Spark::FrontEnd;
 
