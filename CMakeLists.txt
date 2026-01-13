@@ -130,6 +130,9 @@ add_executable(sparktest
 
         tests/frontend/parser/parser_test.cpp
 
+        tests/frontend/source_buffer_test.cpp
+        tests/frontend/source_reader_test.cpp
+
         tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest
