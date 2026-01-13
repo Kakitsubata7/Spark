@@ -11,7 +11,7 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::AST& ast}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::AST& ast} {std::vector<Spark::Error>& errors}
 
 %code requires {
 #include <cstdint>
@@ -19,6 +19,7 @@
 
 #include "frontend/ast.hpp"
 #include "frontend/lexer/token_value.hpp"
+#include "utils/error.hpp"
 
 typedef void* yyscan_t;
 
@@ -954,4 +955,5 @@ overloadable_op:
 void yy::parser::error(const yy::location& loc, const std::string& msg) {
     Location start(static_cast<size_t>(loc.begin.line), static_cast<size_t>(loc.begin.column));
     Location end(static_cast<size_t>(loc.end.line), static_cast<size_t>(loc.end.column));
+    errors.emplace_back(msg, start, end);
 }
