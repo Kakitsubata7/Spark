@@ -697,7 +697,8 @@ struct VarDefStmt final : Stmt {
     /* nullable */ Expr* type;
     /* nullable */ Node* rhs;
 
-    VarDefStmt(Location start, Location end, VarModifier* mod, Pattern* pattern, Expr* type, Node* rhs) noexcept
+    VarDefStmt(Location start, Location end, VarModifier* mod, Pattern* pattern,
+               Expr* type = nullptr, Node* rhs = nullptr) noexcept
         : Stmt(start, end), mod(mod), pattern(pattern), type(type), rhs(rhs) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
