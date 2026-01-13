@@ -10,18 +10,25 @@
 #include "utils/error.hpp"
 
 #define MAKE(type, ...) ast.make<type>(Location(0, 0), Location(0, 0), __VA_ARGS__)
+
 #define VARMOD(kind, isImmut, opt) MAKE(VarModifier, kind, isImmut, opt)
 #define VARKIND VarModifier::VarKind
 #define VAROPT VarModifier::Optionality
 #define VARDEF(mod, pattern, ...) MAKE(VarDefStmt, mod, pattern, __VA_ARGS__)
+
 #define ASSIGN(op, lhs, rhs) MAKE(AssignStmt, op, lhs, rhs)
 #define ASSIGN_OP AssignStmt::OpKind
+
 #define EXPR_STMT(expr) MAKE(ExprStmt, expr)
+
 #define BLOCK(...) MAKE(BlockExpr, std::vector<Stmt*>{__VA_ARGS__})
+
 #define BINARY(op, lhs, rhs) MAKE(BinaryExpr, op, lhs, rhs)
 #define BINARY_OP BinaryExpr::OpKind
+
 #define PREFIX(op, expr) MAKE(PrefixExpr, op, expr)
 #define PREFIX_OP PrefixExpr::OpKind
+
 #define IDENT(name) MAKE(IdentifierExpr, name)
 
 using namespace Spark;
@@ -202,6 +209,20 @@ TEST(ParserTest, OperatorTest11) {
     EXPECT_FALSE(errors.empty());
 }
 
+TEST(ParserTest, TypeofTest) {
+    auto [ast, errors] = parse("typeof(x + y)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            MAKE(TypeofExpr,
+                 BINARY(BINARY_OP::Add, IDENT("x"), IDENT("y"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
 TEST(ParserTest, AssignTest1) {
     // Making sure `??=` binds looser than others
     auto [ast, errors] = parse("a = b ?\?= c");
@@ -244,7 +265,6 @@ TEST(ParserTest, AssignTest3) {
             )
         )
     );
-
     EXPECT_EQ(*ast.root, *root);
 }
 
@@ -260,7 +280,6 @@ TEST(ParserTest, VarDefTest1) {
             IDENT("y")
         )
     );
-
     EXPECT_EQ(*ast.root, *root);
 }
 
@@ -276,7 +295,6 @@ TEST(ParserTest, VarDefTest2) {
             IDENT("y")
         )
     );
-
     EXPECT_EQ(*ast.root, *root);
 }
 
@@ -291,7 +309,6 @@ TEST(ParserTest, VarDefTest3) {
             IDENT("T")
         )
     );
-
     EXPECT_EQ(*ast.root, *root);
 }
 
@@ -307,6 +324,5 @@ TEST(ParserTest, VarDefTest4) {
             IDENT("y")
         )
     );
-
     EXPECT_EQ(*ast.root, *root);
 }
