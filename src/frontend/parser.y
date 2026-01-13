@@ -82,11 +82,24 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 
 %type <std::vector<Spark::FrontEnd::Stmt*>> stmts stmt_list
 %type <Spark::FrontEnd::Stmt*> stmt
-%type <Symbol<Spark::FrontEnd::VarModifier>> varmod
+%type <Spark::FrontEnd::VarModifier*> varmod
 %type <Symbol<Spark::FrontEnd::VarModifier::VarKind>> varkind
 %type <Spark::FrontEnd::VarDefStmt*> vardef_stmt
+%type <Spark::FrontEnd::VarModifier*> opt_varmod
 %type <bool> opt_immut
 %type <std::vector<Spark::FrontEnd::Expr*>> opt_template
+%type <Spark::FrontEnd::FnDefStmt*> fndef_stmt
+%type <Spark::FrontEnd::Name*> fn_name
+%type <std::vector<Spark::FrontEnd::FnParam*>> param_clause
+%type <std::vector<Spark::FrontEnd::FnParam*>> params
+%type <Spark::FrontEnd::FnParam*> param
+%type <Spark::FrontEnd::FnCaptureClause*> capture_clause
+%type <Spark::FrontEnd::FnCaptureClause*> captures
+%type <Spark::FrontEnd::FnCapture*> capture
+%type <std::vector<Spark::FrontEnd::FnReturn*>> ret_clause
+%type <std::vector<Spark::FrontEnd::FnReturn*>> rets
+%type <Spark::FrontEnd::FnReturn*> ret
+%type <std::pair<bool, Spark::FrontEnd::Expr*>> throw_clause
 %type <Spark::FrontEnd::TypeDefStmt*> typedef_stmt
 %type <Symbol<Spark::FrontEnd::TypeDefStmt::TypeKind>> typedef_kind
 %type <Spark::FrontEnd::Name*> typedef_name
@@ -101,6 +114,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 
 %type <Spark::FrontEnd::Expr*> expr
 %type <std::vector<Spark::FrontEnd::Expr*>> exprs
+%type <Spark::FrontEnd::LambdaExpr*> lambda
 %type <Spark::FrontEnd::MatchExpr*> match
 %type <std::vector<Spark::FrontEnd::MatchCase*>> cases
 %type <Spark::FrontEnd::MatchCase*> case
@@ -172,7 +186,7 @@ terminators:
 
 stmt:
       vardef_stmt                  { $$ = $1; }
-    //| fndef
+    | fndef_stmt                   { $$ = $1; }
     | typedef_stmt
         {
             if ($1->kind == TypeDefStmt::TypeKind::Alias) {
@@ -196,24 +210,28 @@ stmt:
     | Return                       { $$ = ast.make<ReturnStmt>($1.start, $1.end, nullptr); }
     | Return expr                  { $$ = ast.make<ReturnStmt>($1.start, $2->end, $2); }
     | module_stmt                  { $$ = $1; }
-    //| Export stmt                //{ $$ = ast.make<Export>($1.start, $2.end, $2); }
+    //| Export stmt                { $$ = ast.make<Export>($1.start, $2.end, $2); }
     //| import_stmt
-    //| Undefine postfix           //{ $$ = ast.make<Undefine>($1.start, $2.end, $2); }
+    //| Undefine postfix           { $$ = ast.make<Undefine>($1.start, $2.end, $2); }
     | expr                         { $$ = ast.make<ExprStmt>($1->start, $1->end, $1); }
     ;
 
 varmod:
-      varkind Caret
+      varkind
         {
-            $$ = Symbol($1.start, $2.end, VarModifier($1.value, true, VarModifier::Optionality::None));
+           $$ = ast.make<VarModifier>($1.start, $1.end, $1.value, false, VarModifier::Optionality::None);
+        }
+    | varkind Caret
+        {
+            $$ = ast.make<VarModifier>($1.start, $2.end, $1.value, true, VarModifier::Optionality::None);
         }
     | varkind Question
         {
-            $$ = Symbol($1.start, $2.end, VarModifier($1.value, false, VarModifier::Optionality::Optional));
+            $$ = ast.make<VarModifier>($1.start, $2.end, $1.value, false, VarModifier::Optionality::Optional);
         }
     | varkind NonNull
         {
-            $$ = Symbol($1.start, $2.end, VarModifier($1.value, false, VarModifier::Optionality::OptionalNonNull));
+            $$ = ast.make<VarModifier>($1.start, $2.end, $1.value, false, VarModifier::Optionality::OptionalNonNull);
         }
     ;
 
@@ -227,20 +245,25 @@ varkind:
 vardef_stmt:
       varmod pattern
         {
-            $$ = ast.make<VarDefStmt>($1.start, $2->end, $1.value, $2, nullptr, nullptr);
+            $$ = ast.make<VarDefStmt>($1->start, $2->end, $1, $2, nullptr, nullptr);
         }
     | varmod pattern Colon expr
         {
-            $$ = ast.make<VarDefStmt>($1.start, $4->end, $1.value, $2, $4, nullptr);
+            $$ = ast.make<VarDefStmt>($1->start, $4->end, $1, $2, $4, nullptr);
         }
     | varmod pattern Assign assign_rhs
         {
-            $$ = ast.make<VarDefStmt>($1.start, $4->end, $1.value, $2, nullptr, $4);
+            $$ = ast.make<VarDefStmt>($1->start, $4->end, $1, $2, nullptr, $4);
         }
     | varmod pattern Colon expr Assign assign_rhs
         {
-            $$ = ast.make<VarDefStmt>($1.start, $6->end, $1.value, $2, $4, $6);
+            $$ = ast.make<VarDefStmt>($1->start, $6->end, $1, $2, $4, $6);
         }
+    ;
+
+opt_varmod:
+      /* empty */  { $$ = nullptr; }
+    | varmod       { $$ = $1; }
     ;
 
 opt_immut:
@@ -253,82 +276,120 @@ opt_template:
     | LBracket exprs RBracket  { $$ = std::move($2); }
     ;
 
-fndef:
-      fn fn_name params captures fn_ret fn_throw block
-    | fn fn_name params captures fn_ret fn_throw FatArrow expr
-    ;
-
-fn:
-      Fn
-    | fn Caret
+fndef_stmt:
+      Fn opt_immut fn_name opt_template param_clause capture_clause ret_clause throw_clause block
+        {
+            auto [isThrowing, throwExpr] = $8;
+            ast.make<FnDefStmt>($1.start, $9->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
+                                isThrowing, throwExpr, $9);
+        }
+    | Fn opt_immut fn_name opt_template param_clause capture_clause ret_clause throw_clause FatArrow expr
+        {
+            auto [isThrowing, throwExpr] = $8;
+            ast.make<FnDefStmt>($1.start, $10->end, $2, $3, std::move($4), std::move($5), $6, std::move($7),
+                                isThrowing, throwExpr, $10);
+        }
     ;
 
 fn_name:
-      Identifier
-    | Discard
-    | Constructor
-    | Destructor
-    | overloadable_op
+      Identifier       { $$ = ast.make<IdentifierName>($1.start, $1.end, std::move($1.lexeme)); }
+    | Discard          { $$ = ast.make<DiscardName>($1.start, $1.end); }
+    | Constructor      { $$ = ast.make<ConstructorName>($1.start, $1.end); }
+    | Destructor       { $$ = ast.make<DestructorName>($1.start, $1.end); }
+    | overloadable_op  { $$ = ast.make<OverloadableOpName>($1.start, $1.end, $1.value); }
+    | Self             { RAISE_ERROR($1.start, $1.end, "`self` cannot be used as a function definition name"); YYERROR; }
+    ;
+
+param_clause:
+      LParen RParen         { $$ = {}; }
+    | LParen params RParen  { $$ = std::move($2); }
     ;
 
 params:
-      LParen RParen
-    | LParen param_list RParen
-    ;
-
-param_list:
-      param
-    | param_list Comma param
+      param               { $$ = {}; $$.push_back($1); }
+    | params Comma param  { $$ = std::move($1); $$.push_back($3); }
     ;
 
 param:
-      param_element
+      pattern                     { $$ = ast.make<FnParam>($1->start, $1->end, nullptr, $1, nullptr, nullptr); }
+    | pattern Colon expr          { $$ = ast.make<FnParam>($1->start, $3->end, nullptr, $1, nullptr, nullptr); }
+    | varmod pattern              { $$ = ast.make<FnParam>($1->start, $2->end, $1, $2, nullptr, nullptr); }
+    | varmod pattern Colon expr   { $$ = ast.make<FnParam>($1->start, $4->end, $1, $2, $4, nullptr); }
+    | pattern Assign expr         { $$ = ast.make<FnParam>($1->start, $3->end, nullptr, $1, nullptr, $3); }
+    | pattern Colon expr Assign expr
+        {
+            $$ = ast.make<FnParam>($1->start, $5->end, nullptr, $1, $3, $5);
+        }
+    | varmod pattern Assign expr  { $$ = ast.make<FnParam>($1->start, $4->end, $1, $2, nullptr, $4); }
+    | varmod pattern Colon expr Assign expr
+        {
+            $$ = ast.make<FnParam>($1->start, $6->end, $1, $2, $4, $6);
+        }
     ;
 
-param_element:
-      Identifier
-    | Identifier Colon expr
-    //| binding_mod Identifier
-    //| binding_mod Identifier Colon expr
+capture_clause:
+      /* empty */                 { $$ = nullptr; }
+    | LBracket RBracket
+        {
+            $$ = ast.make<FnCaptureClause>($1.start, $2.end, std::vector<FnCapture*>(), false, nullptr);
+        }
+    | LBracket captures RBracket  { $2->start = $1.start; $2->end = $3.end; $$ = $2; }
     ;
 
 captures:
-      LBracket RBracket
-    | LBracket capture_list RBracket
-    ;
-
-capture_list:
       capture
-    | capture_list Comma capture
+        {
+            std::vector<FnCapture*> captures = { $1 };
+            $$ = ast.make<FnCaptureClause>($1->start, $1->end, std::move(captures), false, nullptr);
+        }
+    | Range
+        {
+            $$ = ast.make<FnCaptureClause>($1.start, $1.end, std::vector<FnCapture*>(), true, nullptr);
+        }
+    | varmod Range
+        {
+            $$ = ast.make<FnCaptureClause>($1->start, $2.end, std::vector<FnCapture*>(), true, $1);
+        }
+    | captures Comma capture
+        {
+            $1->end = $3->end;
+            $1->captures.push_back($3);
+            $$ = std::move($1);
+        }
+    | captures Comma opt_varmod Range
+        {
+            $1->end = $4.end;
+            $1->hasRest = true;
+            $1->restMod = $3;
+            $$ = std::move($1);
+        }
     ;
 
 capture:
-      postfix
-    //| binding_mod postfix
-    | Range
-    //| binding_mod Range
+      pattern         { $$ = ast.make<FnCapture>($1->start, $1->end, nullptr, $1); }
+    | varmod pattern  { $$ = ast.make<FnCapture>($1->start, $2->end, $1, $2); }
     ;
 
-fn_ret:
-      /* empty */
-    | Arrow rets
+ret_clause:
+      /* empty */  { $$ = {}; }
+    | Arrow rets   { $$ = std::move($2); }
     ;
 
 rets:
-      ret
-    | rets Comma ret
+      ret             { $$ = {}; $$.push_back($1); }
+    | rets Comma ret  { $$ = std::move($1); $$.push_back($3); }
     ;
 
 ret:
-      expr
-    | Ref expr
-    | Cref expr
+      expr       { $$ = ast.make<FnReturn>($1->start, $1->end, FnReturn::RetKind::ByValue, $1); }
+    | Ref expr   { $$ = ast.make<FnReturn>($1.start, $2->end, FnReturn::RetKind::ByRef, $2); }
+    | Cref expr  { $$ = ast.make<FnReturn>($1.start, $2->end, FnReturn::RetKind::ByCref, $2); }
     ;
 
-fn_throw:
-      /* empty */
-    | Throw
-    | Throw expr
+throw_clause:
+      /* empty */   { $$ = std::make_pair(false, nullptr); }
+    | Throw         { $$ = std::make_pair(true, nullptr); }
+    | Throw binary  { $$ = std::make_pair(true, $2); }
     ;
 
 typedef_stmt:
@@ -375,13 +436,8 @@ case_name:
 
 adt_constructor:
       Identifier LParen RParen
-    | Identifier LParen positional_adt_members RParen
+    | Identifier LParen exprs RParen
     | Identifier LParen named_adt_members RParen
-    ;
-
-positional_adt_members:
-      expr
-    | positional_adt_members Comma expr
     ;
 
 named_adt_members:
@@ -468,8 +524,8 @@ import:
 
 
 expr:
-      //lambda
-      If expr Then expr Else expr   { $$ = ast.make<IfThenExpr>($1.start, $6->end, $2, $4, $6); }
+      lambda                        { $$ = $1; }
+    | If expr Then expr Else expr   { $$ = ast.make<IfThenExpr>($1.start, $6->end, $2, $4, $6); }
     | Try expr Else expr            { $$ = ast.make<TryElseExpr>($1.start, $4->end, $2, $4); }
     | match                         { $$ = $1; }
     | trycatch                      { $$ = $1; }
@@ -486,7 +542,12 @@ exprs:
     ;
 
 lambda:
-      fn params captures fn_ret fn_throw FatArrow expr  {}
+      Fn opt_immut param_clause capture_clause ret_clause throw_clause FatArrow expr
+        {
+            auto [isThrowing, throwExpr] = $6;
+            $$ = ast.make<LambdaExpr>($1.start, $8->end, $2, std::move($3), $4, std::move($5), isThrowing, throwExpr,
+                                      $8);
+        }
     ;
 
 match:
@@ -706,6 +767,7 @@ postfix:
         }
     | postfix LParen call_args RParen
         {
+            // TODO: Make sure named args are after all positional args
             $$ = ast.make<CallExpr>($1->start, $4.end, $1, std::move($3));
         }
     | postfix LBracket exprs RBracket
@@ -722,7 +784,7 @@ call_args:
     ;
 
 call_arg:
-      expr  { $$ = CallExpr::Arg(nullptr, $1); }
+      expr                  { $$ = CallExpr::Arg(nullptr, $1); }
     | arg_label Colon expr  { $$ = CallExpr::Arg($1, $3); }
     ;
 

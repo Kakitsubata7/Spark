@@ -126,31 +126,112 @@ protected:
 };
 
 
+struct VarModifier final : Node {
+    enum class VarKind {
+        None, Let, Const, Ref, Cref
+    };
 
-struct Lambda final : Node {
+    enum class Optionality {
+        None, Optional, OptionalNonNull
+    };
+
+    VarKind kind;
     bool isImmutable;
-    std::vector<Node*> params;
-    std::vector<Node*> captures;
-    std::vector<Node*> rets;
-    bool isThrowing;
-    std::vector<Node*> throws;
+    Optionality optionality;
 
-    Lambda(Location start, Location end,
-           bool isImmutable,
-           std::vector<Node*> params,
-           std::vector<Node*> captures,
-           std::vector<Node*> rets,
-           bool isThrowing, std::vector<Node*> throws) noexcept
-        : Node(start, end),
-          isImmutable(isImmutable),
-          params(std::move(params)),
-          captures(std::move(captures)),
-          rets(std::move(rets)),
-          isThrowing(isThrowing), throws(std::move(throws)) { }
+    VarModifier(Location start, Location end, VarKind kind, bool isImmutable, Optionality optionality) noexcept
+        : Node(start, end), kind(kind), isImmutable(isImmutable), optionality(optionality) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
 protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct FnParam final : Node {
+    /* nullable */ VarModifier* mod;
+    Pattern* pattern;
+    /* nullable */ Expr* type;
+    /* nullable */ Expr* def;
+
+    FnParam(Location start, Location end, VarModifier* mod, Pattern* pattern, Expr* type, Expr* def) noexcept
+        : Node(start, end), mod(mod), pattern(pattern), type(type), def(def) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct FnCapture final : Node {
+    /* nullable */ VarModifier* mod;
+    Pattern* pattern;
+
+    FnCapture(Location start, Location end, VarModifier* mod, Pattern* pattern) noexcept
+        : Node(start, end), mod(mod), pattern(pattern) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct FnCaptureClause final : Node {
+    std::vector<FnCapture*> captures;
+    bool hasRest;
+    /* nullable */ VarModifier* restMod;
+
+    FnCaptureClause(Location start, Location end, std::vector<FnCapture*> captures, bool hasRest, VarModifier* restMod)
+        noexcept : Node(start, end), captures(std::move(captures)), hasRest(hasRest), restMod(restMod) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct FnReturn final : Node {
+    enum class RetKind {
+        ByValue, ByRef, ByCref
+    };
+
+    RetKind kind;
+    Expr* type;
+
+    FnReturn(Location start, Location end, RetKind kind, Expr* type) noexcept
+        : Node(start, end), kind(kind), type(type) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct LambdaExpr final : Expr {
+    bool isImmutable;
+    std::vector<FnParam*> params;
+    /* nullable */ FnCaptureClause* captureClause;
+    std::vector<FnReturn*> returns;
+    bool isThrowing;
+    /* nullable */ Expr* throwExpr;
+    Expr* body;
+
+    LambdaExpr(Location start, Location end, bool isImmutable,
+               std::vector<FnParam*> params, FnCaptureClause* captureClause,
+               std::vector<FnReturn*> returns, bool isThrowing, Expr* throwExpr,
+               Expr* body) noexcept
+        : Expr(start, end), isImmutable(isImmutable), params(std::move(params)), captureClause(captureClause),
+          returns(std::move(returns)), isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
@@ -610,34 +691,13 @@ protected:
 
 
 
-struct VarModifier {
-    enum class VarKind {
-        None, Let, Const, Ref, Cref
-    };
-
-    enum class Optionality {
-        None, Optional, OptionalNonNull
-    };
-
-    VarKind kind = VarKind::None;
-    bool isImmutable = false;
-    Optionality optionality = Optionality::None;
-
-    VarModifier() noexcept = default;
-    VarModifier(VarKind kind, bool isImmutable, Optionality optionality) noexcept
-        : kind(kind), isImmutable(isImmutable), optionality(optionality) { }
-
-    bool operator==(const VarModifier& rhs) const noexcept;
-    bool operator!=(const VarModifier& rhs) const noexcept;
-};
-
 struct VarDefStmt final : Stmt {
-    VarModifier mod;
+    VarModifier* mod;
     Pattern* pattern;
     /* nullable */ Expr* type;
     /* nullable */ Node* rhs;
 
-    VarDefStmt(Location start, Location end, VarModifier mod, Pattern* pattern, Expr* type, Node* rhs) noexcept
+    VarDefStmt(Location start, Location end, VarModifier* mod, Pattern* pattern, Expr* type, Node* rhs) noexcept
         : Stmt(start, end), mod(mod), pattern(pattern), type(type), rhs(rhs) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -661,6 +721,32 @@ struct AssignStmt final : Stmt {
 
     AssignStmt(Location start, Location end, OpKind op, Expr* lhs, Node* rhs) noexcept
         : Stmt(start, end), op(op), lhs(lhs), rhs(rhs) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct FnDefStmt final : Stmt {
+    bool isImmutable;
+    Name* name;
+    std::vector<Expr*> generics;
+    std::vector<FnParam*> params;
+    /* nullable */ FnCaptureClause* captureClause;
+    std::vector<FnReturn*> returns;
+    bool isThrowing;
+    /* nullable */ Expr* throwExpr;
+    Expr* body;
+
+    FnDefStmt(Location start, Location end, bool isImmutable, Name* name, std::vector<Expr*> generics,
+              std::vector<FnParam*> params, FnCaptureClause* captureClause,
+              std::vector<FnReturn*> returns, bool isThrowing, Expr* throwExpr,
+              Expr* body) noexcept
+        : Stmt(start, end), isImmutable(isImmutable), name(name), generics(std::move(generics)),
+          params(std::move(params)), captureClause(captureClause), returns(std::move(returns)),
+          isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

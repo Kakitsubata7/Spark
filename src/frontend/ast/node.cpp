@@ -65,6 +65,25 @@ bool SelfName::equalsImpl(const Node& rhs) const noexcept {
 
 
 
+bool LambdaExpr::equalsImpl(const Node& rhs) const noexcept {
+    const LambdaExpr& o = EQ_ASSERT_TYPE(rhs, LambdaExpr);
+    if (params.size() != o.params.size() || returns.size() != o.returns.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < params.size(); ++i) {
+        if (*params[i] != *o.params[i]) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < returns.size(); ++i) {
+        if (*returns[i] != *o.returns[i]) {
+            return false;
+        }
+    }
+    return isImmutable == o.isImmutable && ptrEq(captureClause, o.captureClause) && isThrowing == o.isThrowing &&
+           ptrEq(throwExpr, o.throwExpr) && *body == *o.body;
+}
+
 bool IfThenExpr::equalsImpl(const Node& rhs) const noexcept {
     const IfThenExpr& o = EQ_ASSERT_TYPE(rhs, IfThenExpr);
     return *condition == *o.condition && *thenExpr == *o.thenExpr && *elseExpr == *o.elseExpr;
@@ -297,22 +316,71 @@ bool TypeofExpr::equalsImpl(const Node& rhs) const noexcept {
 
 
 
-bool VarModifier::operator==(const VarModifier& rhs) const noexcept {
-    return kind == rhs.kind && isImmutable == rhs.isImmutable && optionality == rhs.optionality;
-}
-
-bool VarModifier::operator!=(const VarModifier& rhs) const noexcept {
-    return !(*this == rhs);
+bool VarModifier::equalsImpl(const Node& rhs) const noexcept {
+    const VarModifier& o = EQ_ASSERT_TYPE(rhs, VarModifier);
+    return kind == o.kind && isImmutable == o.isImmutable && optionality == o.optionality;
 }
 
 bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const VarDefStmt& o = EQ_ASSERT_TYPE(rhs, VarDefStmt);
-    return mod == o.mod && *pattern == *o.pattern && ptrEq(type, o.type) && ptrEq(this->rhs, o.rhs);
+    return *mod == *o.mod && *pattern == *o.pattern && ptrEq(type, o.type) && ptrEq(this->rhs, o.rhs);
 }
 
 bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
     const AssignStmt& o = EQ_ASSERT_TYPE(rhs, AssignStmt);
     return *lhs == *o.lhs && *this->rhs == *o.rhs && op == o.op;
+}
+
+bool FnParam::equalsImpl(const Node& rhs) const noexcept {
+    const FnParam& o = EQ_ASSERT_TYPE(rhs, FnParam);
+    return ptrEq(mod, o.mod) && *pattern == *o.pattern && ptrEq(type, o.type) && ptrEq(def, o.def);
+}
+
+bool FnCapture::equalsImpl(const Node& rhs) const noexcept {
+    const FnCapture& o = EQ_ASSERT_TYPE(rhs, FnCapture);
+    return ptrEq(mod, o.mod) && *pattern == *o.pattern;
+}
+
+bool FnCaptureClause::equalsImpl(const Node& rhs) const noexcept {
+    const FnCaptureClause& o = EQ_ASSERT_TYPE(rhs, FnCaptureClause);
+    if (captures.size() != o.captures.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < captures.size(); ++i) {
+        if (*captures[i] != *o.captures[i]) {
+            return false;
+        }
+    }
+    return hasRest == o.hasRest && ptrEq(restMod, o.restMod);
+}
+
+bool FnReturn::equalsImpl(const Node& rhs) const noexcept {
+    const FnReturn& o = EQ_ASSERT_TYPE(rhs, FnReturn);
+    return kind == o.kind && *type == *o.type;
+}
+
+bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
+    const FnDefStmt& o = EQ_ASSERT_TYPE(rhs, FnDefStmt);
+    if (generics.size() != o.generics.size() || params.size() != o.params.size() || returns.size() != o.returns.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < generics.size(); ++i) {
+        if (*generics[i] != *o.generics[i]) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < params.size(); ++i) {
+        if (*params[i] != *o.params[i]) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < returns.size(); ++i) {
+        if (*returns[i] != *o.returns[i]) {
+            return false;
+        }
+    }
+    return isImmutable == o.isImmutable && *name == *o.name && ptrEq(captureClause, o.captureClause) &&
+           isThrowing == o.isThrowing && ptrEq(throwExpr, o.throwExpr) && *body == *o.body;
 }
 
 bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
