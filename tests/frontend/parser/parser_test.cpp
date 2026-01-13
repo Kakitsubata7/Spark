@@ -29,6 +29,9 @@
 #define PREFIX(op, expr) MAKE(PrefixExpr, op, expr)
 #define PREFIX_OP PrefixExpr::OpKind
 
+#define POSTFIX(op, expr) MAKE(PostfixExpr, op, expr)
+#define POSTFIX_OP PostfixExpr::OpKind
+
 #define IDENT(name) MAKE(IdentifierExpr, name)
 
 using namespace Spark;
@@ -207,6 +210,57 @@ TEST(ParserTest, OperatorTest11) {
     // Making sure equality is non-associative
     auto [ast, errors] = parse("a == b === c");
     EXPECT_FALSE(errors.empty());
+}
+
+TEST(ParserTest, OperatorTest12) {
+    auto [ast, errors] = parse("-~!a");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            PREFIX(PREFIX_OP::Neg,
+                PREFIX(PREFIX_OP::BitNot,
+                    PREFIX(PREFIX_OP::LogNot, IDENT("a"))
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, OperatorTest13) {
+    // Make sure postfix binds tighter than prefix
+    auto [ast, errors] = parse("-a!");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            PREFIX(PREFIX_OP::Neg,
+               POSTFIX(POSTFIX_OP::ForceUnwrap, IDENT("a"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, OperatorTest14) {
+    // Make sure postfix binds tighter than prefix
+    auto [ast, errors] = parse("!!!a!!!");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        EXPR_STMT(
+            PREFIX(PREFIX_OP::LogNot,
+                PREFIX(PREFIX_OP::LogNot,
+                    PREFIX(PREFIX_OP::LogNot,
+                        POSTFIX(POSTFIX_OP::ForceUnwrap,
+                            POSTFIX(POSTFIX_OP::ForceUnwrap,
+                                POSTFIX(POSTFIX_OP::ForceUnwrap,
+                                    IDENT("a"))))))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
 }
 
 TEST(ParserTest, TypeofTest) {
