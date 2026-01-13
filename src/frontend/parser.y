@@ -507,8 +507,8 @@ regular_assign:
     ;
 
 regular_rhs:
-      expr
-    | regular_assign
+      expr            { $$ = $1; }
+    | regular_assign  { $$ = $1; }
     ;
 
 if_stmt:
