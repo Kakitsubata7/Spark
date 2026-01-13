@@ -541,6 +541,158 @@ TEST(ParserTest, VarDefTest4) {
     EXPECT_EQ(*ast.root, *root);
 }
 
+TEST(ParserTest, FnDefTest1) {
+    auto [ast, errors] = parse("fn foo() { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            /* params */ std::vector<FnParam*>(),
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest2) {
+    auto [ast, errors] = parse("fn^ foo[T]() { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ true,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>{ IDENT("T") },
+            /* params */ std::vector<FnParam*>(),
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest3) {
+    auto [ast, errors] = parse("fn foo(x, y) { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            /* params */ std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, MAKE(BindingPattern, "x"), nullptr, nullptr),
+                MAKE(FnParam, nullptr, MAKE(BindingPattern, "y"), nullptr, nullptr)
+            },
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK()
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest4) {
+    auto [ast, errors] = parse("fn foo()[] { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            /* params */ std::vector<FnParam*>(),
+            MAKE(FnCaptureClause,
+                std::vector<FnCapture*>(), false, nullptr
+            ),
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest5) {
+    auto [ast, errors] = parse("fn foo() -> Int { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            /* params */ std::vector<FnParam*>(),
+            /* captureClause */ nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Int"))
+            },
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest6) {
+    // fn foo(x) => x
+
+    auto [ast, errors] = parse("fn foo(x) => x");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, MAKE(BindingPattern, "x"), nullptr, nullptr)
+            },
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            IDENT("x")
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, FnDefTest7) {
+    auto [ast, errors] = parse("fn foo() throw Error { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            IDENT_NAME("foo"),
+            /* generics */ std::vector<Expr*>(),
+            /* params */ std::vector<FnParam*>(),
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ true,
+            /* throwExpr */ IDENT("Error"),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
 TEST(ParserTest, TypeDefTest1) {
     auto [ast, errors] = parse("struct Foo { }");
     EXPECT_TRUE(errors.empty());
