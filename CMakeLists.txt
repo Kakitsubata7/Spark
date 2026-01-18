@@ -66,8 +66,6 @@ add_library(sparklib
         src/core/type.hpp
 
         src/frontend/ast.hpp
-        src/frontend/ast/equal_visitor.cpp
-        src/frontend/ast/equal_visitor.hpp
         src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp
