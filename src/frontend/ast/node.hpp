@@ -101,7 +101,7 @@ struct DestructorName {
     bool operator!=(const DestructorName) const noexcept { return false; }
 };
 
-struct OverloadableOpName {
+struct OperatorName {
     enum class OpKind {
         Add, Sub, Mul, Div, Mod, BitNot, BitAnd, BitOr, BitXor, BitShl, BitShr, LogNot, LogAnd, LogOr,
             Eq, Ne, Lt, Le, Gt, Ge, Range, RangeExcl, Call, Subscript,
@@ -111,10 +111,10 @@ struct OverloadableOpName {
 
     OpKind op;
 
-    explicit OverloadableOpName(OpKind op) noexcept : op(op) { }
+    explicit OperatorName(OpKind op) noexcept : op(op) { }
 
-    bool operator==(const OverloadableOpName rhs) const noexcept { return op == rhs.op; }
-    bool operator!=(const OverloadableOpName rhs) const noexcept { return !(*this == rhs); }
+    bool operator==(const OperatorName rhs) const noexcept { return op == rhs.op; }
+    bool operator!=(const OperatorName rhs) const noexcept { return !(*this == rhs); }
 };
 
 struct SelfName {
@@ -127,7 +127,7 @@ struct SelfName {
 using Name = std::variant<IdentifierName,
                           ConstructorName,
                           DestructorName,
-                          OverloadableOpName,
+                          OperatorName,
                           SelfName>;
 
 
@@ -187,7 +187,8 @@ struct VarModifier final : Node {
     Optionality optionality;
 
     VarModifier(Location start, Location end, VarKind kind, bool isImmutable, Optionality optionality) noexcept
-        : Node(start, end), kind(kind), isImmutable(isImmutable), optionality(optionality) { }
+        : Node(start, end), kind(kind), isImmutable(isImmutable),
+          optionality(optionality) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -258,6 +259,8 @@ protected:
     [[nodiscard]]
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
+
+
 
 struct LambdaExpr final : Expr {
     bool isImmutable;
@@ -383,10 +386,10 @@ protected:
 };
 
 struct BlockExpr final : Expr {
-    std::vector<Stmt*> stmts;
+    std::vector<Node*> nodes;
 
-    BlockExpr(Location start, Location end, std::vector<Stmt*> stmts) noexcept
-        : Expr(start, end), stmts(std::move(stmts)) { }
+    BlockExpr(Location start, Location end, std::vector<Node*> nodes) noexcept
+        : Expr(start, end), nodes(std::move(nodes)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -827,10 +830,10 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Export final : Node {
-    Node* stmt;
+struct ExportStmt final : Node {
+    Stmt* stmt;
 
-    Export(Location start, Location end, Node* stmt) noexcept
+    ExportStmt(Location start, Location end, Stmt* stmt) noexcept
         : Node(start, end), stmt(stmt) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -840,26 +843,13 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct Undefine final : Node {
-    Node* var;
-
-    Undefine(Location start, Location end, Node* var) noexcept
-        : Node(start, end), var(var) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct ExprStmt final : Stmt {
+struct UndefineStmt final : Node {
     Expr* expr;
 
-    ExprStmt(Location start, Location end, Expr* expr) noexcept
-        : Stmt(start, end), expr(expr) { }
+    UndefineStmt(Location start, Location end, Expr* expr) noexcept
+        : Node(start, end), expr(expr) { }
 
-    void accept(NodeVisitor &v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(*this); }
 
 protected:
     [[nodiscard]]
@@ -933,13 +923,34 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+struct RecordPatternField final : Node {
+    std::optional<Name> label;
+    Pattern* pattern;
 
+    RecordPatternField(Location start, Location end, Name label, Pattern* pattern) noexcept
+        : Node(start, end), label(std::move(label)), pattern(pattern) { }
+    RecordPatternField(Location start, Location end, Pattern* pattern) noexcept
+        : Node(start, end), label(std::nullopt), pattern(pattern) { }
 
-enum class OverloadableOpKind {
-    Add, Sub, Mul, Div, Mod, BitNot, BitAnd, BitOr, BitXor, BitShl, BitShr, LogNot, LogAnd, LogOr,
-        Eq, Ne, Lt, Le, Gt, Ge, Range, RangeExcl, Call, Subscript,
-    AddAssign, SubAssign, MulAssign, DivAssign, ModAssign, BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign,
-        BitShrAssign
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct RecordPattern final : Pattern {
+    std::vector<RecordPatternField*> fields;
+
+    RecordPattern(Location start, Location end,
+                  std::vector<RecordPatternField*> fields) noexcept
+        : Pattern(start, end), fields(std::move(fields)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
 } // Spark::FrontEnd
