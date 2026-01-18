@@ -12,8 +12,127 @@
 
 namespace Spark::FrontEnd {
 
+struct IntLiteral {
+    BigInt value;
+
+    explicit IntLiteral(BigInt value) noexcept : value(std::move(value)) { }
+
+    bool operator==(const IntLiteral& rhs) const noexcept { return value == rhs.value; }
+    bool operator!=(const IntLiteral& rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct RealLiteral {
+    BigReal value;
+
+    explicit RealLiteral(BigReal value) noexcept : value(std::move(value)) { }
+
+    bool operator==(const RealLiteral& rhs) const noexcept { return value == rhs.value; }
+    bool operator!=(const RealLiteral& rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct BoolLiteral {
+    bool value;
+
+    explicit BoolLiteral(bool value) noexcept : value(value) { }
+
+    bool operator==(const BoolLiteral rhs) const noexcept { return value == rhs.value; }
+    bool operator!=(const BoolLiteral rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct StringLiteral {
+    std::string value;
+
+    explicit StringLiteral(std::string value) noexcept : value(std::move(value)) { }
+
+    bool operator==(const StringLiteral& rhs) const noexcept { return value == rhs.value; }
+    bool operator!=(const StringLiteral& rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct NilLiteral {
+    NilLiteral() noexcept = default;
+
+    bool operator==(const NilLiteral) const noexcept { return true; }
+    bool operator!=(const NilLiteral) const noexcept { return false; }
+};
+
+struct VoidLiteral {
+    VoidLiteral() noexcept = default;
+
+    bool operator==(const VoidLiteral) const noexcept { return true; }
+    bool operator!=(const VoidLiteral) const noexcept { return false; }
+};
+
+using Literal = std::variant<IntLiteral,
+                             RealLiteral,
+                             BoolLiteral,
+                             StringLiteral,
+                             NilLiteral,
+                             VoidLiteral>;
+
+
+
+struct IdentifierName {
+    std::string name;
+
+    explicit IdentifierName(std::string name) noexcept : name(std::move(name)) { }
+
+    bool operator==(const IdentifierName& rhs) const noexcept { return name == rhs.name; }
+    bool operator!=(const IdentifierName& rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct DiscardName {
+    DiscardName() noexcept = default;
+
+    bool operator==(const DiscardName) const noexcept { return true; }
+    bool operator!=(const DiscardName) const noexcept { return false; }
+};
+
+struct ConstructorName {
+    ConstructorName() noexcept = default;
+
+    bool operator==(const ConstructorName) const noexcept { return true; }
+    bool operator!=(const ConstructorName) const noexcept { return false; }
+};
+
+struct DestructorName {
+    DestructorName() noexcept = default;
+
+    bool operator==(const DestructorName) const noexcept { return true; }
+    bool operator!=(const DestructorName) const noexcept { return false; }
+};
+
+struct OverloadableOpName {
+    enum class OpKind {
+        Add, Sub, Mul, Div, Mod, BitNot, BitAnd, BitOr, BitXor, BitShl, BitShr, LogNot, LogAnd, LogOr,
+            Eq, Ne, Lt, Le, Gt, Ge, Range, RangeExcl, Call, Subscript,
+        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign, BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign,
+            BitShrAssign
+    };
+
+    OpKind op;
+
+    explicit OverloadableOpName(OpKind op) noexcept : op(op) { }
+
+    bool operator==(const OverloadableOpName rhs) const noexcept { return op == rhs.op; }
+    bool operator!=(const OverloadableOpName rhs) const noexcept { return !(*this == rhs); }
+};
+
+struct SelfName {
+    SelfName() noexcept = default;
+
+    bool operator==(const SelfName) const noexcept { return true; }
+    bool operator!=(const SelfName) const noexcept { return false; }
+};
+
+using Name = std::variant<IdentifierName,
+                          ConstructorName,
+                          DestructorName,
+                          OverloadableOpName,
+                          SelfName>;
+
+
+
 class NodeVisitor;
-enum class OverloadableOpKind;
 
 struct Node {
     Location start;
@@ -52,78 +171,6 @@ struct Pattern : Node {
     void accept(NodeVisitor& v) override { v.visit(*this); }
 };
 
-struct Name : Node {
-    Name(Location start, Location end) : Node(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-};
-
-struct IdentifierName final : Name {
-    std::string name;
-
-    IdentifierName(Location start, Location end, std::string name) noexcept
-        : Name(start, end), name(std::move(name)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct DiscardName final : Name {
-    DiscardName(Location start, Location end) noexcept : Name(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct ConstructorName final : Name {
-    ConstructorName(Location start, Location end) noexcept : Name(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct DestructorName final : Name {
-    DestructorName(Location start, Location end) noexcept : Name(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct OverloadableOpName final : Name {
-    OverloadableOpKind op;
-
-    OverloadableOpName(Location start, Location end, OverloadableOpKind op) noexcept
-        : Name(start, end), op(op) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct SelfName final : Name {
-    SelfName(Location start, Location end) noexcept
-        : Name(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
 
 
 struct VarModifier final : Node {
@@ -447,9 +494,9 @@ protected:
 
 struct MemberAccessExpr final : Expr {
     Expr* base;
-    Name* member;
+    Name member;
 
-    MemberAccessExpr(Location start, Location end, Expr* base, Name* member) noexcept
+    MemberAccessExpr(Location start, Location end, Expr* base, Name member) noexcept
         : Expr(start, end), base(base), member(member) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -460,13 +507,13 @@ protected:
 };
 
 struct CallArg final : Node {
-    /* nullable */ IdentifierName* name;
+    std::optional<Name> name;
     Expr* expr;
 
-    CallArg(Location start, Location end, IdentifierName* name, Expr* expr) noexcept
-        : Node(start, end), name(name), expr(expr) { }
+    CallArg(Location start, Location end, Name name, Expr* expr) noexcept
+        : Node(start, end), name(std::move(name)), expr(expr) { }
     CallArg(Location start, Location end, Expr* expr) noexcept
-        : CallArg(start, end, nullptr, expr) { }
+        : Node(start, end), name(std::nullopt), expr(expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -503,24 +550,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct IntLiteralExpr final : Expr {
-    BigInt value;
+struct LiteralExpr final : Expr {
+    Literal literal;
 
-    IntLiteralExpr(Location start, Location end, BigInt value) noexcept
-            : Expr(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct RealLiteralExpr final : Expr {
-    BigReal value;
-
-    RealLiteralExpr(Location start, Location end, BigReal value) noexcept
-            : Expr(start, end), value(std::move(value)) { }
+    LiteralExpr(Location start, Location end, Literal literal) noexcept
+            : Expr(start, end), literal(std::move(literal)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -529,56 +563,10 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct BoolLiteralExpr final : Expr {
-    bool value;
+struct NameExpr final : Expr {
+    Name name;
 
-    BoolLiteralExpr(Location start, Location end, bool value) noexcept
-            : Expr(start, end), value(value) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct StringLiteralExpr final : Expr {
-    std::string value;
-
-    StringLiteralExpr(Location start, Location end, std::string value) noexcept
-            : Expr(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct NilLiteralExpr final : Expr {
-    NilLiteralExpr(Location start, Location end) noexcept : Expr(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct VoidLiteralExpr final : Expr {
-    VoidLiteralExpr(Location start, Location end) noexcept : Expr(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct IdentifierExpr final : Expr {
-    std::string name;
-
-    IdentifierExpr(Location start, Location end, std::string name) noexcept
+    NameExpr(Location start, Location end, Name name) noexcept
             : Expr(start, end), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -588,54 +576,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct ConstructorExpr final : Expr {
-    ConstructorExpr(Location start, Location end) noexcept : Expr(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct DestructorExpr final : Expr {
-    DestructorExpr(Location start, Location end) noexcept : Expr(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct OverloadableOpExpr final : Expr {
-    OverloadableOpKind op;
-
-    OverloadableOpExpr(Location start, Location end, OverloadableOpKind op) noexcept
-        : Expr(start, end), op(op) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct SelfExpr final : Expr {
-    SelfExpr(Location start, Location end) noexcept : Expr(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
 struct GlobalAccessExpr final : Expr {
-    Name* name;
+    Name name;
 
-    GlobalAccessExpr(Location start, Location end, Name* name) noexcept
-        : Expr(start, end), name(name) { }
+    GlobalAccessExpr(Location start, Location end, Name name) noexcept
+        : Expr(start, end), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -646,10 +591,10 @@ protected:
 
 struct UpvalueExpr final : Expr {
     uint64_t level;
-    Name* name;
+    Name name;
 
-    UpvalueExpr(Location start, Location end, uint64_t level, Name* name) noexcept
-        : Expr(start, end), level(level), name(name) { }
+    UpvalueExpr(Location start, Location end, uint64_t level, Name name) noexcept
+        : Expr(start, end), level(level), name(std::move(name)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -740,7 +685,7 @@ protected:
 
 struct FnDefStmt final : Stmt {
     bool isImmutable;
-    Name* name;
+    Name name;
     std::vector<Expr*> generics;
     std::vector<FnParam*> params;
     /* nullable */ FnCaptureClause* captureClause;
@@ -749,12 +694,14 @@ struct FnDefStmt final : Stmt {
     /* nullable */ Expr* throwExpr;
     Expr* body;
 
-    FnDefStmt(Location start, Location end, bool isImmutable, Name* name, std::vector<Expr*> generics,
+    FnDefStmt(Location start, Location end, bool isImmutable, Name name,
+              std::vector<Expr*> generics,
               std::vector<FnParam*> params, FnCaptureClause* captureClause,
               std::vector<FnReturn*> returns, bool isThrowing, Expr* throwExpr,
               Expr* body) noexcept
-        : Stmt(start, end), isImmutable(isImmutable), name(name), generics(std::move(generics)),
-          params(std::move(params)), captureClause(captureClause), returns(std::move(returns)),
+        : Stmt(start, end), isImmutable(isImmutable), name(std::move(name)),
+          generics(std::move(generics)), params(std::move(params)),
+          captureClause(captureClause), returns(std::move(returns)),
           isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -771,16 +718,16 @@ struct TypeDefStmt final : Stmt {
 
     TypeKind kind;
     bool isImmutable;
-    Name* name;
+    Name name;
     std::vector<Expr*> generics;
     std::vector<Expr*> bases;
     BlockExpr* body;
 
     TypeDefStmt(Location start, Location end,
-                TypeKind kind, bool isImmutable, Name* name,
+                TypeKind kind, bool isImmutable, Name name,
                 std::vector<Expr*> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
-        : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(name), generics(std::move(generics)),
-          bases(std::move(bases)), body(body) { }
+        : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(std::move(name)),
+          generics(std::move(generics)), bases(std::move(bases)), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -867,10 +814,10 @@ protected:
 };
 
 struct ModuleStmt final : Stmt {
-    std::vector<Name*> names;
+    std::vector<Name> names;
     BlockExpr* body;
 
-    ModuleStmt(Location start, Location end, std::vector<Name*> names, BlockExpr* body) noexcept
+    ModuleStmt(Location start, Location end, std::vector<Name> names, BlockExpr* body) noexcept
         : Stmt(start, end), names(std::move(names)), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -921,70 +868,11 @@ protected:
 
 
 
-struct IntLiteralPattern final : Pattern {
-    BigInt value;
+struct LiteralPattern final : Pattern {
+    Literal literal;
 
-    IntLiteralPattern(Location start, Location end, BigInt value) noexcept
-            : Pattern(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct RealLiteralPattern final : Pattern {
-    BigReal value;
-
-    RealLiteralPattern(Location start, Location end, BigReal value) noexcept
-            : Pattern(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct BoolLiteralPattern final : Pattern {
-    bool value;
-
-    BoolLiteralPattern(Location start, Location end, bool value) noexcept
-            : Pattern(start, end), value(value) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct StringLiteralPattern final : Pattern {
-    std::string value;
-
-    StringLiteralPattern(Location start, Location end, std::string value) noexcept
-            : Pattern(start, end), value(std::move(value)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct NilLiteralPattern final : Pattern {
-    NilLiteralPattern(Location start, Location end) noexcept : Pattern(start, end) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct VoidLiteralPattern final : Pattern {
-    VoidLiteralPattern(Location start, Location end) noexcept : Pattern(start, end) { }
+    LiteralPattern(Location start, Location end, Literal literal) noexcept
+            : Pattern(start, end), literal(std::move(literal)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
