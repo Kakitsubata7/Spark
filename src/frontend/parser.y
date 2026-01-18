@@ -6,7 +6,6 @@
 
 %define api.token.raw
 %define api.value.type variant
-%define parse.error verbose
 
 %locations
 
