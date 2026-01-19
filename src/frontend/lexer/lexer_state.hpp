@@ -23,8 +23,8 @@ private:
     std::vector<Error> _errors;
 
 public:
-    size_t lineno;
-    size_t columnno;
+    size_t line;
+    size_t column;
 
     char strDelim = '\0';
 
@@ -35,7 +35,7 @@ public:
     constexpr const std::vector<Error>& errors() const noexcept { return _errors; }
 
     LexerState(SourceBuffer& srcbuf, size_t lineno, size_t columnno)
-        : _srcbufp(&srcbuf), _srcreader(srcbuf), _tokbuf(lineno, columnno), lineno(lineno), columnno(columnno) { }
+        : _srcbufp(&srcbuf), _srcreader(srcbuf), _tokbuf(lineno, columnno), line(lineno), column(columnno) { }
 
     LexerState(const LexerState& other) = delete;
     LexerState& operator=(const LexerState& other) = delete;
@@ -47,8 +47,8 @@ public:
      * Updates the state when a newline is encountered.
      */
     constexpr void whenNewline() noexcept {
-        ++lineno;
-        columnno = 1;
+        ++line;
+        column = 1;
     }
 
     /**

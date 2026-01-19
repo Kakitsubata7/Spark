@@ -5,14 +5,14 @@
 namespace Spark {
 
 struct Location {
-    size_t lineno;
-    size_t columnno;
+    size_t line;
+    size_t column;
 
-    constexpr Location() noexcept : lineno(0), columnno(0) { }
-    constexpr Location(size_t lineno, size_t columnno) noexcept : lineno(lineno), columnno(columnno) { }
+    constexpr Location() noexcept : line(0), column(0) { }
+    constexpr Location(size_t line, size_t column) noexcept : line(line), column(column) { }
 
     constexpr bool operator==(Location rhs) const noexcept {
-        return lineno == rhs.lineno && columnno == rhs.columnno;
+        return line == rhs.line && column == rhs.column;
     }
 
     constexpr bool operator!=(Location rhs) const noexcept {
@@ -20,13 +20,13 @@ struct Location {
     }
 
     constexpr bool operator<(Location rhs) const noexcept {
-        if (lineno < rhs.lineno) {
+        if (line < rhs.line) {
             return true;
         }
-        if (lineno > rhs.lineno) {
+        if (line > rhs.line) {
             return false;
         }
-        return columnno < rhs.columnno;
+        return column < rhs.column;
     }
 
     constexpr bool operator>(Location rhs) const noexcept {

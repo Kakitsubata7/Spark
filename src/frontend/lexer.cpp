@@ -69,7 +69,7 @@ Token Lexer::lex() {
     yy::parser::location_type loc;
     TokenType type = static_cast<TokenType>(yylex(&s, &loc, _scanner));
     const TokenValue& value = s.as<TokenValue>();
-    return Token{type, value.lexeme, value.start.lineno, value.start.columnno};
+    return Token{type, value.lexeme, value.start.line, value.start.column};
 }
 
 std::vector<Token> Lexer::lexAll() {

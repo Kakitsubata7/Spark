@@ -14,10 +14,10 @@ namespace Spark {
         }
 
         // Location & message
-        oss << start.lineno << ':' << start.columnno << ": " << message << '\n';
+        oss << start.line << ':' << start.column << ": " << message << '\n';
 
         // Snippet
-        for (size_t lineno = start.lineno; lineno <= end.lineno; ++lineno) {
+        for (size_t lineno = start.line; lineno <= end.line; ++lineno) {
             oss << "   " << lineno << " |" << srcbuf.getLine(lineno) << '\n';
         }
 

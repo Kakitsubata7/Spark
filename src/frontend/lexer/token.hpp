@@ -32,8 +32,8 @@ struct Token {
     friend std::ostream& operator<<(std::ostream& os, const Token& token) {
         os << "Token(" << token.type << ", "
                        << "\"" << token.lexeme << "\"" << ", "
-                       << token.start.lineno << ':' << token.end.columnno << " - "
-                       << token.end.lineno << ':' << token.end.columnno
+                       << token.start.line << ':' << token.end.column << " - "
+                       << token.end.line << ':' << token.end.column
            << ")";
         return os;
     }

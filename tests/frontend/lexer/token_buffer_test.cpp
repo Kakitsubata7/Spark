@@ -11,17 +11,17 @@ TEST(TokenBufferTest, AppendTest) {
     buffer.append('b');
     buffer.append('c');
     EXPECT_EQ(buffer.view(), "abc");
-    EXPECT_EQ(buffer.lineno(), 3);
-    EXPECT_EQ(buffer.columnno(), 7);
+    EXPECT_EQ(buffer.line(), 3);
+    EXPECT_EQ(buffer.column(), 7);
 
     buffer.append("_123");
     EXPECT_EQ(buffer.view(), "abc_123");
-    EXPECT_EQ(buffer.lineno(), 3);
-    EXPECT_EQ(buffer.columnno(), 7);
+    EXPECT_EQ(buffer.line(), 3);
+    EXPECT_EQ(buffer.column(), 7);
 
     buffer.reset(103, 890);
     buffer.append("\r\nfoo");
     EXPECT_EQ(buffer.view(), "\r\nfoo");
-    EXPECT_EQ(buffer.lineno(), 103);
-    EXPECT_EQ(buffer.columnno(), 890);
+    EXPECT_EQ(buffer.line(), 103);
+    EXPECT_EQ(buffer.column(), 890);
 }

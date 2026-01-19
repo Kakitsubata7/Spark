@@ -62,12 +62,12 @@ struct VoidLiteral {
     bool operator!=(const VoidLiteral) const noexcept { return false; }
 };
 
-using Literal = std::variant<IntLiteral,
+using Literal = std::variant<VoidLiteral,
+                             IntLiteral,
                              RealLiteral,
                              BoolLiteral,
                              StringLiteral,
-                             NilLiteral,
-                             VoidLiteral>;
+                             NilLiteral>;
 
 
 
@@ -103,10 +103,12 @@ struct DestructorName {
 
 struct OperatorName {
     enum class OpKind {
-        Add, Sub, Mul, Div, Mod, BitNot, BitAnd, BitOr, BitXor, BitShl, BitShr, LogNot, LogAnd, LogOr,
-            Eq, Ne, Lt, Le, Gt, Ge, Range, RangeExcl, Call, Subscript,
-        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign, BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign,
-            BitShrAssign
+        Add, Sub, Mul, Div, Mod, BitNot, BitAnd, BitOr, BitXor, BitShl, BitShr, LogNot,
+            LogAnd, LogOr, Eq, Ne, Lt, Le, Gt, Ge, Range, RangeExcl,
+        Pos, Neg,
+        Call, Subscript,
+        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign, BitAndAssign, BitOrAssign,
+            BitXorAssign, BitShlAssign, BitShrAssign
     };
 
     OpKind op;
@@ -124,7 +126,8 @@ struct SelfName {
     bool operator!=(const SelfName) const noexcept { return false; }
 };
 
-using Name = std::variant<IdentifierName,
+using Name = std::variant<DiscardName,
+                          IdentifierName,
                           ConstructorName,
                           DestructorName,
                           OperatorName,
@@ -872,20 +875,10 @@ protected:
 };
 
 struct BindingPattern final : Pattern {
-    std::string name;
+    Name name;
 
-    BindingPattern(Location start, Location end, std::string name) noexcept
+    BindingPattern(Location start, Location end, Name name) noexcept
         : Pattern(start, end), name(std::move(name)) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
-struct WildcardPattern final : Pattern {
-    WildcardPattern(Location start, Location end) noexcept : Pattern(start, end) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

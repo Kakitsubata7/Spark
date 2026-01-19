@@ -141,6 +141,17 @@ bool TryCatchExpr::equalsImpl(const Node& rhs) const noexcept {
     return ptrEq(expr, o.expr) && ptrVecEq(catches, o.catches);
 }
 
+template <typename T>
+        struct Symbol {
+    Spark::Location start;
+    Spark::Location end;
+    T value;
+
+    Symbol() = default;
+    Symbol(Spark::Location start, Spark::Location end, T value) noexcept
+        : start(start), end(end), value(std::move(value)) { }
+};
+
 bool ThrowExpr::equalsImpl(const Node& rhs) const noexcept {
     const ThrowExpr& o = ASSERT_NODE(rhs, ThrowExpr);
     return ptrEq(expr, o.expr);
@@ -313,11 +324,6 @@ bool LiteralPattern::equalsImpl(const Node& rhs) const noexcept {
 bool BindingPattern::equalsImpl(const Node& rhs) const noexcept {
     const BindingPattern& o = ASSERT_NODE(rhs, BindingPattern);
     return name == o.name;
-}
-
-bool WildcardPattern::equalsImpl(const Node& rhs) const noexcept {
-    ASSERT_NODE(rhs, WildcardPattern);
-    return true;
 }
 
 bool TuplePattern::equalsImpl(const Node& rhs) const noexcept {

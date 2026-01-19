@@ -29,8 +29,8 @@ using namespace Spark::FrontEnd;
 #define LSTATE (*static_cast<LexerState*>(yyget_extra(yyscanner)))
 #define LBUFFER (LSTATE.tokbuf())
 
-#define YYLINENO (LSTATE.lineno)
-#define YYCOLUMNNO (LSTATE.columnno)
+#define YYLINENO (LSTATE.line)
+#define YYCOLUMNNO (LSTATE.column)
 #define YYLOCATION (Location(YYLINENO, YYCOLUMNNO))
 
 /**
@@ -53,10 +53,10 @@ using namespace Spark::FrontEnd;
   */
 #define SET_LOC(s, e)                    \
 {                                        \
-    yylloc->begin.line = (s).lineno;     \
-    yylloc->begin.column = (s).columnno; \
-    yylloc->end.line = (e).lineno;       \
-    yylloc->end.column = (e).columnno;   \
+    yylloc->begin.line = (s).line;     \
+    yylloc->begin.column = (s).column; \
+    yylloc->end.line = (e).line;       \
+    yylloc->end.column = (e).column;   \
 }
 
 /**

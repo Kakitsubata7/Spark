@@ -41,8 +41,8 @@ public:
      * @return Line number of the token being processed.
      */
     [[nodiscard]]
-    constexpr size_t lineno() const noexcept {
-        return _start.lineno;
+    constexpr size_t line() const noexcept {
+        return _start.line;
     }
 
     /**
@@ -50,8 +50,8 @@ public:
      * @return Column number of the token being processed.
      */
     [[nodiscard]]
-    constexpr size_t columnno() const noexcept {
-        return _start.columnno;
+    constexpr size_t column() const noexcept {
+        return _start.column;
     }
 
     /**
