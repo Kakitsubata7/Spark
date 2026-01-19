@@ -208,6 +208,11 @@ bool SubscriptExpr::equalsImpl(const Node& rhs) const noexcept {
     return ptrEq(base, o.base) && ptrVecEq(indices, o.indices);
 }
 
+bool LiteralExpr::equalsImpl(const Node& rhs) const noexcept {
+    const LiteralExpr& o = ASSERT_NODE(rhs, LiteralExpr);
+    return literal == o.literal;
+}
+
 bool NameExpr::equalsImpl(const Node& rhs) const noexcept {
     const NameExpr& o = ASSERT_NODE(rhs, NameExpr);
     return name == o.name;

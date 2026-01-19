@@ -9,6 +9,9 @@
 #include "frontend/parser.hpp"
 #include "utils/error.hpp"
 
+using namespace Spark;
+using namespace Spark::FrontEnd;
+
 #define MAKE(type, ...) ast.make<type>(Location(0, 0), Location(0, 0), __VA_ARGS__)
 
 #define VARMOD(kind, isImmut, opt) MAKE(VarModifier, kind, isImmut, opt)
@@ -19,9 +22,9 @@
 #define ASSIGN(op, lhs, rhs) MAKE(AssignStmt, op, lhs, rhs)
 #define ASSIGN_OP AssignStmt::OpKind
 
-#define EXPR_STMT(expr) MAKE(ExprStmt, expr)
-
-#define BLOCK(...) MAKE(BlockExpr, std::vector<Stmt*>{__VA_ARGS__})
+#define BLOCK(...) MAKE(BlockExpr, std::vector<Node*>{__VA_ARGS__})
+#define IFTHEN(cond, t, f) MAKE(IfThenExpr, cond, t, f)
+#define TRYELSE(t, e) MAKE(TryElseExpr, t, e)
 #define MATCH(scrutinee, ...) MAKE(MatchExpr, scrutinee, std::vector<MatchCase*>{__VA_ARGS__})
 #define MATCH_CASE(...) MAKE(MatchCase, __VA_ARGS__)
 #define THROW(expr) MAKE(ThrowExpr, expr)
@@ -42,14 +45,15 @@
 
 #define SUBSCRIPT(base, ...) MAKE(SubscriptExpr, base, std::vector<Expr*>{__VA_ARGS__})
 
-#define IDENT(name) MAKE(IdentifierExpr, name)
+#define IDENT(s) MAKE(NameExpr, IdentifierName(s))
 
-#define INT(v) MAKE(IntLiteralExpr, v)
+#define INT(v) MAKE(LiteralExpr, IntLiteral(BigInt(v)))
 
-#define IDENT_NAME(name) MAKE(IdentifierName, name)
+#define BIND_PAT(name) MAKE(BindingPattern, NAME(name))
 
-using namespace Spark;
-using namespace Spark::FrontEnd;
+Name NAME(const char* s) { return Name(IdentifierName(s)); }
+Name NAME(Name name) { return Name(std::move(name)); }
+#define DISCARD DiscardName()
 
 std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
@@ -61,7 +65,7 @@ TEST(ParserTest, BlockTest1) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(BLOCK())
+        BLOCK()
     );
     EXPECT_EQ(*ast.root, *root);
 }
@@ -71,12 +75,10 @@ TEST(ParserTest, BlockTest2) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BLOCK(
-                EXPR_STMT(IDENT("a")),
-                EXPR_STMT(IDENT("b")),
-                EXPR_STMT(IDENT("c"))
-            )
+        BLOCK(
+            IDENT("a"),
+            IDENT("b"),
+            IDENT("c")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -87,10 +89,8 @@ TEST(ParserTest, IfThenTest) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MAKE(IfThenExpr,
-                CALL(IDENT("foo")), IDENT("a"), IDENT("b")
-            )
+        IFTHEN(
+            CALL(IDENT("foo")), IDENT("a"), IDENT("b")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -103,12 +103,12 @@ TEST(ParserTest, TryElseTest) {
     Node* root = BLOCK(
         ASSIGN(ASSIGN_OP::Assign,
             IDENT("x"),
-            MAKE(TryElseExpr,
+            TRYELSE(
                 BLOCK(
-                    EXPR_STMT(CALL(IDENT("foo"))),
-                    EXPR_STMT(THROW(CALL(IDENT("Error"))))
+                    CALL(IDENT("foo")),
+                    THROW(CALL(IDENT("Error")))
                 ),
-                INT(BigInt(1))
+                INT(1)
             )
         )
     );
@@ -120,14 +120,12 @@ TEST(ParserTest, MatchTest1) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MATCH(
-                IDENT("x"),
-                MATCH_CASE(
-                    MAKE(BindingPattern, "y"),
-                    /* guard */ nullptr,
-                    IDENT("z")
-                )
+        MATCH(
+            IDENT("x"),
+            MATCH_CASE(
+                MAKE(BindingPattern, NAME("y")),
+                /* guard */ nullptr,
+                IDENT("z")
             )
         )
     );
@@ -139,14 +137,12 @@ TEST(ParserTest, MatchTest2) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MATCH(
-                IDENT("x"),
-                MATCH_CASE(
-                    /* pattern */ nullptr,
-                    IDENT("cond"),
-                    IDENT("y")
-                )
+        MATCH(
+            IDENT("x"),
+            MATCH_CASE(
+                /* pattern */ nullptr,
+                IDENT("cond"),
+                IDENT("y")
             )
         )
     );
@@ -158,14 +154,12 @@ TEST(ParserTest, MatchTest3) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MATCH(
-                IDENT("x"),
-                MATCH_CASE(
-                    MAKE(BindingPattern, "y"),
-                    IDENT("cond"),
-                    IDENT("z")
-                )
+        MATCH(
+            IDENT("x"),
+            MATCH_CASE(
+                MAKE(BindingPattern, NAME("y")),
+                IDENT("cond"),
+                IDENT("z")
             )
         )
     );
@@ -182,12 +176,10 @@ match x {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MATCH(
-                IDENT("x"),
-                MATCH_CASE(MAKE(BindingPattern, "a"), nullptr, IDENT("b")),
-                MATCH_CASE(MAKE(BindingPattern, "c"), IDENT("d"), IDENT("e"))
-            )
+        MATCH(
+            IDENT("x"),
+            MATCH_CASE(MAKE(BindingPattern, NAME("a")), nullptr, IDENT("b")),
+            MATCH_CASE(MAKE(BindingPattern, NAME("c")), IDENT("d"), IDENT("e"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -199,10 +191,8 @@ TEST(ParserTest, OperatorTest1) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Add,
-                IDENT("a"), BINARY(BINARY_OP::Mul, IDENT("b"), IDENT("c"))
-            )
+        BINARY(BINARY_OP::Add,
+            IDENT("a"), BINARY(BINARY_OP::Mul, IDENT("b"), IDENT("c"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -214,11 +204,9 @@ TEST(ParserTest, OperatorTest2) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Add,
-                BINARY(BINARY_OP::Mul, IDENT("a"), IDENT("b")),
-                BINARY(BINARY_OP::Mul, IDENT("c"), IDENT("d")))
-        )
+        BINARY(BINARY_OP::Add,
+            BINARY(BINARY_OP::Mul, IDENT("a"), IDENT("b")),
+            BINARY(BINARY_OP::Mul, IDENT("c"), IDENT("d")))
     );
     EXPECT_EQ(*ast.root, *root);
 }
@@ -229,11 +217,9 @@ TEST(ParserTest, OperatorTest3) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Sub,
-                BINARY(BINARY_OP::Sub, IDENT("a"), IDENT("b")),
-                IDENT("c")
-            )
+        BINARY(BINARY_OP::Sub,
+            BINARY(BINARY_OP::Sub, IDENT("a"), IDENT("b")),
+            IDENT("c")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -245,11 +231,9 @@ TEST(ParserTest, OperatorTest4) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Mul,
-                PREFIX(PREFIX_OP::Neg, IDENT("a")),
-                IDENT("b")
-            )
+        BINARY(BINARY_OP::Mul,
+            PREFIX(PREFIX_OP::Neg, IDENT("a")),
+            IDENT("b")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -261,11 +245,9 @@ TEST(ParserTest, OperatorTest5) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BinaryExpr::OpKind::Add,
-               PREFIX(PREFIX_OP::Neg, IDENT("a")),
-               IDENT("b")
-            )
+        BINARY(BINARY_OP::Add,
+           PREFIX(PREFIX_OP::Neg, IDENT("a")),
+           IDENT("b")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -277,11 +259,9 @@ TEST(ParserTest, OperatorTest6) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Mul,
-               BINARY(BINARY_OP::Add, IDENT("a"), IDENT("b")),
-               IDENT("c")
-            )
+        BINARY(BINARY_OP::Mul,
+           BINARY(BINARY_OP::Add, IDENT("a"), IDENT("b")),
+           IDENT("c")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -293,11 +273,9 @@ TEST(ParserTest, OperatorTest7) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::Lt,
-                BINARY(BINARY_OP::Add, IDENT("a"), IDENT("b")),
-                BINARY(BINARY_OP::Mul, IDENT("c"), IDENT("d"))
-            )
+        BINARY(BINARY_OP::Lt,
+            BINARY(BINARY_OP::Add, IDENT("a"), IDENT("b")),
+            BINARY(BINARY_OP::Mul, IDENT("c"), IDENT("d"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -309,11 +287,9 @@ TEST(ParserTest, OperatorTest8) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::LogOr,
-                IDENT("a"),
-                BINARY(BINARY_OP::LogAnd, IDENT("b"), IDENT("c"))
-            )
+        BINARY(BINARY_OP::LogOr,
+            IDENT("a"),
+            BINARY(BINARY_OP::LogAnd, IDENT("b"), IDENT("c"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -325,17 +301,15 @@ TEST(ParserTest, OperatorTest9) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            BINARY(BINARY_OP::LogOr,
-                BINARY(BINARY_OP::LogAnd,
-                    BINARY(BINARY_OP::Lt,
-                        BINARY(BINARY_OP::Add,
-                            IDENT("a"),
-                            BINARY(BINARY_OP::Mul, IDENT("b"), IDENT("c"))),
-                        IDENT("d")),
-                    IDENT("e")),
-                IDENT("f")
-            )
+        BINARY(BINARY_OP::LogOr,
+            BINARY(BINARY_OP::LogAnd,
+                BINARY(BINARY_OP::Lt,
+                    BINARY(BINARY_OP::Add,
+                        IDENT("a"),
+                        BINARY(BINARY_OP::Mul, IDENT("b"), IDENT("c"))),
+                    IDENT("d")),
+                IDENT("e")),
+            IDENT("f")
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -358,11 +332,9 @@ TEST(ParserTest, OperatorTest12) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            PREFIX(PREFIX_OP::Neg,
-                PREFIX(PREFIX_OP::BitNot,
-                    PREFIX(PREFIX_OP::LogNot, IDENT("a"))
-                )
+        PREFIX(PREFIX_OP::Neg,
+            PREFIX(PREFIX_OP::BitNot,
+                PREFIX(PREFIX_OP::LogNot, IDENT("a"))
             )
         )
     );
@@ -375,10 +347,8 @@ TEST(ParserTest, OperatorTest13) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            PREFIX(PREFIX_OP::Neg,
-               POSTFIX(POSTFIX_OP::ForceUnwrap, IDENT("a"))
-            )
+        PREFIX(PREFIX_OP::Neg,
+           POSTFIX(POSTFIX_OP::ForceUnwrap, IDENT("a"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -390,15 +360,13 @@ TEST(ParserTest, OperatorTest14) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
+        PREFIX(PREFIX_OP::LogNot,
             PREFIX(PREFIX_OP::LogNot,
                 PREFIX(PREFIX_OP::LogNot,
-                    PREFIX(PREFIX_OP::LogNot,
+                    POSTFIX(POSTFIX_OP::ForceUnwrap,
                         POSTFIX(POSTFIX_OP::ForceUnwrap,
                             POSTFIX(POSTFIX_OP::ForceUnwrap,
-                                POSTFIX(POSTFIX_OP::ForceUnwrap,
-                                    IDENT("a"))))))
-            )
+                                IDENT("a"))))))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -409,14 +377,12 @@ TEST(ParserTest, OperatorTest15) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            SUBSCRIPT(
-                CALL(
-                    MEMBER(IDENT("a"), IDENT_NAME("b")),
-                    CALL_ARG(IDENT("c"))
-                ),
-                IDENT("d")
-            )
+        SUBSCRIPT(
+            CALL(
+                MEMBER(IDENT("a"), NAME("b")),
+                CALL_ARG(IDENT("c"))
+            ),
+            IDENT("d")
         )
     );
 
@@ -428,10 +394,8 @@ TEST(ParserTest, TypeofTest) {
     EXPECT_TRUE(errors.empty());
 
     Node* root = BLOCK(
-        EXPR_STMT(
-            MAKE(TypeofExpr,
-                 BINARY(BINARY_OP::Add, IDENT("x"), IDENT("y"))
-            )
+        MAKE(TypeofExpr,
+             BINARY(BINARY_OP::Add, IDENT("x"), IDENT("y"))
         )
     );
     EXPECT_EQ(*ast.root, *root);
@@ -489,7 +453,7 @@ TEST(ParserTest, VarDefTest1) {
     Node* root = BLOCK(
         VARDEF(
             VARMOD(VARKIND::Let, false, VAROPT::None),
-            MAKE(BindingPattern, "x"),
+            BIND_PAT(NAME("x")),
             IDENT("T"),
             IDENT("y")
         )
@@ -504,7 +468,7 @@ TEST(ParserTest, VarDefTest2) {
     Node* root = BLOCK(
         VARDEF(
             VARMOD(VARKIND::Const, true, VAROPT::None),
-            MAKE(BindingPattern, "x"),
+            MAKE(BindingPattern, NAME("x")),
             IDENT("T"),
             IDENT("y")
         )
@@ -519,7 +483,7 @@ TEST(ParserTest, VarDefTest3) {
     Node* root = BLOCK(
         VARDEF(
             VARMOD(VARKIND::Let, false, VAROPT::Optional),
-            MAKE(BindingPattern, "x"),
+            MAKE(BindingPattern, NAME("x")),
             IDENT("T")
         )
     );
@@ -533,7 +497,7 @@ TEST(ParserTest, VarDefTest4) {
     Node* root = BLOCK(
         VARDEF(
             VARMOD(VARKIND::Ref, false, VAROPT::None),
-            MAKE(BindingPattern, "x"),
+            MAKE(BindingPattern, NAME("x")),
             nullptr,
             IDENT("y")
         )
@@ -548,7 +512,7 @@ TEST(ParserTest, FnDefTest1) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
@@ -568,7 +532,7 @@ TEST(ParserTest, FnDefTest2) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ true,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>{ IDENT("T") },
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
@@ -588,11 +552,11 @@ TEST(ParserTest, FnDefTest3) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             /* params */ std::vector<FnParam*>{
-                MAKE(FnParam, nullptr, MAKE(BindingPattern, "x"), nullptr, nullptr),
-                MAKE(FnParam, nullptr, MAKE(BindingPattern, "y"), nullptr, nullptr)
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr),
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("y")), nullptr, nullptr)
             },
             /* captureClause */ nullptr,
             /* returns */ std::vector<FnReturn*>(),
@@ -612,7 +576,7 @@ TEST(ParserTest, FnDefTest4) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             /* params */ std::vector<FnParam*>(),
             MAKE(FnCaptureClause,
@@ -634,7 +598,7 @@ TEST(ParserTest, FnDefTest5) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
@@ -658,10 +622,10 @@ TEST(ParserTest, FnDefTest6) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             std::vector<FnParam*>{
-                MAKE(FnParam, nullptr, MAKE(BindingPattern, "x"), nullptr, nullptr)
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
             },
             /* captureClause */ nullptr,
             /* returns */ std::vector<FnReturn*>(),
@@ -680,7 +644,7 @@ TEST(ParserTest, FnDefTest7) {
     Node* root = BLOCK(
         MAKE(FnDefStmt,
             /* isImmutable */ false,
-            IDENT_NAME("foo"),
+            NAME("foo"),
             /* generics */ std::vector<Expr*>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
@@ -701,7 +665,7 @@ TEST(ParserTest, TypeDefTest1) {
         MAKE(TypeDefStmt,
             TypeDefStmt::TypeKind::Struct,
             /* isImmutable */ false,
-            IDENT_NAME("Foo"),
+            NAME("Foo"),
             /* template */ std::vector<Expr*>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
@@ -718,7 +682,7 @@ TEST(ParserTest, TypeDefTest2) {
         MAKE(TypeDefStmt,
             TypeDefStmt::TypeKind::Class,
             /* isImmutable */ true,
-            IDENT_NAME("Foo"),
+            NAME("Foo"),
             /* template */ std::vector<Expr*>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
@@ -735,7 +699,7 @@ TEST(ParserTest, TypeDefTest3) {
         MAKE(TypeDefStmt,
             TypeDefStmt::TypeKind::Struct,
             /* isImmutable */ false,
-            IDENT_NAME("Foo"),
+            NAME("Foo"),
             /* template */ std::vector<Expr*>(),
             /* bases */ std::vector<Expr*>{
                 IDENT("Bar"),
@@ -755,7 +719,7 @@ TEST(ParserTest, TypeDefTest4) {
         MAKE(TypeDefStmt,
             TypeDefStmt::TypeKind::EnumClass,
             /* isImmutable */ false,
-            IDENT_NAME("Color"),
+            NAME("Color"),
             /* template */ std::vector<Expr*>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
@@ -771,8 +735,8 @@ TEST(ParserTest, TypeDefTest5) {
     Node* root = BLOCK(
         MAKE(TypeDefStmt,
             TypeDefStmt::TypeKind::Struct,
-            /* isImmutable */false,
-            IDENT_NAME("Foo"),
+            /* isImmutable */ false,
+            NAME("Foo"),
             std::vector<Expr*>{
                 IDENT("T"),
                 IDENT("U")
@@ -792,7 +756,7 @@ TEST(ParserTest, IfStmtTest1) {
         MAKE(IfStmt,
             IDENT("a"),
             BLOCK(
-                EXPR_STMT(IDENT("b"))
+                IDENT("b")
             ),
             /* elseBody */ nullptr
         )
@@ -808,10 +772,10 @@ TEST(ParserTest, IfStmtTest2) {
         MAKE(IfStmt,
             IDENT("a"),
             BLOCK(
-                EXPR_STMT(IDENT("b"))
+                IDENT("b")
             ),
             BLOCK(
-                EXPR_STMT(IDENT("c"))
+                IDENT("c")
             )
         )
     );
@@ -826,13 +790,13 @@ TEST(ParserTest, IfStmtTest3) {
         MAKE(IfStmt,
             IDENT("a"),
             BLOCK(
-                EXPR_STMT(IDENT("b"))
+                IDENT("b")
             ),
             BLOCK(
                MAKE(IfStmt,
                    IDENT("c"),
                    BLOCK(
-                       EXPR_STMT(IDENT("d"))
+                       IDENT("d")
                    ),
                    /* elseBody */ nullptr
                )
@@ -850,16 +814,16 @@ TEST(ParserTest, IfStmtTest4) {
         MAKE(IfStmt,
             IDENT("a"),
             BLOCK(
-                EXPR_STMT(IDENT("b"))
+                IDENT("b")
             ),
             BLOCK(
                 MAKE(IfStmt,
                     IDENT("c"),
                     BLOCK(
-                        EXPR_STMT(IDENT("d"))
+                        IDENT("d")
                     ),
                     BLOCK(
-                        EXPR_STMT(IDENT("e"))
+                        IDENT("e")
                     )
                 )
             )

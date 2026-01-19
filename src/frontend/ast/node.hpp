@@ -516,10 +516,10 @@ struct CallArg final : Node {
     std::optional<Name> name;
     Expr* expr;
 
-    CallArg(Location start, Location end, Name name, Expr* expr) noexcept
+    CallArg(Location start, Location end, std::optional<Name> name, Expr* expr) noexcept
         : Node(start, end), name(std::move(name)), expr(expr) { }
     CallArg(Location start, Location end, Expr* expr) noexcept
-        : Node(start, end), name(std::nullopt), expr(expr) { }
+        : CallArg(start, end, std::nullopt, expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

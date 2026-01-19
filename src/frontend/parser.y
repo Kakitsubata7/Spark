@@ -787,7 +787,7 @@ call_args:
     ;
 
 call_arg:
-      expr             { $$ = ast.make<CallArg>($1->start, $1->end, $1); }
+      expr             { $$ = ast.make<CallArg>($1->start, $1->end, std::nullopt, $1); }
     | name Colon expr  { $$ = ast.make<CallArg>($1.start, $3->end, std::move($1.value), $3); }
     ;
 
