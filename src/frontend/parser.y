@@ -82,6 +82,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %type <std::vector<Spark::FrontEnd::Node*>> nodes
 %type <std::vector<Spark::FrontEnd::Node*>> node_list
 %type <Spark::FrontEnd::Node*> node
+%type <Spark::FrontEnd::Stmt*> stmt
 %type <Spark::FrontEnd::VarModifier*> varmod
 %type <Symbol<Spark::FrontEnd::VarModifier::VarKind>> varkind
 %type <Spark::FrontEnd::VarDefStmt*> vardef_stmt
@@ -109,6 +110,8 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %type <Spark::FrontEnd::BlockExpr*> else_clause
 %type <Spark::FrontEnd::ModuleStmt*> module_stmt
 %type <std::vector<Spark::FrontEnd::Name>> module_path
+%type <Spark::FrontEnd::ImportStmt*> import_stmt
+%type <Spark::FrontEnd::ImportItem*> import
 
 %type <Spark::FrontEnd::Expr*> expr
 %type <std::vector<Spark::FrontEnd::Expr*>> exprs
@@ -151,6 +154,8 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 
 %type <Symbol<Spark::FrontEnd::Literal>> literal
 %type <Symbol<Spark::FrontEnd::Name>> name
+%type <Spark::FrontEnd::Path*> path
+%type <Spark::FrontEnd::PathSeg*> path_seg
 
 %%
 %start program;
@@ -181,6 +186,11 @@ terminators:
     ;
 
 node:
+      stmt  { $$ = $1; }
+    | expr  { $$ = $1; }
+    ;
+
+stmt:
       vardef_stmt                  { $$ = $1; }
     | fndef_stmt                   { $$ = $1; }
     | typedef_stmt
@@ -206,10 +216,10 @@ node:
     | Return                       { $$ = ast.make<ReturnStmt>($1.start, $1.end, nullptr); }
     | Return expr                  { $$ = ast.make<ReturnStmt>($1.start, $2->end, $2); }
     | module_stmt                  { $$ = $1; }
-    //| Export stmt                { $$ = ast.make<Export>($1.start, $2.end, $2); }
-    //| import_stmt
-    //| Undefine postfix           { $$ = ast.make<Undefine>($1.start, $2.end, $2); }
-    | expr                         { $$ = $1; }
+    | Export stmt                  { $$ = ast.make<ExportStmt>($1.start, $2->end, $2); }
+    | import_stmt                  { $$ = $1; }
+    | From path Import Mul         { $$ = ast.make<ImportAllStmt>($1.start, $4.end, $2); }
+    | Undefine path                { $$ = ast.make<UndefineStmt>($1.start, $2->end, $2); }
     ;
 
 varmod:
@@ -517,18 +527,21 @@ module_path:
     ;
 
 import_stmt:
-      From postfix Import imports
-    | From postfix Import Mul
-    ;
-
-imports:
-      import
-    | imports Comma import
+      From path Import import
+        {
+            std::vector<ImportItem*> imports = { $4 };
+            $$ = ast.make<ImportStmt>($1.start, $4->end, $2, std::move(imports));
+        }
+    | import_stmt Comma import
+        {
+            $$->imports.push_back($3);
+            $$->end = $3->end;
+        }
     ;
 
 import:
-      postfix
-    | postfix As Identifier
+      path          { $$ = ast.make<ImportItem>($1->start, $1->end, $1, std::nullopt); }
+    | path As name  { $$ = ast.make<ImportItem>($1->start, $3.end, $1, std::move($3.value)); }
     ;
 
 
@@ -1050,6 +1063,26 @@ name:
             $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShrAssign));
         }
     | Self             { $$ = Symbol<Name>($1.start, $1.end, SelfName()); }
+    ;
+
+path:
+      path_seg
+        {
+            std::vector<PathSeg*> segs = { $1 };
+            $$ = ast.make<Path>($1->start, $1->end, std::move(segs));
+        }
+    | path Dot path_seg  { $$->segs.push_back($3); $$->end = $3->end; }
+    ;
+
+path_seg:
+      name
+        {
+            ast.make<PathSeg>($1.start, $1.end, std::move($1.value), std::vector<Expr*>());
+        }
+    | name LBracket exprs RBracket
+        {
+            ast.make<PathSeg>($1.start, $4.end, std::move($1.value), std::move($3));
+        }
     ;
 %%
 

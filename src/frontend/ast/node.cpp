@@ -59,7 +59,7 @@ bool Node::operator==(const Node& rhs) const noexcept {
     if (this == &rhs) {
         return true;
     }
-    if (false /* TODO: || start != rhs.start || end != rhs.end */) {
+    if constexpr (false /* TODO: || start != rhs.start || end != rhs.end */) {
         return false;
     }
     return equalsImpl(rhs);
@@ -96,6 +96,16 @@ bool FnCaptureClause::equalsImpl(const Node& rhs) const noexcept {
 bool FnReturn::equalsImpl(const Node& rhs) const noexcept {
     const FnReturn& o = ASSERT_NODE(rhs, FnReturn);
     return kind == o.kind && ptrEq(type, o.type);
+}
+
+bool PathSeg::equalsImpl(const Node& rhs) const noexcept {
+    const PathSeg& o = ASSERT_NODE(rhs, PathSeg);
+    return name == o.name && ptrVecEq(generics, o.generics);
+}
+
+bool Path::equalsImpl(const Node& rhs) const noexcept {
+    const Path& o = ASSERT_NODE(rhs, Path);
+    return ptrVecEq(segs, o.segs);
 }
 
 
@@ -140,17 +150,6 @@ bool TryCatchExpr::equalsImpl(const Node& rhs) const noexcept {
     const TryCatchExpr& o = ASSERT_NODE(rhs, TryCatchExpr);
     return ptrEq(expr, o.expr) && ptrVecEq(catches, o.catches);
 }
-
-template <typename T>
-        struct Symbol {
-    Spark::Location start;
-    Spark::Location end;
-    T value;
-
-    Symbol() = default;
-    Symbol(Spark::Location start, Spark::Location end, T value) noexcept
-        : start(start), end(end), value(std::move(value)) { }
-};
 
 bool ThrowExpr::equalsImpl(const Node& rhs) const noexcept {
     const ThrowExpr& o = ASSERT_NODE(rhs, ThrowExpr);
@@ -314,9 +313,24 @@ bool ExportStmt::equalsImpl(const Node& rhs) const noexcept {
     return ptrEq(stmt, o.stmt);
 }
 
+bool ImportItem::equalsImpl(const Node& rhs) const noexcept {
+    const ImportItem& o = ASSERT_NODE(rhs, ImportItem);
+    return ptrEq(path, o.path) && as == o.as;
+}
+
+bool ImportStmt::equalsImpl(const Node& rhs) const noexcept {
+    const ImportStmt& o = ASSERT_NODE(rhs, ImportStmt);
+    return ptrEq(from, o.from) && ptrVecEq(imports, o.imports);
+}
+
+bool ImportAllStmt::equalsImpl(const Node& rhs) const noexcept {
+    const ImportAllStmt& o = ASSERT_NODE(rhs, ImportAllStmt);
+    return ptrEq(from, o.from);
+}
+
 bool UndefineStmt::equalsImpl(const Node& rhs) const noexcept {
     const UndefineStmt& o = ASSERT_NODE(rhs, UndefineStmt);
-    return ptrEq(expr, o.expr);
+    return ptrEq(path, o.path);
 }
 
 

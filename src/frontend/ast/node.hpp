@@ -263,6 +263,33 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+struct PathSeg final : Node {
+    Name name;
+    std::vector<Expr*> generics;
+
+    PathSeg(Location start, Location end, Name name, std::vector<Expr*> generics) noexcept
+        : Node(start, end), name(std::move(name)), generics(std::move(generics)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct Path final : Node {
+    std::vector<PathSeg*> segs;
+
+    Path(Location start, Location end, std::vector<PathSeg*> segs) noexcept
+        : Node(start, end), segs(std::move(segs)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 
 
 struct LambdaExpr final : Expr {
@@ -833,11 +860,11 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct ExportStmt final : Node {
+struct ExportStmt final : Stmt {
     Stmt* stmt;
 
     ExportStmt(Location start, Location end, Stmt* stmt) noexcept
-        : Node(start, end), stmt(stmt) { }
+        : Stmt(start, end), stmt(stmt) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -846,11 +873,52 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct UndefineStmt final : Node {
-    Expr* expr;
+struct ImportItem final : Node {
+    Path* path;
+    std::optional<Name> as;
 
-    UndefineStmt(Location start, Location end, Expr* expr) noexcept
-        : Node(start, end), expr(expr) { }
+    ImportItem(Location start, Location end, Path* path, std::optional<Name> as) noexcept
+        : Node(start, end), path(path), as(std::move(as)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct ImportStmt final : Stmt {
+    Path* from;
+    std::vector<ImportItem*> imports;
+
+    ImportStmt(Location start, Location end, Path* from, std::vector<ImportItem*> imports) noexcept
+        : Stmt(start, end), from(from), imports(std::move(imports)) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct ImportAllStmt final : Stmt {
+    Path* from;
+
+    ImportAllStmt(Location start, Location end, Path* from) noexcept
+        : Stmt(start, end), from(from) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct UndefineStmt final : Stmt {
+    Path* path;
+
+    UndefineStmt(Location start, Location end, Path* path) noexcept
+        : Stmt(start, end), path(path) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
