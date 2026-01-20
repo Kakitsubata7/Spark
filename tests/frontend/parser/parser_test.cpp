@@ -1833,3 +1833,104 @@ struct Counter {
     );
     EXPECT_EQ(*ast.root, *root);
 }
+
+TEST(ParserTest, TestA) {
+    auto [ast, errors] = parse(
+R"(
+module Math {
+    export fn fact(n: Int) -> Int {
+        if n <= 1 {
+            return 1
+        };
+
+        return n * fact(n - 1)
+    }
+};
+
+from Math import fact;
+
+fn main() -> Int {
+    return fact(5);
+}
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestB) {
+    auto [ast, errors] = parse(
+R"(
+struct Box[T] {
+    let value: T;
+
+    fn map(f: T -> T) -> T {
+        return f(value);
+    }
+};
+
+fn makeInc(n: Int) -> Int -> Int {
+    return fn (x) [n] => x + n;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestC) {
+    auto [ast, errors] = parse(
+R"(
+fn find(nums: Array[Int]) -> Int? {
+    for x in nums {
+        if x < 0 {
+            continue;
+        };
+
+        if x == 0 {
+            break;
+        };
+
+        if x % 2 == 0 {
+            return x;
+        };
+    };
+
+    return nil;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestD) {
+    auto [ast, errors] = parse(
+R"(
+fn riskyDivide(a: Int, b: Int) -> Int throw Error {
+    if b == 0 {
+        throw Error();
+    };
+
+    return a / b;
+};
+
+fn safeCompute(f: (Int, Int) -> Int, x: Int, y: Int) -> Int {
+    return f(x, y);
+}
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestE) {
+    auto [ast, errors] = parse(
+R"(
+module Util {
+    export fn apply[T](x: T, f: T -> T) -> T {
+        return f(x);
+    }
+};
+
+from Util import apply;
+
+fn main() -> Int {
+    let inc = fn (x: Int) => x + 1;
+    return apply(41, inc);
+}
+)");
+    EXPECT_TRUE(errors.empty()) << errors[0].message;
+}
