@@ -911,3 +911,32 @@ TEST(ParserTest, IfStmtTest4) {
     EXPECT_EQ(*ast.root, *root);
 }
 
+TEST(ParserTest, WhileStmtTest1) {
+    auto [ast, errors] = parse("while a { b }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(WhileStmt,
+            IDENT("a"),
+            BLOCK(
+                IDENT("b")
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, DoWhileStmtTest1) {
+    auto [ast, errors] = parse("do { a } while b");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(DoWhileStmt,
+            BLOCK(
+                IDENT("a")
+            ),
+            IDENT("b")
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
