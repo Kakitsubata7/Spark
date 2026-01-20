@@ -6,6 +6,7 @@
 
 %define api.token.raw
 %define api.value.type variant
+%define parse.error detailed
 
 %locations
 
@@ -44,17 +45,8 @@ using namespace Spark::FrontEnd;
 
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
-inline void raiseError(yy::parser& parser, Location start, Location end, const std::string& msg) {
-    yy::position b;
-    b.line = start.line;
-    b.column = start.column;
-    yy::position e;
-    e.line = end.line;
-    e.column = end.column;
-    parser.error(yy::location(b, e), msg);
-}
-
-#define RAISE_ERROR(start, end, msg) raiseError(*this, (start), (end), (msg));
+#define RAISE_ERROR(start, end, msg) errors.emplace_back(msg, start, end)
+#define REMOVE_LAST_ERROR() errors.pop_back()
 }
 
 %token <Spark::FrontEnd::TokenValue> Identifier Discard
@@ -71,7 +63,7 @@ inline void raiseError(yy::parser& parser, Location start, Location end, const s
 %token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign ShlAssign ShrAssign CoalesceAssign
 %token <Spark::FrontEnd::TokenValue> Dot
 %token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
-%token <Spark::FrontEnd::TokenValue> Semicolon Newline LParen RParen LBracket RBracket LBrace RBrace
+%token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace
 %token <Spark::FrontEnd::TokenValue> At
 %token <Spark::FrontEnd::TokenValue> Dollar
 %token <Spark::FrontEnd::TokenValue> LineComment BlockComment
@@ -173,11 +165,21 @@ nodes:
 node_list:
       node                        { $$ = {}; $$.push_back($1); }
     | node_list terminators node  { $$ = std::move($1); $$.push_back($3); }
+    | node_list error node
+        {
+            if (false) { // Replace condition with newline check
+                yyerrok;
+                REMOVE_LAST_ERROR();
+                $$ = std::move($1);
+                $$.push_back($3);
+            } else {
+                YYERROR;
+            }
+        }
     ;
 
 terminator:
-      Newline
-    | Semicolon
+      Semicolon
     ;
 
 terminators:
@@ -193,19 +195,7 @@ node:
 stmt:
       vardef_stmt                  { $$ = $1; }
     | fndef_stmt                   { $$ = $1; }
-    | typedef_stmt
-        {
-            if ($1->kind == TypeDefStmt::TypeKind::Alias) {
-                if ($1->bases.size() != 1) {
-                    RAISE_ERROR($1->start, $1->bases.back()->end, "alias requires exactly one base type");
-                }
-            } else if ($1->kind == TypeDefStmt::TypeKind::Extension) {
-                if ($1->bases.size() != 1) {
-                    RAISE_ERROR($1->start, $1->bases.back()->end, "extension requires exactly one base type");
-                }
-            }
-            $$ = $1;
-        }
+    | typedef_stmt                 { $$ = $1; }
     //| enumcase_stmt
     | assign_stmt                  { $$ = $1; }
     | if_stmt                      { $$ = $1; }
@@ -1089,5 +1079,5 @@ path_seg:
 void yy::parser::error(const yy::location& loc, const std::string& msg) {
     Location start(static_cast<size_t>(loc.begin.line), static_cast<size_t>(loc.begin.column));
     Location end(static_cast<size_t>(loc.end.line), static_cast<size_t>(loc.end.column));
-    errors.emplace_back(msg, start, end);
+    RAISE_ERROR(start, end, msg);
 }

@@ -84,6 +84,25 @@ TEST(ParserTest, BlockTest2) {
     EXPECT_EQ(*ast.root, *root);
 }
 
+TEST(ParserTest, DISABLED_BlockTest3) {
+    auto [ast, errors] = parse(R"(
+{
+    a
+    b
+    c
+})");
+    EXPECT_TRUE(errors.empty()) << errors.size();
+
+    Node* root = BLOCK(
+        BLOCK(
+            IDENT("a"),
+            IDENT("b"),
+            IDENT("c")
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
 TEST(ParserTest, IfThenTest) {
     auto [ast, errors] = parse("if foo() then a else b");
     EXPECT_TRUE(errors.empty());
