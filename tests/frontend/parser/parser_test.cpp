@@ -77,6 +77,124 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return Parser::parse(iss);
 }
 
+TEST(ParserTest, LambdaTest1) {
+    auto [ast, errors] = parse("fn (x, y) => x + y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(LambdaExpr,
+            /* isImmutable */ false,
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr),
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("y")), nullptr, nullptr)
+            },
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BINARY(BINARY_OP::Add, IDENT("x"), IDENT("y"))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, LambdaTest2) {
+    auto [ast, errors] = parse("fn^ (x: Int, y: Int) -> Int => x * y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(LambdaExpr,
+            /* isImmutable */ true,
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), IDENT("Int"), nullptr),
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("y")), IDENT("Int"), nullptr)
+            },
+            /* captureClause */ nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Int"))
+            },
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BINARY(BINARY_OP::Mul, IDENT("x"), IDENT("y"))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, LambdaTest3) {
+    auto [ast, errors] = parse("fn (x)[ref y] => x + y");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(LambdaExpr,
+            /* isImmutable */ false,
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
+            },
+            MAKE(FnCaptureClause,
+                std::vector<FnCapture*>{
+                    MAKE(FnCapture,
+                        VARMOD(VARKIND::Ref, false, VAROPT::None),
+                        BIND_PAT(NAME("y")))
+                },
+                false,
+                nullptr
+            ),
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BINARY(BINARY_OP::Add, IDENT("x"), IDENT("y"))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, LambdaTest4) {
+    auto [ast, errors] = parse("fn (x) throw Error => risky(x)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(LambdaExpr,
+            /* isImmutable */ false,
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
+            },
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>(),
+            /* isThrowing */ true,
+            /* throwExpr */ IDENT("Error"),
+            CALL(IDENT("risky"), CALL_ARG(IDENT("x")))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, LambdaTest5) {
+    auto [ast, errors] = parse("fn (x: Int) -> Bool => x % 2 == 0");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(LambdaExpr,
+            /* isImmutable */ false,
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), IDENT("Int"), nullptr)
+            },
+            /* captureClause */ nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Bool"))
+            },
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BINARY(
+                BINARY_OP::Eq,
+                BINARY(BINARY_OP::Mod, IDENT("x"), INT(2)),
+                INT(0)
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
 TEST(ParserTest, BlockTest1) {
     auto [ast, errors] = parse("{ }");
     EXPECT_TRUE(errors.empty());
@@ -120,7 +238,7 @@ TEST(ParserTest, DISABLED_BlockTest3) {
     EXPECT_EQ(*ast.root, *root);
 }
 
-TEST(ParserTest, IfThenTest) {
+TEST(ParserTest, IfThenTest1) {
     auto [ast, errors] = parse("if foo() then a else b");
     EXPECT_TRUE(errors.empty());
 
@@ -132,7 +250,7 @@ TEST(ParserTest, IfThenTest) {
     EXPECT_EQ(*ast.root, *root);
 }
 
-TEST(ParserTest, TryElseTest) {
+TEST(ParserTest, TryElseTest1) {
     auto [ast, errors] = parse("x = try { foo(); throw Error() } else 1");
     EXPECT_TRUE(errors.empty());
 
