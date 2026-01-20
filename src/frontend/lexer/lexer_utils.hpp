@@ -9,4 +9,4 @@ namespace Spark::FrontEnd {
 
 TokenType classifyWord(std::string_view word) noexcept;
 
-} // Spark::Frontend
+} // Spark::FrontEnd

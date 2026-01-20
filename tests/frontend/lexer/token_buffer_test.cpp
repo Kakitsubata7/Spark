@@ -1,6 +1,6 @@
 ﻿#include <gtest/gtest.h>
 
-#include "frontend/token_buffer.hpp"
+#include "frontend/lexer/token_buffer.hpp"
 
 using namespace Spark::FrontEnd;
 

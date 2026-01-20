@@ -1,8 +1,11 @@
 ﻿#pragma once
 
-#include "ast/ast.hpp"
-#include "parser_error.hpp"
-#include "result.hpp"
+#include <optional>
+#include <string_view>
+#include <vector>
+
+#include "ast.hpp"
+#include "utils/error.hpp"
 
 namespace Spark::FrontEnd {
 
@@ -10,7 +13,8 @@ class Parser {
 public:
     Parser() = default;
 
-    Result<AST::AST, ParserError> parse(std::istream& stream);
+    static std::pair<AST, std::vector<Error>> parse(std::istream& stream,
+                                                    std::optional<std::string_view> filename = std::nullopt);
 };
 
 } // Spark::FrontEnd

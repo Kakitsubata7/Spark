@@ -1,6 +1,8 @@
-#include <cstddef>
+#pragma once
+
 #include <unordered_set>
 
+#include "core/type.hpp"
 #include "drc.hpp"
 
 namespace Spark::Runtime {

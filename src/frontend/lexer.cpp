@@ -1,15 +1,31 @@
 ﻿#include "lexer.hpp"
 
+#include <new>
+#include <sstream>
+
 #include <lex.yy.hpp>
 
 #include "semantic_type.hpp"
 
 namespace Spark::FrontEnd {
 
-Lexer::Lexer(std::istream& stream) : _lstate(1, 1, &stream) {
-    yylex_init(&_scanner);
-    yyset_extra(&_lstate, _scanner);
+Lexer::Lexer(SourceBuffer srcbuf, std::optional<std::string_view> filename)
+    : _filename(filename),
+      _scanner(nullptr),
+      _srcbuf(std::move(srcbuf)),
+      _lstate(_srcbuf, 1, 1) {
+    yylex_init_extra(&_lstate, &_scanner);
+    if (_scanner == nullptr) {
+        throw std::bad_alloc();
+    }
+    yyset_in(nullptr, _scanner);
 }
+
+Lexer::Lexer(std::istream& stream, std::optional<std::string_view> filename)
+    : Lexer(SourceBuffer(stream), filename) { }
+
+Lexer::Lexer(std::string_view sv, std::optional<std::string_view> filename)
+    : Lexer(SourceBuffer(sv), filename) { }
 
 Lexer::~Lexer() {
     if (_scanner != nullptr) {
@@ -18,24 +34,42 @@ Lexer::~Lexer() {
 }
 
 Lexer::Lexer(Lexer&& other) noexcept
-    : _scanner(other._scanner), _lstate(std::move(other._lstate)) {
+    : _filename(std::move(other._filename)),
+      _scanner(other._scanner),
+      _srcbuf(std::move(other._srcbuf)),
+      _lstate(std::move(other._lstate)) {
+    if (_scanner != nullptr) {
+        yyset_extra(&_lstate, _scanner);
+    }
+
     other._scanner = nullptr;
 }
 
 Lexer& Lexer::operator=(Lexer&& other) noexcept {
+    // TODO: Flex states are not entirely moved
     if (this != &other) {
+        _filename = std::move(other._filename);
+        if (_scanner != nullptr) {
+            yylex_destroy(_scanner);
+        }
         _scanner = other._scanner;
-        other._scanner = nullptr;
+        _srcbuf = std::move(other._srcbuf);
         _lstate = std::move(other._lstate);
+        if (_scanner != nullptr) {
+            yyset_extra(&_lstate, _scanner);
+        }
+
+        other._scanner = nullptr;
     }
     return *this;
 }
 
 Token Lexer::lex() {
     SemanticType s;
-    TokenType type = static_cast<TokenType>(yylex(&s, _scanner));
-    TokenValue& value = s.as<TokenValue>();
-    return Token{ type, value.lexeme, value.line, value.column };
+    yy::parser::location_type loc;
+    TokenType type = static_cast<TokenType>(yylex(&s, &loc, _scanner));
+    const TokenValue& value = s.as<TokenValue>();
+    return Token{type, value.lexeme, value.start.line, value.start.column};
 }
 
 std::vector<Token> Lexer::lexAll() {
@@ -48,16 +82,6 @@ std::vector<Token> Lexer::lexAll() {
         tokens.push_back(token);
     }
     return tokens;
-}
-
-Result<std::vector<Token>, std::vector<LexerError>> Lexer::lexAll(std::istream& stream) {
-    Lexer lexer(stream);
-    std::vector<Token> tokens = lexer.lexAll();
-
-    if (lexer.hasError()) {
-        return Result<std::vector<Token>, std::vector<LexerError>>::err(std::move(lexer._lstate.errors));
-    }
-    return Result<std::vector<Token>, std::vector<LexerError>>::ok(std::move(tokens));
 }
 
 } // Spark::FrontEnd

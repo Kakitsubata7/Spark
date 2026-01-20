@@ -4,7 +4,7 @@
 
 #include "frontend/lexer.hpp"
 
-#include "utils.hpp"
+#include "../utils.hpp"
 
 using namespace Spark::FrontEnd;
 using namespace Spark::Test::FrontEnd;
@@ -279,7 +279,7 @@ end
     removeCarriageReturns(source);
     Lexer lexer = testLexAll(source, {
         {TT::Fn, "fn", 2, 1},
-        {TT::BitXor, "^", 2, 3},
+        {TT::Caret, "^", 2, 3},
         {TT::Identifier, "foo", 2, 5},
         {TT::LParen, "(", 2, 8},
         {TT::Identifier, "n", 2, 9},
@@ -370,8 +370,8 @@ TEST(LexerTest, BlockCommentTests) {
         {TT::BlockComment, " ...", 1, 1}
     });
     EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].line, 1);
-    EXPECT_EQ(lexer.errors()[0].column, 6);
+    EXPECT_EQ(lexer.errors()[0].start.line, 1);
+    EXPECT_EQ(lexer.errors()[0].start.column, 6);
 
     // Separated */
     source = R"(/* ... * /)";
@@ -379,8 +379,8 @@ TEST(LexerTest, BlockCommentTests) {
         {TT::BlockComment, " ... * /", 1, 1},
     });
     EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].line, 1);
-    EXPECT_EQ(lexer.errors()[0].column, 10);
+    EXPECT_EQ(lexer.errors()[0].start.line, 1);
+    EXPECT_EQ(lexer.errors()[0].start.column, 10);
 }
 
 TEST(LexerTest, StringTests) {
@@ -425,8 +425,8 @@ TEST(LexerTest, StringTests) {
         {TT::String, "...p...", 1, 1}
     });
     EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].line, 1);
-    EXPECT_EQ(lexer.errors()[0].column, 5);
+    EXPECT_EQ(lexer.errors()[0].start.line, 1);
+    EXPECT_EQ(lexer.errors()[0].start.column, 4);
 
     // Unterminated at EOF
     source = R"("...)";
@@ -434,8 +434,10 @@ TEST(LexerTest, StringTests) {
         {TT::String, "...", 1, 1}
     });
     EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].line, 1);
-    EXPECT_EQ(lexer.errors()[0].column, 4);
+    EXPECT_EQ(lexer.errors()[0].start.line, 1);
+    EXPECT_EQ(lexer.errors()[0].start.column, 1);
+    EXPECT_EQ(lexer.errors()[0].end.line, 1);
+    EXPECT_EQ(lexer.errors()[0].end.column, 4);
 
     // Unterminated by newline
     source = "\"...\n...\"";
@@ -445,10 +447,12 @@ TEST(LexerTest, StringTests) {
         {TT::String, "", 2, 4}
     });
     EXPECT_EQ(lexer.errors().size(), 2);
-    EXPECT_EQ(lexer.errors()[0].line, 1);
-    EXPECT_EQ(lexer.errors()[0].column, 4);
-    EXPECT_EQ(lexer.errors()[1].line, 2);
-    EXPECT_EQ(lexer.errors()[1].column, 4);
+    EXPECT_EQ(lexer.errors()[0].start.line, 1);
+    EXPECT_EQ(lexer.errors()[0].start.column, 1);
+    EXPECT_EQ(lexer.errors()[0].end.line, 1);
+    EXPECT_EQ(lexer.errors()[0].end.column, 4);
+    EXPECT_EQ(lexer.errors()[1].start.line, 2);
+    EXPECT_EQ(lexer.errors()[1].start.column, 4);
 
     // Token immediately after string
     source = R"("..."123)";

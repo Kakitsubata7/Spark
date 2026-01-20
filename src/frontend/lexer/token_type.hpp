@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <ostream>
+#include <string_view>
 
 #include <parser.tab.hpp>
 

@@ -32,11 +32,28 @@ FLEX_TARGET(
         COMPILE_FLAGS "--header-file=${FRONTEND_GENERATED_DIR}/lex.yy.hpp"
 )
 
+add_custom_target(flex
+    DEPENDS
+        ${FLEX_sparklexer_OUTPUTS}
+)
+
+#BISON_TARGET(
+#        sparkparser
+#        ${FRONTEND_DIR}/parser.y
+#        ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
+#        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
+#)
+
 BISON_TARGET(
         sparkparser
         ${FRONTEND_DIR}/parser.y
         ${FRONTEND_GENERATED_DIR}/parser.tab.cpp
-        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp"
+        COMPILE_FLAGS "--defines=${FRONTEND_GENERATED_DIR}/parser.tab.hpp -Wcounterexamples -Wconflicts-sr"
+)
+
+add_custom_target(bison
+    DEPENDS
+        ${BISON_sparkparser_OUTPUTS}
 )
 
 add_flex_bison_dependency(sparklexer sparkparser)
@@ -46,31 +63,32 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
-        src/frontend/ast/ast.hpp
-        src/frontend/ast/expr.hpp
+        src/core/type.hpp
+
+        src/frontend/ast.hpp
+        src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.hpp
-        src/frontend/ast/pattern.hpp
-        src/frontend/ast/stmt.hpp
-        src/frontend/ast/type_nodes.hpp
-        src/frontend/ast/utils.hpp
 
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
-        src/frontend/lexer_error.hpp
-        src/frontend/lexer_state.hpp
-        src/frontend/lexer_utils.cpp
-        src/frontend/lexer_utils.hpp
+        src/frontend/lexer/lexer_state.hpp
+        src/frontend/lexer/lexer_utils.cpp
+        src/frontend/lexer/lexer_utils.hpp
+        src/frontend/lexer/token.hpp
+        src/frontend/lexer/token_buffer.hpp
+        src/frontend/lexer/token_type.cpp
+        src/frontend/lexer/token_type.hpp
+        src/frontend/lexer/token_value.hpp
+
         src/frontend/parser.cpp
         src/frontend/parser.hpp
-        src/frontend/parser_context.hpp
-        src/frontend/parser_error.hpp
+
         src/frontend/semantic_type.hpp
-        src/frontend/token.hpp
-        src/frontend/token_buffer.hpp
-        src/frontend/token_type.cpp
-        src/frontend/token_type.hpp
-        src/frontend/token_value.hpp
+        src/frontend/source_buffer.cpp
+        src/frontend/source_buffer.hpp
+        src/frontend/source_reader.cpp
+        src/frontend/source_reader.hpp
 
         src/runtime/allocator.hpp
         src/runtime/drc.cpp
@@ -78,12 +96,13 @@ add_library(sparklib
         src/runtime/rc.hpp
         src/runtime/spark.hpp
         src/runtime/thread.hpp
-        src/runtime/type.hpp
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
-
-        src/type.hpp
+        src/utils/error.cpp
+        src/utils/error.hpp
+        src/utils/location.hpp
+        src/utils/result.hpp
 )
 
 target_include_directories(sparklib
@@ -102,12 +121,16 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
-        tests/frontend/lex_test.cpp
-        tests/frontend/lexer_test.cpp
-        tests/frontend/token_buffer_test.cpp
-        tests/frontend/token_value_test.cpp
-        tests/frontend/utils.cpp
-        tests/frontend/utils.hpp
+        tests/frontend/lexer/lex_test.cpp
+        tests/frontend/lexer/lexer_test.cpp
+        tests/frontend/lexer/token_buffer_test.cpp
+        tests/frontend/lexer/token_value_test.cpp
+
+        tests/frontend/parser/parser_test.cpp
+
+        tests/frontend/source_buffer_test.cpp
+        tests/frontend/source_reader_test.cpp
+
         tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest

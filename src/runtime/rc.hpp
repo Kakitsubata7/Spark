@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "type.hpp"
+#include "core/type.hpp"
 
 namespace Spark::Runtime {
 

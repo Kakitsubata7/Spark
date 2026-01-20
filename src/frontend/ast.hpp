@@ -4,26 +4,25 @@
 #include <utility>
 #include <vector>
 
-#include "expr.hpp"
-#include "node.hpp"
-#include "stmt.hpp"
+#include "ast/node.hpp"
+#include "ast/node_visitor.hpp"
 
-namespace Spark::FrontEnd::AST {
+namespace Spark::FrontEnd {
 
 class AST {
 private:
-    BlockStmt _root;
     std::vector<std::unique_ptr<Node>> _nodes;
 
 public:
-    [[nodiscard]] constexpr BlockStmt* root() noexcept { return &_root; }
+    Node* root;
 
-    AST() : _root(1, 1, {}) { }
+    AST() noexcept : root(nullptr) { }
 
-    AST(const AST& other) = default;
-    AST& operator=(const AST& other) = default;
+    AST(const AST& other) = delete;
+    AST& operator=(const AST& other) = delete;
+    
     AST(AST&& other) noexcept = default;
-    AST& operator=(AST&& other) noexcept = default;
+    AST& operator=(AST&& other) = default;
 
     /**
      * Allocates a `Node` subtype instance and returns its pointer. The lifecycle of the instance is handled by
@@ -35,11 +34,11 @@ public:
      */
     template <typename T, typename... Args>
     T* make(Args&&... args) {
-        std::unique_ptr<T> ptr = std::make_unique<T>(std::forward<Args>(args)...);
+        auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
         T* raw = ptr.get();
         _nodes.emplace_back(std::move(ptr));
         return raw;
     }
 };
 
-} // Spark::FrontEnd::AST
+} // Spark::FrontEnd

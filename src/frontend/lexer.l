@@ -4,18 +4,22 @@
 %top {
 #include <parser.tab.hpp>
 
-#include "frontend/token_type.hpp"
+#include "frontend/lexer/token_type.hpp"
 
 #define YYSTYPE yy::parser::semantic_type
+
+#define YY_DECL \
+    int yylex(yy::parser::semantic_type* yylval_param, yy::parser::location_type* yylloc, yyscan_t yyscanner)
+YY_DECL;
 }
 
 %{
 #include <sstream>
 #include <string_view>
 
-#include "frontend/lexer_state.hpp"
-#include "frontend/lexer_utils.hpp"
+#include "frontend/lexer.hpp"
 
+using namespace Spark;
 using namespace Spark::FrontEnd;
 
 #define YYLENG (static_cast<size_t>(yyget_leng(yyscanner)))
@@ -23,101 +27,163 @@ using namespace Spark::FrontEnd;
 #define YYLVAL (yyget_lval(yyscanner))
 
 #define LSTATE (*static_cast<LexerState*>(yyget_extra(yyscanner)))
-#define LBUFFER (LSTATE.tokenBuffer)
+#define LBUFFER (LSTATE.tokbuf())
 
 #define YYLINENO (LSTATE.line)
 #define YYCOLUMNNO (LSTATE.column)
+#define YYLOCATION (Location(YYLINENO, YYCOLUMNNO))
 
-#define EMIT_TOKEN(text, line, col) (YYLVAL->emplace<TokenValue>(std::string(text), (line), (col)))
+/**
+  * Updates yylval to "emit" the token with given lexeme, start and end locations typed `Spark::Location`.
+  */
+#define EMIT_TOK(text, start, end) (YYLVAL->emplace<TokenValue>(std::string(text), (start), (end)))
 
-#define RAISE_ERROR(message, line, column) (LSTATE.addError((message), (line), (column)))
+/**
+  * Helper macro to emit and return a single-line token.
+  */
+#define RETURN_TOK(type)                                                   \
+{                                                                          \
+    EMIT_TOK(YYTEXT, YYLOCATION, Location(YYLINENO, YYCOLUMNNO + YYLENG)); \
+    YYCOLUMNNO += YYLENG;                                                \
+    return (type);                                                         \
+}
 
-#define YY_INPUT(buf, result, max_size)                                 \
-{                                                                       \
-    LexerState& ls = *static_cast<LexerState*>(yyget_extra(yyscanner)); \
-    ls.stream->read(reinterpret_cast<char*>(buf), max_size);            \
-    result = ls.stream->gcount();                                       \
-    if (result == 0) {                                                  \
-        result = YY_NULL;                                               \
-    }                                                                   \
+/**
+  * Sets yylloc to a specific start and end typed `Spark::Location`.
+  */
+#define SET_LOC(s, e)                    \
+{                                        \
+    yylloc->begin.line = (s).line;     \
+    yylloc->begin.column = (s).column; \
+    yylloc->end.line = (e).line;       \
+    yylloc->end.column = (e).column;   \
+}
+
+/**
+  * Helper macro to update yylloc for single-line tokens.
+  */
+#define UPDATE_LOC()                             \
+{                                                \
+    Location end(YYLINENO, YYCOLUMNNO + YYLENG); \
+    SET_LOC(YYLOCATION, end)                     \
+}
+
+/**
+  * Reports an error to the lexer state.
+  */
+#define RAISE_ERROR(message, start, end) (LSTATE.addError((message), (start), (end)))
+
+#define YY_INPUT(buf, result, maxSize)     \
+{                                          \
+    size_t read =                          \
+    LSTATE.readChunk(                      \
+        reinterpret_cast<char*>(buf),      \
+        (maxSize)                          \
+    );                                     \
+                                           \
+    if (read == 0) {                       \
+        (result) = YY_NULL;                \
+    } else {                               \
+        (result) = static_cast<int>(read); \
+    }                                      \
 }
 %}
 
 %%
-
-(\r\n|\r|\n) { LSTATE.whenNewline(); }
+(\r\n|\r|\n) {
+    LSTATE.whenNewline();
+}
 
 [ \t\r]+ {
-    LSTATE.consume(YYLENG);
+    YYCOLUMNNO += YYLENG;
 }
 
 [0-9_]*\.[0-9_]+ {
-    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(YYLENG);
-    return TokenType::Real;
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Real);
 }
 
-[0-9_]+|0[bB][0-9_]+|0[oO][0-9_]+|0[xX][0-9A-Za-z_]+ {
-    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(YYLENG);
-    return TokenType::Integer;
+[0-9][0-9_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[bB][01][01_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[oO][0-7][0-7_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
+}
+
+0[xX][0-9A-Fa-f][0-9A-Fa-f_]* {
+    UPDATE_LOC();
+    RETURN_TOK(TokenType::Integer);
 }
 
 [A-Za-z_][A-Za-z0-9_]* {
-    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(YYLENG);
-    return classifyWord(YYTEXT);
+    UPDATE_LOC();
+    RETURN_TOK(classifyWord(YYTEXT));
 }
 
 "//"[^\n]* {
-    EMIT_TOKEN(YYTEXT.substr(2), YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(YYLENG);
+    Location end(YYLINENO, YYCOLUMNNO + YYLENG);
+    SET_LOC(YYLOCATION, end);
+    EMIT_TOK(YYTEXT.substr(2), YYLOCATION, end);
+    YYCOLUMNNO += YYLENG;
     return TokenType::LineComment;
 }
 
 ["'] {
     LBUFFER.reset(YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(1);
-    LSTATE.stringDelimiter = YYTEXT[0];
+    ++YYCOLUMNNO;
+    LSTATE.strDelim = YYTEXT[0];
     BEGIN(IN_STRING);
 }
 
 <IN_STRING>{
-    "\\n" { LBUFFER.append('\n'); LSTATE.consume(2); }
-    "\\t" { LBUFFER.append('\t'); LSTATE.consume(2); }
-    "\\r" { LBUFFER.append('\r'); LSTATE.consume(2); }
-    "\\\\" { LBUFFER.append('\\'); LSTATE.consume(2); }
-    "\\\"" { LBUFFER.append('"'); LSTATE.consume(2); }
-    "\\\'" { LBUFFER.append('\''); LSTATE.consume(2); }
+    "\\n" { LBUFFER.append('\n'); YYCOLUMNNO += 2; }
+    "\\t" { LBUFFER.append('\t'); YYCOLUMNNO += 2; }
+    "\\r" { LBUFFER.append('\r'); YYCOLUMNNO += 2; }
+    "\\\\" { LBUFFER.append('\\'); YYCOLUMNNO += 2; }
+    "\\\"" { LBUFFER.append('"'); YYCOLUMNNO += 2; }
+    "\\\'" { LBUFFER.append('\''); YYCOLUMNNO += 2; }
 
     \\. {
         LBUFFER.append(YYTEXT[1]);
         std::ostringstream oss;
         oss << "unrecognized escape sequence: " << "'" << YYTEXT << "'";
-        RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
-        LSTATE.consume(2);
+        RAISE_ERROR(oss.str(), Location(YYLINENO, YYCOLUMNNO - 1), Location(YYLINENO, YYCOLUMNNO));
+        YYCOLUMNNO += 2;
     }
 
     (\r\n|\r|\n) {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
+        SET_LOC(LBUFFER.start(), end);
         LSTATE.whenNewline();
-        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
     }
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated string literal", YYLINENO, YYCOLUMNNO - 1);
-        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated string literal", LBUFFER.start(), end);
+        SET_LOC(LBUFFER.start(), end);
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::String;
     }
 
     . {
-        LSTATE.consume(1);
-        if (YYTEXT[0] == LSTATE.stringDelimiter) {
+        ++YYCOLUMNNO;
+        if (YYTEXT[0] == LSTATE.strDelim) {
             BEGIN(INITIAL);
-            EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+            SET_LOC(LBUFFER.start(), YYLOCATION);
+            EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
             return TokenType::String;
         }
         LBUFFER.append(YYTEXT[0]);
@@ -127,25 +193,26 @@ using namespace Spark::FrontEnd;
 "/*" {
     BEGIN(IN_BLOCK_COMMENT);
     LBUFFER.reset(YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(2);
+    YYCOLUMNNO += 2;
 }
 
 <IN_BLOCK_COMMENT>{
     "*/" {
         BEGIN(INITIAL);
-        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
-        LSTATE.consume(2);
+        SET_LOC(LBUFFER.start(), YYLOCATION);
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), YYLOCATION);
+        YYCOLUMNNO += 2;
         return TokenType::BlockComment;
     }
 
     [^*\r\n]+ {
         LBUFFER.append(YYTEXT);
-        LSTATE.consume(YYLENG);
+        YYCOLUMNNO += YYLENG;
     }
 
     "*" {
         LBUFFER.append('*');
-        LSTATE.consume(1);
+        ++YYCOLUMNNO;
     }
 
     (\r\n|\r|\n) {
@@ -155,87 +222,91 @@ using namespace Spark::FrontEnd;
 
     <<EOF>> {
         BEGIN(INITIAL);
-        RAISE_ERROR("unterminated block comment", YYLINENO, YYCOLUMNNO - 1);
-        EMIT_TOKEN(LBUFFER.view(), LBUFFER.line(), LBUFFER.column());
+        Location end(YYLINENO, YYCOLUMNNO - 1);
+        RAISE_ERROR("unterminated block comment", end, end);
+        SET_LOC(LBUFFER.start(), end);
+        EMIT_TOK(LBUFFER.view(), LBUFFER.start(), end);
         return TokenType::BlockComment;
     }
 }
 
-"+=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::AddAssign; }
-"+" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Add; }
+"+=" { UPDATE_LOC(); RETURN_TOK(TokenType::AddAssign); }
+"+" { UPDATE_LOC(); RETURN_TOK(TokenType::Add); }
 
-"->" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Arrow; }
-"-=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::SubAssign; }
-"-" {  EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Sub; }
+"->" { UPDATE_LOC(); RETURN_TOK(TokenType::Arrow); }
+"-=" { UPDATE_LOC(); RETURN_TOK(TokenType::SubAssign); }
+"-" { UPDATE_LOC(); RETURN_TOK(TokenType::Sub); }
 
-"*=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::MulAssign; }
-"*" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Mul; }
+"*=" { UPDATE_LOC(); RETURN_TOK(TokenType::MulAssign); }
+"*" { UPDATE_LOC(); RETURN_TOK(TokenType::Mul); }
 
-"/=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::DivAssign; }
-"/" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Div; }
+"/=" { UPDATE_LOC(); RETURN_TOK(TokenType::DivAssign); }
+"/" { UPDATE_LOC(); RETURN_TOK(TokenType::Div); }
 
-"%=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::ModAssign; }
-"%" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Mod; }
+"%=" { UPDATE_LOC(); RETURN_TOK(TokenType::ModAssign); }
+"%" { UPDATE_LOC(); RETURN_TOK(TokenType::Mod); }
 
-"~" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitNot; }
+"~" { UPDATE_LOC(); RETURN_TOK(TokenType::Tide); }
 
-"&&" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::LogAnd; }
-"&=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitAndAssign; }
-"&" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitAnd; }
+"&&" { UPDATE_LOC(); RETURN_TOK(TokenType::LogAnd); }
+"&=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitAndAssign); }
+"&" { UPDATE_LOC(); RETURN_TOK(TokenType::And); }
 
-"||" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::LogOr; }
-"|=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitOrAssign; }
-"|" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitOr; }
+"||" { UPDATE_LOC(); RETURN_TOK(TokenType::LogOr); }
+"|=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitOrAssign); }
+"|>" { UPDATE_LOC(); RETURN_TOK(TokenType::Pipe); }
+"|" { UPDATE_LOC(); RETURN_TOK(TokenType::VBar); }
 
-"^=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitXorAssign; }
-"^" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::BitXor; }
+"^=" { UPDATE_LOC(); RETURN_TOK(TokenType::BitXorAssign); }
+"^" { UPDATE_LOC(); RETURN_TOK(TokenType::Caret); }
 
-"<<=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::BitShlAssign; }
-"<<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitShl; }
-"<=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Le; }
-"<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Lt; }
+"<=" { UPDATE_LOC(); RETURN_TOK(TokenType::Le); }
+"<" { UPDATE_LOC(); RETURN_TOK(TokenType::Lt); }
 
-">>=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::BitShrAssign; }
-">>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::BitShr; }
-">=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ge; }
-">" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Gt; }
+">=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ge); }
+">" { UPDATE_LOC(); RETURN_TOK(TokenType::Gt); }
 
-"!==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictNe; }
-"!=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Ne; }
-"!" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LogNot; }
+"!==" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictNe); }
+"!=" { UPDATE_LOC(); RETURN_TOK(TokenType::Ne); }
+"!" { UPDATE_LOC(); RETURN_TOK(TokenType::Bang); }
 
-"===" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::StrictEq; }
-"=>" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::FatArrow; }
-"==" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Eq; }
-"=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Assign; }
+"===" { UPDATE_LOC(); RETURN_TOK(TokenType::StrictEq); }
+"=>" { UPDATE_LOC(); RETURN_TOK(TokenType::FatArrow); }
+"==" { UPDATE_LOC(); RETURN_TOK(TokenType::Eq); }
+"=" { UPDATE_LOC(); RETURN_TOK(TokenType::Assign); }
 
-"..<" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::RangeExcl; }
-"..." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::Range; }
-"." { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Dot; }
+"..<" { UPDATE_LOC(); RETURN_TOK(TokenType::RangeExcl); }
+"..." { UPDATE_LOC(); RETURN_TOK(TokenType::Range); }
+"." { UPDATE_LOC(); RETURN_TOK(TokenType::Dot); }
 
-"??=" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(3); return TokenType::CoalesceAssign; }
-"??" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(2); return TokenType::Coalesce; }
-"?" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Question; }
+"??=" { UPDATE_LOC(); RETURN_TOK(TokenType::CoalesceAssign); }
+"??" { UPDATE_LOC(); RETURN_TOK(TokenType::Coalesce); }
+"?!" { UPDATE_LOC(); RETURN_TOK(TokenType::NonNull); }
+"?" { UPDATE_LOC(); RETURN_TOK(TokenType::Question); }
 
-"," { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Comma; }
-":" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Colon; }
-";" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Semicolon; }
-"(" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LParen; }
-")" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RParen; }
-"[" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LBracket; }
-"]" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RBracket; }
-"{" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::LBrace; }
-"}" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::RBrace; }
-"@" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::At; }
-"$" { EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO); LSTATE.consume(1); return TokenType::Dollar; }
+"," { UPDATE_LOC(); RETURN_TOK(TokenType::Comma); }
+":" { UPDATE_LOC(); RETURN_TOK(TokenType::Colon); }
+";" { UPDATE_LOC(); RETURN_TOK(TokenType::Semicolon); }
+"(" { UPDATE_LOC(); RETURN_TOK(TokenType::LParen); }
+")" { UPDATE_LOC(); RETURN_TOK(TokenType::RParen); }
+"[" { UPDATE_LOC(); RETURN_TOK(TokenType::LBracket); }
+"]" { UPDATE_LOC(); RETURN_TOK(TokenType::RBracket); }
+"{" { UPDATE_LOC(); RETURN_TOK(TokenType::LBrace); }
+"}" { UPDATE_LOC(); RETURN_TOK(TokenType::RBrace); }
+"@" { UPDATE_LOC(); RETURN_TOK(TokenType::At); }
+"$" { UPDATE_LOC(); RETURN_TOK(TokenType::Dollar); }
 
 . {
     std::ostringstream oss;
     oss << "unrecognized character: " << "'" << YYTEXT << "'";
-    RAISE_ERROR(oss.str(), YYLINENO, YYCOLUMNNO);
-    EMIT_TOKEN(YYTEXT, YYLINENO, YYCOLUMNNO);
-    LSTATE.consume(1);
+    RAISE_ERROR(oss.str(), YYLOCATION, YYLOCATION);
+    EMIT_TOK(YYTEXT, YYLOCATION, YYLOCATION);
+    ++YYCOLUMNNO;
     return TokenType::Error;
 }
 
+<<EOF>> {
+    EMIT_TOK("", YYLOCATION, YYLOCATION);
+    return TokenType::EndOfFile;
+}
 %%
