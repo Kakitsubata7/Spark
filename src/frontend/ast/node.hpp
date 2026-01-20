@@ -868,6 +868,8 @@ struct ReturnStmt final : Stmt {
 
     ReturnStmt(Location start, Location end, Node* expr) noexcept
         : Stmt(start, end), expr(expr) { }
+    ReturnStmt(Location start, Location end) noexcept
+        : ReturnStmt(start, end, nullptr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

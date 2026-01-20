@@ -303,7 +303,7 @@ params:
 
 param:
       pattern                     { $$ = ast.make<FnParam>($1->start, $1->end, nullptr, $1, nullptr, nullptr); }
-    | pattern Colon expr          { $$ = ast.make<FnParam>($1->start, $3->end, nullptr, $1, nullptr, nullptr); }
+    | pattern Colon expr          { $$ = ast.make<FnParam>($1->start, $3->end, nullptr, $1, $3, nullptr); }
     | varmod pattern              { $$ = ast.make<FnParam>($1->start, $2->end, $1, $2, nullptr, nullptr); }
     | varmod pattern Colon expr   { $$ = ast.make<FnParam>($1->start, $4->end, $1, $2, $4, nullptr); }
     | pattern Assign expr         { $$ = ast.make<FnParam>($1->start, $3->end, nullptr, $1, nullptr, $3); }

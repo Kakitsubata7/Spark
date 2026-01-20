@@ -22,6 +22,10 @@ using namespace Spark::FrontEnd;
 #define ASSIGN(op, lhs, rhs) MAKE(AssignStmt, op, lhs, rhs)
 #define ASSIGN_OP AssignStmt::OpKind
 
+#define BREAK ast.make<BreakStmt>(Location(0, 0), Location(0, 0))
+#define CONTINUE ast.make<ContinueStmt>(Location(0, 0), Location(0, 0))
+#define RETURN(...) MAKE(ReturnStmt, __VA_ARGS__)
+
 #define BLOCK(...) MAKE(BlockExpr, std::vector<Node*>{__VA_ARGS__})
 #define IFTHEN(cond, t, f) MAKE(IfThenExpr, cond, t, f)
 #define TRYELSE(t, e) MAKE(TryElseExpr, t, e)
@@ -45,11 +49,19 @@ using namespace Spark::FrontEnd;
 
 #define SUBSCRIPT(base, ...) MAKE(SubscriptExpr, base, std::vector<Expr*>{__VA_ARGS__})
 
+#define INT(v) MAKE(LiteralExpr, IntLiteral(BigInt(v)))
+#define REAL(v) MAKE(LiteralExpr, RealLiteral(BigReal(v))
+#define BOOL(v) MAKE(LiteralExpr, BoolLiteral(v))
+#define STRING(s) MAKE(LiteralExpr, StringLiteral(s))
+#define NIL MAKE(LiteralExpr, NilLiteral())
+#define VOID MAKE(LiteralExpr, VoidLiteral())
+
 #define IDENT(s) MAKE(NameExpr, IdentifierName(s))
 
-#define INT(v) MAKE(LiteralExpr, IntLiteral(BigInt(v)))
+#define COLLECTION(...) MAKE(CollectionExpr, std::vector<Expr*>{__VA_ARGS__})
 
 #define BIND_PAT(name) MAKE(BindingPattern, NAME(name))
+#define TUP_PAT(...) MAKE(TuplePattern, std::vector<Pattern*>{__VA_ARGS__})
 
 Name NAME(const char* s) { return Name(IdentifierName(s)); }
 Name NAME(Name name) { return Name(std::move(name)); }
@@ -936,6 +948,149 @@ TEST(ParserTest, DoWhileStmtTest1) {
                 IDENT("a")
             ),
             IDENT("b")
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ForStmtTest1) {
+    auto [ast, errors] = parse("for i in 0...10 { print(i) }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ForStmt,
+            BIND_PAT(NAME("i")),
+            BINARY(BINARY_OP::Range, INT(0), INT(10)),
+            BLOCK(
+                CALL(IDENT("print"), CALL_ARG(IDENT("i")))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ForStmtTest2) {
+    auto [ast, errors] = parse("for (x, y) in tuples { foo(x, y) }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ForStmt,
+            TUP_PAT(BIND_PAT(NAME("x")), BIND_PAT(NAME("y"))),
+            IDENT("tuples"),
+            BLOCK(
+                CALL(IDENT("foo"), CALL_ARG(IDENT("x")), CALL_ARG(IDENT("y")))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ForStmtTest3) {
+    auto [ast, errors] = parse("for i in [1, 2, 3] { y += x }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ForStmt,
+            BIND_PAT(NAME("i")),
+            COLLECTION(INT(1), INT(2), INT(3)),
+            BLOCK(
+                ASSIGN(ASSIGN_OP::AddAssign, IDENT("y"), IDENT("x"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ForStmtTest4) {
+    auto [ast, errors] = parse("for j in -10..<10 { print('value: ' + j) }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ForStmt,
+            BIND_PAT(NAME("j")),
+            BINARY(BINARY_OP::RangeExcl, PREFIX(PREFIX_OP::Neg, INT(10)), INT(10)),
+            BLOCK(
+                CALL(IDENT("print"), CALL_ARG(BINARY(BINARY_OP::Add, STRING("value: "), IDENT("j"))))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ForStmtTest5) {
+    auto [ast, errors] = parse(R"(
+fn findFirstEven(nums: Array[Int]) -> Int? {
+    for x in nums {
+        if x < 0 {
+            continue;
+        };
+        if x % 2 == 0 {
+            return x;
+        };
+        if x > 1000000 {
+            break;
+        };
+    };
+    return nil;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            /* isImmutable */ false,
+            NAME("findFirstEven"),
+            /* generics */ std::vector<Name>(),
+            /* params */ std::vector<FnParam*>{
+                MAKE(FnParam,
+                    /* mod */ nullptr,
+                    BIND_PAT(NAME("nums")),
+                    SUBSCRIPT(IDENT("Array"), IDENT("Int")),
+                    /* def */ nullptr
+                )
+            },
+            /* captureClause */ nullptr,
+            /* returns */ std::vector<FnReturn*>{
+                MAKE(FnReturn,
+                    FnReturn::RetKind::ByValue, POSTFIX(POSTFIX_OP::Optional, IDENT("Int"))
+                )
+            },
+            /* isThrowing */ false,
+            /* throwExpr */ nullptr,
+            BLOCK(
+                MAKE(ForStmt,
+                    BIND_PAT(NAME("x")),
+                    IDENT("nums"),
+                    BLOCK(
+                        MAKE(IfStmt,
+                            BINARY(BINARY_OP::Lt, IDENT("x"), INT(0)),
+                            BLOCK(
+                                CONTINUE
+                            ),
+                            /* elseBody */ nullptr
+                        ),
+
+                        MAKE(IfStmt,
+                            BINARY(BINARY_OP::Eq,
+                                BINARY(BINARY_OP::Mod, IDENT("x"), INT(2)), INT(0)),
+                            BLOCK(
+                                RETURN(IDENT("x"))
+                            ),
+                            /* elseBody */ nullptr
+                        ),
+
+                        MAKE(IfStmt,
+                            BINARY(BINARY_OP::Gt, IDENT("x"), INT(1000000)),
+                            BLOCK(
+                                BREAK
+                            ),
+                            /* elseBody */ nullptr
+                        )
+                    )
+                ),
+
+                RETURN(NIL)
+            )
         )
     );
     EXPECT_EQ(*ast.root, *root);
