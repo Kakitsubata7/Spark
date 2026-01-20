@@ -65,6 +65,9 @@ using namespace Spark::FrontEnd;
 Name NAME(const char* s) { return Name(IdentifierName(s)); }
 Name NAME(Name name) { return Name(std::move(name)); }
 #define DISCARD DiscardName()
+#define CONSTRUCTOR ConstructorName()
+#define DESTRUCTOR DestructorName()
+#define SELF SelfName()
 
 #define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
 #define PATH_SEG(name, ...) MAKE(PathSeg, name, std::vector<Expr*>{__VA_ARGS__})
@@ -1386,6 +1389,49 @@ TEST(ParserTest, ImportAllStmtTest3) {
                 PATH_SEG(NAME("Foo")),
                 PATH_SEG(NAME("Bar"), IDENT("Int")),
                 PATH_SEG(NAME("Baz"), IDENT("Bool"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, UndefineStmtTest1) {
+    auto [ast, errors] = parse("undefine Foo");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(UndefineStmt,
+            PATH(PATH_SEG(NAME("Foo")))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, UndefineStmtTest2) {
+    auto [ast, errors] = parse("undefine Foo.Bar[Int]");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(UndefineStmt,
+            PATH(
+                PATH_SEG(NAME("Foo")),
+                PATH_SEG(NAME("Bar"), IDENT("Int"))
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, UndefineStmtTest3) {
+    auto [ast, errors] = parse("undefine Foo.Bar[Int].constructor");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(UndefineStmt,
+            PATH(
+                PATH_SEG(NAME("Foo")),
+                PATH_SEG(NAME("Bar"), IDENT("Int")),
+                PATH_SEG(CONSTRUCTOR)
             )
         )
     );
