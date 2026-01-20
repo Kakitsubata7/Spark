@@ -250,11 +250,6 @@ bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
            ptrEq(type, o.type) && ptrEq(this->rhs, o.rhs);
 }
 
-bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
-    const AssignStmt& o = ASSERT_NODE(rhs, AssignStmt);
-    return op == o.op && ptrEq(lhs, o.lhs) && ptrEq(this->rhs, o.rhs);
-}
-
 bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const FnDefStmt& o = ASSERT_NODE(rhs, FnDefStmt);
     return isImmutable == o.isImmutable && name == o.name &&
@@ -269,6 +264,16 @@ bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
     return kind == o.kind && isImmutable == o.isImmutable && name == o.name &&
            ptrVecEq(generics, o.generics) && ptrVecEq(bases, o.bases) &&
            ptrEq(body, o.body);
+}
+
+bool CaseDefStmt::equalsImpl(const Node& rhs) const noexcept {
+    const CaseDefStmt& o = ASSERT_NODE(rhs, CaseDefStmt);
+    return name == o.name && ptrEq(val, o.val);
+}
+
+bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
+    const AssignStmt& o = ASSERT_NODE(rhs, AssignStmt);
+    return op == o.op && ptrEq(lhs, o.lhs) && ptrEq(this->rhs, o.rhs);
 }
 
 bool IfStmt::equalsImpl(const Node& rhs) const noexcept {

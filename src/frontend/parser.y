@@ -93,6 +93,7 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 %type <Spark::FrontEnd::FnReturn*> ret
 %type <std::pair<bool, Spark::FrontEnd::Expr*>> throw_clause
 %type <Spark::FrontEnd::TypeDefStmt*> typedef_stmt
+%type <Spark::FrontEnd::CaseDefStmt*> casedef_stmt
 %type <Symbol<Spark::FrontEnd::TypeDefStmt::TypeKind>> typedef_kind
 %type <Spark::FrontEnd::AssignStmt*> assign_stmt
 %type <Spark::FrontEnd::Node*> assign_rhs
@@ -195,7 +196,7 @@ stmt:
       vardef_stmt                  { $$ = $1; }
     | fndef_stmt                   { $$ = $1; }
     | typedef_stmt                 { $$ = $1; }
-    //| enumcase_stmt
+    | casedef_stmt                 { $$ = $1; }
     | assign_stmt                  { $$ = $1; }
     | if_stmt                      { $$ = $1; }
     | While expr block             { $$ = ast.make<WhileStmt>($1.start, $3->end, $2, $3); }
@@ -404,30 +405,9 @@ typedef_kind:
     | Extension    { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Extension); }
     ;
 
-enumcase_stmt:
-      Case case_name
-    | Case case_name Assign expr
-    | Case adt_constructor
-    ;
-
-case_name:
-      Identifier
-    | Discard
-    ;
-
-adt_constructor:
-      Identifier LParen RParen
-    | Identifier LParen exprs RParen
-    | Identifier LParen named_adt_members RParen
-    ;
-
-named_adt_members:
-      named_adt_member
-    | named_adt_members Comma named_adt_member
-    ;
-
-named_adt_member:
-      Identifier Colon expr
+casedef_stmt:
+      Case name              { $$ = ast.make<CaseDefStmt>($1.start, $2.end, std::move($2.value), nullptr); }
+    | Case name Assign expr  { $$ = ast.make<CaseDefStmt>($1.start, $4->end, std::move($2.value), $4); }
     ;
 
 assign_stmt:

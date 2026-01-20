@@ -694,28 +694,6 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
-struct AssignStmt final : Stmt {
-    enum class OpKind {
-        Assign,
-        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
-        BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
-        CoalesceAssign
-    };
-
-    OpKind op;
-    Node* lhs;
-    Node* rhs;
-
-    AssignStmt(Location start, Location end, OpKind op, Node* lhs, Node* rhs) noexcept
-        : Stmt(start, end), op(op), lhs(lhs), rhs(rhs) { }
-
-    void accept(NodeVisitor& v) override { v.visit(*this); }
-
-protected:
-    [[nodiscard]]
-    bool equalsImpl(const Node& rhs) const noexcept override;
-};
-
 struct FnDefStmt final : Stmt {
     bool isImmutable;
     Name name;
@@ -761,6 +739,44 @@ struct TypeDefStmt final : Stmt {
                 std::vector<Expr*> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
         : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(std::move(name)),
           generics(std::move(generics)), bases(std::move(bases)), body(body) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct CaseDefStmt final : Stmt {
+    Name name;
+    /* nullable */ Expr* val;
+
+    CaseDefStmt(Location start, Location end, Name name, Expr* val) noexcept
+        : Stmt(start, end), name(std::move(name)), val(val) { }
+    CaseDefStmt(Location start, Location end, Name name) noexcept
+        : CaseDefStmt(start, end, std::move(name), nullptr) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
+struct AssignStmt final : Stmt {
+    enum class OpKind {
+        Assign,
+        AddAssign, SubAssign, MulAssign, DivAssign, ModAssign,
+        BitAndAssign, BitOrAssign, BitXorAssign, BitShlAssign, BitShrAssign,
+        CoalesceAssign
+    };
+
+    OpKind op;
+    Node* lhs;
+    Node* rhs;
+
+    AssignStmt(Location start, Location end, OpKind op, Node* lhs, Node* rhs) noexcept
+        : Stmt(start, end), op(op), lhs(lhs), rhs(rhs) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
