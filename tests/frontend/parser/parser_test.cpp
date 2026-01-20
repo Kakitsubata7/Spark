@@ -1555,3 +1555,281 @@ TEST(ParserTest, UndefineStmtTest3) {
     );
     EXPECT_EQ(*ast.root, *root);
 }
+
+TEST(ParserTest, Test1) {
+    auto [ast, errors] = parse(
+R"(
+fn fact(n: Int) -> Int {
+    if n <= 1 {
+        return 1;
+    };
+
+    return n * fact(n - 1);
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            false,
+            NAME("fact"),
+            std::vector<Name>(),
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("n")), IDENT("Int"), nullptr)
+            },
+            nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Int"))
+            },
+            false,
+            nullptr,
+            BLOCK(
+                MAKE(IfStmt,
+                    BINARY(BINARY_OP::Le, IDENT("n"), INT(1)),
+                    BLOCK(
+                        RETURN(INT(1))
+                    ),
+                    nullptr
+                ),
+                RETURN(
+                    BINARY(
+                        BINARY_OP::Mul,
+                        IDENT("n"),
+                        CALL(
+                            IDENT("fact"),
+                            CALL_ARG(BINARY(BINARY_OP::Sub, IDENT("n"), INT(1)))
+                        )
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, Test2) {
+    auto [ast, errors] = parse(
+R"(
+fn fib(n: Int) -> Int {
+    if n <= 1 {
+        return n
+    };
+
+    return fib(n - 1) + fib(n - 2)
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            false,
+            NAME("fib"),
+            std::vector<Name>(),
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("n")), IDENT("Int"), nullptr)
+            },
+            nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Int"))
+            },
+            false,
+            nullptr,
+            BLOCK(
+                MAKE(IfStmt,
+                    BINARY(BINARY_OP::Le, IDENT("n"), INT(1)),
+                    BLOCK(
+                        RETURN(IDENT("n"))
+                    ),
+                    nullptr
+                ),
+                RETURN(
+                    BINARY(
+                        BINARY_OP::Add,
+                        CALL(IDENT("fib"),
+                            CALL_ARG(BINARY(BINARY_OP::Sub, IDENT("n"), INT(1)))
+                        ),
+                        CALL(IDENT("fib"),
+                            CALL_ARG(BINARY(BINARY_OP::Sub, IDENT("n"), INT(2)))
+                        )
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, Test3) {
+    auto [ast, errors] = parse(
+R"(
+fn firstEven(nums: Array[Int]) -> Int? {
+    for x in nums {
+        if x < 0 {
+            continue;
+        };
+
+        if x % 2 == 0 {
+            return x;
+        };
+    };
+
+    return nil;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            false,
+            NAME("firstEven"),
+            std::vector<Name>(),
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("nums")),
+                     SUBSCRIPT(IDENT("Array"), IDENT("Int")), nullptr)
+            },
+            nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn,
+                    FnReturn::RetKind::ByValue,
+                    POSTFIX(POSTFIX_OP::Optional, IDENT("Int"))
+                )
+            },
+            false,
+            nullptr,
+            BLOCK(
+                MAKE(ForStmt,
+                    BIND_PAT(NAME("x")),
+                    IDENT("nums"),
+                    BLOCK(
+                        MAKE(IfStmt,
+                            BINARY(BINARY_OP::Lt, IDENT("x"), INT(0)),
+                            BLOCK(CONTINUE),
+                            nullptr
+                        ),
+                        MAKE(IfStmt,
+                            BINARY(
+                                BINARY_OP::Eq,
+                                BINARY(BINARY_OP::Mod, IDENT("x"), INT(2)),
+                                INT(0)
+                            ),
+                            BLOCK(RETURN(IDENT("x"))),
+                            nullptr
+                        )
+                    )
+                ),
+                RETURN(NIL)
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, Test4) {
+    auto [ast, errors] = parse(
+R"(
+fn makeAdder(base: Int) -> Int -> Int {
+    return fn (x) [base] => x + base;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(FnDefStmt,
+            false,
+            NAME("makeAdder"),
+            std::vector<Name>(),
+            std::vector<FnParam*>{
+                MAKE(FnParam, nullptr, BIND_PAT(NAME("base")), IDENT("Int"), nullptr)
+            },
+            nullptr,
+            std::vector<FnReturn*>{
+                MAKE(FnReturn,
+                    FnReturn::RetKind::ByValue,
+                    BINARY(
+                        BINARY_OP::FuncType,
+                        IDENT("Int"),
+                        IDENT("Int")
+                    )
+                )
+            },
+            false,
+            nullptr,
+            BLOCK(
+                RETURN(
+                    MAKE(LambdaExpr,
+                        false,
+                        std::vector<FnParam*>{
+                            MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
+                        },
+                        MAKE(FnCaptureClause,
+                            std::vector<FnCapture*>{
+                                MAKE(FnCapture, nullptr, BIND_PAT(NAME("base")))
+                            },
+                            false,
+                            nullptr
+                        ),
+                        std::vector<FnReturn*>(),
+                        false,
+                        nullptr,
+                        BINARY(BINARY_OP::Add, IDENT("x"), IDENT("base"))
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, Test5) {
+    auto [ast, errors] = parse(
+R"(
+struct Counter {
+    let value: Int;
+
+    fn inc() -> Int {
+        return value + 1;
+    }
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Struct,
+            false,
+            NAME("Counter"),
+            std::vector<Name>(),
+            std::vector<Expr*>(),
+            BLOCK(
+                VARDEF(
+                    VARMOD(VARKIND::Let, false, VAROPT::None),
+                    BIND_PAT(NAME("value")),
+                    IDENT("Int"),
+                    nullptr
+                ),
+                MAKE(FnDefStmt,
+                    false,
+                    NAME("inc"),
+                    std::vector<Name>(),
+                    std::vector<FnParam*>(),
+                    nullptr,
+                    std::vector<FnReturn*>{
+                        MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("Int"))
+                    },
+                    false,
+                    nullptr,
+                    BLOCK(
+                        RETURN(
+                            BINARY(
+                                BINARY_OP::Add,
+                                IDENT("value"),
+                                INT(1)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
