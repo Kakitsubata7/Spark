@@ -1,5 +1,4 @@
 #include <string_view>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -66,6 +65,9 @@ using namespace Spark::FrontEnd;
 Name NAME(const char* s) { return Name(IdentifierName(s)); }
 Name NAME(Name name) { return Name(std::move(name)); }
 #define DISCARD DiscardName()
+
+#define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
+#define PATH_SEG(...) MAKE(PathSeg, __VA_ARGS__)
 
 std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
@@ -1091,6 +1093,45 @@ fn findFirstEven(nums: Array[Int]) -> Int? {
 
                 RETURN(NIL)
             )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ModuleStmtTest1) {
+    auto [ast, errors] = parse("module Foo { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ModuleStmt,
+            PATH(PATH_SEG(NAME("Foo"))),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ModuleStmtTest2) {
+    auto [ast, errors] = parse("module Foo.Bar { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ModuleStmt,
+            PATH(PATH_SEG(NAME("Foo")), PATH_SEG(NAME("Bar"))),
+            BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ModuleStmtTest3) {
+    auto [ast, errors] = parse("module Foo.Bar.Baz { }");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ModuleStmt,
+            PATH(PATH_SEG(NAME("Foo")), PATH_SEG(NAME("Bar")), PATH_SEG(NAME("Baz"))),
+            BLOCK()
         )
     );
     EXPECT_EQ(*ast.root, *root);

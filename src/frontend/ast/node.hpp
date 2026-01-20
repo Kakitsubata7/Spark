@@ -267,7 +267,7 @@ struct PathSeg final : Node {
     Name name;
     std::vector<Expr*> generics;
 
-    PathSeg(Location start, Location end, Name name, std::vector<Expr*> generics) noexcept
+    PathSeg(Location start, Location end, Name name, std::vector<Expr*> generics = {}) noexcept
         : Node(start, end), name(std::move(name)), generics(std::move(generics)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }

@@ -1042,17 +1042,22 @@ path:
             std::vector<PathSeg*> segs = { $1 };
             $$ = ast.make<Path>($1->start, $1->end, std::move(segs));
         }
-    | path Dot path_seg  { $$->segs.push_back($3); $$->end = $3->end; }
+    | path Dot path_seg
+        {
+            $$ = std::move($1);
+            $$->segs.push_back($3);
+            $$->end = $3->end;
+        }
     ;
 
 path_seg:
       name
         {
-            ast.make<PathSeg>($1.start, $1.end, std::move($1.value), std::vector<Expr*>());
+            $$ = ast.make<PathSeg>($1.start, $1.end, std::move($1.value), std::vector<Expr*>());
         }
     | name LBracket exprs RBracket
         {
-            ast.make<PathSeg>($1.start, $4.end, std::move($1.value), std::move($3));
+            $$ = ast.make<PathSeg>($1.start, $4.end, std::move($1.value), std::move($3));
         }
     ;
 %%
