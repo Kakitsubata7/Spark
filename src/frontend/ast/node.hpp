@@ -814,6 +814,20 @@ protected:
     bool equalsImpl(const Node& rhs) const noexcept override;
 };
 
+struct DoWhileStmt final : Stmt {
+    BlockExpr* body;
+    Expr* condition;
+
+    DoWhileStmt(Location start, Location end, BlockExpr* body, Expr* condition) noexcept
+        : Stmt(start, end), body(body), condition(condition) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
+
 struct ForStmt final : Stmt {
     Pattern* iterator;
     Expr* range;

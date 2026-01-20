@@ -287,6 +287,11 @@ bool WhileStmt::equalsImpl(const Node& rhs) const noexcept {
     return ptrEq(condition, o.condition) && ptrEq(body, o.body);
 }
 
+bool DoWhileStmt::equalsImpl(const Node& rhs) const noexcept {
+    const DoWhileStmt& o = ASSERT_NODE(rhs, DoWhileStmt);
+    return ptrEq(body, o.body) && ptrEq(condition, o.condition);
+}
+
 bool ForStmt::equalsImpl(const Node& rhs) const noexcept {
     const ForStmt& o = ASSERT_NODE(rhs, ForStmt);
     return ptrEq(iterator, o.iterator) && ptrEq(range, o.range) &&

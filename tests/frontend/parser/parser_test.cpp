@@ -420,51 +420,6 @@ TEST(ParserTest, TypeofTest) {
     EXPECT_EQ(*ast.root, *root);
 }
 
-TEST(ParserTest, AssignTest1) {
-    // Making sure `??=` binds looser than others
-    auto [ast, errors] = parse("a = b ?\?= c");
-    EXPECT_TRUE(errors.empty());
-
-    Node* root = BLOCK(
-        ASSIGN(ASSIGN_OP::CoalesceAssign,
-            ASSIGN(ASSIGN_OP::Assign, IDENT("a"), IDENT("b")),
-            IDENT("c")
-        )
-    );
-    EXPECT_EQ(*ast.root, *root);
-}
-
-TEST(ParserTest, AssignTest2) {
-    // Making sure assignment is right-associative
-    auto [ast, errors] = parse("a = b += c");
-    EXPECT_TRUE(errors.empty());
-
-    Node* root = BLOCK(
-        ASSIGN(ASSIGN_OP::Assign,
-            IDENT("a"),
-            ASSIGN(ASSIGN_OP::AddAssign, IDENT("b"), IDENT("c"))
-        )
-    );
-    EXPECT_EQ(*ast.root, *root);
-}
-
-TEST(ParserTest, AssignTest3) {
-    // Making sure assignment is right-associative
-    auto [ast, errors] = parse("a = b += c *= d");
-    EXPECT_TRUE(errors.empty());
-
-    Node* root = BLOCK(
-        ASSIGN(ASSIGN_OP::Assign,
-            IDENT("a"),
-            ASSIGN(ASSIGN_OP::AddAssign,
-                IDENT("b"),
-                ASSIGN(ASSIGN_OP::MulAssign, IDENT("c"), IDENT("d"))
-            )
-        )
-    );
-    EXPECT_EQ(*ast.root, *root);
-}
-
 TEST(ParserTest, VarDefTest1) {
     auto [ast, errors] = parse("let x: T = y");
     EXPECT_TRUE(errors.empty());
@@ -821,6 +776,51 @@ enum OpKind : UInt32 {
                 MAKE(CaseDefStmt, NAME("Sub"),  INT(2)),
                 MAKE(CaseDefStmt, NAME("Mul"),  INT(3)),
                 MAKE(CaseDefStmt, NAME("Div"),  INT(4)),
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, AssignTest1) {
+    // Making sure `??=` binds looser than others
+    auto [ast, errors] = parse("a = b ?\?= c");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        ASSIGN(ASSIGN_OP::CoalesceAssign,
+            ASSIGN(ASSIGN_OP::Assign, IDENT("a"), IDENT("b")),
+            IDENT("c")
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, AssignTest2) {
+    // Making sure assignment is right-associative
+    auto [ast, errors] = parse("a = b += c");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        ASSIGN(ASSIGN_OP::Assign,
+            IDENT("a"),
+            ASSIGN(ASSIGN_OP::AddAssign, IDENT("b"), IDENT("c"))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, AssignTest3) {
+    // Making sure assignment is right-associative
+    auto [ast, errors] = parse("a = b += c *= d");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        ASSIGN(ASSIGN_OP::Assign,
+            IDENT("a"),
+            ASSIGN(ASSIGN_OP::AddAssign,
+                IDENT("b"),
+                ASSIGN(ASSIGN_OP::MulAssign, IDENT("c"), IDENT("d"))
             )
         )
     );

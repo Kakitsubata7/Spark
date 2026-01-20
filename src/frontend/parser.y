@@ -201,6 +201,7 @@ stmt:
     | assign_stmt                  { $$ = $1; }
     | if_stmt                      { $$ = $1; }
     | While expr block             { $$ = ast.make<WhileStmt>($1.start, $3->end, $2, $3); }
+    | Do block While expr          { $$ = ast.make<DoWhileStmt>($1.start, $4->end, $2, $4); }
     | For pattern In expr block    { $$ = ast.make<ForStmt>($1.start, $5->end, $2, $4, $5); }
     | Break                        { $$ = ast.make<BreakStmt>($1.start, $1.end); }
     | Continue                     { $$ = ast.make<ContinueStmt>($1.start, $1.end); }
