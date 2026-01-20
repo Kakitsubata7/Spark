@@ -532,7 +532,7 @@ TEST(ParserTest, FnDefTest1) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
             /* returns */ std::vector<FnReturn*>(),
@@ -552,7 +552,7 @@ TEST(ParserTest, FnDefTest2) {
         MAKE(FnDefStmt,
             /* isImmutable */ true,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>{ IDENT("T") },
+            /* generics */ std::vector<Name>{ NAME("T") },
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
             /* returns */ std::vector<FnReturn*>(),
@@ -572,7 +572,7 @@ TEST(ParserTest, FnDefTest3) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* params */ std::vector<FnParam*>{
                 MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr),
                 MAKE(FnParam, nullptr, BIND_PAT(NAME("y")), nullptr, nullptr)
@@ -596,7 +596,7 @@ TEST(ParserTest, FnDefTest4) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* params */ std::vector<FnParam*>(),
             MAKE(FnCaptureClause,
                 std::vector<FnCapture*>(), false, nullptr
@@ -618,7 +618,7 @@ TEST(ParserTest, FnDefTest5) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
             std::vector<FnReturn*>{
@@ -642,7 +642,7 @@ TEST(ParserTest, FnDefTest6) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             std::vector<FnParam*>{
                 MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
             },
@@ -664,7 +664,7 @@ TEST(ParserTest, FnDefTest7) {
         MAKE(FnDefStmt,
             /* isImmutable */ false,
             NAME("foo"),
-            /* generics */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* params */ std::vector<FnParam*>(),
             /* captureClause */ nullptr,
             /* returns */ std::vector<FnReturn*>(),
@@ -685,7 +685,7 @@ TEST(ParserTest, TypeDefTest1) {
             TypeDefStmt::TypeKind::Struct,
             /* isImmutable */ false,
             NAME("Foo"),
-            /* template */ std::vector<Expr*>(),
+            /* template */ std::vector<Name>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
         )
@@ -702,7 +702,7 @@ TEST(ParserTest, TypeDefTest2) {
             TypeDefStmt::TypeKind::Class,
             /* isImmutable */ true,
             NAME("Foo"),
-            /* template */ std::vector<Expr*>(),
+            /* template */ std::vector<Name>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
         )
@@ -719,7 +719,7 @@ TEST(ParserTest, TypeDefTest3) {
             TypeDefStmt::TypeKind::Struct,
             /* isImmutable */ false,
             NAME("Foo"),
-            /* template */ std::vector<Expr*>(),
+            /* template */ std::vector<Name>(),
             /* bases */ std::vector<Expr*>{
                 IDENT("Bar"),
                 IDENT("Baz")
@@ -739,7 +739,7 @@ TEST(ParserTest, TypeDefTest4) {
             TypeDefStmt::TypeKind::EnumClass,
             /* isImmutable */ false,
             NAME("Color"),
-            /* template */ std::vector<Expr*>(),
+            /* generics */ std::vector<Name>(),
             /* bases */ std::vector<Expr*>(),
             BLOCK()
         )
@@ -756,12 +756,72 @@ TEST(ParserTest, TypeDefTest5) {
             TypeDefStmt::TypeKind::Struct,
             /* isImmutable */ false,
             NAME("Foo"),
-            std::vector<Expr*>{
-                IDENT("T"),
-                IDENT("U")
+            std::vector<Name>{
+                NAME("T"),
+                NAME("U")
             },
             /* bases */ std::vector<Expr*>(),
             BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, CaseDefTest1) {
+    auto [ast, errors] = parse(R"(
+enum Color {
+    case Red;
+    case Yellow;
+    case Blue;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Enum,
+            /* isImmutable */ false,
+            NAME("Color"),
+            /* generics */ std::vector<Name>(),
+            /* bases */ std::vector<Expr*>(),
+            BLOCK(
+                MAKE(CaseDefStmt, NAME("Red")),
+                MAKE(CaseDefStmt, NAME("Yellow")),
+                MAKE(CaseDefStmt, NAME("Blue")),
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, CaseDefTest2) {
+    auto [ast, errors] = parse(R"(
+enum OpKind : UInt32 {
+    case None = 0;
+    case Add  = 1;
+    case Sub  = 2;
+    case Mul  = 3;
+    case Div  = 4;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(TypeDefStmt,
+            TypeDefStmt::TypeKind::Enum,
+            /* isImmutable */ false,
+            NAME("OpKind"),
+            /* generics */ std::vector<Name>(),
+            /* bases */ std::vector<Expr*>{
+                IDENT("UInt32")
+            },
+            BLOCK(
+                MAKE(CaseDefStmt, NAME("None"), INT(0)),
+                MAKE(CaseDefStmt, NAME("Add"),  INT(1)),
+                MAKE(CaseDefStmt, NAME("Sub"),  INT(2)),
+                MAKE(CaseDefStmt, NAME("Mul"),  INT(3)),
+                MAKE(CaseDefStmt, NAME("Div"),  INT(4)),
+            )
         )
     );
     EXPECT_EQ(*ast.root, *root);

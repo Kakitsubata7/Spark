@@ -697,7 +697,7 @@ protected:
 struct FnDefStmt final : Stmt {
     bool isImmutable;
     Name name;
-    std::vector<Expr*> generics;
+    std::vector<Name> generics;
     std::vector<FnParam*> params;
     /* nullable */ FnCaptureClause* captureClause;
     std::vector<FnReturn*> returns;
@@ -706,7 +706,7 @@ struct FnDefStmt final : Stmt {
     Expr* body;
 
     FnDefStmt(Location start, Location end, bool isImmutable, Name name,
-              std::vector<Expr*> generics,
+              std::vector<Name> generics,
               std::vector<FnParam*> params, FnCaptureClause* captureClause,
               std::vector<FnReturn*> returns, bool isThrowing, Expr* throwExpr,
               Expr* body) noexcept
@@ -730,13 +730,13 @@ struct TypeDefStmt final : Stmt {
     TypeKind kind;
     bool isImmutable;
     Name name;
-    std::vector<Expr*> generics;
+    std::vector<Name> generics;
     std::vector<Expr*> bases;
     BlockExpr* body;
 
     TypeDefStmt(Location start, Location end,
                 TypeKind kind, bool isImmutable, Name name,
-                std::vector<Expr*> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
+                std::vector<Name> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
         : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(std::move(name)),
           generics(std::move(generics)), bases(std::move(bases)), body(body) { }
 

@@ -80,7 +80,7 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 %type <Spark::FrontEnd::VarDefStmt*> vardef_stmt
 %type <Spark::FrontEnd::VarModifier*> opt_varmod
 %type <bool> opt_immut
-%type <std::vector<Spark::FrontEnd::Expr*>> opt_template
+%type <std::vector<Spark::FrontEnd::Name>> opt_template
 %type <Spark::FrontEnd::FnDefStmt*> fndef_stmt
 %type <std::vector<Spark::FrontEnd::FnParam*>> param_clause
 %type <std::vector<Spark::FrontEnd::FnParam*>> params
@@ -146,6 +146,7 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
 %type <Symbol<Spark::FrontEnd::Literal>> literal
 %type <Symbol<Spark::FrontEnd::Name>> name
+%type <std::vector<Spark::FrontEnd::Name>> names
 %type <Spark::FrontEnd::Path*> path
 %type <Spark::FrontEnd::PathSeg*> path_seg
 
@@ -269,7 +270,7 @@ opt_immut:
 
 opt_template:
       /* empty */              { $$ = {}; }
-    | LBracket exprs RBracket  { $$ = std::move($2); }
+    | LBracket names RBracket  { $$ = std::move($2); }
     ;
 
 fndef_stmt:
@@ -1027,6 +1028,11 @@ name:
             $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShrAssign));
         }
     | Self             { $$ = Symbol<Name>($1.start, $1.end, SelfName()); }
+    ;
+
+names:
+      name              { $$ = {}; $$.push_back(std::move($1.value)); }
+    | names Comma name  { $$ = std::move($1); $$.push_back(std::move($3.value)); }
     ;
 
 path:

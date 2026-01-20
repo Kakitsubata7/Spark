@@ -253,7 +253,7 @@ bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
 bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const FnDefStmt& o = ASSERT_NODE(rhs, FnDefStmt);
     return isImmutable == o.isImmutable && name == o.name &&
-           ptrVecEq(generics, o.generics) && ptrVecEq(params, o.params) &&
+           generics == o.generics && ptrVecEq(params, o.params) &&
            ptrEq(captureClause, o.captureClause) &&
            ptrVecEq(returns, o.returns) && isThrowing == o.isThrowing &&
            ptrEq(throwExpr, o.throwExpr) && ptrEq(body, o.body);
@@ -262,7 +262,7 @@ bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
 bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const TypeDefStmt& o = ASSERT_NODE(rhs, TypeDefStmt);
     return kind == o.kind && isImmutable == o.isImmutable && name == o.name &&
-           ptrVecEq(generics, o.generics) && ptrVecEq(bases, o.bases) &&
+           generics == o.generics && ptrVecEq(bases, o.bases) &&
            ptrEq(body, o.body);
 }
 
