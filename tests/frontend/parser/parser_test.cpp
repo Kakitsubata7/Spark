@@ -1934,3 +1934,224 @@ fn main() -> Int {
 )");
     EXPECT_TRUE(errors.empty()) << errors[0].message;
 }
+
+TEST(ParserTest, TestF) {
+    auto [ast, errors] = parse(
+R"(
+fn potsOfGold(pots: ^Array[Int]) -> Int {
+    fn recursion(pots: ^Array[Int], i: Int, j: Int, opt: ^Array[^Array[Int]]) -> Int {
+        if i > j {
+            return 0;
+        };
+
+        if opt[i][j] != 0 {
+            return opt[i][j];
+        };
+
+        if i == j {
+            opt[i][j] = pots[i];
+            return opt[i][j];
+        };
+
+        const pickLeft =
+            pots[i] + min(
+                recursion(pots, i + 2, j, opt),
+                recursion(pots, i + 1, j - 1, opt)
+            );
+
+        const pickRight =
+            pots[j] + min(
+                recursion(pots, i, j - 2, opt),
+                recursion(pots, i + 1, j - 1, opt)
+            );
+
+        opt[i][j] = max(pickLeft, pickRight);
+        return opt[i][j];
+    };
+
+    const n = pots.size();
+    const opt: ^Array[^Array[Int]] = Array(n);
+
+    for i in 0...n {
+        opt[i] = Array(n);
+        for j in 0...n {
+            opt[i][j] = 0;
+        };
+    };
+
+    return recursion(pots, 0, n - 1, opt);
+};
+
+print(potsOfGold([10, 5, 15, 20]));
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestG) {
+    auto [ast, errors] = parse(
+ R"(
+fn longestIncreasingPath(A, m, n) {
+    const OPT = Array(m);
+    for i in 0...m {
+        OPT[i] = Array(n);
+        for j in 0...n {
+            OPT[i][j] = nil;
+        };
+    };
+
+    let longest = [];
+
+    fn recursion(A, m, n, prev, i, j, OPT) {
+        if i < 0 || j < 0 || i >= m || j >= n || A[i][j] <= prev {
+            return []
+        };
+
+        if OPT[i][j] != nil {
+            return OPT[i][j]
+        };
+
+        const up = recursion(A, m, n, A[i][j], i, j - 1, OPT);
+        const down = recursion(A, m, n, A[i][j], i, j + 1, OPT);
+        const left = recursion(A, m, n, A[i][j], i - 1, j, OPT);
+        const right = recursion(A, m, n, A[i][j], i + 1, j, OPT);
+
+        let best = up;
+        if down.size() > best.size() {
+            best = down
+        };
+        if left.size() > best.size() {
+            best = left
+        };
+        if right.size() > best.size() {
+            best = right
+        };
+
+        OPT[i][j] = [A[i][j]] + best;
+        return OPT[i][j];
+    };
+
+    for i in 0...m {
+        for j in 0...n {
+            const path = recursion(A, m, n, 0, i, j, OPT);
+            if path.size() > longest.size() {
+                longest = path;
+            };
+        }
+    };
+
+    return longest;
+}
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestH) {
+    auto [ast, errors] = parse(
+ R"(
+fn maxProfit(i, p) {
+    const OPT = Array(i + 1);
+    for k in 0...i {
+        OPT[k] = nil;
+    };
+
+    fn recursion(i, p, OPT) {
+        if OPT[i] != nil {
+            return OPT[i];
+        };
+
+        if i == 0 {
+            OPT[i] = 0;
+            return 0;
+        };
+
+        let profit = p(i);
+
+        for j in 1...i {
+            const candidate =
+                recursion(j, p, OPT) + recursion(i - j, p, OPT);
+
+            if candidate > profit {
+                profit = candidate;
+            };
+        };
+
+        OPT[i] = profit;
+        return profit;
+    };
+
+    return recursion(i, p, OPT);
+};
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestI) {
+    auto [ast, errors] = parse(
+ R"(
+fn numberOfShortestPaths(n, m) {
+    const OPT = Array(n + 1);
+    for i in 0...n {
+        OPT[i] = Array(m + 1);
+        for j in 0...m {
+            OPT[i][j] = nil;
+        };
+    };
+
+    fn recursion(n, m, OPT) {
+        if OPT[n][m] != nil {
+            return OPT[n][m];
+        };
+
+        if n == 0 && m == 0 {
+            OPT[n][m] = 1;
+        } else if n == 0 {
+            OPT[n][m] = recursion(n, m - 1, OPT);
+        } else if m == 0 {
+            OPT[n][m] = recursion(n - 1, m, OPT);
+        } else {
+            OPT[n][m] = recursion(n, m - 1, OPT) + recursion(n - 1, m, OPT);
+        };
+
+        return OPT[n][m];
+    };
+
+    return recursion(n, m, OPT);
+};
+)");
+    EXPECT_TRUE(errors.empty());
+}
+
+TEST(ParserTest, TestJ) {
+    auto [ast, errors] = parse(
+ R"(
+fn paveWays(n) {
+    const OPT = Array(n + 1);
+    for i in 0...n {
+        OPT[i] = nil;
+    };
+
+    fn pave(n, OPT) {
+        if OPT[n] != nil {
+            return OPT[n];
+        };
+
+        if n < 2 {
+            OPT[n] = 0;
+        } else if n == 2 {
+            OPT[n] = 1;
+        } else if n == 3 {
+            OPT[n] = 1;
+        } else if n == 5 {
+            OPT[n] = 3;
+        } else {
+            OPT[n] = pave(n - 2, OPT) + pave(n - 3, OPT) + pave(n - 5, OPT);
+        };
+
+        return OPT[n];
+    };
+
+    return pave(n, OPT);
+};
+)");
+    EXPECT_TRUE(errors.empty());
+}

@@ -818,7 +818,8 @@ tuple_expr:
     ;
 
 collection_expr:
-      LBracket exprs RBracket
+      LBracket RBracket  { $$ = ast.make<CollectionExpr>($1.start, $2.end, std::vector<Expr*>()); }
+    | LBracket exprs RBracket
         {
             $$ = ast.make<CollectionExpr>($1.start, $3.end, std::move($2));
         }
