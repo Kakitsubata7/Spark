@@ -847,11 +847,11 @@ protected:
 };
 
 struct ModuleStmt final : Stmt {
-    std::vector<Name> names;
+    Path* path;
     BlockExpr* body;
 
-    ModuleStmt(Location start, Location end, std::vector<Name> names, BlockExpr* body) noexcept
-        : Stmt(start, end), names(std::move(names)), body(body) { }
+    ModuleStmt(Location start, Location end, Path* path, BlockExpr* body) noexcept
+        : Stmt(start, end), path(path), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

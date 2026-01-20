@@ -305,7 +305,7 @@ bool ReturnStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool ModuleStmt::equalsImpl(const Node& rhs) const noexcept {
     const ModuleStmt& o = ASSERT_NODE(rhs, ModuleStmt);
-    return names == o.names && ptrEq(body, o.body);
+    return ptrEq(path, o.path) && ptrEq(body, o.body);
 }
 
 bool ExportStmt::equalsImpl(const Node& rhs) const noexcept {

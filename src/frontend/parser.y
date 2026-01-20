@@ -101,7 +101,6 @@ int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 %type <Spark::FrontEnd::IfStmt*> if_stmt
 %type <Spark::FrontEnd::BlockExpr*> else_clause
 %type <Spark::FrontEnd::ModuleStmt*> module_stmt
-%type <std::vector<Spark::FrontEnd::Name>> module_path
 %type <Spark::FrontEnd::ImportStmt*> import_stmt
 %type <Spark::FrontEnd::ImportItem*> import
 
@@ -508,12 +507,7 @@ else_clause:
     ;
 
 module_stmt:
-      Module module_path block  { $$ = ast.make<ModuleStmt>($1.start, $3->end, std::move($2), $3); }
-    ;
-
-module_path:
-      name                  { $$ = {}; $$.push_back(std::move($1.value)); }
-    | module_path Dot name  { $$ = std::move($1); $$.push_back(std::move($3.value)); }
+      Module path block  { $$ = ast.make<ModuleStmt>($1.start, $3->end, $2, $3); }
     ;
 
 import_stmt:
