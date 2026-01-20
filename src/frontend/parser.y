@@ -500,6 +500,7 @@ import_stmt:
         }
     | import_stmt Comma import
         {
+            $$ = $1;
             $$->imports.push_back($3);
             $$->end = $3->end;
         }

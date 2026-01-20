@@ -67,7 +67,7 @@ Name NAME(Name name) { return Name(std::move(name)); }
 #define DISCARD DiscardName()
 
 #define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
-#define PATH_SEG(...) MAKE(PathSeg, __VA_ARGS__)
+#define PATH_SEG(name, ...) MAKE(PathSeg, name, std::vector<Expr*>{__VA_ARGS__})
 
 std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
@@ -1132,6 +1132,261 @@ TEST(ParserTest, ModuleStmtTest3) {
         MAKE(ModuleStmt,
             PATH(PATH_SEG(NAME("Foo")), PATH_SEG(NAME("Bar")), PATH_SEG(NAME("Baz"))),
             BLOCK()
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ExportStmtTest1) {
+    auto [ast, errors] = parse(
+R"(
+export module Foo {
+    export let x: Bar = Bar()
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ExportStmt,
+            MAKE(ModuleStmt,
+                PATH(PATH_SEG(NAME("Foo"))),
+                BLOCK(
+                    MAKE(ExportStmt,
+                        VARDEF(
+                            VARMOD(VARKIND::Let, false, VAROPT::None),
+                            BIND_PAT(NAME("x")),
+                            IDENT("Bar"),
+                            CALL(IDENT("Bar"))
+                        )
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ExportStmtTest2) {
+    auto [ast, errors] = parse(
+R"(
+export fn^ max[T](a: T, b: T) -> T throw Error {
+    return myMax(a, b)
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ExportStmt,
+            MAKE(FnDefStmt,
+                /* isImmutable */ true,
+                NAME("max"),
+                /* generics */ std::vector<Name>{
+                    NAME("T")
+                },
+                /* params */ std::vector<FnParam*>{
+                    MAKE(FnParam, nullptr, BIND_PAT(NAME("a")), IDENT("T"), nullptr),
+                    MAKE(FnParam, nullptr, BIND_PAT(NAME("b")), IDENT("T"), nullptr)
+                },
+                /* captureClause */ nullptr,
+                /* returns */ std::vector<FnReturn*>{
+                    MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("T"))
+                },
+                /* isThrowing */ true,
+                /* throwExpr */ IDENT("Error"),
+                BLOCK(
+                    RETURN(CALL(IDENT("myMax"), CALL_ARG(IDENT("a")), CALL_ARG(IDENT("b"))))
+                )
+            )
+        )
+    );
+
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ExportStmtTest3) {
+    auto [ast, errors] = parse(
+R"(
+export class Box[T] : Container { }
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ExportStmt,
+            MAKE(TypeDefStmt,
+                TypeDefStmt::TypeKind::Class,
+                /* isImmutable */ false,
+                NAME("Box"),
+                /* generics */ std::vector<Name>{
+                    NAME("T")
+                },
+                /* bases */ std::vector<Expr*>{
+                    IDENT("Container")
+                },
+                BLOCK()
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ExportTypeDefTest2) {
+    auto [ast, errors] = parse(
+R"(
+export class Box[T] : Container {
+    let value: T;
+
+    fn get() -> T {
+        return value;
+    }
+}
+)");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ExportStmt,
+            MAKE(TypeDefStmt,
+                TypeDefStmt::TypeKind::Class,
+                /* isImmutable */ false,
+                NAME("Box"),
+                /* generics */ std::vector<Name>{
+                    NAME("T")
+                },
+                /* bases */ std::vector<Expr*>{
+                    IDENT("Container")
+                },
+                BLOCK(
+                    VARDEF(
+                        VARMOD(VARKIND::Let, false, VAROPT::None),
+                        BIND_PAT(NAME("value")),
+                        IDENT("T"),
+                        nullptr
+                    ),
+                    MAKE(FnDefStmt,
+                        /* isImmutable */ false,
+                        NAME("get"),
+                        /* generics */ std::vector<Name>(),
+                        /* params */ std::vector<FnParam*>(),
+                        /* captureClause */ nullptr,
+                        /* returns */ std::vector<FnReturn*>{
+                            MAKE(FnReturn, FnReturn::RetKind::ByValue, IDENT("T"))
+                        },
+                        /* isThrowing */ false,
+                        /* throwExpr */ nullptr,
+                        BLOCK(
+                            RETURN(IDENT("value"))
+                        )
+                    )
+                )
+            )
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportStmtTest1) {
+    auto [ast, errors] = parse("from Foo import Bar");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportStmt,
+            PATH(PATH_SEG(NAME("Foo"))),
+            std::vector<ImportItem*>{
+                MAKE(ImportItem,
+                    PATH(PATH_SEG(NAME("Bar"))),
+                    std::nullopt
+                )
+            }
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportStmtTest2) {
+    auto [ast, errors] = parse("from Foo import Bar, Baz as Qux");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportStmt,
+            PATH(PATH_SEG(NAME("Foo"))),
+            std::vector<ImportItem*>{
+                MAKE(ImportItem,
+                    PATH(PATH_SEG(NAME("Bar"))),
+                    std::nullopt
+                ),
+                MAKE(ImportItem,
+                    PATH(PATH_SEG(NAME("Baz"))),
+                    NAME("Qux")
+                )
+            }
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportStmtTest3) {
+    auto [ast, errors] = parse(
+        "from Foo.Bar[Int] import Baz[Bool] as BazBool, Qux"
+    );
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportStmt,
+            PATH(
+                PATH_SEG(NAME("Foo")),
+                PATH_SEG(NAME("Bar"), IDENT("Int"))
+            ),
+            std::vector<ImportItem*>{
+                MAKE(ImportItem,
+                    PATH(
+                        PATH_SEG(NAME("Baz"), IDENT("Bool"))
+                    ),
+                    NAME("BazBool")
+                ),
+                MAKE(ImportItem,
+                    PATH(PATH_SEG(NAME("Qux"))),
+                    std::nullopt
+                )
+            }
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportAllStmtTest1) {
+    auto [ast, errors] = parse("from Foo import *");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportAllStmt,
+            PATH(PATH_SEG(NAME("Foo")))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportAllStmtTest2) {
+    auto [ast, errors] = parse("from Foo.Bar[Int] import *");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportAllStmt,
+            PATH(PATH_SEG(NAME("Foo")), PATH_SEG(NAME("Bar"), IDENT("Int")))
+        )
+    );
+    EXPECT_EQ(*ast.root, *root);
+}
+
+TEST(ParserTest, ImportAllStmtTest3) {
+    auto [ast, errors] = parse("from Foo.Bar[Int].Baz[Bool] import *");
+    EXPECT_TRUE(errors.empty());
+
+    Node* root = BLOCK(
+        MAKE(ImportAllStmt,
+            PATH(
+                PATH_SEG(NAME("Foo")),
+                PATH_SEG(NAME("Bar"), IDENT("Int")),
+                PATH_SEG(NAME("Baz"), IDENT("Bool"))
+            )
         )
     );
     EXPECT_EQ(*ast.root, *root);
