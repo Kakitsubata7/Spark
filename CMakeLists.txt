@@ -84,6 +84,10 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
 
+        src/frontend/semantic/name_resolver.cpp
+        src/frontend/semantic/name_resolver.hpp
+        src/frontend/semantic/symbol.hpp
+
         src/frontend/semantic_type.hpp
         src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp

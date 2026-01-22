@@ -1,8 +1,10 @@
 ﻿#pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "node_visitor.hpp"
@@ -150,6 +152,11 @@ struct Node {
 
     bool operator==(const Node& rhs) const noexcept;
     bool operator!=(const Node& rhs) const noexcept;
+
+    template <typename T>
+    bool is() {
+        return dynamic_cast<T*>(this) != nullptr;
+    }
 
 protected:
     [[nodiscard]]
