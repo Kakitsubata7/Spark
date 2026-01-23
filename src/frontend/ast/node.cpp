@@ -29,7 +29,7 @@ bool ptrEq(const Spark::FrontEnd::Node* lhs, const Spark::FrontEnd::Node* rhs) {
     if (lhs == nullptr || rhs == nullptr) {
         return false;
     }
-    return *lhs == *rhs;
+    return lhs->equalsStructurally(*rhs);
 }
 
 /**
@@ -46,7 +46,7 @@ bool ptrVecEq(const std::vector<T*>& lhs, const std::vector<T*>& rhs) {
         return false;
     }
     for (size_t i = 0; i < lhs.size(); ++i) {
-        if (*lhs[i] != *rhs[i]) {
+        if (!lhs[i]->equalsStructurally(*rhs[i])) {
             return false;
         }
     }
@@ -56,17 +56,18 @@ bool ptrVecEq(const std::vector<T*>& lhs, const std::vector<T*>& rhs) {
 namespace Spark::FrontEnd {
 
 bool Node::operator==(const Node& rhs) const noexcept {
-    if (this == &rhs) {
-        return true;
-    }
-    if constexpr (false /* TODO: || start != rhs.start || end != rhs.end */) {
-        return false;
-    }
-    return equalsImpl(rhs);
+    return equalsStructurally(rhs) && start == rhs.start && end == rhs.end;
 }
 
 bool Node::operator!=(const Node& rhs) const noexcept {
     return !(*this == rhs);
+}
+
+bool Node::equalsStructurally(const Node& rhs) const noexcept {
+    if (this == &rhs) {
+        return true;
+    }
+    return equalsImpl(rhs);
 }
 
 
