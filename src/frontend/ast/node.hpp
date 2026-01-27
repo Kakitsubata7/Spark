@@ -97,6 +97,11 @@ struct Node {
         return dynamic_cast<T*>(this) != nullptr;
     }
 
+    template <typename F>
+    void forEachChild(F&& f) const {
+
+    }
+
 protected:
     [[nodiscard]]
     virtual bool equalsImpl(const Node& rhs) const noexcept = 0;

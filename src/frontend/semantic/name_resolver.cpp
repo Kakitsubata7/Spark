@@ -4,7 +4,7 @@
 
 namespace Spark::FrontEnd {
 
-std::vector<Error> NameResolver::resolve(AST& ast) {
+std::pair<SymbolTable, std::vector<Error>> NameResolver::resolve(const AST& ast) {
     Visitor visitor;
 
     std::stack<Node*> stack;
