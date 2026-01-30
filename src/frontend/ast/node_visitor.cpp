@@ -71,5 +71,5 @@ void NodeVisitor::visit(TuplePattern& node) { visit(static_cast<Pattern&>(node))
 void NodeVisitor::visit(CollectionPattern& node) { visit(static_cast<Pattern&>(node)); }
 void NodeVisitor::visit(RecordPatternField& node) { visit(static_cast<Node&>(node)); }
 void NodeVisitor::visit(RecordPattern& node) { visit(static_cast<Pattern&>(node)); }
-    
+
 } // Spark::FrontEnd

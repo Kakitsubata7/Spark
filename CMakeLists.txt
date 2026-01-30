@@ -66,6 +66,7 @@ add_library(sparklib
         src/core/type.hpp
 
         src/frontend/ast.hpp
+        src/frontend/ast/child_visitor.hpp
         src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.cpp
