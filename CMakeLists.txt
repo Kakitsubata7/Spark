@@ -68,6 +68,7 @@ add_library(sparklib
         src/frontend/ast.hpp
         src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
+        src/frontend/ast/node_visitor.cpp
         src/frontend/ast/node_visitor.hpp
 
         src/frontend/lexer.cpp
