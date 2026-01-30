@@ -2,6 +2,8 @@
 
 #include <typeinfo>
 
+#include "child_visitor.hpp"
+
 /**
  * Checks if `node` is type `type`. If so, return the down-casted reference, otherwise,
  * return false in the scope of the macro usage.
@@ -70,6 +72,10 @@ bool Node::equalsStructurally(const Node& rhs) const noexcept {
     return equalsImpl(rhs);
 }
 
+void Node::getChildren(std::vector<Node*>& out) {
+    ChildVisitor visitor(out);
+    accept(visitor);
+}
 
 
 bool VarModifier::equalsImpl(const Node& rhs) const noexcept {

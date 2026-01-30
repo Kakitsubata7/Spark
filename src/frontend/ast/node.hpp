@@ -90,6 +90,7 @@ struct Node {
     bool operator==(const Node& rhs) const noexcept;
     bool operator!=(const Node& rhs) const noexcept;
 
+    [[nodiscard]]
     bool equalsStructurally(const Node& rhs) const noexcept;
 
     template <typename T>
@@ -97,10 +98,7 @@ struct Node {
         return dynamic_cast<T*>(this) != nullptr;
     }
 
-    template <typename F>
-    void forEachChild(F&& f) const {
-
-    }
+    void getChildren(std::vector<Node*>& out);
 
 protected:
     [[nodiscard]]

@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 
+#include "ast/child_visitor.hpp"
 #include "ast/node.hpp"
 #include "ast/node_visitor.hpp"
 
