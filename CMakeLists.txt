@@ -112,6 +112,8 @@ add_library(sparklib
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
+        src/utils/diagnostic.cpp
+        src/utils/diagnostic.hpp
         src/utils/error.cpp
         src/utils/error.hpp
         src/utils/location.hpp
