@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <variant>
 
@@ -66,5 +67,7 @@ using Name = std::variant<DiscardName,
                           DestructorName,
                           OperatorName,
                           SelfName>;
+
+using NameId = uint64_t;
 
 } // Spark::FrontEnd
