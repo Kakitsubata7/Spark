@@ -60,6 +60,15 @@ public:
      * Retrieves a substring view from @p start to @p end (inclusive).
      * @param start Start location of the substring view (inclusive).
      * @param end End location of the substring view (inclusive).
+     * @param out Retrieved substring view (reference to write to).
+     * @return true if retrieved successfully, false otherwise (invalid range).
+     */
+    virtual bool tryGet(Location start, Location end, std::string_view& out) const noexcept;
+
+    /**
+     * Retrieves a substring view from @p start to @p end (inclusive).
+     * @param start Start location of the substring view (inclusive).
+     * @param end End location of the substring view (inclusive).
      * @return Retrieved substring view.
      */
     [[nodiscard]]
@@ -104,6 +113,10 @@ public:
     static NullSourceBuffer& instance() noexcept {
         static NullSourceBuffer inst;
         return inst;
+    }
+
+    bool tryGet(Location start, Location end, std::string_view& out) const noexcept override {
+        return false;
     }
 
     [[nodiscard]]
