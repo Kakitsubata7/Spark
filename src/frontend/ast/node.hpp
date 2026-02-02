@@ -34,6 +34,7 @@ struct Node {
     bool equalsStructurally(const Node& rhs) const noexcept;
 
     template <typename T>
+    [[nodiscard]]
     bool is() const {
         return dynamic_cast<const T*>(this) != nullptr;
     }
