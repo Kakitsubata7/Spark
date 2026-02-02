@@ -34,11 +34,14 @@ struct Node {
     bool equalsStructurally(const Node& rhs) const noexcept;
 
     template <typename T>
-    bool is() {
-        return dynamic_cast<T*>(this) != nullptr;
+    bool is() const {
+        return dynamic_cast<const T*>(this) != nullptr;
     }
 
     void getChildren(std::vector<Node*>& out);
+
+    [[nodiscard]]
+    std::vector<Node*> getChildren();
 
 protected:
     [[nodiscard]]

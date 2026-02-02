@@ -77,6 +77,11 @@ void Node::getChildren(std::vector<Node*>& out) {
     accept(visitor);
 }
 
+std::vector<Node*> Node::getChildren() {
+    std::vector<Node*> children;
+    getChildren(children);
+    return children;
+}
 
 bool VarModifier::equalsImpl(const Node& rhs) const noexcept {
     const VarModifier& o = ASSERT_NODE(rhs, VarModifier);
