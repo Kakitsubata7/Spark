@@ -138,6 +138,8 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
+        tests/frontend/ast/name_value_test.cpp
+
         tests/frontend/lexer/lex_test.cpp
         tests/frontend/lexer/lexer_test.cpp
         tests/frontend/lexer/token_buffer_test.cpp
