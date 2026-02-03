@@ -5,8 +5,8 @@
 #include <variant>
 #include <vector>
 
-#include "frontend/literal.hpp"
-#include "frontend/name.hpp"
+#include "literal.hpp"
+#include "name.hpp"
 #include "node_visitor.hpp"
 #include "utils/location.hpp"
 
@@ -74,9 +74,10 @@ struct Pattern : Node {
 
 
 struct Name final : Node {
-    NameId id;
+    InternedNameValue name;
 
-    Name(Location start, Location end, NameId id) noexcept : Node(start, end), id(id) { }
+    Name(Location start, Location end, InternedNameValue name) noexcept
+        : Node(start, end), name(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
