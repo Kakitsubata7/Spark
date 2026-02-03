@@ -11,7 +11,7 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {Spark::FrontEnd::AST& ast} {std::vector<Spark::Error>& errors}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {AST& ast} {std::vector<Error>& errors}
 
 %code requires {
 #include <cstdint>
@@ -24,131 +24,129 @@
 typedef void* yyscan_t;
 
 namespace yy {
+    using namespace Spark;
+    using namespace FrontEnd;
+
     template <typename T>
-    struct Symbol {
-        Spark::Location start;
-        Spark::Location end;
+    struct Spanned {
+        Location start;
+        Location end;
         T value;
 
-        Symbol() = default;
-        Symbol(Spark::Location start, Spark::Location end, T value) noexcept
+        Spanned() = default;
+        Spanned(Location start, Location end, T value) noexcept
             : start(start), end(end), value(std::move(value)) { }
     };
 } // yy
 }
 
 %code {
-#include <typeinfo>
-
-using namespace Spark;
-using namespace Spark::FrontEnd;
-
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
 #define RAISE_ERROR(start, end, msg) errors.emplace_back(msg, start, end)
 #define REMOVE_LAST_ERROR() errors.pop_back()
 }
 
-%token <Spark::FrontEnd::TokenValue> Identifier Discard
-%token <Spark::FrontEnd::TokenValue> Integer Real String
-%token <Spark::FrontEnd::TokenValue> Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefine While
-%token <Spark::FrontEnd::TokenValue> Add Sub Mul Div Mod
-%token <Spark::FrontEnd::TokenValue> Tide And VBar Caret
-%token <Spark::FrontEnd::TokenValue> Bang LogAnd LogOr
-%token <Spark::FrontEnd::TokenValue> Eq Ne StrictEq StrictNe Lt Le Gt Ge
-%token <Spark::FrontEnd::TokenValue> Shl Shr
-%token <Spark::FrontEnd::TokenValue> Range RangeExcl
-%token <Spark::FrontEnd::TokenValue> Question NonNull Coalesce
-%token <Spark::FrontEnd::TokenValue> Pipe
-%token <Spark::FrontEnd::TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign ShlAssign ShrAssign CoalesceAssign
-%token <Spark::FrontEnd::TokenValue> Dot
-%token <Spark::FrontEnd::TokenValue> Comma Colon Arrow FatArrow
-%token <Spark::FrontEnd::TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace
-%token <Spark::FrontEnd::TokenValue> At
-%token <Spark::FrontEnd::TokenValue> Dollar
-%token <Spark::FrontEnd::TokenValue> LineComment BlockComment
+%token <TokenValue> Identifier Discard
+%token <TokenValue> Integer Real String
+%token <TokenValue> Alias As Break Case Catch Class Const Constructor Continue Cref Destructor Do Else End Enum Export Extension False Fn For From Global If Import In Is Let Match Module Nil Operator Ref Return Self Struct Super Then Throw Trait True Try Typeof Undefine While
+%token <TokenValue> Add Sub Mul Div Mod
+%token <TokenValue> Tide And VBar Caret
+%token <TokenValue> Bang LogAnd LogOr
+%token <TokenValue> Eq Ne StrictEq StrictNe Lt Le Gt Ge
+%token <TokenValue> Shl Shr
+%token <TokenValue> Range RangeExcl
+%token <TokenValue> Question NonNull Coalesce
+%token <TokenValue> Pipe
+%token <TokenValue> Assign AddAssign SubAssign MulAssign DivAssign ModAssign BitAndAssign BitOrAssign BitXorAssign ShlAssign ShrAssign CoalesceAssign
+%token <TokenValue> Dot
+%token <TokenValue> Comma Colon Arrow FatArrow
+%token <TokenValue> Semicolon LParen RParen LBracket RBracket LBrace RBrace
+%token <TokenValue> At
+%token <TokenValue> Dollar
+%token <TokenValue> LineComment BlockComment
 
 %token EndOfFile 0
 %token Error 1
 
-%type <std::vector<Spark::FrontEnd::Node*>> nodes
-%type <std::vector<Spark::FrontEnd::Node*>> node_list
-%type <Spark::FrontEnd::Node*> node
-%type <Spark::FrontEnd::Stmt*> stmt
-%type <Spark::FrontEnd::VarModifier*> varmod
-%type <Symbol<Spark::FrontEnd::VarModifier::VarKind>> varkind
-%type <Spark::FrontEnd::VarDefStmt*> vardef_stmt
-%type <Spark::FrontEnd::VarModifier*> opt_varmod
+%type <std::vector<Node*>> nodes
+%type <std::vector<Node*>> node_list
+%type <Node*> node
+%type <Stmt*> stmt
+%type <VarModifier*> varmod
+%type <Spanned<VarModifier::VarKind>> varkind
+%type <VarDefStmt*> vardef_stmt
+%type <VarModifier*> opt_varmod
 %type <bool> opt_immut
-%type <std::vector<Spark::FrontEnd::Name>> opt_template
-%type <Spark::FrontEnd::FnDefStmt*> fndef_stmt
-%type <std::vector<Spark::FrontEnd::FnParam*>> param_clause
-%type <std::vector<Spark::FrontEnd::FnParam*>> params
-%type <Spark::FrontEnd::FnParam*> param
-%type <Spark::FrontEnd::FnCaptureClause*> capture_clause
-%type <Spark::FrontEnd::FnCaptureClause*> captures
-%type <Spark::FrontEnd::FnCapture*> capture
-%type <std::vector<Spark::FrontEnd::FnReturn*>> ret_clause
-%type <std::vector<Spark::FrontEnd::FnReturn*>> rets
-%type <Spark::FrontEnd::FnReturn*> ret
-%type <std::pair<bool, Spark::FrontEnd::Expr*>> throw_clause
-%type <Spark::FrontEnd::TypeDefStmt*> typedef_stmt
-%type <Spark::FrontEnd::CaseDefStmt*> casedef_stmt
-%type <Symbol<Spark::FrontEnd::TypeDefStmt::TypeKind>> typedef_kind
-%type <Spark::FrontEnd::AssignStmt*> assign_stmt
-%type <Spark::FrontEnd::Node*> assign_rhs
-%type <Spark::FrontEnd::AssignStmt*> regular_assign
-%type <Spark::FrontEnd::Node*> regular_rhs
-%type <Spark::FrontEnd::IfStmt*> if_stmt
-%type <Spark::FrontEnd::BlockExpr*> else_clause
-%type <Spark::FrontEnd::ModuleStmt*> module_stmt
-%type <Spark::FrontEnd::ImportStmt*> import_stmt
-%type <Spark::FrontEnd::ImportItem*> import
+%type <std::vector<Name*>> opt_template
+%type <FnDefStmt*> fndef_stmt
+%type <std::vector<FnParam*>> param_clause
+%type <std::vector<FnParam*>> params
+%type <FnParam*> param
+%type <FnCaptureClause*> capture_clause
+%type <FnCaptureClause*> captures
+%type <FnCapture*> capture
+%type <std::vector<FnReturn*>> ret_clause
+%type <std::vector<FnReturn*>> rets
+%type <FnReturn*> ret
+%type <std::pair<bool, Expr*>> throw_clause
+%type <TypeDefStmt*> typedef_stmt
+%type <CaseDefStmt*> casedef_stmt
+%type <Spanned<TypeDefStmt::TypeKind>> typedef_kind
+%type <AssignStmt*> assign_stmt
+%type <Node*> assign_rhs
+%type <AssignStmt*> regular_assign
+%type <Node*> regular_rhs
+%type <IfStmt*> if_stmt
+%type <BlockExpr*> else_clause
+%type <ModuleStmt*> module_stmt
+%type <ImportStmt*> import_stmt
+%type <ImportItem*> import
 
-%type <Spark::FrontEnd::Expr*> expr
-%type <std::vector<Spark::FrontEnd::Expr*>> exprs
-%type <Spark::FrontEnd::LambdaExpr*> lambda
-%type <Spark::FrontEnd::MatchExpr*> match
-%type <std::vector<Spark::FrontEnd::MatchCase*>> cases
-%type <Spark::FrontEnd::MatchCase*> case
-%type <Spark::FrontEnd::TryCatchExpr*> trycatch
-%type <std::vector<Spark::FrontEnd::CatchClause*>> catches
-%type <Spark::FrontEnd::CatchClause*> catch
-%type <Spark::FrontEnd::BlockExpr*> block
-%type <Spark::FrontEnd::Expr*> binary
-%type <Spark::FrontEnd::Expr*> binary_pipe
-%type <Spark::FrontEnd::Expr*> binary_type
-%type <Spark::FrontEnd::Expr*> binary_range
-%type <Spark::FrontEnd::Expr*> binary_coalesce
-%type <Spark::FrontEnd::Expr*> binary_logor
-%type <Spark::FrontEnd::Expr*> binary_logand
-%type <Spark::FrontEnd::Expr*> binary_bitor
-%type <Spark::FrontEnd::Expr*> binary_bitxor
-%type <Spark::FrontEnd::Expr*> binary_bitand
-%type <Spark::FrontEnd::Expr*> binary_eq
-%type <Spark::FrontEnd::Expr*> binary_compare
-%type <Spark::FrontEnd::Expr*> binary_bitshift
-%type <Spark::FrontEnd::Expr*> binary_additive
-%type <Spark::FrontEnd::Expr*> binary_multiplicative
-%type <Spark::FrontEnd::Expr*> prefix
-%type <Spark::FrontEnd::Expr*> postfix
-%type <std::vector<Spark::FrontEnd::CallArg*>> call_args
-%type <Spark::FrontEnd::CallArg*> call_arg
-%type <Spark::FrontEnd::Expr*> primary
-%type <Spark::FrontEnd::UpvalueExpr*> upvalue_expr
-%type <Symbol<uint64_t>> dollars
-%type <Spark::FrontEnd::TupleExpr*> tuple_expr
-%type <Spark::FrontEnd::CollectionExpr*> collection_expr
+%type <Expr*> expr
+%type <std::vector<Expr*>> exprs
+%type <LambdaExpr*> lambda
+%type <MatchExpr*> match
+%type <std::vector<MatchCase*>> cases
+%type <MatchCase*> case
+%type <TryCatchExpr*> trycatch
+%type <std::vector<CatchClause*>> catches
+%type <CatchClause*> catch
+%type <BlockExpr*> block
+%type <Expr*> binary
+%type <Expr*> binary_pipe
+%type <Expr*> binary_type
+%type <Expr*> binary_range
+%type <Expr*> binary_coalesce
+%type <Expr*> binary_logor
+%type <Expr*> binary_logand
+%type <Expr*> binary_bitor
+%type <Expr*> binary_bitxor
+%type <Expr*> binary_bitand
+%type <Expr*> binary_eq
+%type <Expr*> binary_compare
+%type <Expr*> binary_bitshift
+%type <Expr*> binary_additive
+%type <Expr*> binary_multiplicative
+%type <Expr*> prefix
+%type <Expr*> postfix
+%type <std::vector<CallArg*>> call_args
+%type <CallArg*> call_arg
+%type <Expr*> primary
+%type <UpvalueExpr*> upvalue_expr
+%type <Spanned<size_t>> dollars
+%type <TupleExpr*> tuple_expr
+%type <CollectionExpr*> collection_expr
 
-%type <Spark::FrontEnd::Pattern*> pattern
-%type <std::vector<Spark::FrontEnd::Pattern*>> patterns
-%type <Spark::FrontEnd::CollectionPattern*> collection_pattern
+%type <Pattern*> pattern
+%type <std::vector<Pattern*>> patterns
+%type <CollectionPattern*> collection_pattern
 
-%type <Symbol<Spark::FrontEnd::Literal>> literal
-%type <Symbol<Spark::FrontEnd::Name>> name
-%type <std::vector<Spark::FrontEnd::Name>> names
-%type <Spark::FrontEnd::Path*> path
-%type <Spark::FrontEnd::PathSeg*> path_seg
+%type <Spanned<Literal>> literal
+%type <Name*> name
+%type <std::vector<Name*>> names
+%type <Path*> path
+%type <PathSeg*> path_seg
 
 %%
 %start program;
@@ -234,10 +232,10 @@ varmod:
     ;
 
 varkind:
-      Let    { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Let); }
-    | Const  { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Const); }
-    | Ref    { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Ref); }
-    | Cref   { $$ = Symbol($1.start, $1.end, VarModifier::VarKind::Cref); }
+      Let    { $$ = Spanned($1.start, $1.end, VarModifier::VarKind::Let); }
+    | Const  { $$ = Spanned($1.start, $1.end, VarModifier::VarKind::Const); }
+    | Ref    { $$ = Spanned($1.start, $1.end, VarModifier::VarKind::Ref); }
+    | Cref   { $$ = Spanned($1.start, $1.end, VarModifier::VarKind::Cref); }
     ;
 
 vardef_stmt:
@@ -278,14 +276,14 @@ fndef_stmt:
       Fn opt_immut name opt_template param_clause capture_clause ret_clause throw_clause block
         {
             auto [isThrowing, throwExpr] = $8;
-            $$ = ast.make<FnDefStmt>($1.start, $9->end, $2, std::move($3.value), std::move($4),
+            $$ = ast.make<FnDefStmt>($1.start, $9->end, $2, $3, std::move($4),
                                      std::move($5), $6, std::move($7), isThrowing, throwExpr,
                                      $9);
         }
     | Fn opt_immut name opt_template param_clause capture_clause ret_clause throw_clause FatArrow expr
         {
             auto [isThrowing, throwExpr] = $8;
-            $$ = ast.make<FnDefStmt>($1.start, $10->end, $2, std::move($3.value), std::move($4),
+            $$ = ast.make<FnDefStmt>($1.start, $10->end, $2, $3, std::move($4),
                                      std::move($5), $6,std::move($7), isThrowing, throwExpr,
                                      $10);
         }
@@ -386,30 +384,30 @@ throw_clause:
 typedef_stmt:
       typedef_kind opt_immut name opt_template block
         {
-            $$ = ast.make<TypeDefStmt>($1.start, $5->end, $1.value, $2, std::move($3.value),
+            $$ = ast.make<TypeDefStmt>($1.start, $5->end, $1.value, $2, $3,
                                        std::move($4), std::vector<Expr*>(), $5);
         }
     | typedef_kind opt_immut name opt_template Colon exprs block
         {
-            $$ = ast.make<TypeDefStmt>($1.start, $7->end, $1.value, $2, std::move($3.value),
+            $$ = ast.make<TypeDefStmt>($1.start, $7->end, $1.value, $2, $3,
                                        std::move($4), std::move($6), $7);
         }
     ;
 
 typedef_kind:
-      Struct       { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Struct); }
-    | Class        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Class); }
-    | Enum         { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Enum); }
-    | Enum Struct  { $$ = Symbol($1.start, $2.end, TypeDefStmt::TypeKind::EnumStruct); }
-    | Enum Class   { $$ = Symbol($1.start, $2.end, TypeDefStmt::TypeKind::EnumClass); }
-    | Trait        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Trait); }
-    | Alias        { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Alias); }
-    | Extension    { $$ = Symbol($1.start, $1.end, TypeDefStmt::TypeKind::Extension); }
+      Struct       { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Struct); }
+    | Class        { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Class); }
+    | Enum         { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Enum); }
+    | Enum Struct  { $$ = Spanned($1.start, $2.end, TypeDefStmt::TypeKind::EnumStruct); }
+    | Enum Class   { $$ = Spanned($1.start, $2.end, TypeDefStmt::TypeKind::EnumClass); }
+    | Trait        { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Trait); }
+    | Alias        { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Alias); }
+    | Extension    { $$ = Spanned($1.start, $1.end, TypeDefStmt::TypeKind::Extension); }
     ;
 
 casedef_stmt:
-      Case name              { $$ = ast.make<CaseDefStmt>($1.start, $2.end, std::move($2.value), nullptr); }
-    | Case name Assign expr  { $$ = ast.make<CaseDefStmt>($1.start, $4->end, std::move($2.value), $4); }
+      Case name              { $$ = ast.make<CaseDefStmt>($1.start, $2->end, $2, nullptr); }
+    | Case name Assign expr  { $$ = ast.make<CaseDefStmt>($1.start, $4->end, $2, $4); }
     ;
 
 assign_stmt:
@@ -507,8 +505,8 @@ import_stmt:
     ;
 
 import:
-      path          { $$ = ast.make<ImportItem>($1->start, $1->end, $1, std::nullopt); }
-    | path As name  { $$ = ast.make<ImportItem>($1->start, $3.end, $1, std::move($3.value)); }
+      path          { $$ = ast.make<ImportItem>($1->start, $1->end, $1, nullptr); }
+    | path As name  { $$ = ast.make<ImportItem>($1->start, $3->end, $1, $3); }
     ;
 
 
@@ -747,7 +745,7 @@ postfix:
       postfix Question  { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::Optional, $1); }
     | postfix NonNull   { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::NonNull, $1); }
     | postfix Bang      { $$ = ast.make<PostfixExpr>($1->start, $2.end, PostfixExpr::OpKind::ForceUnwrap, $1); }
-    | postfix Dot name  { $$ = ast.make<MemberAccessExpr>($1->start, $3.end, $1, std::move($3.value)); }
+    | postfix Dot name  { $$ = ast.make<MemberAccessExpr>($1->start, $3->end, $1, $3); }
     | postfix LParen call_args RParen
         {
             // TODO: Make sure named args are after all positional args
@@ -767,14 +765,14 @@ call_args:
     ;
 
 call_arg:
-      expr             { $$ = ast.make<CallArg>($1->start, $1->end, std::nullopt, $1); }
-    | name Colon expr  { $$ = ast.make<CallArg>($1.start, $3->end, std::move($1.value), $3); }
+      expr             { $$ = ast.make<CallArg>($1->start, $1->end, nullptr, $1); }
+    | name Colon expr  { $$ = ast.make<CallArg>($1->start, $3->end, $1, $3); }
     ;
 
 primary:
       literal             { $$ = ast.make<LiteralExpr>($1.start, $1.end, std::move($1.value)); }
-    | name                { $$ = ast.make<NameExpr>($1.start, $1.end, std::move($1.value)); }
-    | Global Dot name     { $$ = ast.make<GlobalAccessExpr>($1.start, $3.end, std::move($3.value)); }
+    | name                { $$ = ast.make<NameExpr>($1->start, $1->end, $1); }
+    | Global Dot name     { $$ = ast.make<GlobalAccessExpr>($1.start, $3->end, $3); }
     | upvalue_expr        { $$ = $1; }
     | LParen expr RParen  { $$ = $2; }
     | tuple_expr          { $$ = $1; }
@@ -788,16 +786,16 @@ primary:
 upvalue_expr:
       dollars name
         {
-            if ($1.end.line != $2.start.line || $1.end.column + 1 != $2.start.column) {
-                RAISE_ERROR($1.start, $2.end, "unexpected whitespace after `$`");
+            if ($1.end.line != $2->start.line || $1.end.column + 1 != $2->start.column) {
+                RAISE_ERROR($1.start, $2->end, "unexpected whitespace after `$`");
                 YYERROR;
             }
-            $$ = ast.make<UpvalueExpr>($1.start, $2.end, $1.value, std::move($2.value));
+            $$ = ast.make<UpvalueExpr>($1.start, $2->end, $1.value, $2);
         }
     ;
 
 dollars:
-      Dollar          { $$ = Symbol<uint64_t>($1.start, $1.end, 1); }
+      Dollar          { $$ = Spanned<size_t>($1.start, $1.end, 1); }
     | dollars Dollar
         {
             if ($1.end.line != $2.start.line || $1.end.column + 1 != $2.start.column) {
@@ -829,7 +827,7 @@ collection_expr:
 
 pattern:
       literal             { $$ = ast.make<LiteralPattern>($1.start, $1.end, std::move($1.value)); }
-    | name                { $$ = ast.make<BindingPattern>($1.start, $1.end, std::move($1.value)); }
+    | name                { $$ = ast.make<BindingPattern>($1->start, $1->end, $1); }
     | LParen patterns RParen
         {
             $$ = ast.make<TuplePattern>($1.start, $3.end, std::move($2));
@@ -872,170 +870,173 @@ collection_pattern:
 
 
 literal:
-      Integer        { $$ = Symbol<Literal>($1.start, $1.end, IntLiteral(BigInt($1.lexeme))); }
-    | Real           { $$ = Symbol<Literal>($1.start, $1.end, RealLiteral(BigReal($1.lexeme))); }
-    | True           { $$ = Symbol<Literal>($1.start, $1.end, BoolLiteral(true)); }
-    | False          { $$ = Symbol<Literal>($1.start, $1.end, BoolLiteral(false)); }
-    | String         { $$ = Symbol<Literal>($1.start, $1.end, StringLiteral(std::move($1.lexeme))); }
-    | Nil            { $$ = Symbol<Literal>($1.start, $1.end, NilLiteral()); }
-    | LParen RParen  { $$ = Symbol<Literal>($1.start, $2.end, VoidLiteral()); }
+      Integer        { $$ = Spanned<Literal>($1.start, $1.end, IntLiteral(BigInt($1.lexeme))); }
+    | Real           { $$ = Spanned<Literal>($1.start, $1.end, RealLiteral(BigReal($1.lexeme))); }
+    | True           { $$ = Spanned<Literal>($1.start, $1.end, BoolLiteral(true)); }
+    | False          { $$ = Spanned<Literal>($1.start, $1.end, BoolLiteral(false)); }
+    | String         { $$ = Spanned<Literal>($1.start, $1.end, StringLiteral(std::move($1.lexeme))); }
+    | Nil            { $$ = Spanned<Literal>($1.start, $1.end, NilLiteral()); }
+    | LParen RParen  { $$ = Spanned<Literal>($1.start, $2.end, VoidLiteral()); }
     ;
 
 name:
-      Identifier       { $$ = Symbol<Name>($1.start, $1.end, IdentifierName(std::move($1.lexeme))); }
-    | Discard          { $$ = Symbol<Name>($1.start, $1.end, DiscardName()); }
-    | Constructor      { $$ = Symbol<Name>($1.start, $1.end, ConstructorName()); }
-    | Destructor       { $$ = Symbol<Name>($1.start, $1.end, DestructorName()); }
+      Identifier
+        {
+            $$ = ast.make<Name>($1.start, $1.end, ast.intern(NameValue::identifier(std::move($1.lexeme))));
+        }
+    | Discard      { $$ = ast.make<Name>($1.start, $1.end, ast.intern(NameValue::discard())); }
+    | Self         { $$ = ast.make<Name>($1.start, $1.end, ast.intern(NameValue::self())); }
+    | Constructor  { $$ = ast.make<Name>($1.start, $1.end, ast.intern(NameValue::constructor())); }
+    | Destructor   { $$ = ast.make<Name>($1.start, $1.end, ast.intern(NameValue::destructor())); }
     | Operator Add
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Add));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Add)));
         }
     | Operator Sub
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Sub));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Sub)));
         }
     | Operator Mul
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Mul));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Mul)));
         }
     | Operator Div
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Div));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Div)));
         }
     | Operator Mod
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Mod));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Mod)));
         }
     | Operator Tide
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitNot));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitNot)));
         }
     | Operator And
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitAnd));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitAnd)));
         }
     | Operator VBar
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitOr));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitOr)));
         }
     | Operator Caret
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitXor));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitXor)));
         }
     | Operator Shl
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShl));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitShl)));
         }
     | Operator Shr
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShr));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitShr)));
         }
     | Operator Bang
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::LogNot));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::LogNot)));
         }
     | Operator LogAnd
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::LogAnd));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::LogAnd)));
         }
     | Operator LogOr
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::LogOr));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::LogOr)));
         }
     | Operator Eq
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Eq));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Eq)));
         }
     | Operator Ne
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Ne));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Ne)));
         }
     | Operator Lt
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Lt));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Lt)));
         }
     | Operator Le
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Le));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Le)));
         }
     | Operator Gt
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Gt));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Gt)));
         }
     | Operator Ge
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Ge));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Ge)));
         }
     | Operator Range
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::Range));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::Range)));
         }
     | Operator RangeExcl
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::RangeExcl));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::RangeExcl)));
         }
     | Operator LParen Add RParen
         {
-            $$ = Symbol<Name>($1.start, $4.end, OperatorName(OperatorName::OpKind::Pos));
+            $$ = ast.make<Name>($1.start, $4.end, ast.intern(NameValue::op(OverOpKind::Pos)));
         }
     | Operator LParen Sub RParen
         {
-            $$ = Symbol<Name>($1.start, $4.end, OperatorName(OperatorName::OpKind::Neg));
+            $$ = ast.make<Name>($1.start, $4.end, ast.intern(NameValue::op(OverOpKind::Neg)));
         }
     | Operator LParen RParen
         {
-            $$ = Symbol<Name>($1.start, $3.end, OperatorName(OperatorName::OpKind::Call));
+            $$ = ast.make<Name>($1.start, $3.end, ast.intern(NameValue::op(OverOpKind::Call)));
         }
     | Operator LBracket RBracket
         {
-            $$ = Symbol<Name>($1.start, $3.end, OperatorName(OperatorName::OpKind::Subscript));
+            $$ = ast.make<Name>($1.start, $3.end, ast.intern(NameValue::op(OverOpKind::Subscript)));
         }
     | Operator AddAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::AddAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::AddAssign)));
         }
     | Operator SubAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::SubAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::SubAssign)));
         }
     | Operator MulAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::MulAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::MulAssign)));
         }
     | Operator DivAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::DivAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::DivAssign)));
         }
     | Operator ModAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::ModAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::ModAssign)));
         }
     | Operator BitAndAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitAndAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitAndAssign)));
         }
     | Operator BitOrAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitOrAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitOrAssign)));
         }
     | Operator BitXorAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitXorAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitXorAssign)));
         }
     | Operator ShlAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShlAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitShlAssign)));
         }
     | Operator ShrAssign
         {
-            $$ = Symbol<Name>($1.start, $2.end, OperatorName(OperatorName::OpKind::BitShrAssign));
+            $$ = ast.make<Name>($1.start, $2.end, ast.intern(NameValue::op(OverOpKind::BitShrAssign)));
         }
-    | Self             { $$ = Symbol<Name>($1.start, $1.end, SelfName()); }
     ;
 
 names:
-      name              { $$ = {}; $$.push_back(std::move($1.value)); }
-    | names Comma name  { $$ = std::move($1); $$.push_back(std::move($3.value)); }
+      name              { $$ = {}; $$.push_back($1); }
+    | names Comma name  { $$ = std::move($1); $$.push_back($3); }
     ;
 
 path:
@@ -1055,11 +1056,11 @@ path:
 path_seg:
       name
         {
-            $$ = ast.make<PathSeg>($1.start, $1.end, std::move($1.value), std::vector<Expr*>());
+            $$ = ast.make<PathSeg>($1->start, $1->end, $1, std::vector<Expr*>());
         }
     | name LBracket exprs RBracket
         {
-            $$ = ast.make<PathSeg>($1.start, $4.end, std::move($1.value), std::move($3));
+            $$ = ast.make<PathSeg>($1->start, $4.end, $1, std::move($3));
         }
     ;
 %%
