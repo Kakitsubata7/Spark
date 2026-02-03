@@ -98,6 +98,7 @@ add_library(sparklib
         src/frontend/semantic/symbol.hpp
         src/frontend/semantic/symbol_table.cpp
         src/frontend/semantic/symbol_table.hpp
+        src/frontend/semantic/utils.hpp
 
         src/frontend/semantic_type.hpp
 
