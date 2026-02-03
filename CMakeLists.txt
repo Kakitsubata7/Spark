@@ -148,6 +148,8 @@ add_executable(sparktest
 
         tests/frontend/parser/parser_test.cpp
 
+        tests/frontend/semantic/name_resolver_test.cpp
+
         tests/frontend/source_buffer_test.cpp
         tests/frontend/source_reader_test.cpp
 

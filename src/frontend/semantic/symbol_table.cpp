@@ -1,33 +1,25 @@
 #include "symbol_table.hpp"
 
-#include <stdexcept>
-
 namespace Spark::FrontEnd {
 
-Symbol* SymbolTable::define(const Name* node, Symbol symbol) {
-    if (hasSymbol(node)) {
-        throw std::runtime_error("symbol already defined");
-    }
-    _symbols[node] = std::make_unique<Symbol>(std::move(symbol));
-    return _symbols[node].get();
+Symbol* SymbolTable::make(Symbol symbol) {
+    return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get();
 }
 
-bool SymbolTable::hasSymbol(const Name* node) const noexcept {
-    return _symbols.find(node) != _symbols.end();
+void SymbolTable::set(const Name* node, Symbol* symbol) {
+    _map[node] = symbol;
+}
+
+bool SymbolTable::hasSymbol(const Name* node) const {
+    return _map.find(node) != _map.end();
 }
 
 Symbol* SymbolTable::symbolOf(const Name* node) {
-    if (!hasSymbol(node)) {
-        throw std::runtime_error("symbol not found");
-    }
-    return _symbols.at(node).get();
+    return _map.at(node);
 }
 
 const Symbol* SymbolTable::symbolOf(const Name* node) const {
-    if (!hasSymbol(node)) {
-        throw std::runtime_error("symbol not found");
-    }
-    return _symbols.at(node).get();
+    return _map.at(node);
 }
 
 } // Spark::FrontEnd

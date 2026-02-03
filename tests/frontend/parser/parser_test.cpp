@@ -71,7 +71,7 @@ using namespace Spark::FrontEnd;
 #define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
 #define PATH_SEG(name, ...) MAKE(PathSeg, name, std::vector<Expr*>{__VA_ARGS__})
 
-std::pair<AST, std::vector<Error>> parse(std::string_view source) {
+static std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     std::istringstream iss{std::string(source)};
     return Parser::parse(iss);
 }
