@@ -26,6 +26,7 @@ void ChildVisitor::visit(FnReturn& node) {
 }
 
 void ChildVisitor::visit(PathSeg& node) {
+    add(node.name);
     addVec(node.generics);
 }
 
@@ -108,9 +109,11 @@ void ChildVisitor::visit(PostfixExpr& node) {
 
 void ChildVisitor::visit(MemberAccessExpr& node) {
     add(node.base);
+    add(node.member);
 }
 
 void ChildVisitor::visit(CallArg& node) {
+    add(node.name);
     add(node.expr);
 }
 
@@ -122,6 +125,18 @@ void ChildVisitor::visit(CallExpr& node) {
 void ChildVisitor::visit(SubscriptExpr& node) {
     add(node.base);
     addVec(node.indices);
+}
+
+void ChildVisitor::visit(NameExpr& node) {
+    add(node.name);
+}
+
+void ChildVisitor::visit(GlobalAccessExpr& node) {
+    add(node.name);
+}
+
+void ChildVisitor::visit(UpvalueExpr& node) {
+    add(node.name);
 }
 
 void ChildVisitor::visit(TupleExpr& node) {
@@ -144,6 +159,8 @@ void ChildVisitor::visit(VarDefStmt& node) {
 }
 
 void ChildVisitor::visit(FnDefStmt& node) {
+    add(node.name);
+    addVec(node.generics);
     addVec(node.params);
     add(node.captureClause);
     addVec(node.returns);
@@ -152,11 +169,14 @@ void ChildVisitor::visit(FnDefStmt& node) {
 }
 
 void ChildVisitor::visit(TypeDefStmt& node) {
+    add(node.name);
+    addVec(node.generics);
     addVec(node.bases);
     add(node.body);
 }
 
 void ChildVisitor::visit(CaseDefStmt& node) {
+    add(node.name);
     add(node.val);
 }
 
@@ -202,6 +222,7 @@ void ChildVisitor::visit(ExportStmt& node) {
 
 void ChildVisitor::visit(ImportItem& node) {
     add(node.path);
+    add(node.as);
 }
 
 void ChildVisitor::visit(ImportStmt& node) {
@@ -217,6 +238,10 @@ void ChildVisitor::visit(UndefineStmt& node) {
     add(node.path);
 }
 
+void ChildVisitor::visit(BindingPattern& node) {
+    add(node.name);
+}
+
 void ChildVisitor::visit(TuplePattern& node) {
     addVec(node.patterns);
 }
@@ -227,6 +252,7 @@ void ChildVisitor::visit(CollectionPattern& node) {
 }
 
 void ChildVisitor::visit(RecordPatternField& node) {
+    add(node.label);
     add(node.pattern);
 }
 

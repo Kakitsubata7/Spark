@@ -38,6 +38,9 @@ public:
     void visit(CallArg& node) override;
     void visit(CallExpr& node) override;
     void visit(SubscriptExpr& node) override;
+    void visit(NameExpr& node) override;
+    void visit(GlobalAccessExpr& node) override;
+    void visit(UpvalueExpr& node) override;
     void visit(TupleExpr& node) override;
     void visit(CollectionExpr& node) override;
     void visit(TypeofExpr& node) override;
@@ -59,6 +62,7 @@ public:
     void visit(ImportAllStmt& node) override;
     void visit(UndefineStmt& node) override;
 
+    void visit(BindingPattern& node) override;
     void visit(TuplePattern& node) override;
     void visit(CollectionPattern& node) override;
     void visit(RecordPatternField& node) override;
