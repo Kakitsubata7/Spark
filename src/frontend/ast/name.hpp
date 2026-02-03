@@ -38,20 +38,33 @@ private:
     explicit NameValue(ValueT value) noexcept : _value(std::move(value)) { }
 
 public:
+    [[nodiscard]]
     static NameValue identifier(std::string name) noexcept { return NameValue(Identifier{.name = std::move(name)}); }
+    [[nodiscard]]
     static NameValue discard() noexcept { return NameValue(Discard{}); }
+    [[nodiscard]]
     static NameValue self() noexcept { return NameValue(Self{}); }
+    [[nodiscard]]
     static NameValue constructor() noexcept { return NameValue(Constructor{}); }
+    [[nodiscard]]
     static NameValue destructor() noexcept { return NameValue(Destructor{}); }
+    [[nodiscard]]
     static NameValue op(OverOpKind op) noexcept { return NameValue(Operator{.op = op}); }
 
+    [[nodiscard]]
     bool isIdentifier() const noexcept { return std::holds_alternative<Identifier>(_value); }
+    [[nodiscard]]
     bool isDiscard() const noexcept { return std::holds_alternative<Discard>(_value); }
+    [[nodiscard]]
     bool isSelf() const noexcept { return std::holds_alternative<Self>(_value); }
+    [[nodiscard]]
     bool isConstructor() const noexcept { return std::holds_alternative<Constructor>(_value); }
+    [[nodiscard]]
     bool isDestructor() const noexcept { return std::holds_alternative<Destructor>(_value); }
+    [[nodiscard]]
     bool isOp() const noexcept { return std::holds_alternative<Operator>(_value); }
 
+    [[nodiscard]]
     std::string_view str() const noexcept;
 
     bool operator==(const NameValue& rhs) const noexcept {
@@ -94,6 +107,7 @@ private:
 public:
     explicit InternedNameValue(const NameValue* ptr) noexcept : _ptr(ptr) { }
 
+    [[nodiscard]]
     const NameValue& value() const noexcept { return *_ptr; }
 
     friend bool operator==(InternedNameValue lhs, InternedNameValue rhs) noexcept {
@@ -103,6 +117,8 @@ public:
     friend bool operator!=(InternedNameValue lhs, InternedNameValue rhs) noexcept {
         return !(lhs == rhs);
     }
+
+    friend std::hash<InternedNameValue>;
 };
 
 class NameValueInterner {
@@ -126,3 +142,10 @@ public:
 };
 
 } // Spark::FrontEnd
+
+template <>
+struct std::hash<Spark::FrontEnd::InternedNameValue> {
+    size_t operator()(const Spark::FrontEnd::InternedNameValue& n) const noexcept {
+        return std::hash<const Spark::FrontEnd::NameValue*>{}(n._ptr);
+    }
+};
