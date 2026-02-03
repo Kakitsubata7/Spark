@@ -68,6 +68,9 @@ add_library(sparklib
         src/frontend/ast.hpp
         src/frontend/ast/child_visitor.cpp
         src/frontend/ast/child_visitor.hpp
+        src/frontend/ast/literal.hpp
+        src/frontend/ast/name.cpp
+        src/frontend/ast/name.hpp
         src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
         src/frontend/ast/node_visitor.cpp
@@ -83,9 +86,6 @@ add_library(sparklib
         src/frontend/lexer/token_type.cpp
         src/frontend/lexer/token_type.hpp
         src/frontend/lexer/token_value.hpp
-
-        src/frontend/literal.hpp
-        src/frontend/name.hpp
 
         src/frontend/parser.cpp
         src/frontend/parser.hpp
