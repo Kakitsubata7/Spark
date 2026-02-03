@@ -10,6 +10,8 @@ void NodeVisitor::visit(Expr& node) { visit(static_cast<Node&>(node)); }
 void NodeVisitor::visit(Stmt& node) { visit(static_cast<Node&>(node)); }
 void NodeVisitor::visit(Pattern& node) { visit(static_cast<Node&>(node)); }
 
+void NodeVisitor::visit(Name& node) { visit(static_cast<Node&>(node)); }
+
 void NodeVisitor::visit(VarModifier& node) { visit(static_cast<Node&>(node)); }
 
 void NodeVisitor::visit(FnParam& node) { visit(static_cast<Node&>(node)); }

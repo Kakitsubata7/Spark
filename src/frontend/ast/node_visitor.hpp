@@ -8,6 +8,8 @@ struct Expr;
 struct Stmt;
 struct Pattern;
 
+struct Name;
+
 struct VarModifier;
 
 struct FnParam;
@@ -79,6 +81,8 @@ public:
     virtual void visit(Expr& node); 
     virtual void visit(Stmt& node);
     virtual void visit(Pattern& node);
+
+    virtual void visit(Name& node);
 
     virtual void visit(VarModifier& node);
 
