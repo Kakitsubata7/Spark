@@ -29,6 +29,27 @@ public:
                std::string message) noexcept
         : filename(std::move(filename)), start(start), end(end), severity(severity), message(std::move(message)) { }
 
+    static Diagnostic note(std::optional<std::string> filename,
+                           Location start,
+                           Location end,
+                           std::string message) noexcept {
+        return Diagnostic{std::move(filename), start, end, Severity::Note, std::move(message)};
+    }
+
+    static Diagnostic warning(std::optional<std::string> filename,
+                              Location start,
+                              Location end,
+                              std::string message) noexcept {
+        return Diagnostic{std::move(filename), start, end, Severity::Warning, std::move(message)};
+    }
+
+    static Diagnostic error(std::optional<std::string> filename,
+                            Location start,
+                            Location end,
+                            std::string message) noexcept {
+        return Diagnostic{std::move(filename), start, end, Severity::Error, std::move(message)};
+    }
+
     void render(std::ostream& os, const FrontEnd::SourceBuffer& srcbuf) const;
 };
 
