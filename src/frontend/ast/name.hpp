@@ -110,6 +110,9 @@ public:
     [[nodiscard]]
     const NameValue& value() const noexcept { return *_ptr; }
 
+    [[nodiscard]]
+    std::string_view str() const noexcept { return _ptr->str(); }
+
     friend bool operator==(InternedNameValue lhs, InternedNameValue rhs) noexcept {
         return lhs._ptr == rhs._ptr;
     }
