@@ -208,7 +208,7 @@ bool PostfixExpr::equalsImpl(const Node& rhs) const noexcept {
 
 bool MemberAccessExpr::equalsImpl(const Node& rhs) const noexcept {
     const MemberAccessExpr& o = ASSERT_NODE(rhs, MemberAccessExpr);
-    return ptrEq(base, o.base) && member == o.member;
+    return ptrEq(base, o.base) && ptrEq(member, o.member);
 }
 
 bool CallArg::equalsImpl(const Node& rhs) const noexcept {
@@ -272,7 +272,7 @@ bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
 bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const FnDefStmt& o = ASSERT_NODE(rhs, FnDefStmt);
     return isImmutable == o.isImmutable && ptrEq(name, o.name) &&
-           generics == o.generics && ptrVecEq(params, o.params) &&
+           ptrVecEq(generics, o.generics) && ptrVecEq(params, o.params) &&
            ptrEq(captureClause, o.captureClause) &&
            ptrVecEq(returns, o.returns) && isThrowing == o.isThrowing &&
            ptrEq(throwExpr, o.throwExpr) && ptrEq(body, o.body);
@@ -281,7 +281,7 @@ bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
 bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const TypeDefStmt& o = ASSERT_NODE(rhs, TypeDefStmt);
     return kind == o.kind && isImmutable == o.isImmutable && ptrEq(name, o.name) &&
-           generics == o.generics && ptrVecEq(bases, o.bases) &&
+           ptrVecEq(generics, o.generics) && ptrVecEq(bases, o.bases) &&
            ptrEq(body, o.body);
 }
 
@@ -344,7 +344,7 @@ bool ExportStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool ImportItem::equalsImpl(const Node& rhs) const noexcept {
     const ImportItem& o = ASSERT_NODE(rhs, ImportItem);
-    return ptrEq(path, o.path) && as == o.as;
+    return ptrEq(path, o.path) && ptrEq(as, o.as);
 }
 
 bool ImportStmt::equalsImpl(const Node& rhs) const noexcept {
@@ -387,7 +387,7 @@ bool CollectionPattern::equalsImpl(const Node& rhs) const noexcept {
 
 bool RecordPatternField::equalsImpl(const Node& rhs) const noexcept {
     const RecordPatternField& o = ASSERT_NODE(rhs, RecordPatternField);
-    return label == o.label && ptrEq(pattern, o.pattern);
+    return ptrEq(label, o.label) && ptrEq(pattern, o.pattern);
 }
 
 bool RecordPattern::equalsImpl(const Node& rhs) const noexcept {
