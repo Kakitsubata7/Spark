@@ -5,6 +5,9 @@
 namespace Spark::FrontEnd {
 
 Symbol* SymbolTable::define(const Name* node, Symbol symbol) {
+    if (hasSymbol(node)) {
+        throw std::runtime_error("symbol already defined");
+    }
     _symbols[node] = std::make_unique<Symbol>(std::move(symbol));
     return _symbols[node].get();
 }

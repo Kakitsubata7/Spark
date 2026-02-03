@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <utility>
 
 #include "frontend/ast/node.hpp"
 #include "symbol.hpp"
