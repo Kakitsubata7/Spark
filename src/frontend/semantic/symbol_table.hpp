@@ -10,14 +10,14 @@ namespace Spark::FrontEnd {
 
 class SymbolTable {
 private:
-    std::unordered_map<const Node*, std::unique_ptr<Symbol>> _symbols;
+    std::unordered_map<const Name*, std::unique_ptr<Symbol>> _symbols;
 
 public:
     SymbolTable() = default;
 
-    void define(const Node* node, Symbol symbol);
-    bool hasSymbol(const Node* node) const noexcept;
-    const Symbol& symbolOf(const Node* node) const;
+    void define(const Name* node, Symbol symbol);
+    bool hasSymbol(const Name* node) const noexcept;
+    const Symbol& symbolOf(const Name* node) const;
 };
 
 } // Spark::FrontEnd
