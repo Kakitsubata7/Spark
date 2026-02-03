@@ -16,11 +16,12 @@ private:
 public:
     SymbolTable() = default;
 
-    void define(const Name* node, Symbol symbol);
+    Symbol* define(const Name* node, Symbol symbol);
 
     bool hasSymbol(const Name* node) const noexcept;
 
-    const Symbol& symbolOf(const Name* node) const;
+    Symbol* symbolOf(const Name* node);
+    const Symbol* symbolOf(const Name* node) const;
 };
 
 } // Spark::FrontEnd

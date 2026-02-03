@@ -4,19 +4,27 @@
 
 namespace Spark::FrontEnd {
 
-void SymbolTable::define(const Name* node, Symbol symbol) {
+Symbol* SymbolTable::define(const Name* node, Symbol symbol) {
     _symbols[node] = std::make_unique<Symbol>(std::move(symbol));
+    return _symbols[node].get();
 }
 
 bool SymbolTable::hasSymbol(const Name* node) const noexcept {
     return _symbols.find(node) != _symbols.end();
 }
 
-const Symbol& SymbolTable::symbolOf(const Name* node) const {
+Symbol* SymbolTable::symbolOf(const Name* node) {
     if (!hasSymbol(node)) {
         throw std::runtime_error("symbol not found");
     }
-    return *_symbols.at(node);
+    return _symbols.at(node).get();
+}
+
+const Symbol* SymbolTable::symbolOf(const Name* node) const {
+    if (!hasSymbol(node)) {
+        throw std::runtime_error("symbol not found");
+    }
+    return _symbols.at(node).get();
 }
 
 } // Spark::FrontEnd
