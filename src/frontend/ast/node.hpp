@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include <cstdint>
-#include <optional>
-#include <string>
+#include <cstddef>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -39,6 +37,12 @@ struct Node {
         return dynamic_cast<const T*>(this) != nullptr;
     }
 
+    template <typename T>
+    [[nodiscard]]
+    T* as() {
+        return dynamic_cast<T*>(this);
+    }
+
     void getChildren(std::vector<Node*>& out);
 
     [[nodiscard]]
@@ -68,6 +72,18 @@ struct Pattern : Node {
 };
 
 
+
+struct Name final : Node {
+    NameId id;
+
+    Name(Location start, Location end, NameId id) noexcept : Node(start, end), id(id) { }
+
+    void accept(NodeVisitor& v) override { v.visit(*this); }
+
+protected:
+    [[nodiscard]]
+    bool equalsImpl(const Node& rhs) const noexcept override;
+};
 
 struct VarModifier final : Node {
     enum class VarKind {
@@ -157,11 +173,11 @@ protected:
 };
 
 struct PathSeg final : Node {
-    Name name;
+    Name* name;
     std::vector<Expr*> generics;
 
-    PathSeg(Location start, Location end, Name name, std::vector<Expr*> generics = {}) noexcept
-        : Node(start, end), name(std::move(name)), generics(std::move(generics)) { }
+    PathSeg(Location start, Location end, Name* name, std::vector<Expr*> generics = {}) noexcept
+        : Node(start, end), name(name), generics(std::move(generics)) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -420,9 +436,9 @@ protected:
 
 struct MemberAccessExpr final : Expr {
     Expr* base;
-    Name member;
+    Name* member;
 
-    MemberAccessExpr(Location start, Location end, Expr* base, Name member) noexcept
+    MemberAccessExpr(Location start, Location end, Expr* base, Name* member) noexcept
         : Expr(start, end), base(base), member(member) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -433,13 +449,13 @@ protected:
 };
 
 struct CallArg final : Node {
-    std::optional<Name> name;
+    /* nullable */ Name* name;
     Expr* expr;
 
-    CallArg(Location start, Location end, std::optional<Name> name, Expr* expr) noexcept
-        : Node(start, end), name(std::move(name)), expr(expr) { }
+    CallArg(Location start, Location end, Name* name, Expr* expr) noexcept
+        : Node(start, end), name(name), expr(expr) { }
     CallArg(Location start, Location end, Expr* expr) noexcept
-        : CallArg(start, end, std::nullopt, expr) { }
+        : CallArg(start, end, nullptr, expr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -490,10 +506,10 @@ protected:
 };
 
 struct NameExpr final : Expr {
-    Name name;
+    Name* name;
 
-    NameExpr(Location start, Location end, Name name) noexcept
-            : Expr(start, end), name(std::move(name)) { }
+    NameExpr(Location start, Location end, Name* name) noexcept
+            : Expr(start, end), name(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -503,10 +519,10 @@ protected:
 };
 
 struct GlobalAccessExpr final : Expr {
-    Name name;
+    Name* name;
 
-    GlobalAccessExpr(Location start, Location end, Name name) noexcept
-        : Expr(start, end), name(std::move(name)) { }
+    GlobalAccessExpr(Location start, Location end, Name* name) noexcept
+        : Expr(start, end), name(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -516,11 +532,11 @@ protected:
 };
 
 struct UpvalueExpr final : Expr {
-    uint64_t level;
-    Name name;
+    size_t level;
+    Name* name;
 
-    UpvalueExpr(Location start, Location end, uint64_t level, Name name) noexcept
-        : Expr(start, end), level(level), name(std::move(name)) { }
+    UpvalueExpr(Location start, Location end, size_t level, Name* name) noexcept
+        : Expr(start, end), level(level), name(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -589,8 +605,8 @@ protected:
 
 struct FnDefStmt final : Stmt {
     bool isImmutable;
-    Name name;
-    std::vector<Name> generics;
+    Name* name;
+    std::vector<Name*> generics;
     std::vector<FnParam*> params;
     /* nullable */ FnCaptureClause* captureClause;
     std::vector<FnReturn*> returns;
@@ -598,12 +614,12 @@ struct FnDefStmt final : Stmt {
     /* nullable */ Expr* throwExpr;
     Expr* body;
 
-    FnDefStmt(Location start, Location end, bool isImmutable, Name name,
-              std::vector<Name> generics,
+    FnDefStmt(Location start, Location end, bool isImmutable, Name* name,
+              std::vector<Name*> generics,
               std::vector<FnParam*> params, FnCaptureClause* captureClause,
               std::vector<FnReturn*> returns, bool isThrowing, Expr* throwExpr,
               Expr* body) noexcept
-        : Stmt(start, end), isImmutable(isImmutable), name(std::move(name)),
+        : Stmt(start, end), isImmutable(isImmutable), name(name),
           generics(std::move(generics)), params(std::move(params)),
           captureClause(captureClause), returns(std::move(returns)),
           isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
@@ -622,15 +638,15 @@ struct TypeDefStmt final : Stmt {
 
     TypeKind kind;
     bool isImmutable;
-    Name name;
-    std::vector<Name> generics;
+    Name* name;
+    std::vector<Name*> generics;
     std::vector<Expr*> bases;
     BlockExpr* body;
 
     TypeDefStmt(Location start, Location end,
-                TypeKind kind, bool isImmutable, Name name,
-                std::vector<Name> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
-        : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(std::move(name)),
+                TypeKind kind, bool isImmutable, Name* name,
+                std::vector<Name*> generics, std::vector<Expr*> bases, BlockExpr* body) noexcept
+        : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(name),
           generics(std::move(generics)), bases(std::move(bases)), body(body) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
@@ -641,13 +657,13 @@ protected:
 };
 
 struct CaseDefStmt final : Stmt {
-    Name name;
+    Name* name;
     /* nullable */ Expr* val;
 
-    CaseDefStmt(Location start, Location end, Name name, Expr* val) noexcept
-        : Stmt(start, end), name(std::move(name)), val(val) { }
-    CaseDefStmt(Location start, Location end, Name name) noexcept
-        : CaseDefStmt(start, end, std::move(name), nullptr) { }
+    CaseDefStmt(Location start, Location end, Name* name, Expr* val) noexcept
+        : Stmt(start, end), name(name), val(val) { }
+    CaseDefStmt(Location start, Location end, Name* name) noexcept
+        : CaseDefStmt(start, end, name, nullptr) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -800,10 +816,10 @@ protected:
 
 struct ImportItem final : Node {
     Path* path;
-    std::optional<Name> as;
+    /* nullable */ Name* as;
 
-    ImportItem(Location start, Location end, Path* path, std::optional<Name> as) noexcept
-        : Node(start, end), path(path), as(std::move(as)) { }
+    ImportItem(Location start, Location end, Path* path, Name* as) noexcept
+        : Node(start, end), path(path), as(as) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -868,10 +884,10 @@ protected:
 };
 
 struct BindingPattern final : Pattern {
-    Name name;
+    Name* name;
 
-    BindingPattern(Location start, Location end, Name name) noexcept
-        : Pattern(start, end), name(std::move(name)) { }
+    BindingPattern(Location start, Location end, Name* name) noexcept
+        : Pattern(start, end), name(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 
@@ -910,13 +926,13 @@ protected:
 };
 
 struct RecordPatternField final : Node {
-    std::optional<Name> label;
+    /* nullable */ Name* label;
     Pattern* pattern;
 
-    RecordPatternField(Location start, Location end, Name label, Pattern* pattern) noexcept
-        : Node(start, end), label(std::move(label)), pattern(pattern) { }
+    RecordPatternField(Location start, Location end, Name* label, Pattern* pattern) noexcept
+        : Node(start, end), label(label), pattern(pattern) { }
     RecordPatternField(Location start, Location end, Pattern* pattern) noexcept
-        : Node(start, end), label(std::nullopt), pattern(pattern) { }
+        : Node(start, end), label(nullptr), pattern(pattern) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

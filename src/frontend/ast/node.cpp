@@ -83,6 +83,13 @@ std::vector<Node*> Node::getChildren() {
     return children;
 }
 
+
+
+bool Name::equalsImpl(const Node& rhs) const noexcept {
+    const Name& o = ASSERT_NODE(rhs, Name);
+    return id == o.id;
+}
+
 bool VarModifier::equalsImpl(const Node& rhs) const noexcept {
     const VarModifier& o = ASSERT_NODE(rhs, VarModifier);
     return kind == o.kind && isImmutable == o.isImmutable && optionality == o.optionality;
@@ -112,7 +119,7 @@ bool FnReturn::equalsImpl(const Node& rhs) const noexcept {
 
 bool PathSeg::equalsImpl(const Node& rhs) const noexcept {
     const PathSeg& o = ASSERT_NODE(rhs, PathSeg);
-    return name == o.name && ptrVecEq(generics, o.generics);
+    return ptrEq(name, o.name) && ptrVecEq(generics, o.generics);
 }
 
 bool Path::equalsImpl(const Node& rhs) const noexcept {
@@ -206,7 +213,7 @@ bool MemberAccessExpr::equalsImpl(const Node& rhs) const noexcept {
 
 bool CallArg::equalsImpl(const Node& rhs) const noexcept {
     const CallArg& o = ASSERT_NODE(rhs, CallArg);
-    return name == o.name && ptrEq(expr, o.expr);
+    return ptrEq(name, o.name) && ptrEq(expr, o.expr);
 }
 
 bool CallExpr::equalsImpl(const Node& rhs) const noexcept {
@@ -226,17 +233,17 @@ bool LiteralExpr::equalsImpl(const Node& rhs) const noexcept {
 
 bool NameExpr::equalsImpl(const Node& rhs) const noexcept {
     const NameExpr& o = ASSERT_NODE(rhs, NameExpr);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool GlobalAccessExpr::equalsImpl(const Node& rhs) const noexcept {
     const GlobalAccessExpr& o = ASSERT_NODE(rhs, GlobalAccessExpr);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool UpvalueExpr::equalsImpl(const Node& rhs) const noexcept {
     const UpvalueExpr& o = ASSERT_NODE(rhs, UpvalueExpr);
-    return level == o.level && name == o.name;
+    return level == o.level && ptrEq(name, o.name);
 }
 
 bool TupleExpr::equalsImpl(const Node& rhs) const noexcept {
@@ -264,7 +271,7 @@ bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const FnDefStmt& o = ASSERT_NODE(rhs, FnDefStmt);
-    return isImmutable == o.isImmutable && name == o.name &&
+    return isImmutable == o.isImmutable && ptrEq(name, o.name) &&
            generics == o.generics && ptrVecEq(params, o.params) &&
            ptrEq(captureClause, o.captureClause) &&
            ptrVecEq(returns, o.returns) && isThrowing == o.isThrowing &&
@@ -273,14 +280,14 @@ bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const TypeDefStmt& o = ASSERT_NODE(rhs, TypeDefStmt);
-    return kind == o.kind && isImmutable == o.isImmutable && name == o.name &&
+    return kind == o.kind && isImmutable == o.isImmutable && ptrEq(name, o.name) &&
            generics == o.generics && ptrVecEq(bases, o.bases) &&
            ptrEq(body, o.body);
 }
 
 bool CaseDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const CaseDefStmt& o = ASSERT_NODE(rhs, CaseDefStmt);
-    return name == o.name && ptrEq(val, o.val);
+    return ptrEq(name, o.name) && ptrEq(val, o.val);
 }
 
 bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
@@ -364,7 +371,7 @@ bool LiteralPattern::equalsImpl(const Node& rhs) const noexcept {
 
 bool BindingPattern::equalsImpl(const Node& rhs) const noexcept {
     const BindingPattern& o = ASSERT_NODE(rhs, BindingPattern);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool TuplePattern::equalsImpl(const Node& rhs) const noexcept {
