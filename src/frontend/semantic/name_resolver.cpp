@@ -31,18 +31,30 @@ void NameResolver::ResolveVisitor::visit(Node& node) {
 }
 
 void NameResolver::ResolveVisitor::visit(Name& name) {
-    if (lookup(name.name) == nullptr) {
+    Symbol* s = lookup(name.name);
+    if (s == nullptr) {
         diagnostic(cannotFindError(_filename, name.start, name.end, name.name.str()));
+        return;
     }
+    _symTable.set(&name, s);
 }
 
 void NameResolver::ResolveVisitor::visit(VarDefStmt& vardef) {
+    // Resolve pattern
     PatternBinder binder{currentEnv(), _symTable, isReassignable(vardef.mod), isReference(vardef.mod)};
     vardef.pattern->accept(binder);
-
-    // Append diagnostics from binder
     result.diagnostics.insert(result.diagnostics.end(), binder.diagnostics.begin(),
-        binder.diagnostics.end());
+        binder.diagnostics.end()); // Append diagnostics
+
+    // Resolve type
+    if (vardef.type != nullptr) {
+        vardef.type->accept(*this);
+    }
+
+    // Resolve rhs
+    if (vardef.rhs != nullptr) {
+        vardef.rhs->accept(*this);
+    }
 }
 
 void NameResolver::ResolveVisitor::visit(FnDefStmt& fndef) {
