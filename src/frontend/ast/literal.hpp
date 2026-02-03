@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <string>
+#include <variant>
+
 #include "utils/bigint.hpp"
 #include "utils/bigreal.hpp"
 
