@@ -15,12 +15,15 @@ private:
     std::unordered_map<InternedNameValue, Symbol*> _map;
 
 public:
-    void define(InternedNameValue name, Symbol* symbol) {
-        _map[name] = symbol;
+    Symbol* get(InternedNameValue name) const noexcept {
+        if (_map.find(name) == _map.end()) {
+            return nullptr;
+        }
+        return _map.at(name);
     }
 
-    Symbol* get(InternedNameValue name) const {
-        return _map.at(name);
+    void set(InternedNameValue name, Symbol* symbol) {
+        _map[name] = symbol;
     }
 };
 
