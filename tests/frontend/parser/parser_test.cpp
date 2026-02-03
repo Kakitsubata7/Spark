@@ -55,19 +55,18 @@ using namespace Spark::FrontEnd;
 #define NIL MAKE(LiteralExpr, NilLiteral())
 #define VOID MAKE(LiteralExpr, VoidLiteral())
 
-#define IDENT(s) MAKE(NameExpr, IdentifierName(s))
+#define IDENT(s) MAKE(NameExpr, NAME(s))
 
 #define COLLECTION(...) MAKE(CollectionExpr, std::vector<Expr*>{__VA_ARGS__})
 
-#define BIND_PAT(name) MAKE(BindingPattern, NAME(name))
+#define BIND_PAT(name) MAKE(BindingPattern, name)
 #define TUP_PAT(...) MAKE(TuplePattern, std::vector<Pattern*>{__VA_ARGS__})
 
-Name NAME(const char* s) { return Name(IdentifierName(s)); }
-Name NAME(Name name) { return Name(std::move(name)); }
-#define DISCARD DiscardName()
-#define CONSTRUCTOR ConstructorName()
-#define DESTRUCTOR DestructorName()
-#define SELF SelfName()
+#define NAME(s) MAKE(Name, ast.intern(NameValue::identifier(s)))
+#define DISCARD MAKE(Name, ast.intern(NameValue::discard()))
+#define CONSTRUCTOR MAKE(Name, ast.intern(NameValue::constructor()))
+#define DESTRUCTOR MAKE(Name, ast.intern(NameValue::destructor()))
+#define SELF MAKE(Name, ast.intern(NameValue::self()))
 
 #define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
 #define PATH_SEG(name, ...) MAKE(PathSeg, name, std::vector<Expr*>{__VA_ARGS__})
@@ -77,7 +76,7 @@ std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return Parser::parse(iss);
 }
 
-#define PARSE_EXPECT(source, expected)           \
+#define PARSE_EXPECT(source, expected)                   \
 {                                                        \
     auto [actualAST, errors] = parse(source);            \
     EXPECT_TRUE(errors.empty());                         \
@@ -589,7 +588,7 @@ TEST_F(ParserTest, FnDefTest1) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>(),
                 /* captureClause */ nullptr,
                 /* returns */ std::vector<FnReturn*>(),
@@ -607,7 +606,7 @@ TEST_F(ParserTest, FnDefTest2) {
             MAKE(FnDefStmt,
                 /* isImmutable */ true,
                 NAME("foo"),
-                /* generics */ std::vector<Name>{ NAME("T") },
+                /* generics */ std::vector<Name*>{ NAME("T") },
                 /* params */ std::vector<FnParam*>(),
                 /* captureClause */ nullptr,
                 /* returns */ std::vector<FnReturn*>(),
@@ -625,7 +624,7 @@ TEST_F(ParserTest, FnDefTest3) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr),
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("y")), nullptr, nullptr)
@@ -646,7 +645,7 @@ TEST_F(ParserTest, FnDefTest4) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>(),
                 MAKE(FnCaptureClause,
                     std::vector<FnCapture*>(), false, nullptr
@@ -666,7 +665,7 @@ TEST_F(ParserTest, FnDefTest5) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>(),
                 /* captureClause */ nullptr,
                 std::vector<FnReturn*>{
@@ -686,7 +685,7 @@ TEST_F(ParserTest, FnDefTest6) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("x")), nullptr, nullptr)
                 },
@@ -706,7 +705,7 @@ TEST_F(ParserTest, FnDefTest7) {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("foo"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>(),
                 /* captureClause */ nullptr,
                 /* returns */ std::vector<FnReturn*>(),
@@ -725,7 +724,7 @@ TEST_F(ParserTest, TypeDefTest1) {
                 TypeDefStmt::TypeKind::Struct,
                 /* isImmutable */ false,
                 NAME("Foo"),
-                /* template */ std::vector<Name>(),
+                /* template */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>(),
                 BLOCK()
             )
@@ -740,7 +739,7 @@ TEST_F(ParserTest, TypeDefTest2) {
                 TypeDefStmt::TypeKind::Class,
                 /* isImmutable */ true,
                 NAME("Foo"),
-                /* template */ std::vector<Name>(),
+                /* template */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>(),
                 BLOCK()
             )
@@ -755,7 +754,7 @@ TEST_F(ParserTest, TypeDefTest3) {
                 TypeDefStmt::TypeKind::Struct,
                 /* isImmutable */ false,
                 NAME("Foo"),
-                /* template */ std::vector<Name>(),
+                /* template */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>{
                     IDENT("Bar"),
                     IDENT("Baz")
@@ -773,7 +772,7 @@ TEST_F(ParserTest, TypeDefTest4) {
                 TypeDefStmt::TypeKind::EnumClass,
                 /* isImmutable */ false,
                 NAME("Color"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>(),
                 BLOCK()
             )
@@ -788,7 +787,7 @@ TEST_F(ParserTest, TypeDefTest5) {
                 TypeDefStmt::TypeKind::Struct,
                 /* isImmutable */ false,
                 NAME("Foo"),
-                std::vector<Name>{
+                std::vector<Name*>{
                     NAME("T"),
                     NAME("U")
                 },
@@ -812,7 +811,7 @@ enum Color {
                 TypeDefStmt::TypeKind::Enum,
                 /* isImmutable */ false,
                 NAME("Color"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>(),
                 BLOCK(
                     MAKE(CaseDefStmt, NAME("Red")),
@@ -839,7 +838,7 @@ enum OpKind : UInt32 {
                 TypeDefStmt::TypeKind::Enum,
                 /* isImmutable */ false,
                 NAME("OpKind"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* bases */ std::vector<Expr*>{
                     IDENT("UInt32")
                 },
@@ -1073,7 +1072,7 @@ fn findFirstEven(nums: Array[Int]) -> Int? {
             MAKE(FnDefStmt,
                 /* isImmutable */ false,
                 NAME("findFirstEven"),
-                /* generics */ std::vector<Name>(),
+                /* generics */ std::vector<Name*>(),
                 /* params */ std::vector<FnParam*>{
                     MAKE(FnParam,
                         /* mod */ nullptr,
@@ -1201,7 +1200,7 @@ export fn^ max[T](a: T, b: T) -> T throw Error {
                 MAKE(FnDefStmt,
                     /* isImmutable */ true,
                     NAME("max"),
-                    /* generics */ std::vector<Name>{
+                    /* generics */ std::vector<Name*>{
                         NAME("T")
                     },
                     /* params */ std::vector<FnParam*>{
@@ -1234,7 +1233,7 @@ export class Box[T] : Container { }
                     TypeDefStmt::TypeKind::Class,
                     /* isImmutable */ false,
                     NAME("Box"),
-                    /* generics */ std::vector<Name>{
+                    /* generics */ std::vector<Name*>{
                         NAME("T")
                     },
                     /* bases */ std::vector<Expr*>{
@@ -1264,7 +1263,7 @@ export class Box[T] : Container {
                     TypeDefStmt::TypeKind::Class,
                     /* isImmutable */ false,
                     NAME("Box"),
-                    /* generics */ std::vector<Name>{
+                    /* generics */ std::vector<Name*>{
                         NAME("T")
                     },
                     /* bases */ std::vector<Expr*>{
@@ -1280,7 +1279,7 @@ export class Box[T] : Container {
                         MAKE(FnDefStmt,
                             /* isImmutable */ false,
                             NAME("get"),
-                            /* generics */ std::vector<Name>(),
+                            /* generics */ std::vector<Name*>(),
                             /* params */ std::vector<FnParam*>(),
                             /* captureClause */ nullptr,
                             /* returns */ std::vector<FnReturn*>{
@@ -1307,7 +1306,7 @@ TEST_F(ParserTest, ImportStmtTest1) {
                 std::vector<ImportItem*>{
                     MAKE(ImportItem,
                         PATH(PATH_SEG(NAME("Bar"))),
-                        std::nullopt
+                        nullptr
                     )
                 }
             )
@@ -1323,7 +1322,7 @@ TEST_F(ParserTest, ImportStmtTest2) {
                 std::vector<ImportItem*>{
                     MAKE(ImportItem,
                         PATH(PATH_SEG(NAME("Bar"))),
-                        std::nullopt
+                        nullptr
                     ),
                     MAKE(ImportItem,
                         PATH(PATH_SEG(NAME("Baz"))),
@@ -1352,7 +1351,7 @@ TEST_F(ParserTest, ImportStmtTest3) {
                     ),
                     MAKE(ImportItem,
                         PATH(PATH_SEG(NAME("Qux"))),
-                        std::nullopt
+                        nullptr
                     )
                 }
             )
@@ -1446,7 +1445,7 @@ fn fact(n: Int) -> Int {
             MAKE(FnDefStmt,
                 false,
                 NAME("fact"),
-                std::vector<Name>(),
+                std::vector<Name*>(),
                 std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("n")), IDENT("Int"), nullptr)
                 },
@@ -1495,7 +1494,7 @@ fn fib(n: Int) -> Int {
             MAKE(FnDefStmt,
                 false,
                 NAME("fib"),
-                std::vector<Name>(),
+                std::vector<Name*>(),
                 std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("n")), IDENT("Int"), nullptr)
                 },
@@ -1551,7 +1550,7 @@ fn firstEven(nums: Array[Int]) -> Int? {
             MAKE(FnDefStmt,
                 false,
                 NAME("firstEven"),
-                std::vector<Name>(),
+                std::vector<Name*>(),
                 std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("nums")),
                          SUBSCRIPT(IDENT("Array"), IDENT("Int")), nullptr)
@@ -1604,7 +1603,7 @@ fn makeAdder(base: Int) -> Int -> Int {
             MAKE(FnDefStmt,
                 false,
                 NAME("makeAdder"),
-                std::vector<Name>(),
+                std::vector<Name*>(),
                 std::vector<FnParam*>{
                     MAKE(FnParam, nullptr, BIND_PAT(NAME("base")), IDENT("Int"), nullptr)
                 },
@@ -1663,7 +1662,7 @@ struct Counter {
                 TypeDefStmt::TypeKind::Struct,
                 false,
                 NAME("Counter"),
-                std::vector<Name>(),
+                std::vector<Name*>(),
                 std::vector<Expr*>(),
                 BLOCK(
                     VARDEF(
@@ -1675,7 +1674,7 @@ struct Counter {
                     MAKE(FnDefStmt,
                         false,
                         NAME("inc"),
-                        std::vector<Name>(),
+                        std::vector<Name*>(),
                         std::vector<FnParam*>(),
                         nullptr,
                         std::vector<FnReturn*>{
