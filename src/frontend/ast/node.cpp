@@ -57,14 +57,6 @@ bool ptrVecEq(const std::vector<T*>& lhs, const std::vector<T*>& rhs) {
 
 namespace Spark::FrontEnd {
 
-bool Node::operator==(const Node& rhs) const noexcept {
-    return equalsStructurally(rhs) && start == rhs.start && end == rhs.end;
-}
-
-bool Node::operator!=(const Node& rhs) const noexcept {
-    return !(*this == rhs);
-}
-
 bool Node::equalsStructurally(const Node& rhs) const noexcept {
     if (this == &rhs) {
         return true;

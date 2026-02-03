@@ -25,9 +25,6 @@ struct Node {
 
     virtual void accept(NodeVisitor& v) = 0;
 
-    bool operator==(const Node& rhs) const noexcept;
-    bool operator!=(const Node& rhs) const noexcept;
-
     [[nodiscard]]
     bool equalsStructurally(const Node& rhs) const noexcept;
 
