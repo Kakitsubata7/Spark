@@ -35,6 +35,10 @@ void Diagnostic::render(std::ostream& os,
     }
 }
 
+bool Diagnostics::empty() const noexcept {
+    return _diagnostics.empty();
+}
+
 bool Diagnostics::hasWarning() const noexcept {
     for (const Diagnostic& d : _diagnostics) {
         if (d.severity == Diagnostic::Severity::Warning) {
@@ -57,11 +61,15 @@ void Diagnostics::add(Diagnostic diagnostic) {
     _diagnostics.push_back(std::move(diagnostic));
 }
 
-void Diagnostics::merge(Diagnostics& from) {
+void Diagnostics::adopt(Diagnostics& from) {
     for (Diagnostic& d : from._diagnostics) {
         add(std::move(d));
     }
     from.clear();
+}
+
+void Diagnostics::clear() noexcept {
+    _diagnostics.clear();
 }
 
 void Diagnostics::render(std::ostream& os,
