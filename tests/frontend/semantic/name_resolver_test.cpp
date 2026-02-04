@@ -20,7 +20,7 @@ TEST(NameResolverTest, Valid1) {
 )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.empty());
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid2) {
@@ -34,7 +34,7 @@ TEST(NameResolverTest, Valid2) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.empty());
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid3) {
@@ -45,7 +45,7 @@ TEST(NameResolverTest, Valid3) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.empty());
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid4) {
@@ -57,7 +57,7 @@ TEST(NameResolverTest, Valid4) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.empty());
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid5) {
@@ -72,7 +72,7 @@ TEST(NameResolverTest, Valid5) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.empty());
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Invalid1) {
@@ -82,7 +82,7 @@ TEST(NameResolverTest, Invalid1) {
 )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.empty());
+    EXPECT_TRUE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Invalid2) {
@@ -92,7 +92,7 @@ TEST(NameResolverTest, Invalid2) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.empty());
+    EXPECT_TRUE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Invalid3) {
@@ -105,7 +105,7 @@ TEST(NameResolverTest, Invalid3) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.empty());
+    EXPECT_TRUE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Invalid4) {
@@ -116,7 +116,7 @@ TEST(NameResolverTest, Invalid4) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.empty());
+    EXPECT_TRUE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Invalid5) {
@@ -131,5 +131,5 @@ TEST(NameResolverTest, Invalid5) {
     )");
     SymbolTable symTable;
     NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.empty());
+    EXPECT_TRUE(result.diagnostics.hasError());
 }

@@ -15,10 +15,10 @@ namespace Spark::FrontEnd {
  * Represents the result of name resolution.
  */
 struct NameResolveResult {
-    std::vector<Diagnostic> diagnostics;
+    Diagnostics diagnostics{};
 
     NameResolveResult() = default;
-    explicit NameResolveResult(std::vector<Diagnostic> diagnostics) noexcept
+    explicit NameResolveResult(Diagnostics diagnostics) noexcept
         : diagnostics(std::move(diagnostics)) { }
 };
 
@@ -36,14 +36,11 @@ private:
 
         std::vector<Env> _envStack;
 
-        const std::optional<std::string>& _filename;
-
     public:
         NameResolveResult result;
 
-        explicit ResolveVisitor(SymbolTable& symTable,
-                                const std::optional<std::string>& filename = std::nullopt) noexcept
-            : _symTable(symTable), _filename(filename) { }
+        explicit ResolveVisitor(SymbolTable& symTable) noexcept
+            : _symTable(symTable) { }
 
         void visit(Node& node) override;
         void visit(Name& name) override;
@@ -59,8 +56,8 @@ private:
 
         Symbol* lookup(InternedNameValue name) const noexcept;
 
-        void diagnostic(Diagnostic diagnostic) noexcept {
-            result.diagnostics.push_back(std::move(diagnostic));
+        void report(Diagnostic diagnostic) noexcept {
+            result.diagnostics.add(std::move(diagnostic));
         }
 
         static bool isHoisted(const Node* node) noexcept {
@@ -89,26 +86,22 @@ private:
         bool _isReassignable;
         bool _isReference;
 
-        const std::optional<std::string>& _filename;
-
     public:
-        std::vector<Diagnostic> diagnostics;
+        Diagnostics diagnostics;
 
         PatternBinder(Env& env,
                       SymbolTable& symTable,
                       bool isReassignable,
-                      bool isReference,
-                      const std::optional<std::string>& filename = std::nullopt) noexcept
-            : _env(env), _symTable(symTable), _isReassignable(isReassignable), _isReference(isReference),
-              _filename(filename) { }
+                      bool isReference) noexcept
+            : _env(env), _symTable(symTable), _isReassignable(isReassignable), _isReference(isReference) { }
 
         void visit(BindingPattern& p) override;
         void visit(TuplePattern& p) override;
         void visit(CollectionPattern& p) override;
         void visit(RecordPattern& p) override;
 
-        void diagnostic(Diagnostic diagnostic) noexcept {
-            diagnostics.push_back(std::move(diagnostic));
+        void report(Diagnostic diagnostic) noexcept {
+            diagnostics.add(std::move(diagnostic));
         }
     };
 
