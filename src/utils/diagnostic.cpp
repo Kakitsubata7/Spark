@@ -53,9 +53,15 @@ bool Diagnostics::hasError() const noexcept {
     return false;
 }
 
-Diagnostic& Diagnostics::add(Diagnostic diagnostic) {
+void Diagnostics::add(Diagnostic diagnostic) {
     _diagnostics.push_back(std::move(diagnostic));
-    return _diagnostics.back();
+}
+
+void Diagnostics::merge(Diagnostics& from) {
+    for (Diagnostic& d : from._diagnostics) {
+        add(std::move(d));
+    }
+    from.clear();
 }
 
 void Diagnostics::render(std::ostream& os,

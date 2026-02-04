@@ -52,7 +52,9 @@ public:
     [[nodiscard]]
     bool hasError() const noexcept;
 
-    Diagnostic& add(Diagnostic diagnostic);
+    void add(Diagnostic diagnostic);
+
+    void merge(Diagnostics& from) noexcept;
 
     void clear() noexcept { _diagnostics.clear(); }
 
