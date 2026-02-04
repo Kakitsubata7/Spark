@@ -71,10 +71,10 @@ struct Pattern : Node {
 
 
 struct Name final : Node {
-    InternedNameValue name;
+    InternedNameValue value;
 
     Name(Location start, Location end, InternedNameValue name) noexcept
-        : Node(start, end), name(name) { }
+        : Node(start, end), value(name) { }
 
     void accept(NodeVisitor& v) override { v.visit(*this); }
 

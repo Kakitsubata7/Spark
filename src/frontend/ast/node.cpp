@@ -79,7 +79,7 @@ std::vector<Node*> Node::getChildren() {
 
 bool Name::equalsImpl(const Node& rhs) const noexcept {
     const Name& o = ASSERT_NODE(rhs, Name);
-    return name.value() == o.name.value();
+    return value.value() == o.value.value();
 }
 
 bool VarModifier::equalsImpl(const Node& rhs) const noexcept {
