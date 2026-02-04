@@ -1,56 +1,63 @@
-﻿#pragma once
+#pragma once
 
 #include <optional>
 #include <ostream>
 #include <string>
+#include <vector>
 
-#include "frontend/source_buffer.hpp"
 #include "location.hpp"
 
 namespace Spark {
 
-class Diagnostic {
-public:
+struct Diagnostic {
     enum class Severity {
-        Note, Warning, Error, Fatal
+        Note, Warning, Error
     };
 
-    std::optional<std::string> filename;
     Location start;
     Location end;
     Severity severity = Severity::Note;
     std::string message;
+    std::vector<Diagnostic> subs;
 
-    Diagnostic() = default;
-    Diagnostic(std::optional<std::string> filename,
-               Location start,
+    Diagnostic() noexcept = default;
+
+    Diagnostic(Location start,
                Location end,
                Severity severity,
-               std::string message) noexcept
-        : filename(std::move(filename)), start(start), end(end), severity(severity), message(std::move(message)) { }
+               std::string message,
+               std::vector<Diagnostic> subs) noexcept
+        : start(start), end(end), severity(severity), message(std::move(message)),
+          subs(std::move(subs)) { }
 
-    static Diagnostic note(std::optional<std::string> filename,
-                           Location start,
-                           Location end,
-                           std::string message) noexcept {
-        return Diagnostic{std::move(filename), start, end, Severity::Note, std::move(message)};
-    }
+    void render(std::ostream& os,
+                const std::optional<std::string>& filename = std::nullopt) const;
+};
 
-    static Diagnostic warning(std::optional<std::string> filename,
-                              Location start,
-                              Location end,
-                              std::string message) noexcept {
-        return Diagnostic{std::move(filename), start, end, Severity::Warning, std::move(message)};
-    }
+class Diagnostics {
+private:
+    std::vector<Diagnostic> _diagnostics;
 
-    static Diagnostic error(std::optional<std::string> filename,
-                            Location start,
-                            Location end,
-                            std::string message) noexcept {
-        return Diagnostic{std::move(filename), start, end, Severity::Error, std::move(message)};
-    }
+public:
+    Diagnostics() noexcept = default;
 
-    void render(std::ostream& os, const FrontEnd::SourceBuffer& srcbuf) const;
+    const std::vector<Diagnostic>& diagnostics() const noexcept { return _diagnostics; }
+
+    [[nodiscard]]
+    bool empty() const noexcept { return _diagnostics.empty(); }
+
+    [[nodiscard]]
+    bool hasWarning() const noexcept;
+
+    [[nodiscard]]
+    bool hasError() const noexcept;
+
+    Diagnostic& add(Diagnostic diagnostic);
+
+    void clear() noexcept { _diagnostics.clear(); }
+
+    void render(std::ostream& os,
+                const std::optional<std::string>& filename = std::nullopt) const;
 };
 
 } // Spark

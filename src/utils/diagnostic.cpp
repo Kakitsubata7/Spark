@@ -1,11 +1,10 @@
-﻿#include "diagnostic.hpp"
-
-#include <string_view>
+#include "diagnostic.hpp"
 
 namespace Spark {
 
-void Diagnostic::render(std::ostream& os, const FrontEnd::SourceBuffer& srcbuf) const {
-    // Location info
+void Diagnostic::render(std::ostream& os,
+                        const std::optional<std::string>& filename) const {
+    // Location
     if (filename.has_value()) {
         os << filename.value() << ":";
     }
@@ -25,26 +24,45 @@ void Diagnostic::render(std::ostream& os, const FrontEnd::SourceBuffer& srcbuf) 
         default:
             break;
     }
-    os << message << '\n';
+    os << message << "\n";
 
-    // Snippet
-    if (std::string_view snippet; srcbuf.tryGet(start, end, snippet)) {
-        os << snippet << '\n';
+    // TODO: Snippet
 
-        // // TODO: Highlight
-        // std::string_view line = srcbuf.getLine(start.line);
-        // for (size_t i = 1; i < start.column; ++i) {
-        //     if (line[i - 1] == '\t') {
-        //         os << '\t';
-        //     } else {
-        //         os << ' ';
-        //     }
-        // }
-        // os << '^';
-        // for (size_t i = start.column + 1; i <= end.column; ++i) {
-        //     os << '~';
-        // }
-        // os << '\n';
+    // Sub-diagnostics
+    for (const Diagnostic& sub : subs) {
+        sub.render(os, filename);
+        os << "\n";
+    }
+}
+
+bool Diagnostics::hasWarning() const noexcept {
+    for (const Diagnostic& d : _diagnostics) {
+        if (d.severity == Diagnostic::Severity::Warning) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Diagnostics::hasError() const noexcept {
+    for (const Diagnostic& d : _diagnostics) {
+        if (d.severity == Diagnostic::Severity::Error) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Diagnostic& Diagnostics::add(Diagnostic diagnostic) {
+    _diagnostics.push_back(std::move(diagnostic));
+    return _diagnostics.back();
+}
+
+void Diagnostics::render(std::ostream& os,
+                         const std::optional<std::string>& filename) const {
+    for (const Diagnostic& d : _diagnostics) {
+        d.render(os, filename);
+        os << "\n\n";
     }
 }
 
