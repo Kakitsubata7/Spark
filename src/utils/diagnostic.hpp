@@ -85,6 +85,8 @@ struct Diagnostic {
      */
     void render(std::ostream& os,
                 const std::optional<std::string>& filename = std::nullopt) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Diagnostic& d);
 };
 
 /**
@@ -98,6 +100,13 @@ public:
     Diagnostics() noexcept = default;
 
     const std::vector<Diagnostic>& diagnostics() const noexcept { return _diagnostics; }
+
+    /**
+     * Gets the number of diagnostics.
+     * @return Number of diagnostics.
+     */
+    [[nodiscard]]
+    size_t count() const noexcept;
 
     /**
      * Checks if there's any diagnostics.

@@ -4,27 +4,11 @@ namespace Spark {
 
 void Diagnostic::render(std::ostream& os,
                         const std::optional<std::string>& filename) const {
-    // Location
+    // Location & message
     if (filename.has_value()) {
         os << filename.value() << ":";
     }
-    os << start.line << ":" << start.column << ": ";
-
-    // Message
-    switch (severity) {
-        case Severity::Note:
-            os << "note: ";
-            break;
-        case Severity::Warning:
-            os << "warning: ";
-            break;
-        case Severity::Error:
-            os << "error: ";
-            break;
-        default:
-            break;
-    }
-    os << message << "\n";
+    os << *this << "\n";
 
     // TODO: Snippet
 
@@ -33,6 +17,29 @@ void Diagnostic::render(std::ostream& os,
         sub.render(os, filename);
         os << "\n";
     }
+}
+
+std::ostream& operator<<(std::ostream& os, const Diagnostic& d) {
+    os << d.start.line << ":" << d.start.column << ": ";
+    switch (d.severity) {
+        case Diagnostic::Severity::Note:
+            os << "note: ";
+            break;
+        case Diagnostic::Severity::Warning:
+            os << "warning: ";
+            break;
+        case Diagnostic::Severity::Error:
+            os << "error: ";
+            break;
+        default:
+            break;
+    }
+    os << d.message;
+    return os;
+}
+
+size_t Diagnostics::count() const noexcept {
+    return _diagnostics.size();
 }
 
 bool Diagnostics::empty() const noexcept {
