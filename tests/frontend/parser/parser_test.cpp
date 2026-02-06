@@ -71,45 +71,35 @@ using namespace Spark::FrontEnd;
 #define PATH(...) MAKE(Path, std::vector<PathSeg*>{__VA_ARGS__})
 #define PATH_SEG(name, ...) MAKE(PathSeg, name, std::vector<Expr*>{__VA_ARGS__})
 
-static std::pair<AST, std::vector<Error>> parse(std::string_view source) {
-    std::istringstream iss{std::string(source)};
-    return Parser::parse(iss);
-}
-
-#define PARSE() \
-({ \
-    std::istringstream iss{std::string(source)};                    \
-    ParseResult result = Parser::parse(iss);                        \
-    if (result.diagnostics.hasError()) {                            \
-        std::ostringstream oss;                                     \
-        FAIL() << "error when parsing source: \n" << source << "\n" \
-               << oss.str();                                        \
-    }                                                               \
-    result.ast;                                                     \
+#define PARSE(source)                            \
+({                                               \
+    std::istringstream iss{std::string(source)}; \
+    ParseResult result = Parser::parse(iss);     \
+    std::move(result);                           \
 })
 
 #define PARSE_EXPECT(source, expected)                            \
 {                                                                 \
-    AST ast = std::move(PARSE(source));                           \
+    auto [actualAST, _] = PARSE(source);                          \
     EXPECT_TRUE(actualAST.root->equalsStructurally(*(expected))); \
 }
 
-#define PARSE_EXPECT_SUCCESS(source) \
-{                                    \
-    auto [_, errors] = parse(source);    \
-    EXPECT_TRUE(errors.empty());         \
+#define PARSE_EXPECT_SUCCESS(source)       \
+{                                          \
+    auto [_, diagnostics] = PARSE(source); \
+    EXPECT_FALSE(diagnostics.hasError());  \
 }
 
-#define PARSE_EXPECT_ERROR(source)    \
-{                                     \
-    auto [_, errors] = parse(source); \
-    EXPECT_FALSE(errors.empty());     \
+#define PARSE_EXPECT_ERROR(source)         \
+{                                          \
+    auto [_, diagnostics] = PARSE(source); \
+    EXPECT_TRUE(diagnostics.hasError());   \
 }
 
-#define PARSE_EXPECT_NERROR(source, n) \
-{                                      \
-    auto [_, errors] = parse(source);  \
-    EXPECT_EQ(errors.size(), n);       \
+#define PARSE_EXPECT_NERROR(source, n)     \
+{                                          \
+    auto [_, diagnostics] = PARSE(source); \
+    EXPECT_EQ(diagnostics.count(), n);     \
 }
 
 class ParserTest : public ::testing::Test {

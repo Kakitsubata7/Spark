@@ -8,44 +8,47 @@
 using namespace Spark;
 using namespace Spark::FrontEnd;
 
-static AST parse(std::string_view source) {
-    std::istringstream iss{std::string(source)};
-    auto [ast, errors] = Parser::parse(iss);
-    EXPECT_TRUE(errors.empty()) << "error during parsing source: \n" << source;
-    return std::move(ast);
+#define PARSE(source)                                                             \
+({                                                                                \
+    std::istringstream iss{std::string(source)};                                  \
+    ParseResult result = Parser::parse(iss);                                      \
+    if (result.diagnostics.hasError()) {                                          \
+        std::ostringstream oss;                                                   \
+        for (const Diagnostic& d : result.diagnostics.diagnostics()) {            \
+            oss << d << "\n";                                                     \
+        }                                                                         \
+        FAIL() << "error when parsing source: \n" << source << "\n" << oss.str(); \
+    }                                                                             \
+    std::move(result.ast);                                                        \
+})
+
+#define RESOLVE_EXPECT_SUCCESS(source, symTable)                     \
+{                                                                    \
+    AST ast = PARSE(source);                                         \
+    NameResolveResult result = NameResolver::resolve(ast, symTable); \
+    EXPECT_FALSE(result.diagnostics.hasError());                     \
 }
 
-#define RESOLVE_EXPECT_SUCCESS(source)            \
-{                                                 \
-    std::istringstream iss{std::string(source)}; \
-    ParserResult presult = Parser::parse(iss); \
-    if (presult.diagnostics.hasError()) {         \
-        std::string output; \
-        for (const Diagnostic& d : presult.diagnostics.diagnostics()) { \
-            output += d.message;\
-            output += "\n";\
-        }\
-        FAIL() << "error while parsing source: \n"\
-               << source << "\n\n"\
-               << output;\
-    }\
-}
-
-#define RESOLVE_EXPECT_FAIL() \
-{                             \
-                              \
+#define RESOLVE_EXPECT_FAIL(source, symTable)                        \
+{                                                                    \
+    AST ast = PARSE(source);                                         \
+    NameResolveResult result = NameResolver::resolve(ast, symTable); \
+    EXPECT_TRUE(result.diagnostics.hasError());                      \
 }
 
 TEST(NameResolverTest, Valid1) {
-    RESOLVE_EXPECT_SUCCESS(R"(
+    AST ast = PARSE(R"(
         let x = 1;
         let y = x + 1;
-)");
+    )");
+    SymbolTable symTable;
+    NameResolveResult result = NameResolver::resolve(ast, symTable);
+    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid2) {
     // Shadowing
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let x = 1;
         {
             let x = 2;
@@ -59,7 +62,7 @@ TEST(NameResolverTest, Valid2) {
 
 TEST(NameResolverTest, Valid3) {
     // Function is hoisted
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         foo();
         fn foo() { };
     )");
@@ -69,7 +72,7 @@ TEST(NameResolverTest, Valid3) {
 }
 
 TEST(NameResolverTest, Valid4) {
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let x = 1;
         {
             let y = x;
@@ -81,7 +84,7 @@ TEST(NameResolverTest, Valid4) {
 }
 
 TEST(NameResolverTest, Valid5) {
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let a = 1;
         {
             let b = a;
@@ -97,7 +100,7 @@ TEST(NameResolverTest, Valid5) {
 
 TEST(NameResolverTest, Invalid1) {
     // Undefined symbol `print` and `x`
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         print(x);
 )");
     SymbolTable symTable;
@@ -107,7 +110,7 @@ TEST(NameResolverTest, Invalid1) {
 
 TEST(NameResolverTest, Invalid2) {
     // Undefined symbol `x`
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let y = x + 1;
     )");
     SymbolTable symTable;
@@ -117,7 +120,7 @@ TEST(NameResolverTest, Invalid2) {
 
 TEST(NameResolverTest, Invalid3) {
     // Undefined symbol `x`
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         {
             let x = 1;
         };
@@ -130,7 +133,7 @@ TEST(NameResolverTest, Invalid3) {
 
 TEST(NameResolverTest, Invalid4) {
     // Redeclaration of `x`
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let x = 1;
         let x = 2;
     )");
@@ -140,7 +143,7 @@ TEST(NameResolverTest, Invalid4) {
 }
 
 TEST(NameResolverTest, Invalid5) {
-    AST ast = parse(R"(
+    AST ast = PARSE(R"(
         let a = 1;
         {
             let b = a;
