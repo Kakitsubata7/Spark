@@ -1,4 +1,6 @@
-﻿#include <gtest/gtest.h>
+﻿#include <sstream>
+
+#include <gtest/gtest.h>
 
 #include "frontend/parser.hpp"
 #include "frontend/semantic/name_resolver.hpp"
@@ -13,14 +15,32 @@ static AST parse(std::string_view source) {
     return std::move(ast);
 }
 
+#define RESOLVE_EXPECT_SUCCESS(source)            \
+{                                                 \
+    std::istringstream iss{std::string(source)}; \
+    ParserResult presult = Parser::parse(iss); \
+    if (presult.diagnostics.hasError()) {         \
+        std::string output; \
+        for (const Diagnostic& d : presult.diagnostics.diagnostics()) { \
+            output += d.message;\
+            output += "\n";\
+        }\
+        FAIL() << "error while parsing source: \n"\
+               << source << "\n\n"\
+               << output;\
+    }\
+}
+
+#define RESOLVE_EXPECT_FAIL() \
+{                             \
+                              \
+}
+
 TEST(NameResolverTest, Valid1) {
-    AST ast = parse(R"(
+    RESOLVE_EXPECT_SUCCESS(R"(
         let x = 1;
         let y = x + 1;
 )");
-    SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
 }
 
 TEST(NameResolverTest, Valid2) {

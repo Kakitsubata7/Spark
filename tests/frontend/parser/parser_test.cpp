@@ -76,18 +76,28 @@ static std::pair<AST, std::vector<Error>> parse(std::string_view source) {
     return Parser::parse(iss);
 }
 
-#define PARSE_EXPECT(source, expected)                   \
-{                                                        \
-    auto [actualAST, errors] = parse(source);            \
-    EXPECT_TRUE(errors.empty());                         \
-    const Node& ex = *(expected);                        \
-    EXPECT_TRUE(actualAST.root->equalsStructurally(ex)); \
+#define PARSE() \
+({ \
+    std::istringstream iss{std::string(source)};                    \
+    ParseResult result = Parser::parse(iss);                        \
+    if (result.diagnostics.hasError()) {                            \
+        std::ostringstream oss;                                     \
+        FAIL() << "error when parsing source: \n" << source << "\n" \
+               << oss.str();                                        \
+    }                                                               \
+    result.ast;                                                     \
+})
+
+#define PARSE_EXPECT(source, expected)                            \
+{                                                                 \
+    AST ast = std::move(PARSE(source));                           \
+    EXPECT_TRUE(actualAST.root->equalsStructurally(*(expected))); \
 }
 
 #define PARSE_EXPECT_SUCCESS(source) \
 {                                    \
-auto [_, errors] = parse(source);    \
-EXPECT_TRUE(errors.empty());         \
+    auto [_, errors] = parse(source);    \
+    EXPECT_TRUE(errors.empty());         \
 }
 
 #define PARSE_EXPECT_ERROR(source)    \
