@@ -99,6 +99,7 @@ private:
 public:
     Diagnostics() noexcept = default;
 
+    [[nodiscard]]
     const std::vector<Diagnostic>& diagnostics() const noexcept { return _diagnostics; }
 
     /**

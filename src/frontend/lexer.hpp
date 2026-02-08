@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <optional>
-#include <string_view>
 #include <vector>
 
 #include "lexer/lexer_state.hpp"
@@ -10,61 +8,62 @@
 #include "lexer/token_buffer.hpp"
 #include "lexer/token_type.hpp"
 #include "lexer/token_value.hpp"
-#include "utils/error.hpp"
-#include "utils/result.hpp"
 #include "source_buffer.hpp"
+#include "utils/diagnostic.hpp"
 
 namespace Spark::FrontEnd {
+
+struct LexResult {
+    std::vector<Token> tokens;
+    SourceBuffer srcbuf;
+    Diagnostics diagnostics;
+
+    LexResult() noexcept = default;
+    LexResult(std::vector<Token> tokens, SourceBuffer srcbuf, Diagnostics diagnostics) noexcept
+        : tokens(std::move(tokens)), srcbuf(std::move(srcbuf)), diagnostics(std::move(diagnostics)) { }
+};
 
 /**
  * Represents a wrapper to Flex's lexer logics.
  */
 class Lexer {
 private:
-    std::optional<std::string> _filename;
-
     yyscan_t _scanner;
-    SourceBuffer _srcbuf;
     LexerState _lstate;
 
+    SourceBuffer _srcbuf;
+
+    Diagnostics _diagnostics{};
+
 private:
-    explicit Lexer(SourceBuffer srcbuf, std::optional<std::string_view> filename = std::nullopt);
+    explicit Lexer(SourceBuffer srcbuf);
 
 public:
-    explicit Lexer(std::istream& stream, std::optional<std::string_view> filename = std::nullopt);
-    explicit Lexer(std::string_view sv, std::optional<std::string_view> filename = std::nullopt);
+    explicit Lexer(std::istream& stream);
+
     ~Lexer();
 
     Lexer(const Lexer& other) = delete;
     Lexer& operator=(const Lexer& other) = delete;
 
-    Lexer(Lexer&& other) noexcept;
-    Lexer& operator=(Lexer&& other) noexcept;
-
-    [[nodiscard]]
-    constexpr const std::optional<std::string>& filename() const noexcept { return _filename; }
+    Lexer(Lexer&& other) noexcept = delete;
+    Lexer& operator=(Lexer&& other) noexcept = delete;
 
     /**
-     * Gets whether the lexer produced any error during lexing.
-     * @return true if the lexer has at least an error, false otherwise.
+     * Retrieves the diagnotics occurred during lexing.
+     * @return Diagnostics occurred during lexing.
      */
     [[nodiscard]]
-    bool hasError() const noexcept {
-        return !_lstate.errors().empty();
-    }
+    constexpr const Diagnostics& diagnostics() const { return _diagnostics; }
+
+    [[nodiscard]]
+    constexpr const SourceBuffer& srcbuf() const noexcept { return _srcbuf; }
 
     /**
-     * Retrieves the errors occurred during lexing.
-     * @return Errors occurred during lexing.
+     * Clears the lexer.
      */
-    [[nodiscard]]
-    constexpr const std::vector<Error>& errors() const noexcept {
-        return _lstate.errors();
-    }
-
-    [[nodiscard]]
-    constexpr const SourceBuffer& srcbuf() const noexcept {
-        return _srcbuf;
+    void clear() noexcept {
+        _lstate.clear();
     }
 
     /**
@@ -80,11 +79,11 @@ public:
     std::vector<Token> lexAll();
 
     /**
-     * Clears the lexer.
+     * Lexes all tokens till the end of ths stream.
+     * @param stream Input stream.
+     * @return Lexing result.
      */
-    void clear() noexcept {
-        _lstate.clear();
-    }
+    static LexResult lexAll(std::istream& stream);
 
     friend class Parser;
 };
