@@ -53,19 +53,19 @@ protected:
 struct Expr : Node {
     Expr(Location start, Location end) : Node(start, end) { }
 
-    void accept(NodeVisitor &v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 };
 
 struct Stmt : Node {
     Stmt(Location start, Location end) : Node(start, end) { }
 
-    void accept(NodeVisitor &v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 };
 
 struct Pattern : Node {
     Pattern(Location start, Location end) : Node(start, end) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 };
 
 
@@ -76,7 +76,7 @@ struct Name final : Node {
     Name(Location start, Location end, InternedNameValue name) noexcept
         : Node(start, end), value(name) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -100,7 +100,7 @@ struct VarModifier final : Node {
         : Node(start, end), kind(kind), isImmutable(isImmutable),
           optionality(optionality) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -116,7 +116,7 @@ struct FnParam final : Node {
     FnParam(Location start, Location end, VarModifier* mod, Pattern* pattern, Expr* type, Expr* def) noexcept
         : Node(start, end), mod(mod), pattern(pattern), type(type), def(def) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -130,7 +130,7 @@ struct FnCapture final : Node {
     FnCapture(Location start, Location end, VarModifier* mod, Pattern* pattern) noexcept
         : Node(start, end), mod(mod), pattern(pattern) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -145,7 +145,7 @@ struct FnCaptureClause final : Node {
     FnCaptureClause(Location start, Location end, std::vector<FnCapture*> captures, bool hasRest, VarModifier* restMod)
         noexcept : Node(start, end), captures(std::move(captures)), hasRest(hasRest), restMod(restMod) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -163,7 +163,7 @@ struct FnReturn final : Node {
     FnReturn(Location start, Location end, RetKind kind, Expr* type) noexcept
         : Node(start, end), kind(kind), type(type) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -177,7 +177,7 @@ struct PathSeg final : Node {
     PathSeg(Location start, Location end, Name* name, std::vector<Expr*> generics = {}) noexcept
         : Node(start, end), name(name), generics(std::move(generics)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -190,7 +190,7 @@ struct Path final : Node {
     Path(Location start, Location end, std::vector<PathSeg*> segs) noexcept
         : Node(start, end), segs(std::move(segs)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -215,7 +215,7 @@ struct LambdaExpr final : Expr {
         : Expr(start, end), isImmutable(isImmutable), params(std::move(params)), captureClause(captureClause),
           returns(std::move(returns)), isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -230,7 +230,7 @@ struct IfThenExpr final : Expr {
     IfThenExpr(Location start, Location end, Expr* condition, Expr* thenExpr, Expr* elseExpr) noexcept
         : Expr(start, end), condition(condition), thenExpr(thenExpr), elseExpr(elseExpr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -244,7 +244,7 @@ struct TryElseExpr final : Expr {
     TryElseExpr(Location start, Location end, Expr* tryExpr, Expr* elseExpr) noexcept
         : Expr(start, end), tryExpr(tryExpr), elseExpr(elseExpr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -259,7 +259,7 @@ struct MatchCase final : Node {
     MatchCase(Location start, Location end, Pattern* pattern, Expr* guard, Expr* body) noexcept
         : Node(start, end), pattern(pattern), guard(guard), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -273,7 +273,7 @@ struct MatchExpr final : Expr {
     MatchExpr(Location start, Location end, Expr* scrutinee, std::vector<MatchCase*> cases) noexcept
         : Expr(start, end), scrutinee(scrutinee), cases(std::move(cases)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -288,7 +288,7 @@ struct CatchClause final : Node {
     CatchClause(Location start, Location end, Pattern* pattern, Expr* guard, Expr* body) noexcept
         : Node(start, end), pattern(pattern), guard(guard), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -302,7 +302,7 @@ struct TryCatchExpr final : Expr {
     TryCatchExpr(Location start, Location end, Expr* expr, std::vector<CatchClause*> catches) noexcept
         : Expr(start, end), expr(expr), catches(std::move(catches)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -315,7 +315,7 @@ struct ThrowExpr final : Expr {
     ThrowExpr(Location start, Location end, Expr* expr) noexcept
         : Expr(start, end), expr(expr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -328,7 +328,7 @@ struct BlockExpr final : Expr {
     BlockExpr(Location start, Location end, std::vector<Node*> nodes) noexcept
         : Expr(start, end), nodes(std::move(nodes)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -342,7 +342,7 @@ struct IsExpr final : Expr {
     IsExpr(Location start, Location end, Expr* expr, Expr* type) noexcept
         : Expr(start, end), expr(expr), type(type) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -357,7 +357,7 @@ struct AsExpr final : Expr {
     AsExpr(Location start, Location end, Expr* expr, Pattern* pattern, Expr* type) noexcept
         : Expr(start, end), expr(expr), pattern(pattern), type(type) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -389,7 +389,7 @@ struct BinaryExpr final : Expr {
     BinaryExpr(Location start, Location end, OpKind op, Expr* lhs, Expr* rhs) noexcept
         : Expr(start, end), op(op), lhs(lhs), rhs(rhs) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -407,7 +407,7 @@ struct PrefixExpr final : Expr {
     PrefixExpr(Location start, Location end, OpKind op, Expr* expr) noexcept
         : Expr(start, end), op(op), expr(expr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -425,7 +425,7 @@ struct PostfixExpr final : Expr {
     PostfixExpr(Location start, Location end, OpKind op, Expr* expr) noexcept
         : Expr(start, end), op(op), expr(expr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -439,7 +439,7 @@ struct MemberAccessExpr final : Expr {
     MemberAccessExpr(Location start, Location end, Expr* base, Name* member) noexcept
         : Expr(start, end), base(base), member(member) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -455,7 +455,7 @@ struct CallArg final : Node {
     CallArg(Location start, Location end, Expr* expr) noexcept
         : CallArg(start, end, nullptr, expr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -469,7 +469,7 @@ struct CallExpr final : Expr {
     CallExpr(Location start, Location end, Expr* callee, std::vector<CallArg*> args) noexcept
         : Expr(start, end), callee(callee), args(std::move(args)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -483,7 +483,7 @@ struct SubscriptExpr final : Expr {
     SubscriptExpr(Location start, Location end, Expr* callee, std::vector<Expr*> indices) noexcept
         : Expr(start, end), base(callee), indices(std::move(indices)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -496,7 +496,7 @@ struct LiteralExpr final : Expr {
     LiteralExpr(Location start, Location end, Literal literal) noexcept
             : Expr(start, end), literal(std::move(literal)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -509,7 +509,7 @@ struct NameExpr final : Expr {
     NameExpr(Location start, Location end, Name* name) noexcept
             : Expr(start, end), name(name) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -522,7 +522,7 @@ struct GlobalAccessExpr final : Expr {
     GlobalAccessExpr(Location start, Location end, Name* name) noexcept
         : Expr(start, end), name(name) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -536,7 +536,7 @@ struct UpvalueExpr final : Expr {
     UpvalueExpr(Location start, Location end, size_t level, Name* name) noexcept
         : Expr(start, end), level(level), name(name) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -549,7 +549,7 @@ struct TupleExpr final : Expr {
     TupleExpr(Location start, Location end, std::vector<Expr*> exprs) noexcept
         : Expr(start, end), exprs(std::move(exprs)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -562,7 +562,7 @@ struct CollectionExpr final : Expr {
     CollectionExpr(Location start, Location end, std::vector<Expr*> exprs) noexcept
         : Expr(start, end), exprs(std::move(exprs)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -575,7 +575,7 @@ struct TypeofExpr final : Expr {
     TypeofExpr(Location start, Location end, Expr* expr) noexcept
         : Expr(start, end), expr(expr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -594,7 +594,7 @@ struct VarDefStmt final : Stmt {
                Expr* type = nullptr, Node* rhs = nullptr) noexcept
         : Stmt(start, end), mod(mod), pattern(pattern), type(type), rhs(rhs) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -622,7 +622,7 @@ struct FnDefStmt final : Stmt {
           captureClause(captureClause), returns(std::move(returns)),
           isThrowing(isThrowing), throwExpr(throwExpr), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -647,7 +647,7 @@ struct TypeDefStmt final : Stmt {
         : Stmt(start, end), kind(kind), isImmutable(isImmutable), name(name),
           generics(std::move(generics)), bases(std::move(bases)), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -663,7 +663,7 @@ struct CaseDefStmt final : Stmt {
     CaseDefStmt(Location start, Location end, Name* name) noexcept
         : CaseDefStmt(start, end, name, nullptr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -685,7 +685,7 @@ struct AssignStmt final : Stmt {
     AssignStmt(Location start, Location end, OpKind op, Node* lhs, Node* rhs) noexcept
         : Stmt(start, end), op(op), lhs(lhs), rhs(rhs) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -700,7 +700,7 @@ struct IfStmt final : Stmt {
     IfStmt(Location start, Location end, Expr* condition, BlockExpr* thenBody, BlockExpr* elseBody) noexcept
         : Stmt(start, end), condition(condition), thenBody(thenBody), elseBody(elseBody) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -714,7 +714,7 @@ struct WhileStmt final : Stmt {
     WhileStmt(Location start, Location end, Expr* condition, BlockExpr* body) noexcept
         : Stmt(start, end), condition(condition), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -728,7 +728,7 @@ struct DoWhileStmt final : Stmt {
     DoWhileStmt(Location start, Location end, BlockExpr* body, Expr* condition) noexcept
         : Stmt(start, end), body(body), condition(condition) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -743,7 +743,7 @@ struct ForStmt final : Stmt {
     ForStmt(Location start, Location end, Pattern* iterator, Expr* range, BlockExpr* body) noexcept
         : Stmt(start, end), iterator(iterator), range(range), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -753,7 +753,7 @@ protected:
 struct BreakStmt final : Stmt {
     BreakStmt(Location start, Location end) noexcept : Stmt(start, end) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -763,7 +763,7 @@ protected:
 struct ContinueStmt final : Stmt {
     ContinueStmt(Location start, Location end) noexcept : Stmt(start, end) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -778,7 +778,7 @@ struct ReturnStmt final : Stmt {
     ReturnStmt(Location start, Location end) noexcept
         : ReturnStmt(start, end, nullptr) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -792,7 +792,7 @@ struct ModuleStmt final : Stmt {
     ModuleStmt(Location start, Location end, Path* path, BlockExpr* body) noexcept
         : Stmt(start, end), path(path), body(body) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -805,7 +805,7 @@ struct ExportStmt final : Stmt {
     ExportStmt(Location start, Location end, Stmt* stmt) noexcept
         : Stmt(start, end), stmt(stmt) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -819,7 +819,7 @@ struct ImportItem final : Node {
     ImportItem(Location start, Location end, Path* path, Name* as) noexcept
         : Node(start, end), path(path), as(as) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -833,7 +833,7 @@ struct ImportStmt final : Stmt {
     ImportStmt(Location start, Location end, Path* from, std::vector<ImportItem*> imports) noexcept
         : Stmt(start, end), from(from), imports(std::move(imports)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -846,7 +846,7 @@ struct ImportAllStmt final : Stmt {
     ImportAllStmt(Location start, Location end, Path* from) noexcept
         : Stmt(start, end), from(from) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -859,7 +859,7 @@ struct UndefineStmt final : Stmt {
     UndefineStmt(Location start, Location end, Path* path) noexcept
         : Stmt(start, end), path(path) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -874,7 +874,7 @@ struct LiteralPattern final : Pattern {
     LiteralPattern(Location start, Location end, Literal literal) noexcept
             : Pattern(start, end), literal(std::move(literal)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -887,7 +887,7 @@ struct BindingPattern final : Pattern {
     BindingPattern(Location start, Location end, Name* name) noexcept
         : Pattern(start, end), name(name) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -900,7 +900,7 @@ struct TuplePattern final : Pattern {
     TuplePattern(Location start, Location end, std::vector<Pattern*> patterns) noexcept
         : Pattern(start, end), patterns(std::move(patterns)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -916,7 +916,7 @@ struct CollectionPattern final : Pattern {
                       std::vector<Pattern*> prefix, std::vector<Pattern*> suffix, bool isExact) noexcept
         : Pattern(start, end), prefix(std::move(prefix)), suffix(std::move(suffix)), isExact(isExact) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -932,7 +932,7 @@ struct RecordPatternField final : Node {
     RecordPatternField(Location start, Location end, Pattern* pattern) noexcept
         : Node(start, end), label(nullptr), pattern(pattern) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]
@@ -946,7 +946,7 @@ struct RecordPattern final : Pattern {
                   std::vector<RecordPatternField*> fields) noexcept
         : Pattern(start, end), fields(std::move(fields)) { }
 
-    void accept(NodeVisitor& v) override { v.visit(*this); }
+    void accept(NodeVisitor& v) override { v.visit(this); }
 
 protected:
     [[nodiscard]]

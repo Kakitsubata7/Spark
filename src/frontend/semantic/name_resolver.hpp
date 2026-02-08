@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -42,18 +41,19 @@ private:
         explicit ResolveVisitor(SymbolTable& symTable) noexcept
             : _symTable(symTable) { }
 
-        void visit(Node& node) override;
-        void visit(Name& name) override;
-        void visit(VarDefStmt& vardef) override;
-        void visit(FnDefStmt& fndef) override;
-        void visit(TypeDefStmt& tdef) override;
-        void visit(BlockExpr& block) override;
+        void visit(Node* node) override;
+        void visit(Name* name) override;
+        void visit(VarDefStmt* vardef) override;
+        void visit(FnDefStmt* fndef) override;
+        void visit(TypeDefStmt* tdef) override;
+        void visit(BlockExpr* block) override;
 
     private:
         void pushEnv() { _envStack.emplace_back(); }
         void popEnv() { _envStack.pop_back(); }
         Env& currentEnv() { return _envStack.back(); }
 
+        [[nodiscard]]
         Symbol* lookup(InternedNameValue name) const noexcept;
 
         void report(Diagnostic diagnostic) noexcept {
@@ -95,10 +95,10 @@ private:
                       bool isReference) noexcept
             : _env(env), _symTable(symTable), _isReassignable(isReassignable), _isReference(isReference) { }
 
-        void visit(BindingPattern& p) override;
-        void visit(TuplePattern& p) override;
-        void visit(CollectionPattern& p) override;
-        void visit(RecordPattern& p) override;
+        void visit(BindingPattern* p) override;
+        void visit(TuplePattern* p) override;
+        void visit(CollectionPattern* p) override;
+        void visit(RecordPattern* p) override;
 
         void report(Diagnostic diagnostic) noexcept {
             diagnostics.add(std::move(diagnostic));

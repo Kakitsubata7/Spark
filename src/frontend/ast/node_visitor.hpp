@@ -76,75 +76,75 @@ class NodeVisitor {
 public:
     virtual ~NodeVisitor() = default;
 
-    virtual void visit(Node& node);
+    virtual void visit(Node* node);
 
-    virtual void visit(Expr& node); 
-    virtual void visit(Stmt& node);
-    virtual void visit(Pattern& node);
+    virtual void visit(Expr* expr); 
+    virtual void visit(Stmt* stmt);
+    virtual void visit(Pattern* pattern);
 
-    virtual void visit(Name& node);
+    virtual void visit(Name* name);
 
-    virtual void visit(VarModifier& node);
+    virtual void visit(VarModifier* varmod);
 
-    virtual void visit(FnParam& node);
-    virtual void visit(FnCapture& node);
-    virtual void visit(FnCaptureClause& node);
-    virtual void visit(FnReturn& node);
+    virtual void visit(FnParam* param);
+    virtual void visit(FnCapture* cap);
+    virtual void visit(FnCaptureClause* clause);
+    virtual void visit(FnReturn* ret);
 
-    virtual void visit(PathSeg& node);
-    virtual void visit(Path& node);
+    virtual void visit(PathSeg* seg);
+    virtual void visit(Path* path);
 
-    virtual void visit(LambdaExpr& node);
-    virtual void visit(IfThenExpr& node);
-    virtual void visit(TryElseExpr& node);
-    virtual void visit(MatchCase& node);
-    virtual void visit(MatchExpr& node);
-    virtual void visit(CatchClause& node);
-    virtual void visit(TryCatchExpr& node);
-    virtual void visit(ThrowExpr& node);
-    virtual void visit(BlockExpr& node);
-    virtual void visit(IsExpr& node);
-    virtual void visit(AsExpr& node);
-    virtual void visit(BinaryExpr& node);
-    virtual void visit(PrefixExpr& node);
-    virtual void visit(PostfixExpr& node);
-    virtual void visit(MemberAccessExpr& node);
-    virtual void visit(CallArg& node);
-    virtual void visit(CallExpr& node);
-    virtual void visit(SubscriptExpr& node);
-    virtual void visit(LiteralExpr& node);
-    virtual void visit(NameExpr& node);
-    virtual void visit(GlobalAccessExpr& node);
-    virtual void visit(UpvalueExpr& node);
-    virtual void visit(TupleExpr& node);
-    virtual void visit(CollectionExpr& node);
-    virtual void visit(TypeofExpr& node);
+    virtual void visit(LambdaExpr* expr);
+    virtual void visit(IfThenExpr* expr);
+    virtual void visit(TryElseExpr* expr);
+    virtual void visit(MatchCase* c);
+    virtual void visit(MatchExpr* expr);
+    virtual void visit(CatchClause* c);
+    virtual void visit(TryCatchExpr* expr);
+    virtual void visit(ThrowExpr* expr);
+    virtual void visit(BlockExpr* expr);
+    virtual void visit(IsExpr* expr);
+    virtual void visit(AsExpr* expr);
+    virtual void visit(BinaryExpr* expr);
+    virtual void visit(PrefixExpr* expr);
+    virtual void visit(PostfixExpr* expr);
+    virtual void visit(MemberAccessExpr* expr);
+    virtual void visit(CallArg* arg);
+    virtual void visit(CallExpr* expr);
+    virtual void visit(SubscriptExpr* expr);
+    virtual void visit(LiteralExpr* expr);
+    virtual void visit(NameExpr* expr);
+    virtual void visit(GlobalAccessExpr* expr);
+    virtual void visit(UpvalueExpr* expr);
+    virtual void visit(TupleExpr* expr);
+    virtual void visit(CollectionExpr* expr);
+    virtual void visit(TypeofExpr* expr);
 
-    virtual void visit(VarDefStmt& node);
-    virtual void visit(FnDefStmt& node);
-    virtual void visit(TypeDefStmt& node);
-    virtual void visit(CaseDefStmt& node);
-    virtual void visit(AssignStmt& node);
-    virtual void visit(IfStmt& node);
-    virtual void visit(WhileStmt& node);
-    virtual void visit(DoWhileStmt& node);
-    virtual void visit(ForStmt& node);
-    virtual void visit(BreakStmt& node);
-    virtual void visit(ContinueStmt& node);
-    virtual void visit(ReturnStmt& node);
-    virtual void visit(ModuleStmt& node);
-    virtual void visit(ExportStmt& node);
-    virtual void visit(ImportItem& node);
-    virtual void visit(ImportStmt& node);
-    virtual void visit(ImportAllStmt& node);
-    virtual void visit(UndefineStmt& node);
+    virtual void visit(VarDefStmt* stmt);
+    virtual void visit(FnDefStmt* stmt);
+    virtual void visit(TypeDefStmt* stmt);
+    virtual void visit(CaseDefStmt* stmt);
+    virtual void visit(AssignStmt* stmt);
+    virtual void visit(IfStmt* stmt);
+    virtual void visit(WhileStmt* stmt);
+    virtual void visit(DoWhileStmt* stmt);
+    virtual void visit(ForStmt* stmt);
+    virtual void visit(BreakStmt* stmt);
+    virtual void visit(ContinueStmt* stmt);
+    virtual void visit(ReturnStmt* stmt);
+    virtual void visit(ModuleStmt* stmt);
+    virtual void visit(ExportStmt* stmt);
+    virtual void visit(ImportItem* stmt);
+    virtual void visit(ImportStmt* stmt);
+    virtual void visit(ImportAllStmt* stmt);
+    virtual void visit(UndefineStmt* stmt);
 
-    virtual void visit(LiteralPattern& node);
-    virtual void visit(BindingPattern& node);
-    virtual void visit(TuplePattern& node);
-    virtual void visit(CollectionPattern& node);
-    virtual void visit(RecordPatternField& node);
-    virtual void visit(RecordPattern& node);
+    virtual void visit(LiteralPattern* pattern);
+    virtual void visit(BindingPattern* pattern);
+    virtual void visit(TuplePattern* pattern);
+    virtual void visit(CollectionPattern* pattern);
+    virtual void visit(RecordPatternField* field);
+    virtual void visit(RecordPattern* pattern);
 };
 
 } // Spark::FrontEnd

@@ -4,74 +4,74 @@
 
 namespace Spark::FrontEnd {
 
-void NodeVisitor::visit(Node& node) { }
+void NodeVisitor::visit(Node* node) { }
 
-void NodeVisitor::visit(Expr& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(Stmt& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(Pattern& node) { visit(static_cast<Node&>(node)); }
+void NodeVisitor::visit(Expr* expr) { visit(static_cast<Node*>(expr)); }
+void NodeVisitor::visit(Stmt* stmt) { visit(static_cast<Node*>(stmt)); }
+void NodeVisitor::visit(Pattern* pattern) { visit(static_cast<Node*>(pattern)); }
 
-void NodeVisitor::visit(Name& node) { visit(static_cast<Node&>(node)); }
+void NodeVisitor::visit(Name* name) { visit(static_cast<Node*>(name)); }
 
-void NodeVisitor::visit(VarModifier& node) { visit(static_cast<Node&>(node)); }
+void NodeVisitor::visit(VarModifier* varmod) { visit(static_cast<Node*>(varmod)); }
 
-void NodeVisitor::visit(FnParam& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(FnCapture& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(FnCaptureClause& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(FnReturn& node) { visit(static_cast<Node&>(node)); }
+void NodeVisitor::visit(FnParam* param) { visit(static_cast<Node*>(param)); }
+void NodeVisitor::visit(FnCapture* cap) { visit(static_cast<Node*>(cap)); }
+void NodeVisitor::visit(FnCaptureClause* clause) { visit(static_cast<Node*>(clause)); }
+void NodeVisitor::visit(FnReturn* ret) { visit(static_cast<Node*>(ret)); }
 
-void NodeVisitor::visit(PathSeg& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(Path& node) { visit(static_cast<Node&>(node)); }
+void NodeVisitor::visit(PathSeg* seg) { visit(static_cast<Node*>(seg)); }
+void NodeVisitor::visit(Path* path) { visit(static_cast<Node*>(path)); }
 
-void NodeVisitor::visit(LambdaExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(IfThenExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(TryElseExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(MatchCase& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(MatchExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(CatchClause& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(TryCatchExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(ThrowExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(BlockExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(IsExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(AsExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(BinaryExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(PrefixExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(PostfixExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(MemberAccessExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(CallArg& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(CallExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(SubscriptExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(LiteralExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(NameExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(GlobalAccessExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(UpvalueExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(TupleExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(CollectionExpr& node) { visit(static_cast<Expr&>(node)); }
-void NodeVisitor::visit(TypeofExpr& node) { visit(static_cast<Expr&>(node)); }
+void NodeVisitor::visit(LambdaExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(IfThenExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(TryElseExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(MatchCase* c) { visit(static_cast<Node*>(c)); }
+void NodeVisitor::visit(MatchExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(CatchClause* c) { visit(static_cast<Node*>(c)); }
+void NodeVisitor::visit(TryCatchExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(ThrowExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(BlockExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(IsExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(AsExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(BinaryExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(PrefixExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(PostfixExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(MemberAccessExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(CallArg* arg) { visit(static_cast<Node*>(arg)); }
+void NodeVisitor::visit(CallExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(SubscriptExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(LiteralExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(NameExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(GlobalAccessExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(UpvalueExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(TupleExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(CollectionExpr* expr) { visit(static_cast<Expr*>(expr)); }
+void NodeVisitor::visit(TypeofExpr* expr) { visit(static_cast<Expr*>(expr)); }
 
-void NodeVisitor::visit(VarDefStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(FnDefStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(TypeDefStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(CaseDefStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(AssignStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(IfStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(WhileStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(DoWhileStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ForStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(BreakStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ContinueStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ReturnStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ModuleStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ExportStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ImportItem& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(ImportStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(ImportAllStmt& node) { visit(static_cast<Stmt&>(node)); }
-void NodeVisitor::visit(UndefineStmt& node) { visit(static_cast<Stmt&>(node)); }
+void NodeVisitor::visit(VarDefStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(FnDefStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(TypeDefStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(CaseDefStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(AssignStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(IfStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(WhileStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(DoWhileStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ForStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(BreakStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ContinueStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ReturnStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ModuleStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ExportStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ImportItem* stmt) { visit(static_cast<Node*>(stmt)); }
+void NodeVisitor::visit(ImportStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(ImportAllStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
+void NodeVisitor::visit(UndefineStmt* stmt) { visit(static_cast<Stmt*>(stmt)); }
 
-void NodeVisitor::visit(LiteralPattern& node) { visit(static_cast<Pattern&>(node)); }
-void NodeVisitor::visit(BindingPattern& node) { visit(static_cast<Pattern&>(node)); }
-void NodeVisitor::visit(TuplePattern& node) { visit(static_cast<Pattern&>(node)); }
-void NodeVisitor::visit(CollectionPattern& node) { visit(static_cast<Pattern&>(node)); }
-void NodeVisitor::visit(RecordPatternField& node) { visit(static_cast<Node&>(node)); }
-void NodeVisitor::visit(RecordPattern& node) { visit(static_cast<Pattern&>(node)); }
+void NodeVisitor::visit(LiteralPattern* pattern) { visit(static_cast<Pattern*>(pattern)); }
+void NodeVisitor::visit(BindingPattern* pattern) { visit(static_cast<Pattern*>(pattern)); }
+void NodeVisitor::visit(TuplePattern* pattern) { visit(static_cast<Pattern*>(pattern)); }
+void NodeVisitor::visit(CollectionPattern* pattern) { visit(static_cast<Pattern*>(pattern)); }
+void NodeVisitor::visit(RecordPatternField* field) { visit(static_cast<Node*>(field)); }
+void NodeVisitor::visit(RecordPattern* pattern) { visit(static_cast<Pattern*>(pattern)); }
 
 } // Spark::FrontEnd
