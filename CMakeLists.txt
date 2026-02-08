@@ -97,8 +97,6 @@ add_library(sparklib
         src/frontend/semantic/symbol_table.cpp
         src/frontend/semantic/symbol_table.hpp
 
-        src/frontend/semantic_type.hpp
-
         src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp
         src/frontend/source_reader.cpp
