@@ -11,7 +11,7 @@
 %locations
 
 %lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {AST& ast} {std::vector<Error>& errors}
+%parse-param {yyscan_t scanner} {yy::parser::location_type* yylloc} {AST& ast} {Diagnostics& diagnostics}
 
 %code requires {
 #include <cstdint>
@@ -19,7 +19,7 @@
 
 #include "frontend/ast.hpp"
 #include "frontend/lexer/token_value.hpp"
-#include "utils/error.hpp"
+#include "utils/diagnostic.hpp"
 
 typedef void* yyscan_t;
 
@@ -43,8 +43,8 @@ namespace yy {
 %code {
 int yylex(yy::parser::semantic_type*, yy::parser::location_type*, yyscan_t);
 
-#define RAISE_ERROR(start, end, msg) errors.emplace_back(msg, start, end)
-#define REMOVE_LAST_ERROR() errors.pop_back()
+#define RAISE_ERROR(start, end, msg) diagnostics.add(Diagnostic::error(start, end, msg))
+#define REMOVE_LAST_ERROR()
 }
 
 %token <TokenValue> Identifier Discard
