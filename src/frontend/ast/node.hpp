@@ -40,6 +40,12 @@ struct Node {
         return dynamic_cast<T*>(this);
     }
 
+    template <typename T>
+    [[nodiscard]]
+    const T* as() const {
+        return dynamic_cast<const T*>(this);
+    }
+
     void getChildren(std::vector<Node*>& out);
 
     [[nodiscard]]
