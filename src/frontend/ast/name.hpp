@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <memory>
+#include <ostream>
 #include <string>
 #include <unordered_set>
 #include <variant>
@@ -119,6 +120,10 @@ public:
 
     friend bool operator!=(InternedNameValue lhs, InternedNameValue rhs) noexcept {
         return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const InternedNameValue& n) {
+        return os << n.str();
     }
 
     friend std::hash<InternedNameValue>;
