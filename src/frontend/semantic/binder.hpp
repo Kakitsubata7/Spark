@@ -15,6 +15,7 @@ private:
     SymbolTable& _symTable;
     NodeSymbolMap& _nodeSymMap;
 
+    SymbolKind _kind;
     bool _isReassignable;
     bool _isReference;
     bool _isRedeclarable;
@@ -26,12 +27,13 @@ public:
     BindingVisitor(Env& env,
                    SymbolTable& symTable,
                    NodeSymbolMap& nodeSymMap,
+                   SymbolKind kind,
                    bool isReassignable,
                    bool isReference,
                    bool isRedeclarable,
                    bool isVisible,
                    Diagnostics& diagnostics) noexcept
-        : _env(env), _symTable(symTable), _nodeSymMap(nodeSymMap), _isReassignable(isReassignable),
+        : _env(env), _symTable(symTable), _nodeSymMap(nodeSymMap), _kind(kind), _isReassignable(isReassignable),
           _isReference(isReference), _isRedeclarable(isRedeclarable), _isVisible(isVisible),
           _diagnostics(diagnostics) { }
 

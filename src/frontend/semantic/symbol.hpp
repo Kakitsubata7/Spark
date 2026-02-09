@@ -4,11 +4,26 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents the kind of semantic symbols.
+ */
+enum class SymbolKind {
+    Var, Func, Type, Module
+};
+
+/**
+ * Represents a symbol during semantic passes.
+ */
 struct Symbol {
     /**
      * Pointer to the definition `Name` node.
      */
     Name* node;
+
+    /**
+     * Kind of the symbol.
+     */
+    SymbolKind kind;
 
     /**
      * Whether the symbol is reassignable or not.

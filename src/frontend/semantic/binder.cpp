@@ -6,6 +6,10 @@ void BindingVisitor::visit(Name* name) {
     // Check if name is already declared in the same env
     if (const Symbol* s = _env.find(name->value); s != nullptr) {
         if (_isRedeclarable) {
+            if (s->kind != _kind) {
+                report(Diagnostic::conflictingRedeclareError(name->start, name->end, s));
+                return;
+            }
             _nodeSymMap.set(name, s);
         } else {
             report(Diagnostic::redeclareError(name->start, name->end, s));
@@ -16,6 +20,7 @@ void BindingVisitor::visit(Name* name) {
     // Define symbol from name
     const Symbol* s = _symTable.make(Symbol{
         .node = name,
+        .kind = _kind,
         .isReassignable = _isReassignable,
         .isReference = _isReference
     });
@@ -49,24 +54,34 @@ void BindingVisitor::visit(RecordPattern* pattern) {
 }
 
 
+
 void Binder::BinderVisitor::visit(VarDefStmt* vardef) {
     VarModifier* mod = vardef->mod;
-    BindingVisitor v{_env, _symTable, _nodeSymMap, isReassignable(mod), isReference(mod), false, _isVisible, _diagnostics};
+    BindingVisitor v{
+        _env, _symTable, _nodeSymMap, SymbolKind::Var, isReassignable(mod), isReference(mod),
+        false, _isVisible, _diagnostics
+    };
     vardef->pattern->accept(v);
 }
 
 void Binder::BinderVisitor::visit(FnDefStmt* fndef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, false, false, true, _isVisible, _diagnostics};
+    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Func, false, false,
+        true, _isVisible, _diagnostics
+    };
     fndef->name->accept(v);
 }
 
 void Binder::BinderVisitor::visit(TypeDefStmt* tdef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, false, false, false, _isVisible, _diagnostics};
+    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Type, false, false,
+        false, _isVisible, _diagnostics
+    };
     tdef->name->accept(v);
 }
 
 void Binder::BinderVisitor::visit(ModuleStmt* moddef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, false, false, true, _isVisible, _diagnostics};
+    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Module, false, false,
+        true, _isVisible, _diagnostics
+    };
     moddef->path->segs[0]->name->accept(v);
 }
 
