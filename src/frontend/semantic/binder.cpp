@@ -3,6 +3,11 @@
 namespace Spark::FrontEnd {
 
 void BindingVisitor::visit(Name* name) {
+    // Ignore if node is already bound to a symbol
+    if (_nodeSymMap.hasSymbol(name)) {
+        return;
+    }
+
     // Check if name is already declared in the same env
     if (const Symbol* s = _env.find(name->value); s != nullptr) {
         if (_isRedeclarable) {
