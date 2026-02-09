@@ -16,6 +16,32 @@ Diagnostic Diagnostic::redeclareError(Location start, Location end, const Symbol
     });
 }
 
+Diagnostic Diagnostic::conflictingRedeclareError(Location start, Location end, const Symbol* sym) {
+    std::ostringstream oss;
+    oss << "conflicting declarations of `" << sym->name() << "`: previously declared as a ";
+    switch (sym->kind) {
+        case SymbolKind::Var:
+            oss << "variable";
+            break;
+        case SymbolKind::Func:
+            oss << "function";
+            break;
+        case SymbolKind::Type:
+            oss << "type";
+            break;
+        case SymbolKind::Module:
+            oss << "module";
+            break;
+        default:
+            // Unreachable
+            oss << "unknown";
+            break;
+    }
+    return error(start, end, oss.str(), {
+        note(sym->start(), sym->end(), "previously declared here")
+    });
+}
+
 Diagnostic Diagnostic::cannotFindError(Location start, Location end, std::string_view name) {
     std::ostringstream oss;
     oss << "cannot find symbol `" << name << "`";

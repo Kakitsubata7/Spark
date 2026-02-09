@@ -99,6 +99,15 @@ struct Diagnostic {
     static Diagnostic redeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
 
     /**
+     * Constructs an error for name resolution conflicting redeclaration error.
+     * @param start Start location in source.
+     * @param end End location in source.
+     * @param sym Symbol that causes the redeclaration.
+     * @return Constructed error diagnostic.
+     */
+    static Diagnostic conflictingRedeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
+
+    /**
      * Constructs an error for name resolution cannot find error.
      * @param start Start location in source.
      * @param end End location in source.
