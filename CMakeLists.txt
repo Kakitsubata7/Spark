@@ -90,6 +90,8 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
 
+        src/frontend/semantic/binding_visitor.cpp
+        src/frontend/semantic/binding_visitor.hpp
         src/frontend/semantic/env.hpp
         src/frontend/semantic/name_resolver.cpp
         src/frontend/semantic/name_resolver.hpp
