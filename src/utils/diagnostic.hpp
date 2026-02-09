@@ -38,6 +38,12 @@ struct Diagnostic {
         : start(start), end(end), severity(severity), message(std::move(message)),
           subs(std::move(subs)) { }
 
+    Diagnostic(const Diagnostic& other) noexcept = default;
+    Diagnostic& operator=(const Diagnostic& other) noexcept = default;
+
+    Diagnostic(Diagnostic&& other) noexcept = default;
+    Diagnostic& operator=(Diagnostic&& other) noexcept = default;
+
     /**
      * Constructs a note diagnostic.
      * @param start Start location in source.
