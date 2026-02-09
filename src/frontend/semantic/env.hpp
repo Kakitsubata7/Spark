@@ -22,6 +22,12 @@ private:
 public:
     Env() = default;
 
+    Env(const Env& other) = default;
+    Env& operator=(const Env& other) = default;
+
+    Env(Env&& other) = default;
+    Env& operator=(Env&& other) = default;
+
     /**
      * Declares a symbol to this environment with its visibility.
      * @param symbol Symbol to declare.
