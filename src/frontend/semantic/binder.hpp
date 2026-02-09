@@ -90,6 +90,7 @@ private:
 public:
     /**
      * Binds names of a definition node to the current environment, creating symbols.
+     * If `node` is not a definition node, nothing happens.
      * @param node Definition node.
      * @param env Environment to bind names to.
      * @param symTable Symbol table.
