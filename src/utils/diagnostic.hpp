@@ -114,7 +114,7 @@ struct Diagnostic {
      * @param sym Symbol that causes the error.
      * @return Constructed error diagnostic.
      */
-    static Diagnostic useBeforeDeclError(Location start, Location end, const FrontEnd::Symbol* sym)
+    static Diagnostic useBeforeDeclError(Location start, Location end, const FrontEnd::Symbol* sym);
 
     /**
      * Constructs an error for name resolution cannot find error.
