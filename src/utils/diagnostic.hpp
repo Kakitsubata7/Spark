@@ -108,6 +108,15 @@ struct Diagnostic {
     static Diagnostic conflictingRedeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
 
     /**
+     * Constructs an error for name resolution use before declaration error.
+     * @param start Start location in source.
+     * @param end End location in source.
+     * @param sym Symbol that causes the error.
+     * @return Constructed error diagnostic.
+     */
+    static Diagnostic useBeforeDeclError(Location start, Location end, const FrontEnd::Symbol* sym)
+
+    /**
      * Constructs an error for name resolution cannot find error.
      * @param start Start location in source.
      * @param end End location in source.
