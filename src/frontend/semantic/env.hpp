@@ -13,7 +13,7 @@ namespace Spark::FrontEnd {
 class Env {
 private:
     struct Decl {
-        Symbol* symbol;
+        const Symbol* symbol;
         bool isVisible;
     };
 
