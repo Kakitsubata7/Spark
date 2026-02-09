@@ -1,6 +1,6 @@
 #include "diagnostic.hpp"
 
-#include <ostream>
+#include <sstream>
 
 #include "frontend/semantic/symbol.hpp"
 
