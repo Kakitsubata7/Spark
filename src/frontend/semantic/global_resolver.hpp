@@ -7,16 +7,6 @@
 
 namespace Spark::FrontEnd {
 
-class GlobalResolveVisitor : public NodeVisitor {
-public:
-    SymbolTable& symTable;
-    NodeSymbolMap& nodeSymMap;
-    Env& globalEnv;
-
-    GlobalResolveVisitor(SymbolTable& symTable, NodeSymbolMap& nodeSymMap, Env& globalEnv) noexcept
-        : symTable(symTable), nodeSymMap(nodeSymMap), globalEnv(globalEnv) { }
-};
-
 struct GlobalResolveResult {
     Env globalEnv;
     Diagnostics diagnostics;
