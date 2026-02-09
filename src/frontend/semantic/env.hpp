@@ -54,6 +54,19 @@ public:
         auto it = _declMap.find(name);
         return it != _declMap.end() && it->second.isVisible;
     }
+
+    /**
+     * Sets the visibility of a name in the environment.
+     * If the name doesn't exist in the environment, nothing happens.
+     * @param name Name to set visibility.
+     * @param isVisible Visibility.
+     */
+    void setVisible(InternedNameValue name, bool isVisible) {
+        auto it = _declMap.find(name);
+        if (it != _declMap.end()) {
+            it->second.isVisible = isVisible;
+        }
+    }
 };
 
 } // Spark::FrontEnd
