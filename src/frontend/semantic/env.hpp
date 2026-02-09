@@ -12,18 +12,47 @@ namespace Spark::FrontEnd {
  */
 class Env {
 private:
-    std::unordered_map<InternedNameValue, Symbol*> _map;
+    struct Decl {
+        Symbol* symbol;
+        bool isVisible;
+    };
+
+    std::unordered_map<InternedNameValue, Decl> _declMap;
 
 public:
-    Symbol* get(InternedNameValue name) const noexcept {
-        if (_map.find(name) == _map.end()) {
-            return nullptr;
-        }
-        return _map.at(name);
+    Env() = default;
+
+    /**
+     * Declares a symbol to this environment with its visibility.
+     * @param symbol Symbol to declare.
+     * @param isVisible Whether the symbol is visible or not (default is true).
+     */
+    void declare(Symbol* symbol, bool isVisible = true) {
+        InternedNameValue name = symbol->name();
+        _declMap.insert_or_assign(name, Decl{symbol, isVisible});
     }
 
-    void set(InternedNameValue name, Symbol* symbol) {
-        _map[name] = symbol;
+    /**
+     * Finds the symbol by its name. If no symbol with the name was found, `nullptr` is returned.
+     * @param name Name to find.
+     * @return Symbol or `nullptr` if no symbol with the name was found.
+     */
+    [[nodiscard]]
+    Symbol* find(InternedNameValue name) const {
+        auto it = _declMap.find(name);
+        return it == _declMap.end() ? nullptr : it->second.symbol;
+    }
+
+    /**
+     * Checks whether the symbol with the name is visible or not. If the name is not associated with a symbol, `false`
+     * is returned.
+     * @param name Name of the symbol to check for.
+     * @return `true` if symbol is visible, `false` otherwise or if the environment doesn't have a symbol with the name.
+     */
+    [[nodiscard]]
+    bool isVisible(InternedNameValue name) const {
+        auto it = _declMap.find(name);
+        return it != _declMap.end() && it->second.isVisible;
     }
 };
 
