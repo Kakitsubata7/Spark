@@ -53,7 +53,7 @@ struct Symbol {
  */
 class SymbolTable {
 private:
-    std::vector<std::unique_ptr<Symbol>> _symbols;
+    std::vector<Symbol> _symbols;
 
 public:
     SymbolTable() = default;
@@ -69,8 +69,8 @@ public:
      * @param symbol Symbol to create.
      * @return Pointer to the created symbol.
      */
-    Symbol* make(Symbol symbol) {
-        return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get();
+    const Symbol* make(Symbol symbol) {
+        return &_symbols.emplace_back(std::move(symbol));
     }
 
     /**
@@ -78,7 +78,7 @@ public:
      * @param from Symbol table to move from.
      */
     void adopt(SymbolTable& from) {
-        for (std::unique_ptr<Symbol>& p : from._symbols) {
+        for (Symbol& p : from._symbols) {
             _symbols.push_back(std::move(p));
         }
         from._symbols.clear();
@@ -90,7 +90,7 @@ public:
  */
 class NodeSymbolMap {
 private:
-    std::unordered_map<const Node*, Symbol*> _map;
+    std::unordered_map<const Node*, const Symbol*> _map;
 
 public:
     NodeSymbolMap() = default;
@@ -117,7 +117,7 @@ public:
      * @return Symbol or `nullptr` if the AST node doesn't have a symbol.
      */
     [[nodiscard]]
-    Symbol* symbolOf(const Node* node) const {
+    const Symbol* symbolOf(const Node* node) const {
         auto it = _map.find(node);
         return it == _map.end() ? nullptr : it->second;
     }
@@ -127,7 +127,7 @@ public:
      * @param node AST node to set symbol.
      * @param symbol Symbol to set.
      */
-    void set(const Node* node, Symbol* symbol) {
+    void set(const Node* node, const Symbol* symbol) {
         _map[node] = symbol;
     }
 };

@@ -27,7 +27,7 @@ public:
      * @param symbol Symbol to declare.
      * @param isVisible Whether the symbol is visible or not (default is true).
      */
-    void declare(Symbol* symbol, bool isVisible = true) {
+    void declare(const Symbol* symbol, bool isVisible = true) {
         InternedNameValue name = symbol->name();
         _declMap.insert_or_assign(name, Decl{symbol, isVisible});
     }
@@ -38,7 +38,7 @@ public:
      * @return Symbol or `nullptr` if no symbol with the name was found.
      */
     [[nodiscard]]
-    Symbol* find(InternedNameValue name) const {
+    const Symbol* find(InternedNameValue name) const {
         auto it = _declMap.find(name);
         return it == _declMap.end() ? nullptr : it->second.symbol;
     }
