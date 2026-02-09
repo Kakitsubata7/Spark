@@ -1,6 +1,26 @@
 #include "diagnostic.hpp"
 
+#include <ostream>
+
+#include "frontend/semantic/symbol.hpp"
+
 namespace Spark {
+
+using namespace FrontEnd;
+
+Diagnostic Diagnostic::redeclareError(Location start, Location end, const Symbol* sym) {
+    std::ostringstream oss;
+    oss << "redeclaration of `" << sym->name() << "`";
+    return error(start, end, oss.str(), {
+        note(sym->start(), sym->end(), "previously declared here")
+    });
+}
+
+Diagnostic Diagnostic::cannotFindError(Location start, Location end, std::string_view name) {
+    std::ostringstream oss;
+    oss << "cannot find symbol `" << name << "`";
+    return error(start, end, oss.str());
+}
 
 void Diagnostic::render(std::ostream& os,
                         const std::optional<std::string>& filename) const {

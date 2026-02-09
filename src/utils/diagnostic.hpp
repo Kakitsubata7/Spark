@@ -3,11 +3,16 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "location.hpp"
 
 namespace Spark {
+
+namespace FrontEnd {
+    struct Symbol;
+} // FrontEnd
 
 /**
  * Represents a compilation diagnostic with source location, severity, message, and sub-diagnostics.
@@ -77,6 +82,24 @@ struct Diagnostic {
                             std::vector<Diagnostic> subs = {}) noexcept {
         return {start, end, Severity::Error, std::move(message), std::move(subs)};
     }
+
+    /**
+     * Constructs an error for name resolution redeclaration error.
+     * @param start Start location in source.
+     * @param end End location in source.
+     * @param sym Symbol that causes the redeclaration.
+     * @return Constructed error diagnostic.
+     */
+    static Diagnostic redeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
+
+    /**
+     * Constructs an error for name resolution cannot find error.
+     * @param start Start location in source.
+     * @param end End location in source.
+     * @param name Name that couldn't be found.
+     * @return Constructed error diagnostic.
+     */
+    static Diagnostic cannotFindError(Location start, Location end, std::string_view name);
 
     /**
      * Renders the diagnostic into the output stream.
