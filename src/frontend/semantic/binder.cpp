@@ -2,7 +2,48 @@
 
 namespace Spark::FrontEnd {
 
-void BindingVisitor::visit(Name* name) {
+void PatternBindingCollector::visit(BindingPattern* pattern) {
+    _out.push_back(pattern->name);
+}
+
+void PatternBindingCollector::visit(TuplePattern* pattern) {
+    for (Pattern* p : pattern->patterns) {
+        p->accept(*this);
+    }
+}
+
+void PatternBindingCollector::visit(CollectionPattern* pattern) {
+    for (Pattern* p : pattern->prefix) {
+        p->accept(*this);
+    }
+    for (Pattern* p : pattern->suffix) {
+        p->accept(*this);
+    }
+}
+
+void PatternBindingCollector::visit(RecordPattern* pattern) {
+    for (RecordPatternField* f : pattern->fields) {
+        f->pattern->accept(*this);
+    }
+}
+
+void PatternBindingCollector::collect(Node* node, std::vector<Name*>& out) {
+    if (node == nullptr) {
+        return;
+    }
+    PatternBindingCollector v{out};
+    node->accept(v);
+}
+
+std::vector<Name*> PatternBindingCollector::collect(Node* node) {
+    std::vector<Name*> out;
+    collect(node, out);
+    return out;
+}
+
+
+
+void NameBinder::visit(Name* name) {
     // Ignore if node is already bound to a symbol
     if (_nodeSymMap.hasSymbol(name)) {
         return;
@@ -33,73 +74,91 @@ void BindingVisitor::visit(Name* name) {
     _nodeSymMap.set(name, s);
 }
 
-void BindingVisitor::visit(BindingPattern* pattern) {
-    pattern->name->accept(*this);
-}
-
-void BindingVisitor::visit(TuplePattern* pattern) {
-    for (Pattern* cp : pattern->patterns) {
-        cp->accept(*this);
+void NameBinder::visit(BindingPattern* pattern) {
+    for (Name* name : PatternBindingCollector::collect(pattern)) {
+        name->accept(*this);
     }
 }
 
-void BindingVisitor::visit(CollectionPattern* pattern) {
-    for (Pattern* cp : pattern->prefix) {
-        cp->accept(*this);
-    }
-    for (Pattern* cp : pattern->suffix) {
-        cp->accept(*this);
+void NameBinder::visit(TuplePattern* pattern) {
+    for (Name* name : PatternBindingCollector::collect(pattern)) {
+        name->accept(*this);
     }
 }
 
-void BindingVisitor::visit(RecordPattern* pattern) {
-    for (RecordPatternField* field : pattern->fields) {
-        field->pattern->accept(*this);
+void NameBinder::visit(CollectionPattern* pattern) {
+    for (Name* name : PatternBindingCollector::collect(pattern)) {
+        name->accept(*this);
     }
+}
+
+void NameBinder::visit(RecordPattern* pattern) {
+    for (Name* name : PatternBindingCollector::collect(pattern)) {
+        name->accept(*this);
+    }
+}
+
+void NameBinder::bind(Node* node,
+                      Env& env,
+                      SymbolTable& symTable,
+                      NodeSymbolMap& nodeSymMap,
+                      SymbolKind kind,
+                      bool isReassignable,
+                      bool isReference,
+                      bool isRedeclarable,
+                      bool isVisible,
+                      Diagnostics& diagnostics) {
+    if (node == nullptr) {
+        return;
+    }
+    NameBinder v{
+        env, symTable, nodeSymMap, kind, isReassignable, isReference, isRedeclarable, isVisible, diagnostics
+    };
+    node->accept(v);
 }
 
 
 
-void Binder::BinderVisitor::visit(VarDefStmt* vardef) {
+void DeclBinder::visit(VarDefStmt* vardef) {
     VarModifier* mod = vardef->mod;
-    BindingVisitor v{
+    NameBinder v{
         _env, _symTable, _nodeSymMap, SymbolKind::Var, isReassignable(mod), isReference(mod),
         false, _isVisible, _diagnostics
     };
     vardef->pattern->accept(v);
 }
 
-void Binder::BinderVisitor::visit(FnDefStmt* fndef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Func, false, false,
+void DeclBinder::visit(FnDefStmt* fndef) {
+    NameBinder v{_env, _symTable, _nodeSymMap, SymbolKind::Func, false, false,
         true, _isVisible, _diagnostics
     };
     fndef->name->accept(v);
 }
 
-void Binder::BinderVisitor::visit(TypeDefStmt* tdef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Type, false, false,
+void DeclBinder::visit(TypeDefStmt* tdef) {
+    NameBinder v{_env, _symTable, _nodeSymMap, SymbolKind::Type, false, false,
         false, _isVisible, _diagnostics
     };
     tdef->name->accept(v);
 }
 
-void Binder::BinderVisitor::visit(ModuleStmt* moddef) {
-    BindingVisitor v{_env, _symTable, _nodeSymMap, SymbolKind::Module, false, false,
+void DeclBinder::visit(ModuleStmt* moddef) {
+    NameBinder v{_env, _symTable, _nodeSymMap, SymbolKind::Module, false, false,
         true, _isVisible, _diagnostics
     };
     moddef->path->segs[0]->name->accept(v);
 }
 
-void Binder::bind(Node* node,
-                  Env& env,
-                  SymbolTable& symTable,
-                  NodeSymbolMap& nodeSymMap,
-                  bool isVisible,
-                  Diagnostics& diagnostics) {
+void DeclBinder::bind(Node* node,
+                      Env& env,
+                      SymbolTable& symTable,
+                      NodeSymbolMap& nodeSymMap,
+                      bool isVisible,
+                      Diagnostics& diagnostics) {
     if (node == nullptr) {
         return;
     }
-    BinderVisitor v{env, symTable, nodeSymMap, isVisible, diagnostics};
+    DeclBinder v{env, symTable, nodeSymMap, isVisible, diagnostics};
     node->accept(v);
 }
 
