@@ -102,6 +102,8 @@ public:
                Diagnostics& diagnostics) noexcept
         : _env(env), _symTable(symTable), _nodeSymMap(nodeSymMap), _isVisible(isVisible), _diagnostics(diagnostics) { }
 
+    void visit(FnParam* param) override;
+
     void visit(VarDefStmt* vardef) override;
     void visit(FnDefStmt* fndef) override;
     void visit(TypeDefStmt* tdef) override;
@@ -113,17 +115,6 @@ public:
                      NodeSymbolMap& nodeSymMap,
                      bool isVisible,
                      Diagnostics& diagnostics);
-
-private:
-    static bool isReassignable(const VarModifier* mod) noexcept {
-        VarModifier::VarKind kind = mod->kind;
-        return kind == VarModifier::VarKind::Let || kind == VarModifier::VarKind::Ref;
-    }
-
-    static bool isReference(const VarModifier* mod) noexcept {
-        VarModifier::VarKind kind = mod->kind;
-        return kind == VarModifier::VarKind::Ref || kind == VarModifier::VarKind::Cref;
-    }
 };
 
 } // Spark::FrontEnd
