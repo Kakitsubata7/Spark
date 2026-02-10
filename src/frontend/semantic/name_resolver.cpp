@@ -46,7 +46,7 @@ void NameResolveVisitor::visit(Name* name) {
 }
 
 void NameResolveVisitor::visit(LambdaExpr* lambda) {
-
+    lambda->body->accept(*this);
 }
 
 void NameResolveVisitor::visit(VarDefStmt* vardef) {
@@ -67,15 +67,15 @@ void NameResolveVisitor::visit(VarDefStmt* vardef) {
 }
 
 void NameResolveVisitor::visit(FnDefStmt* fndef) {
-
+    fndef->body->accept(*this);
 }
 
 void NameResolveVisitor::visit(TypeDefStmt* tdef) {
-
+    tdef->body->accept(*this);
 }
 
 void NameResolveVisitor::visit(ModuleStmt* moddef) {
-
+    moddef->body->accept(*this);
 }
 
 void NameResolveVisitor::visit(BlockExpr* block) {
