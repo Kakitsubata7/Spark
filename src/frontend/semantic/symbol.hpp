@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <iterator>
+#include <memory>
+
 #include "frontend/ast/node.hpp"
 
 namespace Spark::FrontEnd {
@@ -68,13 +71,13 @@ struct Symbol {
  */
 class SymbolTable {
 private:
-    std::vector<Symbol> _symbols;
+    std::vector<std::unique_ptr<Symbol>> _symbols;
 
 public:
     SymbolTable() = default;
 
-    SymbolTable(const SymbolTable&) = default;
-    SymbolTable& operator=(const SymbolTable&) = default;
+    SymbolTable(const SymbolTable&) = delete;
+    SymbolTable& operator=(const SymbolTable&) = delete;
 
     SymbolTable(SymbolTable&&) = default;
     SymbolTable& operator=(SymbolTable&&) = default;
@@ -85,7 +88,7 @@ public:
      * @return Pointer to the created symbol.
      */
     const Symbol* make(Symbol symbol) {
-        return &_symbols.emplace_back(std::move(symbol));
+        return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get();
     }
 
     /**
@@ -93,9 +96,11 @@ public:
      * @param from Symbol table to move from.
      */
     void adopt(SymbolTable& from) {
-        for (Symbol& p : from._symbols) {
-            _symbols.push_back(std::move(p));
-        }
+        _symbols.insert(
+            _symbols.end(),
+            std::make_move_iterator(from._symbols.begin()),
+            std::make_move_iterator(from._symbols.end())
+        );
         from._symbols.clear();
     }
 };
