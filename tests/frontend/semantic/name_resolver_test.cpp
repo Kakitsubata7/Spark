@@ -22,69 +22,73 @@ using namespace Spark::FrontEnd;
     std::move(result.ast);                                                        \
 })
 
-#define RESOLVE_EXPECT_SUCCESS(source, symTable)                     \
-{                                                                    \
-    AST ast = PARSE(source);                                         \
-    NameResolveResult result = NameResolver::resolve(ast, symTable); \
-    EXPECT_FALSE(result.diagnostics.hasError());                     \
+#define RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv)                           \
+{                                                                                                 \
+    AST ast = PARSE(source);                                                                      \
+    NameResolveResult result = NameResolver::resolve(ast, (symTable), (nodeSymMap), (globalEnv)); \
+    EXPECT_FALSE(result.diagnostics.hasError()) << result.diagnostics << "\n";                    \
 }
 
-#define RESOLVE_EXPECT_FAIL(source, symTable)                        \
-{                                                                    \
-    AST ast = PARSE(source);                                         \
-    NameResolveResult result = NameResolver::resolve(ast, symTable); \
-    EXPECT_TRUE(result.diagnostics.hasError());                      \
+#define RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv)                              \
+{                                                                                                 \
+    AST ast = PARSE(source);                                                                      \
+    NameResolveResult result = NameResolver::resolve(ast, (symTable), (nodeSymMap), (globalEnv)); \
+    EXPECT_TRUE(result.diagnostics.hasError());                                                   \
 }
 
 TEST(NameResolverTest, Valid1) {
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let x = 1;
         let y = x + 1;
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Valid2) {
     // Shadowing
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let x = 1;
         {
             let x = 2;
             let y = x;
         }
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Valid3) {
     // Function is hoisted
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         foo();
         fn foo() { };
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Valid4) {
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let x = 1;
         {
             let y = x;
         }
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Valid5) {
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let a = 1;
         {
             let b = a;
@@ -92,58 +96,63 @@ TEST(NameResolverTest, Valid5) {
                 let c = b;
             }
         }
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_FALSE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_SUCCESS(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Invalid1) {
     // Undefined symbol `print` and `x`
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         print(x);
-)");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Invalid2) {
     // Undefined symbol `x`
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let y = x + 1;
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Invalid3) {
     // Undefined symbol `x`
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         {
             let x = 1;
         };
         let y = x;
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Invalid4) {
     // Redeclaration of `x`
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let x = 1;
         let x = 2;
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
 
 TEST(NameResolverTest, Invalid5) {
-    AST ast = PARSE(R"(
+    std::string_view source = R"(
         let a = 1;
         {
             let b = a;
@@ -151,8 +160,9 @@ TEST(NameResolverTest, Invalid5) {
                 let c = d;
             }
         }
-    )");
+    )";
     SymbolTable symTable;
-    NameResolveResult result = NameResolver::resolve(ast, symTable);
-    EXPECT_TRUE(result.diagnostics.hasError());
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
