@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <cassert>
 #include <unordered_map>
 
 #include "frontend/ast/name.hpp"
@@ -63,15 +64,14 @@ public:
 
     /**
      * Sets the visibility of a name in the environment.
-     * If the name doesn't exist in the environment, nothing happens.
+     * The name has to exist in the environment, otherwise assertion failure (debug mode) or undefined behavior.
      * @param name Name to set visibility.
      * @param isVisible Visibility.
      */
     void setVisible(InternedNameValue name, bool isVisible) {
         auto it = _declMap.find(name);
-        if (it != _declMap.end()) {
-            it->second.isVisible = isVisible;
-        }
+        assert(it != _declMap.end());
+        it->second.isVisible = isVisible;
     }
 };
 
