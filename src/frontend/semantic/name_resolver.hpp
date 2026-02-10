@@ -5,7 +5,6 @@
 
 #include "env.hpp"
 #include "frontend/ast.hpp"
-#include "symbol_table.hpp"
 #include "utils/diagnostic.hpp"
 
 namespace Spark::FrontEnd {
@@ -17,96 +16,84 @@ struct NameResolveResult {
     Diagnostics diagnostics{};
 
     NameResolveResult() = default;
-    explicit NameResolveResult(Diagnostics diagnostics) noexcept
-        : diagnostics(std::move(diagnostics)) { }
 };
 
 /**
  * Represents lexical symbol resolution.
  */
 class NameResolver {
+public:
+    static NameResolveResult resolve(const AST& ast,
+                                     SymbolTable& symTable,
+                                     NodeSymbolMap& nodeSymMap,
+                                     const Env& globalEnv = {});
+};
+
+/**
+ * Represents a visitor that does name resolution.
+ */
+class NameResolveVisitor : public NodeVisitor {
 private:
-    /**
-     * Represents a visitor that resolves all symbols.
-     */
-    class ResolveVisitor : public NodeVisitor {
-    private:
-        SymbolTable& _symTable;
+    SymbolTable& _symTable;
+    NodeSymbolMap& _nodeSymMap;
+    Diagnostics& _diagnostics;
 
-        std::vector<Env> _envStack;
-
-    public:
-        NameResolveResult result;
-
-        explicit ResolveVisitor(SymbolTable& symTable) noexcept
-            : _symTable(symTable) { }
-
-        void visit(Node* node) override;
-        void visit(Name* name) override;
-        void visit(VarDefStmt* vardef) override;
-        void visit(FnDefStmt* fndef) override;
-        void visit(TypeDefStmt* tdef) override;
-        void visit(BlockExpr* block) override;
-
-    private:
-        void pushEnv() { _envStack.emplace_back(); }
-        void popEnv() { _envStack.pop_back(); }
-        Env& currentEnv() { return _envStack.back(); }
-
-        [[nodiscard]]
-        Symbol* lookup(InternedNameValue name) const noexcept;
-
-        void report(Diagnostic diagnostic) noexcept {
-            result.diagnostics.add(std::move(diagnostic));
-        }
-
-        static bool isHoisted(const Node* node) noexcept {
-            return node->is<FnDefStmt>() || node->is<TypeDefStmt>() || node->is<ModuleStmt>();
-        }
-
-        static bool isReassignable(const VarModifier* mod) noexcept {
-            VarModifier::VarKind kind = mod->kind;
-            return kind == VarModifier::VarKind::Let || kind == VarModifier::VarKind::Ref;
-        }
-
-        static bool isReference(const VarModifier* mod) noexcept {
-            VarModifier::VarKind kind = mod->kind;
-            return kind == VarModifier::VarKind::Ref || kind == VarModifier::VarKind::Cref;
-        }
-    };
-
-    /**
-     * Represents a visitor that traverses a pattern and binds symbols to an environment.
-     */
-    class PatternBinder : public NodeVisitor {
-    private:
-        Env& _env;
-        SymbolTable& _symTable;
-
-        bool _isReassignable;
-        bool _isReference;
-
-    public:
-        Diagnostics diagnostics;
-
-        PatternBinder(Env& env,
-                      SymbolTable& symTable,
-                      bool isReassignable,
-                      bool isReference) noexcept
-            : _env(env), _symTable(symTable), _isReassignable(isReassignable), _isReference(isReference) { }
-
-        void visit(BindingPattern* p) override;
-        void visit(TuplePattern* p) override;
-        void visit(CollectionPattern* p) override;
-        void visit(RecordPattern* p) override;
-
-        void report(Diagnostic diagnostic) noexcept {
-            diagnostics.add(std::move(diagnostic));
-        }
-    };
+    std::vector<Env> _envStack;
 
 public:
-    static NameResolveResult resolve(const AST& ast, SymbolTable& symTable);
+    explicit NameResolveVisitor(SymbolTable& symTable, NodeSymbolMap& nodeSymMap, Diagnostics& diagnostics) noexcept
+        : _symTable(symTable), _nodeSymMap(nodeSymMap), _diagnostics(diagnostics) { }
+
+    void visit(Node* node) override;
+
+    void visit(Name* name) override;
+
+    void visit(LambdaExpr* lambda) override;
+
+    void visit(VarDefStmt* vardef) override;
+    void visit(FnDefStmt* fndef) override;
+    void visit(TypeDefStmt* tdef) override;
+    void visit(ModuleStmt* moddef) override;
+    void visit(BlockExpr* block) override;
+
+    void resolveBlock(BlockExpr* block, Env env);
+
+private:
+    /**
+     * Pushes a new lexical environment.
+     * @param env Environment to push (optional).
+     */
+    void pushEnv(Env env = {}) { _envStack.push_back(std::move(env)); }
+
+    /**
+     * Pop the current lexical environment.
+     */
+    void popEnv() { _envStack.pop_back(); }
+
+    /**
+     * Retrieves the current lexical environment.
+     * @return The current lexical environment.
+     */
+    Env& currentEnv() { return _envStack.back(); }
+
+    /**
+     * Looks up a name starting from the current environment up to the global environment.
+     * @param name Name to look up.
+     * @return Symbol associated with the name or `nullptr` if no symbol was found, and whether the symbol is visible
+     *         or not.
+     */
+    [[nodiscard]]
+    std::pair<const Symbol*, bool> lookup(InternedNameValue name) const noexcept;
+
+    /**
+     * Adds a diagnostic to the result.
+     * @param diagnostic Diagnostic to add.
+     */
+    void report(Diagnostic diagnostic) noexcept {
+        _diagnostics.add(std::move(diagnostic));
+    }
+
+    friend class NameResolver;
 };
 
 } // Spark::FrontEnd
