@@ -23,7 +23,7 @@ GlobalResolveResult GlobalResolver::resolve(const AST& ast, SymbolTable& symTabl
     for (const Node* node : nodes) {
         if (const ExportStmt* ex = node->as<ExportStmt>(); ex != nullptr) {
             Stmt* stmt = ex->stmt;
-            Binder::bind(stmt, globalEnv, symTable, nodeSymMap, true, diagnostics);
+            DeclBinder::bind(stmt, globalEnv, symTable, nodeSymMap, true, diagnostics);
         }
     }
 
