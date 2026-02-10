@@ -166,3 +166,15 @@ TEST(NameResolverTest, Invalid5) {
     Env globalEnv;
     RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
 }
+
+TEST(NameResolverTest, Invalid6) {
+    // Use before declaration
+    std::string_view source = R"(
+        let y = x + 1;
+        let x = 2;
+    )";
+    SymbolTable symTable;
+    NodeSymbolMap nodeSymMap;
+    Env globalEnv;
+    RESOLVE_EXPECT_FAIL(source, symTable, nodeSymMap, globalEnv);
+}
