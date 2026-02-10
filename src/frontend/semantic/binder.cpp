@@ -119,10 +119,19 @@ void NameBinder::bind(Node* node,
 
 
 
+void DeclBinder::visit(FnParam* param) {
+    VarModifier* mod = param->mod;
+    NameBinder v{
+        _env, _symTable, _nodeSymMap, SymbolKind::Var, mod->isReassignable(), mod->isReference(),
+        false, _isVisible, _diagnostics
+    };
+    param->pattern->accept(v);
+}
+
 void DeclBinder::visit(VarDefStmt* vardef) {
     VarModifier* mod = vardef->mod;
     NameBinder v{
-        _env, _symTable, _nodeSymMap, SymbolKind::Var, isReassignable(mod), isReference(mod),
+        _env, _symTable, _nodeSymMap, SymbolKind::Var, mod->isReassignable(), mod->isReference(),
         false, _isVisible, _diagnostics
     };
     vardef->pattern->accept(v);
