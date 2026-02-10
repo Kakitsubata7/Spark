@@ -111,6 +111,17 @@ struct VarModifier final : Node {
 protected:
     [[nodiscard]]
     bool equalsImpl(const Node& rhs) const noexcept override;
+
+public:
+    [[nodiscard]]
+    bool isReassignable() const noexcept {
+        return kind == VarKind::Let || kind == VarKind::Ref;
+    }
+
+    [[nodiscard]]
+    bool isReference() const noexcept {
+        return kind == VarKind::Ref || kind == VarKind::Cref;
+    }
 };
 
 struct FnParam final : Node {
