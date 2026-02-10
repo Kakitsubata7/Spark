@@ -194,6 +194,22 @@ public:
      */
     void clear() noexcept;
 
+    auto begin() { return _diagnostics.begin(); }
+    auto end() { return _diagnostics.end(); }
+
+    [[nodiscard]] auto begin() const { return _diagnostics.begin(); }
+    [[nodiscard]] auto end() const { return _diagnostics.end(); }
+
+    Diagnostic& operator[](size_t i) noexcept {
+        return _diagnostics[i];
+    }
+
+    const Diagnostic& operator[](size_t i) const noexcept {
+        return _diagnostics[i];
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Diagnostics& diagnostics);
+
     /**
      * Renders all diagnostics into the output stream.
      * The order of diagnostics is based on the adding order.

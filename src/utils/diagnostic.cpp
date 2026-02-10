@@ -1,5 +1,6 @@
 #include "diagnostic.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 #include "frontend/semantic/symbol.hpp"
@@ -74,6 +75,7 @@ void Diagnostic::render(std::ostream& os,
 }
 
 std::ostream& operator<<(std::ostream& os, const Diagnostic& d) {
+    // Main
     os << d.start.line << ":" << d.start.column << ": ";
     switch (d.severity) {
         case Diagnostic::Severity::Note:
@@ -89,6 +91,18 @@ std::ostream& operator<<(std::ostream& os, const Diagnostic& d) {
             break;
     }
     os << d.message;
+
+    // Subs
+    if (!d.subs.empty()) {
+        os << "\n";
+        for (size_t i = 0; i < d.subs.size(); ++i) {
+            os << d.subs[i];
+            if (i != d.subs.size() - 1) {
+                os << "\n";
+            }
+        }
+    }
+
     return os;
 }
 
@@ -101,21 +115,15 @@ bool Diagnostics::empty() const noexcept {
 }
 
 bool Diagnostics::hasWarning() const noexcept {
-    for (const Diagnostic& d : _diagnostics) {
-        if (d.severity == Diagnostic::Severity::Warning) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(_diagnostics.begin(), _diagnostics.end(), [](const Diagnostic& d) {
+        return d.severity == Diagnostic::Severity::Warning;
+    });
 }
 
 bool Diagnostics::hasError() const noexcept {
-    for (const Diagnostic& d : _diagnostics) {
-        if (d.severity == Diagnostic::Severity::Error) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(_diagnostics.begin(), _diagnostics.end(), [](const Diagnostic& d) {
+        return d.severity == Diagnostic::Severity::Error;
+    });
 }
 
 void Diagnostics::add(Diagnostic diagnostic) {
@@ -131,6 +139,16 @@ void Diagnostics::adopt(Diagnostics& from) {
 
 void Diagnostics::clear() noexcept {
     _diagnostics.clear();
+}
+
+std::ostream& operator<<(std::ostream& os, const Diagnostics& diagnostics) {
+    for (size_t i = 0; i < diagnostics.count(); ++i) {
+        os << diagnostics[i];
+        if (i != diagnostics.count() - 1) {
+            os << "\n";
+        }
+    }
+    return os;
 }
 
 void Diagnostics::render(std::ostream& os,
