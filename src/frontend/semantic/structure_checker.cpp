@@ -2,12 +2,11 @@
 
 namespace Spark::FrontEnd {
 
-Diagnostics StructureChecker::check(const AST& ast) {
+void StructureChecker::check(const AST& ast, Diagnostics& diagnostics) {
     if (ast.root == nullptr) {
-        return {};
+        return;
     }
 
-    Diagnostics diagnostics{};
     StructureChecker checker{diagnostics};
     checker.replaceCtx(Context{
         .inLoop = false,
@@ -16,7 +15,6 @@ Diagnostics StructureChecker::check(const AST& ast) {
         .inModule = true
     });
     ast.root->accept(checker);
-    return std::move(diagnostics);
 }
 
 void StructureChecker::visit(Expr* expr) {
@@ -158,7 +156,7 @@ void StructureChecker::visitFn(Expr* body) {
         .inModule = false
     });
 
-    if (BlockExpr* block = body->as<BlockExpr>()) {
+    if (auto* block = body->as<BlockExpr>()) {
         for (Node* node : block->nodes) {
             node->accept(*this);
         }

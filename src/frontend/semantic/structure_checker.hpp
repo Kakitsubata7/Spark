@@ -21,7 +21,7 @@ private:
     explicit StructureChecker(Diagnostics& diagnostics) noexcept : _diagnostics(diagnostics) { }
 
 public:
-    static Diagnostics check(const AST& ast);
+    static void check(const AST& ast, Diagnostics& diagnostics);
 
     void visit(Expr* expr) override;
     void visit(Stmt* stmt) override;
