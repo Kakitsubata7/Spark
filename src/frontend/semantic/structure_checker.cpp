@@ -2,9 +2,9 @@
 
 namespace Spark::FrontEnd {
 
-void DeclarativePatternChecker::check(Node* node, Diagnostics& diagnostics) {
+void DeclarativePatternChecker::check(Pattern* pattern, Diagnostics& diagnostics) {
     DeclarativePatternChecker checker{diagnostics};
-    node->accept(checker);
+    pattern->accept(checker);
 }
 
 void DeclarativePatternChecker::visit(LiteralPattern* pattern) {
@@ -83,7 +83,7 @@ void StructureChecker::visit(BlockExpr* block) {
 
 void StructureChecker::visit(MatchExpr* match) {
     for (MatchCase* c : match->cases) {
-        DeclarativePatternChecker::check(c, _diagnostics);
+        DeclarativePatternChecker::check(c->pattern, _diagnostics);
     }
 }
 

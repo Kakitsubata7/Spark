@@ -12,7 +12,7 @@ private:
 public:
     explicit DeclarativePatternChecker(Diagnostics& diagnostics) noexcept : _diagnostics(diagnostics) { }
 
-    static void check(Node* node, Diagnostics& diagnostics);
+    static void check(Pattern* pattern, Diagnostics& diagnostics);
 
     void visit(LiteralPattern* pattern) override;
     void visit(BindingPattern* pattern) override;
