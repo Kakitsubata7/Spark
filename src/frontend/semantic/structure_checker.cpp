@@ -83,12 +83,8 @@ void StructureChecker::visit(BlockExpr* block) {
 
 void StructureChecker::visit(MatchExpr* match) {
     for (MatchCase* c : match->cases) {
-        c->accept(*this);
+        DeclarativePatternChecker::check(c, _diagnostics);
     }
-}
-
-void StructureChecker::visit(MatchCase* c) {
-    DeclarativePatternChecker::check(c, _diagnostics);
 }
 
 void StructureChecker::visit(VarDefStmt* vardef) {

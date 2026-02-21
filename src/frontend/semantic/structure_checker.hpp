@@ -43,7 +43,6 @@ public:
     void visit(Stmt* stmt) override;
     void visit(BlockExpr* block) override;
     void visit(MatchExpr* match) override;
-    void visit(MatchCase* c) override;
     void visit(VarDefStmt* vardef) override;
 
     void visit(WhileStmt* w) override;
