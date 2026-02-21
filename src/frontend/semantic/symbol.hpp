@@ -1,155 +1,19 @@
 ﻿#pragma once
 
-#include <iterator>
-#include <memory>
-
 #include "frontend/ast/node.hpp"
 
 namespace Spark::FrontEnd {
 
-/**
- * Represents the kind of semantic symbols.
- */
-enum class SymbolKind {
-    Var, Func, Type, Module
-};
-
-/**
- * Represents a symbol during semantic passes.
- */
 struct Symbol {
     /**
-     * Pointer to the definition `Name` node.
+     * Declaration `Name` node.
      */
-    Name* node;
-
-    /**
-     * Kind of the symbol.
-     */
-    SymbolKind kind;
+    Name* name;
 
     /**
      * Whether the symbol is reassignable or not.
      */
     bool isReassignable;
-
-    /**
-     * Whether the symbol is a reference or not.
-     */
-    bool isReference;
-
-    /**
-     * Retrieves the interned name of the symbol.
-     * @return Interned name of the symbol.
-     */
-    [[nodiscard]]
-    InternedNameValue name() const noexcept {
-        return node->value;
-    }
-
-    /**
-     * Retrieves the start location of the definition.
-     * @return Start location of the definition.
-     */
-    [[nodiscard]]
-    Location start() const noexcept {
-        return node->start;
-    }
-
-    /**
-     * Retrieves the end location of the definition.
-     * @return End location of the definition.
-     */
-    [[nodiscard]]
-    Location end() const noexcept {
-        return node->end;
-    }
-};
-
-/**
- * Represents a data structure that manages symbols.
- */
-class SymbolTable {
-private:
-    std::vector<std::unique_ptr<Symbol>> _symbols;
-
-public:
-    SymbolTable() = default;
-
-    SymbolTable(const SymbolTable&) = delete;
-    SymbolTable& operator=(const SymbolTable&) = delete;
-
-    SymbolTable(SymbolTable&&) = default;
-    SymbolTable& operator=(SymbolTable&&) = default;
-
-    /**
-     * Creates a `Symbol` instance.
-     * @param symbol Symbol to create.
-     * @return Pointer to the created symbol.
-     */
-    const Symbol* make(Symbol symbol) {
-        return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get();
-    }
-
-    /**
-     * Moves all symbols from another symbol table into itself.
-     * @param from Symbol table to move from.
-     */
-    void adopt(SymbolTable& from) {
-        _symbols.insert(
-            _symbols.end(),
-            std::make_move_iterator(from._symbols.begin()),
-            std::make_move_iterator(from._symbols.end())
-        );
-        from._symbols.clear();
-    }
-};
-
-/**
- * Represents a data structure that maps an AST node to a symbol.
- */
-class NodeSymbolMap {
-private:
-    std::unordered_map<const Node*, const Symbol*> _map;
-
-public:
-    NodeSymbolMap() = default;
-
-    NodeSymbolMap(const NodeSymbolMap&) = default;
-    NodeSymbolMap& operator=(const NodeSymbolMap&) = default;
-
-    NodeSymbolMap(NodeSymbolMap&&) = default;
-    NodeSymbolMap& operator=(NodeSymbolMap&&) = default;
-
-    /**
-     * Checks whether an AST node has a symbol.
-     * @param node AST node to check.
-     * @return `true` if the AST node has a symbol, false otherwise.
-     */
-    [[nodiscard]]
-    bool hasSymbol(const Node* node) const {
-        return _map.find(node) != _map.end();
-    }
-
-    /**
-     * Retrieves the symbol of the AST node.
-     * @param node AST node to retrieve symbol from.
-     * @return Symbol or `nullptr` if the AST node doesn't have a symbol.
-     */
-    [[nodiscard]]
-    const Symbol* symbolOf(const Node* node) const {
-        auto it = _map.find(node);
-        return it == _map.end() ? nullptr : it->second;
-    }
-
-    /**
-     * Sets the symbol of an AST node.
-     * @param node AST node to set symbol.
-     * @param symbol Symbol to set.
-     */
-    void set(const Node* node, const Symbol* symbol) {
-        _map[node] = symbol;
-    }
 };
 
 } // Spark::FrontEnd
