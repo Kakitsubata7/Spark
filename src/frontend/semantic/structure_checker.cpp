@@ -2,6 +2,40 @@
 
 namespace Spark::FrontEnd {
 
+void DeclarativePatternChecker::check(Node* node, Diagnostics& diagnostics) {
+    DeclarativePatternChecker checker{diagnostics};
+    node->accept(checker);
+}
+
+void DeclarativePatternChecker::visit(LiteralPattern* pattern) {
+    _diagnostics.add(Diagnostic::error(pattern->start, pattern->end, "literal pattern is not allowed inside a declarative context"));
+}
+
+void DeclarativePatternChecker::visit(BindingPattern* pattern) { }
+
+void DeclarativePatternChecker::visit(TuplePattern* pattern) {
+    for (Pattern* p : pattern->patterns) {
+        p->accept(*this);
+    }
+}
+
+void DeclarativePatternChecker::visit(CollectionPattern* pattern) {
+    for (Pattern* p : pattern->prefix) {
+        p->accept(*this);
+    }
+    for (Pattern* p : pattern->suffix) {
+        p->accept(*this);
+    }
+}
+
+void DeclarativePatternChecker::visit(RecordPattern* pattern) {
+    for (RecordPatternField* field : pattern->fields) {
+        field->pattern->accept(*this);
+    }
+}
+
+
+
 void StructureChecker::check(const AST& ast, Diagnostics& diagnostics) {
     if (ast.root == nullptr) {
         return;
@@ -47,7 +81,19 @@ void StructureChecker::visit(BlockExpr* block) {
     replaceCtx(old);
 }
 
-void StructureChecker::visit(VarDefStmt* vardef) { }
+void StructureChecker::visit(MatchExpr* match) {
+    for (MatchCase* c : match->cases) {
+        c->accept(*this);
+    }
+}
+
+void StructureChecker::visit(MatchCase* c) {
+    DeclarativePatternChecker::check(c, _diagnostics);
+}
+
+void StructureChecker::visit(VarDefStmt* vardef) {
+    DeclarativePatternChecker::check(vardef->pattern, _diagnostics);
+}
 
 void StructureChecker::visit(WhileStmt* w) {
     visitLoop(w->body);
@@ -165,6 +211,12 @@ void StructureChecker::visitFn(Expr* body) {
     }
 
     replaceCtx(old);
+}
+
+void StructureChecker::visitDeclPattern(Pattern* pattern) {
+    if (pattern->as<CollectionPattern>()) {
+
+    }
 }
 
 } // Spark::FrontEnd

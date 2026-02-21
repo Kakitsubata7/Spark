@@ -5,6 +5,22 @@
 
 namespace Spark::FrontEnd {
 
+class DeclarativePatternChecker : public NodeVisitor {
+private:
+    Diagnostics& _diagnostics;
+
+public:
+    explicit DeclarativePatternChecker(Diagnostics& diagnostics) noexcept : _diagnostics(diagnostics) { }
+
+    static void check(Node* node, Diagnostics& diagnostics);
+
+    void visit(LiteralPattern* pattern) override;
+    void visit(BindingPattern* pattern) override;
+    void visit(TuplePattern* pattern) override;
+    void visit(CollectionPattern* pattern) override;
+    void visit(RecordPattern* pattern) override;
+};
+
 class StructureChecker : public NodeVisitor {
 private:
     struct Context {
@@ -26,6 +42,8 @@ public:
     void visit(Expr* expr) override;
     void visit(Stmt* stmt) override;
     void visit(BlockExpr* block) override;
+    void visit(MatchExpr* match) override;
+    void visit(MatchCase* c) override;
     void visit(VarDefStmt* vardef) override;
 
     void visit(WhileStmt* w) override;
@@ -62,6 +80,7 @@ private:
 
     void visitLoop(BlockExpr* body);
     void visitFn(Expr* body);
+    void visitDeclPattern(Pattern* pattern);
 
     void error(Location start, Location end, std::string message, std::vector<Diagnostic> subs = {}) {
         _diagnostics.add(Diagnostic::error(start, end, std::move(message), std::move(subs)));
