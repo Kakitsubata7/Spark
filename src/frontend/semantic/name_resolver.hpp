@@ -1,99 +1,150 @@
 ﻿#pragma once
 
+#include <string_view>
 #include <utility>
-#include <vector>
 
-#include "env.hpp"
 #include "frontend/ast.hpp"
+#include "symbol.hpp"
 #include "utils/diagnostic.hpp"
 
 namespace Spark::FrontEnd {
 
 /**
- * Represents the result of name resolution.
+ * Represents an environment that maps names to symbols during name resolution.
  */
-struct NameResolveResult {
-    Diagnostics diagnostics{};
-
-    NameResolveResult() = default;
-};
-
-/**
- * Represents lexical symbol resolution.
- */
-class NameResolver {
-public:
-    static NameResolveResult resolve(const AST& ast,
-                                     SymbolTable& symTable,
-                                     NodeSymbolMap& nodeSymMap,
-                                     const Env& globalEnv = {});
-};
-
-/**
- * Represents a visitor that does name resolution.
- */
-class NameResolveVisitor : public NodeVisitor {
+class Env {
 private:
-    SymbolTable& _symTable;
-    NodeSymbolMap& _nodeSymMap;
+    std::unordered_map<std::string, Symbol*> _map;
+
+public:
+    void set(std::string_view name, Symbol* symbol) {
+        _map.emplace(std::string(name), symbol);
+    }
+
+    Symbol* get(std::string_view name) const {
+        auto it = _map.find(std::string(name));
+        return it == _map.end() ? nullptr : it->second;
+    }
+};
+
+class NameResolveContext {
+private:
+    SymbolTable& _symbolTable;
+
+    std::unordered_map<const Symbol*, std::unique_ptr<Env>> _moduleEnvMap;
+
+public:
+    explicit NameResolveContext(SymbolTable& symbolTable) noexcept : _symbolTable(symbolTable) { }
+
+    Symbol* makeSymbol(Symbol symbol) {
+        return _symbolTable.make(symbol);
+    }
+
+    Env* makeSubEnv(const Symbol* symbol) {
+        return _moduleEnvMap.emplace(symbol, std::make_unique<Env>()).first->second.get();
+    }
+
+    [[nodiscard]]
+    Env* getSubEnv(const Symbol* symbol) const {
+        auto it = _moduleEnvMap.find(symbol);
+        return it == _moduleEnvMap.end() ? nullptr : it->second.get();
+    }
+};
+
+class PatternDeclarator : public NodeVisitor {
+private:
+    SymbolTable& _symbolTable;
+    Env& _env;
+    SymbolKind _kind;
+    bool _isReassignable;
     Diagnostics& _diagnostics;
 
-    std::vector<Env> _envStack;
+public:
+    PatternDeclarator(SymbolTable& symbolTable,
+                      Env& env,
+                      SymbolKind kind,
+                      bool isReassignable,
+                      Diagnostics& diagnostics) noexcept
+        : _symbolTable(symbolTable), _env(env), _kind(kind), _isReassignable(isReassignable),
+          _diagnostics(diagnostics) { }
+
+    static void declare(Pattern* pattern,
+                        SymbolTable& symbolTable,
+                        Env& env,
+                        SymbolKind kind,
+                        bool isReassignable,
+                        Diagnostics& diagnostics);
+
+    void visit(BindingPattern* pattern) override;
+    void visit(TuplePattern* pattern) override;
+    void visit(CollectionPattern* pattern) override;
+    void visit(RecordPattern* pattern) override;
+
+private:
+    void diagnostic(Diagnostic diagnostic) {
+        _diagnostics.add(std::move(diagnostic));
+    }
+};
+
+class Declarator : public NodeVisitor {
+private:
+    SymbolTable& _symbolTable;
+    Env& _env;
+    Diagnostics& _diagnostics;
 
 public:
-    explicit NameResolveVisitor(SymbolTable& symTable, NodeSymbolMap& nodeSymMap, Diagnostics& diagnostics) noexcept
-        : _symTable(symTable), _nodeSymMap(nodeSymMap), _diagnostics(diagnostics) { }
+    Declarator(SymbolTable& symbolTable, Env& env, Diagnostics& diagnostics) noexcept
+        : _symbolTable(symbolTable), _env(env), _diagnostics(diagnostics) { }
 
-    void visit(Node* node) override;
+    static void declare(Node* node, SymbolTable& symbolTable, Env& env, Diagnostics& diagnostics);
 
-    void visit(Name* name) override;
-
-    void visit(LambdaExpr* lambda) override;
+    void visit(MatchCase* c) override;
 
     void visit(VarDefStmt* vardef) override;
     void visit(FnDefStmt* fndef) override;
     void visit(TypeDefStmt* tdef) override;
-    void visit(ModuleStmt* moddef) override;
-    void visit(BlockExpr* block) override;
-
-    void resolveBlock(BlockExpr* block, Env env);
+    void visit(ModuleStmt* mdef) override;
 
 private:
-    /**
-     * Pushes a new lexical environment.
-     * @param env Environment to push (optional).
-     */
-    void pushEnv(Env env = {}) { _envStack.push_back(std::move(env)); }
-
-    /**
-     * Pop the current lexical environment.
-     */
-    void popEnv() { _envStack.pop_back(); }
-
-    /**
-     * Retrieves the current lexical environment.
-     * @return The current lexical environment.
-     */
-    Env& currentEnv() { return _envStack.back(); }
-
-    /**
-     * Looks up a name starting from the current environment up to the global environment.
-     * @param name Name to look up.
-     * @return Symbol associated with the name or `nullptr` if no symbol was found, and whether the symbol is visible
-     *         or not.
-     */
-    [[nodiscard]]
-    std::pair<const Symbol*, bool> lookup(InternedNameValue name) const noexcept;
-
-    /**
-     * Adds a diagnostic to the result.
-     * @param diagnostic Diagnostic to add.
-     */
-    void report(Diagnostic diagnostic) noexcept {
+    void diagnostic(Diagnostic diagnostic) {
         _diagnostics.add(std::move(diagnostic));
     }
+};
 
-    friend class NameResolver;
+/**
+ * Resolves all globally exported names to symbols and add them to the global environment.
+ * If the name already exists in the given global environment, it will be overridden.
+ */
+class GlobalNameResolver : public NodeVisitor {
+private:
+    SymbolTable& _symbolTable;
+    Env& _globalEnv;
+    Diagnostics& _diagnostics;
+
+public:
+    GlobalNameResolver(SymbolTable& symbolTable, Env& globalEnv, Diagnostics& diagnostics) noexcept
+        : _symbolTable(symbolTable), _globalEnv(globalEnv), _diagnostics(diagnostics) { }
+
+    static void resolve(const AST& ast, SymbolTable& symbolTable, Env& globalEnv, Diagnostics& diagnostics);
+
+    void visit(ExportStmt* e) override;
+};
+
+/**
+ * Resolves all lexical names and module names to symbols, ignoring globally exported names.
+ */
+class NameResolver : public NodeVisitor {
+private:
+    const Env& _globalEnv;
+    Diagnostics& _diagnostics;
+
+public:
+    explicit NameResolver(const Env& globalEnv, Diagnostics& diagnostics) noexcept
+        : _globalEnv(globalEnv), _diagnostics(diagnostics) { }
+
+    static void resolve(const AST& ast, const Env& globalEnv, Diagnostics& diagnostics);
+
+    void visit(MemberAccessExpr* expr) override;
 };
 
 } // Spark::FrontEnd
