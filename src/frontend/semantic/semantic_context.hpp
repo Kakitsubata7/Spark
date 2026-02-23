@@ -9,11 +9,13 @@
 
 namespace Spark::FrontEnd {
 
+class SemanticModule;
+
 class SemanticContext {
 private:
     std::vector<std::unique_ptr<Symbol>> _symbols;
 
-    std::unordered_map<const Node*, const Symbol*> _nodeSymMap;
+    std::unordered_map<const Node*, Symbol*> _nodeSymMap;
 
 public:
     SemanticContext() = default;
@@ -24,12 +26,12 @@ public:
     SemanticContext(SemanticContext&& other) noexcept = default;
     SemanticContext& operator=(SemanticContext&& other) noexcept = default;
 
-    const Symbol* make(Symbol symbol);
+    Symbol* make(Symbol symbol);
 
-    void setSymbol(const Node* node, const Symbol* symbol);
+    void setSymbol(const Node* node, Symbol* symbol);
 
     [[nodiscard]]
-    const Symbol* symbolOf(const Node* node) const;
+    Symbol* symbolOf(const Node* node) const;
 
     [[nodiscard]]
     bool hasSymbol(const Node* node) const;

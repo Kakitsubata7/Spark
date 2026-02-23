@@ -2,18 +2,18 @@
 
 namespace Spark::FrontEnd {
 
-const Symbol* SemanticContext::make(Symbol symbol) {
-    return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get();
+Symbol* SemanticContext::make(Symbol symbol) {
+    return _symbols.emplace_back(std::make_unique<Symbol>(std::move(symbol))).get(); // TODO: Remove `std::move`
 }
 
-void SemanticContext::setSymbol(const Node* node, const Symbol* symbol) {
+void SemanticContext::setSymbol(const Node* node, Symbol* symbol) {
     if (node == nullptr || symbol == nullptr) {
         return;
     }
     _nodeSymMap[node] = symbol;
 }
 
-const Symbol* SemanticContext::symbolOf(const Node* node) const {
+Symbol* SemanticContext::symbolOf(const Node* node) const {
     if (node == nullptr) {
         return nullptr;
     }
