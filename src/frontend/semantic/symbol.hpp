@@ -1,7 +1,9 @@
 ﻿#pragma once
 
+#include <cassert>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include "frontend/ast/node.hpp"
 #include "symbol.hpp"
@@ -67,6 +69,22 @@ public:
     Symbol* make(Symbol symbol) {
         return _symbols.emplace_back(std::make_unique<Symbol>(symbol)).get();
     }
+};
+
+class NodeSymbolMap {
+private:
+    std::unordered_map<const Node*, Symbol*> _map;
+
+public:
+    Symbol* get(const Node* node) const {
+        auto it = _map.find(node);
+        return it == _map.end() ? nullptr : it->second;
+    }
+
+    void set(const Node* node, Symbol* symbol) {
+        assert(node != nullptr);
+        _map[node] = symbol;
+    };
 };
 
 } // Spark::FrontEnd
