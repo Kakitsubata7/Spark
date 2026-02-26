@@ -90,12 +90,13 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
 
+        src/frontend/semantic/env.hpp
         src/frontend/semantic/name_resolver.cpp
         src/frontend/semantic/name_resolver.hpp
-        src/frontend/semantic/structure_checker.cpp
-        src/frontend/semantic/structure_checker.hpp
         src/frontend/semantic/semantic_context.hpp
         src/frontend/semantic/semantic_context.cpp
+        src/frontend/semantic/structure_checker.cpp
+        src/frontend/semantic/structure_checker.hpp
         src/frontend/semantic/symbol.hpp
 
         src/frontend/source_buffer.cpp
