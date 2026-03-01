@@ -12,11 +12,14 @@ namespace Spark::FrontEnd {
  */
 class Env {
 private:
+    const Env* _parent;
     std::unordered_map<std::string_view, Symbol*> _map;
 
 public:
-    Env() = default;
+    Env() : _parent(nullptr) { }
+    explicit Env(const Env& parent) : _parent(&parent) { }
 
+    [[nodiscard]]
     Symbol* get(std::string_view name) const {
         auto it = _map.find(name);
         return it != _map.end() ? it->second : nullptr;
@@ -28,6 +31,12 @@ public:
 
     void remove(std::string_view name) {
         _map.erase(name);
+    }
+
+    [[nodiscard]]
+    Symbol* find(std::string_view name) const {
+        auto it = _map.find(name);
+        return it != _map.end() ? it->second : (_parent != nullptr ? _parent->find(name) : nullptr);
     }
 };
 
