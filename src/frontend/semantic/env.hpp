@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <cassert>
 #include <string_view>
 #include <unordered_map>
 
@@ -12,12 +13,29 @@ namespace Spark::FrontEnd {
  */
 class Env {
 private:
-    const Env* _parent;
+    Env* _parent;
     std::unordered_map<std::string_view, Symbol*> _map;
 
 public:
     Env() : _parent(nullptr) { }
-    explicit Env(const Env& parent) : _parent(&parent) { }
+    explicit Env(Env& parent) : _parent(&parent) { }
+
+    Env(const Env& other) = delete;
+    Env& operator=(const Env& other) = delete;
+
+    Env(Env&& other) = default;
+    Env& operator=(Env&& other) = default;
+
+    [[nodiscard]]
+    bool hasParent() const noexcept {
+        return _parent != nullptr;
+    }
+
+    [[nodiscard]]
+    Env& parent() const noexcept {
+        assert(_parent != nullptr);
+        return *_parent;
+    }
 
     [[nodiscard]]
     Symbol* get(std::string_view name) const {
