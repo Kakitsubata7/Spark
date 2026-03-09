@@ -32,7 +32,13 @@ public:
     }
 
     [[nodiscard]]
-    Env& parent() const noexcept {
+    Env& parent() noexcept {
+        assert(_parent != nullptr);
+        return *_parent;
+    }
+
+    [[nodiscard]]
+    const Env& parent() const noexcept {
         assert(_parent != nullptr);
         return *_parent;
     }
