@@ -22,7 +22,7 @@ void PatternDeclarator::visit(Name* node) {
         _env.set(name, symbol);
     } else {
         // Redeclaration error, reuse the previously declared symbol
-        redeclareError(node, symbol->node);
+        redeclareError(node->start, node->end, name, symbol->start(), symbol->end());
     }
 
     // Bind symbol to the `Name` node
@@ -58,15 +58,15 @@ void PatternDeclarator::visit(RecordPattern* pattern) {
     }
 }
 
-void PatternDeclarator::redeclareError(const Name* node, const Name* prevDeclareNode) noexcept {
-    assert(node != nullptr);
-    assert(prevDeclareNode != nullptr);
-
+void PatternDeclarator::redeclareError(Location start,
+                                       Location end,
+                                       std::string_view name,
+                                       Location prevStart,
+                                       Location prevEnd) noexcept {
     std::ostringstream msg;
-    std::string_view name = node->value.str();
     msg << "redeclaration of name: `" << name << "`";
-    _diagnostics.add(Diagnostic::error(node->start, node->end, msg.str(), {
-        Diagnostic::note(prevDeclareNode->start, node->end, "previously declared here")
+    _diagnostics.add(Diagnostic::error(start, end, msg.str(), {
+        Diagnostic::note(prevStart, prevEnd, "previously declared here")
     }));
 }
 
@@ -90,8 +90,9 @@ void NameDeclarator::visit(FnDefStmt* fndef) {
 void NameResolver::visit(NameExpr* ident) {
     std::string_view name = ident->name->value.str();
     if (Symbol* symbol = _env.find(name); symbol != nullptr) {
-        _nodeSymbolMap.set(ident, symbol);
+        // Map symbol to `NameExpr` and `Name` nodes
         _nodeSymbolMap.set(ident->name, symbol);
+        _nodeSymbolMap.set(ident, symbol);
         return;
     }
     cannotFindError(ident->start, ident->end, name);

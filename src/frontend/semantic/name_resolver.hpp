@@ -39,7 +39,11 @@ public:
     void visit(RecordPattern* pattern) override;
 
 private:
-    void redeclareError(const Name* node, const Name* prevDeclareNode) noexcept;
+    void redeclareError(Location start,
+                        Location end,
+                        std::string_view name,
+                        Location prevStart,
+                        Location prevEnd) noexcept;
 };
 
 class NameDeclarator : public NodeVisitor {
@@ -68,7 +72,9 @@ class NameResolver : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
     NodeSymbolMap& _nodeSymbolMap;
+
     const Env& _env;
+
     Diagnostics& _diagnostics;
 
 public:
