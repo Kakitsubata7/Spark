@@ -78,7 +78,7 @@ public:
 
     virtual void visit(Node* node);
 
-    virtual void visit(Expr* expr); 
+    virtual void visit(Expr* expr);
     virtual void visit(Stmt* stmt);
     virtual void visit(Pattern* pattern);
 

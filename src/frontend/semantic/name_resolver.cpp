@@ -70,8 +70,6 @@ void PatternDeclarator::redeclareError(Location start,
     }));
 }
 
-
-
 void NameDeclarator::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
     bool isReassignable = vardef->mod->kind == VarModifier::VarKind::Let;
@@ -88,6 +86,8 @@ void NameDeclarator::visit(FnDefStmt* fndef) {
 
 
 void NameResolver::visit(NameExpr* ident) {
+    assert(ident != nullptr);
+
     std::string_view name = ident->name->value.str();
     if (Symbol* symbol = _env.find(name); symbol != nullptr) {
         // Map symbol to `NameExpr` and `Name` nodes
@@ -123,17 +123,6 @@ void SemanticResolver::visit(BlockExpr* block) {
     NameResolver nameResolver{};
 
     popEnv();
-}
-
-void SemanticResolver::resolveTopLevel(Node* node) {
-    assert(node != nullptr);
-
-    std::vector<Node*> nodes;
-    if (auto* block = node->as<BlockExpr>()) {
-        nodes = block->nodes;
-    } else {
-        nodes.push_back(node);
-    }
 }
 
 bool SemanticResolver::isHoistedDeclarative(const Node* node) noexcept {

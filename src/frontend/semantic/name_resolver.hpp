@@ -97,14 +97,6 @@ public:
     SemanticResolver(SemanticContext& ctx, Env& globalEnv, Diagnostics& diagnostics)
         : SemanticVisitor(ctx, diagnostics), _globalEnv(globalEnv) { }
 
-    static void resolve(const AST& ast, SemanticContext& ctx, Env& globalEnv, Diagnostics& diagnostics) {
-        if (ast.root == nullptr) {
-            return;
-        }
-        SemanticResolver resolver{ctx, globalEnv, diagnostics};
-        resolver.resolveTopLevel(ast.root);
-    }
-
 private:
     void visit(BlockExpr* block) override;
 
@@ -125,8 +117,6 @@ private:
         assert(node != nullptr);
         node->accept(*this);
     }
-
-    void resolveTopLevel(Node* node);
 
     static bool isHoistedDeclarative(const Node* node) noexcept;
 };
