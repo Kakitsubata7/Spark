@@ -1,4 +1,4 @@
-﻿#include "name_resolver.hpp"
+﻿#include "semantic_resolver.hpp"
 
 #include <sstream>
 
