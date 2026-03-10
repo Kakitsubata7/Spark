@@ -32,13 +32,14 @@ public:
         : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _env(env), _kind(kind),
           _isReassignable(isReassignable), _diagnostics(diagnostics) { }
 
-    void visit(Name* node) override;
     void visit(BindingPattern* pattern) override;
     void visit(TuplePattern* pattern) override;
     void visit(CollectionPattern* pattern) override;
     void visit(RecordPattern* pattern) override;
 
 private:
+    Symbol* declare(Name* node);
+
     void redeclareError(Location start,
                         Location end,
                         std::string_view name,
@@ -83,22 +84,45 @@ public:
 
     void visit(NameExpr* ident) override;
 
+private:
+    Symbol* resolve(const Name* node);
+
     void cannotFindError(Location start, Location end, std::string_view name);
 };
 
 
 
-class SemanticResolver : public SemanticVisitor {
+class SemanticResolver : public NodeVisitor {
 private:
+    SymbolTable& _symbolTable;
+    NodeSymbolMap& _nodeSymbolMap;
+
     Env& _globalEnv;
     std::vector<Env> _envStack;
 
+    Diagnostics& _diagnostics;
+
 public:
-    SemanticResolver(SemanticContext& ctx, Env& globalEnv, Diagnostics& diagnostics)
-        : SemanticVisitor(ctx, diagnostics), _globalEnv(globalEnv) { }
+    SemanticResolver(SymbolTable& symbolTable,
+                     NodeSymbolMap& nodeSymbolMap,
+                     Env& globalEnv,
+                     Diagnostics& diagnostics)
+        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _globalEnv(globalEnv), _diagnostics(diagnostics) { }
 
 private:
     void visit(BlockExpr* block) override;
+    void visit(IfThenExpr* ifthen) override;
+    void visit(BinaryExpr* binary) override;
+    void visit(PrefixExpr* prefix) override;
+    void visit(PostfixExpr* postfix) override;
+    void visit(NameExpr* ident) override;
+
+    void visit(VarDefStmt* vardef) override;
+    void visit(FnDefStmt* fndef) override;
+    void visit(IfStmt* ifstmt) override;
+    void visit(WhileStmt* w) override;
+    void visit(DoWhileStmt* dowhile) override;
+    void visit(ReturnStmt* ret) override;
 
     Env& currentEnv() noexcept {
         return _envStack.empty() ? _globalEnv : _envStack.back();
