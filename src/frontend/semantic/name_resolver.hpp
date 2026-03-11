@@ -4,13 +4,12 @@
 
 #include "env.hpp"
 #include "frontend/ast.hpp"
-#include "semantic_visitor.hpp"
 #include "symbol.hpp"
 #include "utils/diagnostic.hpp"
 
 namespace Spark::FrontEnd {
 
-class PatternDeclarator : public NodeVisitor {
+class NameDeclarator : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
     NodeSymbolMap& _nodeSymbolMap;
@@ -23,23 +22,22 @@ private:
     Diagnostics& _diagnostics;
 
 public:
-    PatternDeclarator(SymbolTable& symbolTable,
-                      NodeSymbolMap& nodeSymbolMap,
-                      Env& env,
-                      SymbolKind kind,
-                      bool isReassignable,
-                      Diagnostics& diagnostics) noexcept
+    NameDeclarator(SymbolTable& symbolTable,
+                   NodeSymbolMap& nodeSymbolMap,
+                   Env& env,
+                   SymbolKind kind,
+                   bool isReassignable,
+                   Diagnostics& diagnostics) noexcept
         : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _env(env), _kind(kind),
           _isReassignable(isReassignable), _diagnostics(diagnostics) { }
 
+    void visit(Name* node) override;
     void visit(BindingPattern* pattern) override;
     void visit(TuplePattern* pattern) override;
     void visit(CollectionPattern* pattern) override;
     void visit(RecordPattern* pattern) override;
 
 private:
-    Symbol* declare(Name* node);
-
     void redeclareError(Location start,
                         Location end,
                         std::string_view name,
@@ -47,52 +45,9 @@ private:
                         Location prevEnd) noexcept;
 };
 
-class NameDeclarator : public NodeVisitor {
-private:
-    SymbolTable& _symbolTable;
-    NodeSymbolMap& _nodeSymbolMap;
-
-    Env& _env;
-
-    Diagnostics& _diagnostics;
-
-public:
-    NameDeclarator(SymbolTable& symbolTable,
-                   NodeSymbolMap& nodeSymbolMap,
-                   Env& env,
-                   Diagnostics& diagnostics) noexcept
-        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _env(env), _diagnostics(diagnostics) { }
-
-    void visit(VarDefStmt* vardef) override;
-    void visit(FnDefStmt* fndef) override;
-};
-
 
 
 class NameResolver : public NodeVisitor {
-private:
-    SymbolTable& _symbolTable;
-    NodeSymbolMap& _nodeSymbolMap;
-
-    const Env& _env;
-
-    Diagnostics& _diagnostics;
-
-public:
-    NameResolver(SymbolTable& symbolTable, NodeSymbolMap& nodeSymbolMap, Env& env, Diagnostics& diagnostics) noexcept
-        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _env(env), _diagnostics(diagnostics) { }
-
-    void visit(NameExpr* ident) override;
-
-private:
-    Symbol* resolve(const Name* node);
-
-    void cannotFindError(Location start, Location end, std::string_view name);
-};
-
-
-
-class SemanticResolver : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
     NodeSymbolMap& _nodeSymbolMap;
@@ -103,15 +58,17 @@ private:
     Diagnostics& _diagnostics;
 
 public:
-    SemanticResolver(SymbolTable& symbolTable,
-                     NodeSymbolMap& nodeSymbolMap,
-                     Env& globalEnv,
-                     Diagnostics& diagnostics)
+    NameResolver(SymbolTable& symbolTable,
+                 NodeSymbolMap& nodeSymbolMap,
+                 Env& globalEnv,
+                 Diagnostics& diagnostics)
         : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _globalEnv(globalEnv), _diagnostics(diagnostics) { }
 
 private:
-    void visit(BlockExpr* block) override;
+    void visit(Name* node) override;
+
     void visit(IfThenExpr* ifthen) override;
+    void visit(BlockExpr* block) override;
     void visit(BinaryExpr* binary) override;
     void visit(PrefixExpr* prefix) override;
     void visit(PostfixExpr* postfix) override;
@@ -119,6 +76,7 @@ private:
 
     void visit(VarDefStmt* vardef) override;
     void visit(FnDefStmt* fndef) override;
+    void visit(TypeDefStmt* tdef) override;
     void visit(IfStmt* ifstmt) override;
     void visit(WhileStmt* w) override;
     void visit(DoWhileStmt* dowhile) override;
@@ -137,12 +95,12 @@ private:
         _envStack.pop_back();
     }
 
-    void resolve(Node* node) {
-        assert(node != nullptr);
-        node->accept(*this);
-    }
+    void declare(Name* node, Env& env, SymbolKind kind, bool isReassignable);
+    void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
     static bool isHoistedDeclarative(const Node* node) noexcept;
+
+    void cannotFindError(Location start, Location end, std::string_view name);
 };
 
 } // Spark::FrontEnd
