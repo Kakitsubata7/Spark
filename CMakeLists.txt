@@ -96,6 +96,8 @@ add_library(sparklib
         src/frontend/semantic/structure_checker.cpp
         src/frontend/semantic/structure_checker.hpp
         src/frontend/semantic/symbol.hpp
+        src/frontend/semantic/type_resolver.cpp
+        src/frontend/semantic/type_resolver.hpp
 
         src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp
