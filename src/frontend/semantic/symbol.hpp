@@ -83,8 +83,13 @@ public:
 
     void set(const Node* node, Symbol* symbol) {
         assert(node != nullptr);
-        _map[node] = symbol;
-    };
+
+        if (symbol == nullptr) {
+            _map.erase(node);
+        } else {
+            _map[node] = symbol;
+        }
+    }
 };
 
 } // Spark::FrontEnd
