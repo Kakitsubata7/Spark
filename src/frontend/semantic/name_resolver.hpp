@@ -9,6 +9,9 @@
 
 namespace Spark::FrontEnd {
 
+/**
+ * Represents a visitor that creates symbol(s) for a name or a pattern and binds them to the given environment.
+ */
 class NameDeclarator : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
@@ -47,6 +50,9 @@ private:
 
 
 
+/**
+ * Represents a visitor that declares names and resolves name usages, creating environment mappings for each scope.
+ */
 class NameResolver : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
