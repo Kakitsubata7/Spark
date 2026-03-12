@@ -72,6 +72,7 @@ public:
 
 private:
     void visit(Name* node) override;
+    void visit(FnParam* param) override;
 
     void visit(IfThenExpr* ifthen) override;
     void visit(BlockExpr* block) override;
@@ -104,6 +105,7 @@ private:
     void declare(Name* node, Env& env, SymbolKind kind, bool isReassignable);
     void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
+    static bool isReassignable(const VarModifier* varmod) noexcept;
     static bool isHoistedDeclarative(const Node* node) noexcept;
 
     void cannotFindError(Location start, Location end, std::string_view name);

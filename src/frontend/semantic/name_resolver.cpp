@@ -83,6 +83,12 @@ void NameResolver::visit(Name* node) {
     cannotFindError(node->start, node->end, name);
 }
 
+void NameResolver::visit(FnParam* param) {
+    assert(param != nullptr);
+
+    NameDeclarator declarator{_symbolTable, _nodeSymbolMap, currentEnv(), SymbolKind::Var, };
+}
+
 void NameResolver::visit(IfThenExpr* ifthen) {
     assert(ifthen != nullptr);
     ifthen->condition->accept(*this);
@@ -141,7 +147,20 @@ void NameResolver::visit(VarDefStmt* vardef) {
 
 void NameResolver::visit(FnDefStmt* fndef) {
     assert(fndef != nullptr);
+
+    // Declares function name
     declare(fndef->name, currentEnv(), SymbolKind::Func, false);
+
+    //
+    pushEnv();
+
+    for (FnParam* param : fndef->params) {
+        param->
+    }
+
+    fndef->body->accept(*this);
+
+    popEnv();
 }
 
 void NameResolver::visit(TypeDefStmt* tdef) {
@@ -189,6 +208,11 @@ void NameResolver::declare(Pattern* pattern, Env& env, SymbolKind kind, bool isR
 
     NameDeclarator declarator{_symbolTable, _nodeSymbolMap, env, kind, isReassignable, _diagnostics};
     pattern->accept(declarator);
+}
+
+bool NameResolver::isReassignable(const VarModifier* varmod) noexcept {
+    assert(varmod != nullptr);
+    return varmod->kind == VarModifier::VarKind::Let || varmod->kind == VarModifier::VarKind::Ref;
 }
 
 bool NameResolver::isHoistedDeclarative(const Node* node) noexcept {
