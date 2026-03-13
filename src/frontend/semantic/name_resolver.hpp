@@ -87,6 +87,7 @@ private:
     void visit(IfStmt* ifstmt) override;
     void visit(WhileStmt* w) override;
     void visit(DoWhileStmt* dowhile) override;
+    void visit(ForStmt* forstmt) override;
     void visit(ReturnStmt* ret) override;
 
     Env& currentEnv() noexcept {
@@ -105,7 +106,9 @@ private:
     void declare(Name* node, Env& env, SymbolKind kind, bool isReassignable);
     void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
+    static bool isReassignable(VarModifier::VarKind kind) noexcept;
     static bool isReassignable(const VarModifier* varmod) noexcept;
+
     static bool isHoistedDeclarative(const Node* node) noexcept;
 
     void cannotFindError(Location start, Location end, std::string_view name);

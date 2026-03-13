@@ -86,7 +86,16 @@ void NameResolver::visit(Name* node) {
 void NameResolver::visit(FnParam* param) {
     assert(param != nullptr);
 
-    NameDeclarator declarator{_symbolTable, _nodeSymbolMap, currentEnv(), SymbolKind::Var, };
+    // Declares the parameter name
+    declare(param->pattern, currentEnv(), SymbolKind::Var, isReassignable(param->mod));
+
+    // Resolves type and default value (if present)
+    if (param->type != nullptr) {
+        param->type->accept(*this);
+    }
+    if (param->def) {
+        param->def->accept(*this);
+    }
 }
 
 void NameResolver::visit(IfThenExpr* ifthen) {
@@ -141,8 +150,7 @@ void NameResolver::visit(NameExpr* ident) {
 
 void NameResolver::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
-    bool isReassignable = vardef->mod->kind == VarModifier::VarKind::Let;
-    declare(vardef->pattern, currentEnv(), SymbolKind::Var, isReassignable);
+    declare(vardef->pattern, currentEnv(), SymbolKind::Var, isReassignable(vardef->mod));
 }
 
 void NameResolver::visit(FnDefStmt* fndef) {
@@ -151,13 +159,15 @@ void NameResolver::visit(FnDefStmt* fndef) {
     // Declares function name
     declare(fndef->name, currentEnv(), SymbolKind::Func, false);
 
-    //
+    // Function body
     pushEnv();
 
+    // Declares parameters
     for (FnParam* param : fndef->params) {
-        param->
+        param->accept(*this);
     }
 
+    // Resolves body
     fndef->body->accept(*this);
 
     popEnv();
@@ -165,7 +175,17 @@ void NameResolver::visit(FnDefStmt* fndef) {
 
 void NameResolver::visit(TypeDefStmt* tdef) {
     assert(tdef != nullptr);
+
+    // Declares type name
     declare(tdef->name, currentEnv(), SymbolKind::Type, false);
+
+    // Resolves base type list
+    for (Expr* base : tdef->bases) {
+        base->accept(*this);
+    }
+
+    // Resolves type body
+    tdef->body->accept(*this);
 }
 
 void NameResolver::visit(IfStmt* ifstmt) {
@@ -189,6 +209,23 @@ void NameResolver::visit(DoWhileStmt* dowhile) {
     dowhile->condition->accept(*this);
 }
 
+void NameResolver::visit(ForStmt* forstmt) {
+    assert(forstmt != nullptr);
+
+    // Resolves range
+    forstmt->range->accept(*this);
+
+    pushEnv();
+
+    // Declares iterator
+    declare(forstmt->iterator, currentEnv(), SymbolKind::Var, false);
+
+    // Resolves body
+    forstmt->body->accept(*this);
+
+    popEnv();
+}
+
 void NameResolver::visit(ReturnStmt* ret) {
     assert(ret != nullptr);
     if (ret->expr != nullptr) {
@@ -210,9 +247,13 @@ void NameResolver::declare(Pattern* pattern, Env& env, SymbolKind kind, bool isR
     pattern->accept(declarator);
 }
 
+bool NameResolver::isReassignable(VarModifier::VarKind kind) noexcept {
+    return kind == VarModifier::VarKind::Let || kind == VarModifier::VarKind::Ref;
+}
+
 bool NameResolver::isReassignable(const VarModifier* varmod) noexcept {
     assert(varmod != nullptr);
-    return varmod->kind == VarModifier::VarKind::Let || varmod->kind == VarModifier::VarKind::Ref;
+    return isReassignable(varmod->kind);
 }
 
 bool NameResolver::isHoistedDeclarative(const Node* node) noexcept {
