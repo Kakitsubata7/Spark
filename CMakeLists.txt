@@ -91,6 +91,8 @@ add_library(sparklib
         src/frontend/parser.hpp
 
         src/frontend/semantic/env.hpp
+        src/frontend/semantic/hir_emitter.cpp
+        src/frontend/semantic/hir_emitter.hpp
         src/frontend/semantic/name_resolver.cpp
         src/frontend/semantic/name_resolver.hpp
         src/frontend/semantic/structure_checker.cpp

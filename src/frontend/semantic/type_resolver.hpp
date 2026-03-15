@@ -19,8 +19,15 @@ private:
 public:
     TypeResolver(NodeSymbolMap& nodeSymbolMap,
                  SemanticTypeTable& typeTable,
+                 NodeTypeMap& nodeTypeMap,
                  Diagnostics& diagnostics) noexcept :
-        _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _diagnostics(diagnostics) { }
+        _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _nodeTypeMap(nodeTypeMap), _diagnostics(diagnostics) { }
+
+    void visit(LiteralExpr* expr) override;
+
+    void visit(VarDefStmt* vardef) override;
+    void visit(FnDefStmt* fndef) override;
+    void visit(TypeDefStmt* tdef) override;
 };
 
 } // Spark::FrontEnd

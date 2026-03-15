@@ -91,6 +91,11 @@ public:
             _map[node] = symbol;
         }
     }
+
+    [[nodiscard]]
+    bool has(const Node* node) const {
+        return _map.find(node) != _map.end();
+    }
 };
 
 } // Spark::FrontEnd
