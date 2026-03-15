@@ -76,6 +76,7 @@ private:
     std::unordered_map<const Node*, Symbol*> _map;
 
 public:
+    [[nodiscard]]
     Symbol* get(const Node* node) const {
         auto it = _map.find(node);
         return it == _map.end() ? nullptr : it->second;
