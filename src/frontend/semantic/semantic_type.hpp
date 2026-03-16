@@ -26,17 +26,12 @@ public:
     SemanticType* type() const noexcept { return _type; }
 };
 
-class TypeMethod {
-private:
-
-};
-
 class SemanticType {
 private:
     TypeKind _kind;
 
     std::unordered_map<std::string_view, TypeField> _fieldMap;
-    std::unordered_map<std::string_view, TypeMethod> _methodMap;
+    std::unordered_map<std::string_view, SemanticFunc> _methodMap;
 
 public:
     explicit SemanticType(TypeKind kind) noexcept : _kind(kind) { }
@@ -61,13 +56,13 @@ public:
     }
 
     [[nodiscard]]
-    const TypeMethod& getMethod(std::string_view name) const {
+    const SemanticFunc& getMethod(std::string_view name) const {
         auto it = _methodMap.find(name);
         assert(it != _methodMap.end());
         return it->second;
     }
 
-    void setMethod(std::string_view name, TypeMethod method) {
+    void setMethod(std::string_view name, SemanticFunc method) {
         _methodMap.insert({name, std::move(method)});
     }
 
@@ -82,9 +77,12 @@ private:
     std::vector<std::unique_ptr<SemanticType>> _types;
 
 public:
-    SemanticType* make(SemanticType type) {
-        return _types.emplace_back(std::make_unique<SemanticType>(std::move(type))).get();
-    }
+    SemanticType* make(SemanticType type);
+
+    SemanticType* makeFuncType();
+    SemanticType* makeClassType();
+    SemanticType* makeStructType();
+    SemanticType* makeUnionType();
 };
 
 class NodeTypeMap {
