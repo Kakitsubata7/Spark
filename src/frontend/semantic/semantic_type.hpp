@@ -8,83 +8,138 @@
 
 namespace Spark::FrontEnd {
 
-enum class TypeKind {
-    Struct,
-    Class
+class SemanticFunc;
+
+/**
+ * Represents a type during semantic passes.
+ */
+class SemanticType {
+public:
+    virtual ~SemanticType() = default;
 };
 
-class SemanticType;
-
-class TypeField {
+/**
+ * Represents a record type's field during semantic passes.
+ */
+class RecordField {
 private:
+    std::string name;
     SemanticType* _type;
 
 public:
-    explicit TypeField(SemanticType* type) noexcept : _type(type) { }
+    explicit RecordField(SemanticType* type) noexcept : _type(type) { }
 
     [[nodiscard]]
     SemanticType* type() const noexcept { return _type; }
 };
 
-class SemanticType {
+class RecordType : public SemanticType {
 private:
-    TypeKind _kind;
+    std::vector<SemanticType*> _traits;
 
-    std::unordered_map<std::string_view, TypeField> _fieldMap;
-    std::unordered_map<std::string_view, SemanticFunc> _methodMap;
+    std::vector<std::pair<std::string, RecordField>> _fields;
+
+    std::unordered_map<std::string, SemanticFunc*> _methods;
+
+protected:
+    explicit RecordType(std::vector<SemanticType*> traits = {}) noexcept
+        : _traits(std::move(traits)) { }
 
 public:
-    explicit SemanticType(TypeKind kind) noexcept : _kind(kind) { }
+    [[nodiscard]]
+    const std::vector<SemanticType*>& traits() const noexcept { return _traits; }
 
     [[nodiscard]]
-    TypeKind kind() const noexcept { return _kind;}
-
-    [[nodiscard]]
-    const TypeField& getField(std::string_view name) const {
-        auto it = _fieldMap.find(name);
-        assert(it != _fieldMap.end());
-        return it->second;
-    }
-
-    void setField(std::string_view name, TypeField field) {
-        _fieldMap.insert({name, std::move(field)});
-    }
-
-    [[nodiscard]]
-    bool hasField(std::string_view name) const {
-        return _fieldMap.find(name) != _fieldMap.end();
-    }
-
-    [[nodiscard]]
-    const SemanticFunc& getMethod(std::string_view name) const {
-        auto it = _methodMap.find(name);
-        assert(it != _methodMap.end());
-        return it->second;
-    }
-
-    void setMethod(std::string_view name, SemanticFunc method) {
-        _methodMap.insert({name, std::move(method)});
-    }
-
-    [[nodiscard]]
-    bool hasMethod(std::string_view name) const {
-        return _methodMap.find(name) != _methodMap.end();
-    }
+    const std::unordered_map<std::string, SemanticFunc*>& methods() const noexcept { return _methods; }
 };
 
-class SemanticTypeTable {
+class StructType final : public RecordType {
+public:
+    explicit StructType(std::vector<SemanticType*> traits) noexcept
+        : RecordType(std::move(traits)) { }
+};
+
+class ClassType final : public RecordType {
+private:
+    SemanticType* _base;
+
+public:
+    explicit ClassType(SemanticType* base, std::vector<SemanticType*> traits = {}) noexcept
+        : RecordType(std::move(traits)), _base(base) { }
+
+    [[nodiscard]]
+    SemanticType* base() const noexcept { return _base; }
+};
+
+class FuncType final : public SemanticType {
+private:
+    SemanticFunc* _func;
+
+public:
+    explicit FuncType(SemanticFunc* func) noexcept
+        : _func(func) { }
+
+    [[nodiscard]]
+    SemanticFunc* func() const noexcept { return _func; }
+};
+
+/**
+ * Represents a data structure that manages `SemanticType` instances and provides factory methods for creating
+ * `SemanticType` instances.
+ * Instantiated `SemanticType` instances will be deallocated when the table is destructed.
+ */
+class TypeTable {
 private:
     std::vector<std::unique_ptr<SemanticType>> _types;
 
 public:
+    /**
+     * Instantiates a `SemanticType` instance with the given object.
+     * @param type `SemanticType` instance to instantiate.
+     * @return Instantiated `SemanticType` instance.
+     */
     SemanticType* make(SemanticType type);
 
-    SemanticType* makeFuncType();
-    SemanticType* makeClassType();
-    SemanticType* makeStructType();
-    SemanticType* makeUnionType();
+    /**
+     * Instantiates a function type.
+     * @param func `SemanticFunc`
+     * @return Instantiated function `SemanticType` instance.
+     */
+    SemanticType* makeFuncType(SemanticFunc* func, const std::vector<SemanticType*>& captures = {});
+
+    /**
+     * Instantiates a struct type.
+     * @param traits Traits the struct type will implement (none by default).
+     * @return Instantiated struct `SemanticType` instance.
+     */
+    SemanticType* makeStructType(std::vector<SemanticType*> traits = {});
+
+    /**
+     * Instantiates a class type.
+     * @param base Base class type (none by default).
+     * @param traits Traits the class type will implement (none by default).
+     * @return Instantiated class `SemanticType` instance.
+     */
+    SemanticType* makeClassType(SemanticType* base = nullptr, std::vector<SemanticType*> traits = {});
+
+    /**
+     * Instantiates a tuple type with the given types.
+     * @param types Types to form a tuple type.
+     * @return Instantiated tuple `SemanticType` instance.
+     */
+    SemanticType* makeTupleType(const std::vector<SemanticType*>& types);
+
+    /**
+     * Instantiates a union type with the given types.
+     * @param types Types to form a union type.
+     * @return Instantiated union `SemanticType` instance.
+     */
+    SemanticType* makeUnionType(const std::vector<SemanticType*>& types);
 };
 
+/**
+ * Represents a data structure that maps an AST node to a type.
+ */
 class NodeTypeMap {
 private:
     std::unordered_map<const Node*, SemanticType*> _map;

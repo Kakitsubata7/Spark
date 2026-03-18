@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "frontend/ast/node.hpp"
+#include "semantic_type.hpp"
 #include "symbol.hpp"
 
 namespace Spark::FrontEnd {
@@ -32,6 +33,11 @@ struct Symbol {
      * Declaration `Name` node.
      */
     Name* node;
+
+    /**
+     * Type of the symbol.
+     */
+    SemanticType* type;
 
     /**
      * Retrieves the name string of the symbol.
@@ -61,6 +67,10 @@ struct Symbol {
     }
 };
 
+/**
+ * Represents a data structure that manages `Symbol` instances.
+ * Instances will be deallocated during the table's destruction.
+ */
 class SymbolTable {
 private:
     std::vector<std::unique_ptr<Symbol>> _symbols;
@@ -71,6 +81,9 @@ public:
     }
 };
 
+/**
+ * Represents a map that binds a `Node` instance to a `Symbol` instance.
+ */
 class NodeSymbolMap {
 private:
     std::unordered_map<const Node*, Symbol*> _map;

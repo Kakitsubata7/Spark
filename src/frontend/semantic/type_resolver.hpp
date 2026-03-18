@@ -11,14 +11,14 @@ class TypeResolver : public NodeVisitor {
 private:
     NodeSymbolMap& _nodeSymbolMap;
 
-    SemanticTypeTable& _typeTable;
+    TypeTable& _typeTable;
     NodeTypeMap& _nodeTypeMap;
 
     Diagnostics& _diagnostics;
 
 public:
     TypeResolver(NodeSymbolMap& nodeSymbolMap,
-                 SemanticTypeTable& typeTable,
+                 TypeTable& typeTable,
                  NodeTypeMap& nodeTypeMap,
                  Diagnostics& diagnostics) noexcept :
         _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _nodeTypeMap(nodeTypeMap), _diagnostics(diagnostics) { }
