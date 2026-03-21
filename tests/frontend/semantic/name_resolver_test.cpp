@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "frontend/parser.hpp"
-#include "frontend/semantic/name_resolver.hpp"
+#include "frontend/semantic/semantic_resolver.hpp"
 
 using namespace Spark;
 using namespace Spark::FrontEnd;

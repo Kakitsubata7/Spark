@@ -93,8 +93,8 @@ add_library(sparklib
         src/frontend/semantic/c_emitter.cpp
         src/frontend/semantic/c_emitter.hpp
         src/frontend/semantic/env.hpp
-        src/frontend/semantic/name_resolver.cpp
-        src/frontend/semantic/name_resolver.hpp
+        src/frontend/semantic/semantic_resolver.cpp
+        src/frontend/semantic/semantic_resolver.hpp
         src/frontend/semantic/semantic_func.cpp
         src/frontend/semantic/semantic_func.hpp
         src/frontend/semantic/semantic_type.hpp
