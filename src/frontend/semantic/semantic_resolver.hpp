@@ -31,12 +31,12 @@ private:
 
 public:
     SemanticResolver(SymbolTable& symbolTable,
-                 NodeSymbolMap& nodeSymbolMap,
-                 TypeTable& typeTable,
-                 NodeTypeMap& nodeTypeMap,
-                 Env& globalEnv,
-                 CEmitter& emitter,
-                 Diagnostics& diagnostics)
+                     NodeSymbolMap& nodeSymbolMap,
+                     TypeTable& typeTable,
+                     NodeTypeMap& nodeTypeMap,
+                     Env& globalEnv,
+                     CEmitter& emitter,
+                     Diagnostics& diagnostics)
         : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _nodeTypeMap(nodeTypeMap),
           _globalEnv(globalEnv), _emitter(emitter), _diagnostics(diagnostics) { }
 
