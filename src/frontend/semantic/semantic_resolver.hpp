@@ -14,7 +14,7 @@ namespace Spark::FrontEnd {
 /**
  * Represents a visitor that declares names and resolves name usages, creating environment mappings for each scope.
  */
-class NameResolver : public NodeVisitor {
+class SemanticResolver : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
     NodeSymbolMap& _nodeSymbolMap;
@@ -30,7 +30,7 @@ private:
     Diagnostics& _diagnostics;
 
 public:
-    NameResolver(SymbolTable& symbolTable,
+    SemanticResolver(SymbolTable& symbolTable,
                  NodeSymbolMap& nodeSymbolMap,
                  TypeTable& typeTable,
                  NodeTypeMap& nodeTypeMap,

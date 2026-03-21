@@ -5,7 +5,7 @@
 
 namespace Spark::FrontEnd {
 
-void NameResolver::visit(Name* node) {
+void SemanticResolver::visit(Name* node) {
     assert(node != nullptr);
 
     std::string_view name = node->value.str();
@@ -16,7 +16,7 @@ void NameResolver::visit(Name* node) {
     cannotFindError(node->start, node->end, name);
 }
 
-void NameResolver::visit(FnParam* param) {
+void SemanticResolver::visit(FnParam* param) {
     assert(param != nullptr);
 
     // Declares the parameter name
@@ -31,14 +31,14 @@ void NameResolver::visit(FnParam* param) {
     }
 }
 
-void NameResolver::visit(IfThenExpr* ifthen) {
+void SemanticResolver::visit(IfThenExpr* ifthen) {
     assert(ifthen != nullptr);
     ifthen->condition->accept(*this);
     ifthen->thenExpr->accept(*this);
     ifthen->elseExpr->accept(*this);
 }
 
-void NameResolver::visit(BlockExpr* block) {
+void SemanticResolver::visit(BlockExpr* block) {
     assert(block != nullptr);
 
     pushEnv();
@@ -60,28 +60,28 @@ void NameResolver::visit(BlockExpr* block) {
     popEnv();
 }
 
-void NameResolver::visit(BinaryExpr* binary) {
+void SemanticResolver::visit(BinaryExpr* binary) {
     assert(binary != nullptr);
     binary->lhs->accept(*this);
     binary->rhs->accept(*this);
 }
 
-void NameResolver::visit(PrefixExpr* prefix) {
+void SemanticResolver::visit(PrefixExpr* prefix) {
     assert(prefix != nullptr);
     prefix->expr->accept(*this);
 }
 
-void NameResolver::visit(PostfixExpr* postfix) {
+void SemanticResolver::visit(PostfixExpr* postfix) {
     assert(postfix != nullptr);
 
     postfix->expr->accept(*this);
 }
 
-void NameResolver::visit(LiteralExpr* literal) {
+void SemanticResolver::visit(LiteralExpr* literal) {
     assert(literal != nullptr);
 }
 
-void NameResolver::resolve(LiteralExpr* literal, std::string& src) {
+void SemanticResolver::resolve(LiteralExpr* literal, std::string& src) {
     assert(literal != nullptr);
 
     std::visit([&](auto&& value) {
@@ -127,17 +127,17 @@ void NameResolver::resolve(LiteralExpr* literal, std::string& src) {
     }, literal->literal);
 }
 
-void NameResolver::visit(NameExpr* ident) {
+void SemanticResolver::visit(NameExpr* ident) {
     assert(ident != nullptr);
     ident->name->accept(*this);
 }
 
-void NameResolver::visit(VarDefStmt* vardef) {
+void SemanticResolver::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
     declare(vardef->pattern, currentEnv(), SymbolKind::Var, isReassignable(vardef->mod));
 }
 
-void NameResolver::visit(FnDefStmt* fndef) {
+void SemanticResolver::visit(FnDefStmt* fndef) {
     assert(fndef != nullptr);
 
     // Declares function name
@@ -157,7 +157,7 @@ void NameResolver::visit(FnDefStmt* fndef) {
     popEnv();
 }
 
-void NameResolver::visit(TypeDefStmt* tdef) {
+void SemanticResolver::visit(TypeDefStmt* tdef) {
     assert(tdef != nullptr);
 
     // Declares type name
@@ -172,7 +172,7 @@ void NameResolver::visit(TypeDefStmt* tdef) {
     tdef->body->accept(*this);
 }
 
-void NameResolver::visit(IfStmt* ifstmt) {
+void SemanticResolver::visit(IfStmt* ifstmt) {
     assert(ifstmt != nullptr);
     ifstmt->condition->accept(*this);
     ifstmt->thenBody->accept(*this);
@@ -181,19 +181,19 @@ void NameResolver::visit(IfStmt* ifstmt) {
     }
 }
 
-void NameResolver::visit(WhileStmt* w) {
+void SemanticResolver::visit(WhileStmt* w) {
     assert(w != nullptr);
     w->condition->accept(*this);
     w->body->accept(*this);
 }
 
-void NameResolver::visit(DoWhileStmt* dowhile) {
+void SemanticResolver::visit(DoWhileStmt* dowhile) {
     assert(dowhile != nullptr);
     dowhile->body->accept(*this);
     dowhile->condition->accept(*this);
 }
 
-void NameResolver::visit(ForStmt* forstmt) {
+void SemanticResolver::visit(ForStmt* forstmt) {
     assert(forstmt != nullptr);
 
     // Resolves range
@@ -210,41 +210,41 @@ void NameResolver::visit(ForStmt* forstmt) {
     popEnv();
 }
 
-void NameResolver::visit(ReturnStmt* ret) {
+void SemanticResolver::visit(ReturnStmt* ret) {
     assert(ret != nullptr);
     if (ret->expr != nullptr) {
         ret->expr->accept(*this);
     }
 }
 
-void NameResolver::declare(Name* node, Env& env, SymbolKind kind, bool isReassignable) {
+void SemanticResolver::declare(Name* node, Env& env, SymbolKind kind, bool isReassignable) {
     assert(node != nullptr);
 
     NameDeclarator declarator{_symbolTable, _nodeSymbolMap, env, kind, isReassignable, _diagnostics};
     node->accept(declarator);
 }
 
-void NameResolver::declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable) {
+void SemanticResolver::declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable) {
     assert(pattern != nullptr);
 
     NameDeclarator declarator{_symbolTable, _nodeSymbolMap, env, kind, isReassignable, _diagnostics};
     pattern->accept(declarator);
 }
 
-SemanticType* NameResolver::getGlobalDeclaredType(std::string_view name) const {
+SemanticType* SemanticResolver::getGlobalDeclaredType(std::string_view name) const {
     return _globalEnv.get(name)->type;
 }
 
-bool NameResolver::isReassignable(VarModifier::VarKind kind) noexcept {
+bool SemanticResolver::isReassignable(VarModifier::VarKind kind) noexcept {
     return kind == VarModifier::VarKind::Let || kind == VarModifier::VarKind::Ref;
 }
 
-bool NameResolver::isReassignable(const VarModifier* varmod) noexcept {
+bool SemanticResolver::isReassignable(const VarModifier* varmod) noexcept {
     assert(varmod != nullptr);
     return isReassignable(varmod->kind);
 }
 
-bool NameResolver::isHoistedDeclarative(const Node* node) noexcept {
+bool SemanticResolver::isHoistedDeclarative(const Node* node) noexcept {
     assert(node != nullptr);
 
     if (node->is<FnDefStmt>() || node->is<TypeDefStmt>()) {
@@ -253,7 +253,7 @@ bool NameResolver::isHoistedDeclarative(const Node* node) noexcept {
     return false;
 }
 
-void NameResolver::cannotFindError(Location start, Location end, std::string_view name) {
+void SemanticResolver::cannotFindError(Location start, Location end, std::string_view name) {
     std::ostringstream msg;
     msg << "cannot find name: `" << name << "`";
     _diagnostics.add(Diagnostic::error(start, end, msg.str()));
