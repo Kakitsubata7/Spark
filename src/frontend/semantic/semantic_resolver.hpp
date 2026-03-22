@@ -20,7 +20,6 @@ private:
     NodeSymbolMap& _nodeSymbolMap;
 
     TypeTable& _typeTable;
-    NodeTypeMap& _nodeTypeMap;
 
     Env& _globalEnv;
     std::vector<Env> _envStack;
@@ -33,12 +32,11 @@ public:
     SemanticResolver(SymbolTable& symbolTable,
                      NodeSymbolMap& nodeSymbolMap,
                      TypeTable& typeTable,
-                     NodeTypeMap& nodeTypeMap,
                      Env& globalEnv,
                      CEmitter& emitter,
                      Diagnostics& diagnostics)
-        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _nodeTypeMap(nodeTypeMap),
-          _globalEnv(globalEnv), _emitter(emitter), _diagnostics(diagnostics) { }
+        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _globalEnv(globalEnv),
+          _emitter(emitter), _diagnostics(diagnostics) { }
 
     void visit(Name* node) override;
     void visit(FnParam* param) override;
