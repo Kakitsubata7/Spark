@@ -40,7 +40,6 @@ public:
         : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _nodeTypeMap(nodeTypeMap),
           _globalEnv(globalEnv), _emitter(emitter), _diagnostics(diagnostics) { }
 
-private:
     void visit(Name* node) override;
     void visit(FnParam* param) override;
 
@@ -58,37 +57,86 @@ private:
     void visit(IfStmt* ifstmt) override;
     void visit(WhileStmt* w) override;
     void visit(DoWhileStmt* dowhile) override;
-    void visit(ForStmt* forstmt) override;
     void visit(ReturnStmt* ret) override;
 
+private:
     void resolve(LiteralExpr* literal, std::string& src);
 
-    Env& currentEnv() noexcept {
-        return _envStack.empty() ? _globalEnv : _envStack.back();
-    }
+    /**
+     * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global
+     * environment.
+     * @return Reference to the current environment.
+     */
+    Env& currentEnv() noexcept;
 
-    void pushEnv() {
-        _envStack.emplace_back(currentEnv());
-    }
+    /**
+     * Creates and pushes a new lexical environment. It will be the new current environment.
+     */
+    void pushEnv();
 
-    void popEnv() {
-        assert(!_envStack.empty());
-        _envStack.pop_back();
-    }
+    /**
+     * Pops the current environment. The global environment cannot be popped.
+     */
+    void popEnv();
 
+    /**
+     * Creates symbol and declares a name to the given environment by specifying its symbol kind and reassignability.
+     * If the name already exists, no new symbol will be created, but the name will be mapped to the existing symbol.
+     * @param node `Name` node to declare.
+     * @param env Environment to declare the name in.
+     * @param kind Symbol kind of the symbol to declare.
+     * @param isReassignable Whether the symbol to declare is reassignable or not.
+     */
     void declare(Name* node, Env& env, SymbolKind kind, bool isReassignable);
+
+    /**
+     * Creates symbol(s) and declares name(s) to the given environment by specifying their symbol kind(s) and
+     * reassignability.
+     * If a name already exists, no new symbol will be created, but the name will be mapped to the existing symbol.
+     * @param pattern `Pattern` node containing names to declare.
+     * @param env Environment to declare the name(s) in.
+     * @param kind Symbol kind of the symbol(s) to declare.
+     * @param isReassignable Whether the symbol(s) to declare are reassignable or not.
+     */
     void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
+    /**
+     * Gets the type that the name declares in the global environment.
+     * @param name Name to get.
+     * @return Pointer to the `SemanticType` instance declared by the name, `nullptr` if not found.
+     */
     [[nodiscard]]
     SemanticType* getGlobalDeclaredType(std::string_view name) const;
 
     void resolveType(Node* node, SemanticType* type);
 
+    /**
+     * Checks whether a var kind represents reassignable or not.
+     * @param kind Kind to check.
+     * @return `true` if represents reassignable, `false` otherwise.
+     */
     static bool isReassignable(VarModifier::VarKind kind) noexcept;
+
+    /**
+     * Checks whether a `VarModifier` node represents reassignable or not.
+     * @param varmod `VarModifier` node to check.
+     * @return `true` if represents reassignable, `false` otherwise.
+     */
     static bool isReassignable(const VarModifier* varmod) noexcept;
 
+    /**
+     * Checks whether an AST node is a hoisted declarative node.
+     * @param node Node to check.
+     * @return `true` if the node is a hoisted declarative node, `false` otherwise.
+     */
     static bool isHoistedDeclarative(const Node* node) noexcept;
 
+    /**
+     * Adds a "cannot find name" name resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param name Name that couldn't be found.
+     */
     void cannotFindError(Location start, Location end, std::string_view name);
 };
 

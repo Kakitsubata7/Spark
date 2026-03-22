@@ -81,52 +81,6 @@ void SemanticResolver::visit(LiteralExpr* literal) {
     assert(literal != nullptr);
 }
 
-void SemanticResolver::resolve(LiteralExpr* literal, std::string& src) {
-    assert(literal != nullptr);
-
-    std::visit([&](auto&& value) {
-        using T = std::decay_t<decltype(value)>;
-
-        if constexpr (std::is_same_v<T, VoidLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("Void"));
-
-            // Set C source
-            src = _emitter.voidLiteral();
-        } else if constexpr (std::is_same_v<T, IntLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("Int"));
-
-            // Set C source
-            src = _emitter.intLiteral(value.value);
-        } else if constexpr (std::is_same_v<T, RealLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("Real"));
-
-            // Set C source
-            src = _emitter.realLiteral(value.value);
-        } else if constexpr (std::is_same_v<T, BoolLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("Bool"));
-
-            // Set C source
-            src = _emitter.boolLiteral(value.value);
-        } else if constexpr (std::is_same_v<T, StringLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("String"));
-
-            // Set C source
-            src = _emitter.stringLiteral(value.value);
-        } else if constexpr (std::is_same_v<T, NilLiteral>) {
-            // Resolves type
-            resolveType(literal, getGlobalDeclaredType("Nil"));
-
-            // Set C source
-            src = _emitter.nilLiteral();
-        }
-    }, literal->literal);
-}
-
 void SemanticResolver::visit(NameExpr* ident) {
     assert(ident != nullptr);
     ident->name->accept(*this);
@@ -193,28 +147,70 @@ void SemanticResolver::visit(DoWhileStmt* dowhile) {
     dowhile->condition->accept(*this);
 }
 
-void SemanticResolver::visit(ForStmt* forstmt) {
-    assert(forstmt != nullptr);
-
-    // Resolves range
-    forstmt->range->accept(*this);
-
-    pushEnv();
-
-    // Declares iterator
-    declare(forstmt->iterator, currentEnv(), SymbolKind::Var, false);
-
-    // Resolves body
-    forstmt->body->accept(*this);
-
-    popEnv();
-}
-
 void SemanticResolver::visit(ReturnStmt* ret) {
     assert(ret != nullptr);
     if (ret->expr != nullptr) {
         ret->expr->accept(*this);
     }
+}
+
+void SemanticResolver::resolve(LiteralExpr* literal, std::string& src) {
+    assert(literal != nullptr);
+
+    std::visit([&](auto&& value) {
+        using T = std::decay_t<decltype(value)>;
+
+        if constexpr (std::is_same_v<T, VoidLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("Void"));
+
+            // Set C source
+            src = _emitter.voidLiteral();
+        } else if constexpr (std::is_same_v<T, IntLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("Int"));
+
+            // Set C source
+            src = _emitter.intLiteral(value.value);
+        } else if constexpr (std::is_same_v<T, RealLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("Real"));
+
+            // Set C source
+            src = _emitter.realLiteral(value.value);
+        } else if constexpr (std::is_same_v<T, BoolLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("Bool"));
+
+            // Set C source
+            src = _emitter.boolLiteral(value.value);
+        } else if constexpr (std::is_same_v<T, StringLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("String"));
+
+            // Set C source
+            src = _emitter.stringLiteral(value.value);
+        } else if constexpr (std::is_same_v<T, NilLiteral>) {
+            // Resolves type
+            resolveType(literal, getGlobalDeclaredType("Nil"));
+
+            // Set C source
+            src = _emitter.nilLiteral();
+        }
+    }, literal->literal);
+}
+
+Env& SemanticResolver::currentEnv() noexcept {
+    return _envStack.empty() ? _globalEnv : _envStack.back();
+}
+
+void SemanticResolver::pushEnv() {
+    _envStack.emplace_back(currentEnv());
+}
+
+void SemanticResolver::popEnv() {
+    assert(!_envStack.empty());
+    _envStack.pop_back();
 }
 
 void SemanticResolver::declare(Name* node, Env& env, SymbolKind kind, bool isReassignable) {
