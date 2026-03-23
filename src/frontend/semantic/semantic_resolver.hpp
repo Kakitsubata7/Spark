@@ -25,6 +25,8 @@ public:
 
 class SemanticResolver : public NodeVisitor {
 private:
+    TypeTable _typeTable;
+
     Env _globalEnv;
     std::vector<Env> _envStack;
 
@@ -33,8 +35,7 @@ private:
     SemanticType* _currentType = nullptr;
 
 public:
-    explicit SemanticResolver(Diagnostics& diagnostics)
-        : _diagnostics(diagnostics) { }
+    explicit SemanticResolver(Diagnostics& diagnostics);
 
     void visit(Name* node) override;
     void visit(FnParam* param) override;

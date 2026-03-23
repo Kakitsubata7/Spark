@@ -5,6 +5,9 @@
 
 namespace Spark::FrontEnd {
 
+SemanticResolver::SemanticResolver(Diagnostics& diagnostics) : _diagnostics(diagnostics) {
+}
+
 void SemanticResolver::visit(FnParam* param) {
     assert(param != nullptr);
 
