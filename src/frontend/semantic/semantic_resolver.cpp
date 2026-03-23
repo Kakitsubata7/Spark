@@ -5,17 +5,6 @@
 
 namespace Spark::FrontEnd {
 
-void SemanticResolver::visit(Name* node) {
-    assert(node != nullptr);
-
-    std::string_view name = node->value.str();
-    if (Symbol* symbol = currentEnv().find(name); symbol != nullptr) {
-        // Map symbol to `Name` node
-        _nodeSymbolMap.set(node, symbol);
-    }
-    cannotFindError(node->start, node->end, name);
-}
-
 void SemanticResolver::visit(FnParam* param) {
     assert(param != nullptr);
 
@@ -33,9 +22,25 @@ void SemanticResolver::visit(FnParam* param) {
 
 void SemanticResolver::visit(IfThenExpr* ifthen) {
     assert(ifthen != nullptr);
-    ifthen->condition->accept(*this);
-    ifthen->thenExpr->accept(*this);
-    ifthen->elseExpr->accept(*this);
+
+    // Resolves condition
+    SemanticType* condType = resolve(ifthen->condition);
+
+    // Type checks condition
+    if (condType->is(boolType())) {
+
+    } else if (auto* ctor = boolType()->getImplicitConstructor(condType); ctor != nullptr) {
+
+    } else {
+        // TODO: Type mismatch error
+    }
+
+    // Resolves branches
+    SemanticType* thenType = resolve(ifthen->thenExpr);
+    SemanticType* elseType = resolve(ifthen->elseExpr);
+
+    //
+    _currentType = unionType(thenType, elseType);
 }
 
 void SemanticResolver::visit(BlockExpr* block) {
@@ -43,52 +48,225 @@ void SemanticResolver::visit(BlockExpr* block) {
 
     pushEnv();
 
+    SemanticType* type = voidType();
+
     // Declare hoisted names
-    for (Node* node : block->nodes) {
+    for (auto it = block->nodes.begin(); it != block->nodes.end(); ++it) {
+        Node* node = *it;
         if (isHoistedDeclarative(node)) {
-            node->accept(*this);
+            SemanticType* t = resolve(node);
+            if (std::next(it) == block->nodes.end()) {
+                type = t;
+            }
         }
     }
 
     // Resolve the rest
-    for (Node* node : block->nodes) {
+    for (auto it = block->nodes.begin(); it != block->nodes.end(); ++it) {
+        Node* node = *it;
         if (!isHoistedDeclarative(node)) {
-            node->accept(*this);
+            SemanticType* t = resolve(node);
+            if (std::next(it) == block->nodes.end()) {
+                type = t;
+            }
         }
     }
+
+    // Sets the type of the block
+    _currentType = type;
 
     popEnv();
 }
 
 void SemanticResolver::visit(BinaryExpr* binary) {
     assert(binary != nullptr);
-    binary->lhs->accept(*this);
-    binary->rhs->accept(*this);
+
+    SemanticType* lhsType = resolve(binary->lhs);
+    SemanticType* rhsType = resolve(binary->rhs);
+
+    switch (binary->op) {
+        case BinaryExpr::OpKind::Add:
+            break;
+
+        case BinaryExpr::OpKind::Sub:
+            break;
+
+        case BinaryExpr::OpKind::Mul:
+            break;
+
+        case BinaryExpr::OpKind::Div:
+            break;
+
+        case BinaryExpr::OpKind::Mod:
+            break;
+
+        case BinaryExpr::OpKind::Lt:
+            break;
+
+        case BinaryExpr::OpKind::Le:
+            break;
+
+        case BinaryExpr::OpKind::Gt:
+            break;
+
+        case BinaryExpr::OpKind::Ge:
+            break;
+
+        case BinaryExpr::OpKind::Eq:
+            break;
+
+        case BinaryExpr::OpKind::Ne:
+            break;
+
+        case BinaryExpr::OpKind::StrictEq: {
+            if (lhsType != rhsType) {
+                // TODO: Type mismatch error
+            }
+            break;
+        }
+
+        case BinaryExpr::OpKind::StrictNe: {
+            if (lhsType != rhsType) {
+                // TODO: Type mismatch error
+            }
+            break;
+        }
+
+        case BinaryExpr::OpKind::BitAnd:
+            break;
+
+        case BinaryExpr::OpKind::BitOr:
+            break;
+
+        case BinaryExpr::OpKind::BitXor:
+            break;
+
+        case BinaryExpr::OpKind::BitShl:
+            break;
+
+        case BinaryExpr::OpKind::BitShr:
+            break;
+
+        case BinaryExpr::OpKind::LogAnd:
+            break;
+
+        case BinaryExpr::OpKind::LogOr:
+            break;
+
+        case BinaryExpr::OpKind::Coalesce:
+            break;
+
+        case BinaryExpr::OpKind::Range:
+            break;
+
+        case BinaryExpr::OpKind::RangeExcl:
+            break;
+
+        case BinaryExpr::OpKind::FuncType:
+            break;
+
+        case BinaryExpr::OpKind::Pipe:
+            break;
+
+        default:
+            assert(false && "invalid `BinaryExpr::OpKind` value");
+            break;
+    }
 }
 
 void SemanticResolver::visit(PrefixExpr* prefix) {
     assert(prefix != nullptr);
-    prefix->expr->accept(*this);
+
+    // Resolves expr
+    SemanticType* type = resolve(prefix->expr);
+
+    switch (prefix->op) {
+        case PrefixExpr::OpKind::Pos:
+            break;
+
+        case PrefixExpr::OpKind::Neg:
+            break;
+
+        case PrefixExpr::OpKind::BitNot:
+            break;
+
+        case PrefixExpr::OpKind::LogNot:
+            break;
+
+        case PrefixExpr::OpKind::Immut:
+            break;
+    }
 }
 
 void SemanticResolver::visit(PostfixExpr* postfix) {
     assert(postfix != nullptr);
 
-    postfix->expr->accept(*this);
+    // Resolves expr
+    SemanticType* type = resolve(postfix->expr);
+
+    switch (postfix->op) {
+        case PostfixExpr::OpKind::Optional:
+            break;
+
+        case PostfixExpr::OpKind::NonNull:
+            break;
+
+        case PostfixExpr::OpKind::ForceUnwrap:
+            break;
+    }
 }
 
 void SemanticResolver::visit(LiteralExpr* literal) {
     assert(literal != nullptr);
+
+    std::visit([&](auto&& value) {
+         using T = std::decay_t<decltype(value)>;
+
+         if constexpr (std::is_same_v<T, VoidLiteral>) {
+             // Resolves type
+             _currentType = voidType();
+         } else if constexpr (std::is_same_v<T, IntLiteral>) {
+             // Resolves type
+            _currentType = intType();
+         } else if constexpr (std::is_same_v<T, RealLiteral>) {
+             // Resolves type
+            _currentType = realType();
+         } else if constexpr (std::is_same_v<T, BoolLiteral>) {
+             // Resolves type
+            _currentType = boolType();
+         } else if constexpr (std::is_same_v<T, StringLiteral>) {
+             // Resolves type
+            _currentType = stringType();
+         } else if constexpr (std::is_same_v<T, NilLiteral>) {
+             // Resolves type
+            _currentType = nilType();
+         }
+     }, literal->literal);
 }
 
 void SemanticResolver::visit(NameExpr* ident) {
     assert(ident != nullptr);
-    ident->name->accept(*this);
+
+    // Gets the symbol of the name
+    std::string_view name = ident->name->value.str();
+
+    // Resolves name and type
+    if (Symbol* symbol = lookup(name); symbol != nullptr) {
+        _currentType = symbol->type;
+    } else {
+        _currentType = unknownType();
+        cannotFindError(ident->start, ident->end, name);
+    }
 }
 
 void SemanticResolver::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
+
+    // Declares name into the current environment
     declare(vardef->pattern, currentEnv(), SymbolKind::Var, isReassignable(vardef->mod));
+
+    // Resolves type
+    _currentType = voidType();
 }
 
 void SemanticResolver::visit(FnDefStmt* fndef) {
@@ -227,8 +405,19 @@ void SemanticResolver::declare(Pattern* pattern, Env& env, SymbolKind kind, bool
     pattern->accept(declarator);
 }
 
+SemanticType* SemanticResolver::getDeclaredType(Node* node) {
+    assert(node != nullptr);
+
+
+}
+
 SemanticType* SemanticResolver::getGlobalDeclaredType(std::string_view name) const {
-    return _globalEnv.get(name)->type;
+    Symbol* symbol = _globalEnv.get(name);
+    if (symbol == nullptr) {
+        return nullptr;
+    }
+    auto it = _symbolDeclaredTypeMap.find(symbol);
+    return it == _symbolDeclaredTypeMap.end() ? nullptr : it->second;
 }
 
 bool SemanticResolver::isReassignable(VarModifier::VarKind kind) noexcept {
@@ -321,19 +510,6 @@ void NameDeclarator::redeclareError(Location start,
     _diagnostics.add(Diagnostic::error(start, end, msg.str(), {
         Diagnostic::note(prevStart, prevEnd, "previously declared here")
     }));
-}
-
-
-
-void DeclaredTypeResolver::visit(NameExpr* ident) {
-    assert(ident != nullptr);
-
-    std::string_view name = ident->name->value.str();
-    Symbol* symbol = _env.find(name);
-}
-
-void DeclaredTypeResolver::visit(BinaryExpr* binary) {
-
 }
 
 } // Spark::FrontEnd

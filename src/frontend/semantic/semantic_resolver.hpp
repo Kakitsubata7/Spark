@@ -3,7 +3,6 @@
 #include <string_view>
 
 #include "c_emitter.hpp"
-#include "env.hpp"
 #include "frontend/ast.hpp"
 #include "semantic_type.hpp"
 #include "symbol.hpp"
@@ -11,32 +10,31 @@
 
 namespace Spark::FrontEnd {
 
-/**
- * Represents a visitor that declares names and resolves name usages, creating environment mappings for each scope.
- */
+class Env {
+private:
+    struct Entry {
+        std::unique_ptr<Symbol> symbol;
+        std::unique_ptr<SemanticType> declaredType;
+    };
+
+    std::unordered_map<std::string, Entry> _map;
+
+public:
+
+};
+
 class SemanticResolver : public NodeVisitor {
 private:
-    SymbolTable& _symbolTable;
-    NodeSymbolMap& _nodeSymbolMap;
-
-    TypeTable& _typeTable;
-
-    Env& _globalEnv;
+    Env _globalEnv;
     std::vector<Env> _envStack;
-
-    CEmitter& _emitter;
 
     Diagnostics& _diagnostics;
 
+    SemanticType* _currentType = nullptr;
+
 public:
-    SemanticResolver(SymbolTable& symbolTable,
-                     NodeSymbolMap& nodeSymbolMap,
-                     TypeTable& typeTable,
-                     Env& globalEnv,
-                     CEmitter& emitter,
-                     Diagnostics& diagnostics)
-        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _typeTable(typeTable), _globalEnv(globalEnv),
-          _emitter(emitter), _diagnostics(diagnostics) { }
+    explicit SemanticResolver(Diagnostics& diagnostics)
+        : _diagnostics(diagnostics) { }
 
     void visit(Name* node) override;
     void visit(FnParam* param) override;
@@ -98,6 +96,14 @@ private:
      */
     void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
+    [[nodiscard]]
+    SemanticType* getDenotedType();
+
+    void setDenotedType();
+
+    [[nodiscard]]
+    SemanticType* getDeclaredType(Node* node) const;
+
     /**
      * Gets the type that the name declares in the global environment.
      * @param name Name to get.
@@ -128,6 +134,12 @@ private:
      * @return `true` if the node is a hoisted declarative node, `false` otherwise.
      */
     static bool isHoistedDeclarative(const Node* node) noexcept;
+
+    [[nodiscard]]
+    SemanticType* voidType() const noexcept;
+
+    [[nodiscard]]
+    SemanticType* intType() const noexcept;
 
     /**
      * Adds a "cannot find name" name resolution error to the diagnostics.
@@ -177,31 +189,6 @@ private:
                         std::string_view name,
                         Location prevStart,
                         Location prevEnd) noexcept;
-};
-
-
-
-/**
- * Represents an AST node visitor that resolves an expression to its declared type.
- */
-class DeclaredTypeResolver : public NodeVisitor {
-private:
-    TypeTable& _typeTable;
-    NodeTypeMap& _nodeTypeMap;
-
-    const Env& _env;
-
-    SemanticType* _result = nullptr;
-
-public:
-    DeclaredTypeResolver(TypeTable& typeTable, NodeTypeMap& nodeTypeMap, const Env& env) noexcept
-        : _typeTable(typeTable), _nodeTypeMap(nodeTypeMap), _env(env) { }
-
-    [[nodiscard]]
-    SemanticType* result() const noexcept { return _result; }
-
-    void visit(NameExpr* ident) override;
-    void visit(BinaryExpr* binary) override;
 };
 
 } // Spark::FrontEnd

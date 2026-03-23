@@ -383,16 +383,12 @@ protected:
 
 struct BinaryExpr final : Expr {
     enum class OpKind {
-        Mul, Div, Mod,
         Add, Sub,
-        BitShl, BitShr,
+        Mul, Div, Mod,
         Lt, Le, Gt, Ge,
         Eq, Ne, StrictEq, StrictNe,
-        BitAnd,
-        BitXor,
-        BitOr,
-        LogAnd,
-        LogOr,
+        BitAnd, BitOr, BitXor, BitShl, BitShr,
+        LogAnd, LogOr,
         Coalesce,
         Range, RangeExcl,
         FuncType,
