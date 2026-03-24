@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 
 #include "symbol.hpp"
@@ -17,35 +16,16 @@ private:
     std::vector<SemanticType*> _paramTypes;
     std::vector<SemanticType*> _returnTypes;
 
-    std::vector<Symbol*> _captures;
-
 public:
     SemanticFunc(std::vector<SemanticType*> paramTypes,
-                 std::vector<SemanticType*> returnTypes,
-                 std::vector<Symbol*> captures) noexcept
-        : _paramTypes(std::move(paramTypes)), _returnTypes(std::move(returnTypes)), _captures(std::move(captures)) { }
+                 std::vector<SemanticType*> returnTypes) noexcept
+        : _paramTypes(std::move(paramTypes)), _returnTypes(std::move(returnTypes)) { }
 
-    /**
-     * Checks whether the function is callable with the given parameter and return types.
-     * @param paramTypes Parameter types (in order).
-     * @param returnTypes Return types (in order).
-     * @return `true` if the function is callable with the given parameter and return types, `false` otherwise.
-     */
     [[nodiscard]]
-    bool isCallableWith(const std::vector<SemanticType*>& paramTypes,
-                        const std::vector<SemanticType*>& returnTypes) const noexcept;
-};
+    const std::vector<SemanticType*>& paramTypes() const noexcept { return _paramTypes; }
 
-/**
- * Represents a data structure that manages `SemanticFunc` instances and provide factory methods for creating
- * `SemanticFunc` instances.
- */
-class FuncTable {
-private:
-    std::vector<std::unique_ptr<SemanticFunc>> _funcs;
-
-public:
-    SemanticFunc* make(SemanticFunc func);
+    [[nodiscard]]
+    const std::vector<SemanticType*>& returnTypes() const noexcept { return _returnTypes; }
 };
 
 } // Spark::FrontEnd
