@@ -44,23 +44,24 @@ public:
     }
 
     [[nodiscard]]
-    Symbol* get(std::string_view name) const {
+    Symbol* get(std::string_view name) {
         auto it = _map.find(name);
         return it != _map.end() ? it->second : nullptr;
     }
 
     void set(std::string_view name, Symbol* symbol) {
-        _map.emplace(name, symbol);
+        assert(symbol != nullptr);
+        _map[name] = symbol;
     }
 
-    void remove(std::string_view name) {
+    void erase(std::string_view name) {
         _map.erase(name);
     }
 
     [[nodiscard]]
-    Symbol* find(std::string_view name) const {
+    Symbol* lookup(std::string_view name) {
         auto it = _map.find(name);
-        return it != _map.end() ? it->second : (_parent != nullptr ? _parent->find(name) : nullptr);
+        return it != _map.end() ? it->second : (_parent != nullptr ? _parent->lookup(name) : nullptr);
     }
 };
 
