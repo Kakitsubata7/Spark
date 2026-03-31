@@ -2,19 +2,19 @@
 
 #include <string_view>
 
-#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace Spark {
 
 class BigReal {
 private:
-    boost::multiprecision::cpp_rational _value;
+    boost::multiprecision::cpp_dec_float_50 _value;
 
-    explicit BigReal(boost::multiprecision::cpp_rational r) noexcept : _value(std::move(r)) { }
+    explicit BigReal(boost::multiprecision::cpp_dec_float_50 r) noexcept : _value(std::move(r)) { }
 
 public:
     BigReal() noexcept : _value(0) { }
-    explicit BigReal(std::string_view sv) : _value(sv) { } // TODO: cpp_rational constructor doesn't support decimal string
+    explicit BigReal(std::string_view sv) : _value(sv) { }
 
     BigReal operator+(const BigReal& rhs) const { return BigReal(_value + rhs._value); }
     BigReal operator-(const BigReal& rhs) const { return BigReal(_value - rhs._value); }
