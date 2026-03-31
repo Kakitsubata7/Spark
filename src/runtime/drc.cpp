@@ -13,7 +13,7 @@ namespace Spark::Runtime {
 static bool removeReferencee(DRCNode* owner, DRCNode* referencee) noexcept {
     std::vector<DRCNode*>& referencees = owner->referencees;
     DRCNode* referenceeNode = referencee;
-    for (size_t i = 0; referencees.size(); ++i) {
+    for (size_t i = 0; i < referencees.size(); ++i) {
         if (referencees[i] == referenceeNode) {
             referencees[i] = referencees.back();
             referencees.pop_back();
