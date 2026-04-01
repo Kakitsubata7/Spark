@@ -90,8 +90,9 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
 
-        src/frontend/semantic/c_emitter.cpp
-        src/frontend/semantic/c_emitter.hpp
+        src/frontend/hir/lua_ir.hpp
+        src/frontend/hir/lua_ir_visitor.hpp
+
         src/frontend/semantic/env.hpp
         src/frontend/semantic/semantic_resolver.cpp
         src/frontend/semantic/semantic_resolver.hpp
