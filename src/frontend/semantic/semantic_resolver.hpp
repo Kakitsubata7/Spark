@@ -1,8 +1,9 @@
 ﻿#pragma once
 
+#include <optional>
 #include <string_view>
 
-#include "c_emitter.hpp"
+#include "env.hpp"
 #include "frontend/ast.hpp"
 #include "semantic_type.hpp"
 #include "symbol.hpp"
@@ -10,21 +11,9 @@
 
 namespace Spark::FrontEnd {
 
-class Env {
-private:
-    struct Entry {
-        std::unique_ptr<Symbol> symbol;
-        std::unique_ptr<SemanticType> declaredType;
-    };
-
-    std::unordered_map<std::string, Entry> _map;
-
-public:
-
-};
-
 class SemanticResolver : public NodeVisitor {
 private:
+    SymbolTable _symbolTable;
     TypeTable _typeTable;
 
     Env _globalEnv;
@@ -34,30 +23,84 @@ private:
 
     SemanticType* _currentType = nullptr;
 
+    SemanticType* _unknownType;
+    SemanticType* _voidType;
+    SemanticType* _intType;
+    SemanticType* _realType;
+    SemanticType* _boolType;
+    SemanticType* _stringType;
+    SemanticType* _nilType;
+
+    [[nodiscard]]
+    SemanticType* unknownType() const noexcept { return _unknownType; }
+
+    [[nodiscard]]
+    SemanticType* voidType() const noexcept { return _voidType; }
+
+    [[nodiscard]]
+    SemanticType* intType() const noexcept { return _intType; }
+
+    [[nodiscard]]
+    SemanticType* realType() const noexcept { return _realType; }
+
+    [[nodiscard]]
+    SemanticType* boolType() const noexcept { return _boolType; }
+
+    [[nodiscard]]
+    SemanticType* stringType() const noexcept { return _stringType; }
+
+    [[nodiscard]]
+    SemanticType* nilType() const noexcept { return _nilType; }
+
 public:
     explicit SemanticResolver(Diagnostics& diagnostics);
 
-    void visit(Name* node) override;
     void visit(FnParam* param) override;
 
+    void visit(LambdaExpr* lambda) override;
     void visit(IfThenExpr* ifthen) override;
+    void visit(TryElseExpr* tryelse) override;
+    void visit(MatchExpr* match) override;
+    void visit(TryCatchExpr* trycatch) override;
+    void visit(ThrowExpr* t) override;
     void visit(BlockExpr* block) override;
+    void visit(IsExpr* is) override;
+    void visit(AsExpr* as) override;
     void visit(BinaryExpr* binary) override;
     void visit(PrefixExpr* prefix) override;
     void visit(PostfixExpr* postfix) override;
+    void visit(MemberAccessExpr* maccess) override;
+    void visit(CallExpr* call) override;
+    void visit(SubscriptExpr* subscript) override;
     void visit(LiteralExpr* literal) override;
     void visit(NameExpr* ident) override;
+    void visit(GlobalAccessExpr* gaccess) override;
+    void visit(UpvalueExpr* upvalue) override;
+    void visit(TupleExpr* tuple) override;
+    void visit(CollectionExpr* collection) override;
+    void visit(TypeofExpr* t) override;
 
     void visit(VarDefStmt* vardef) override;
     void visit(FnDefStmt* fndef) override;
     void visit(TypeDefStmt* tdef) override;
+    void visit(AssignStmt* assign) override;
     void visit(IfStmt* ifstmt) override;
     void visit(WhileStmt* w) override;
-    void visit(DoWhileStmt* dowhile) override;
+    void visit(DoWhileStmt* dw) override;
+    void visit(ForStmt* f) override;
+    void visit(BreakStmt* b) override;
+    void visit(ContinueStmt* c) override;
     void visit(ReturnStmt* ret) override;
+    void visit(ModuleStmt* moddef) override;
+    void visit(ExportStmt* e) override;
+    void visit(ImportStmt* i) override;
+    void visit(ImportAllStmt* i) override;
+    void visit(UndefineStmt* undef) override;
+
+    SemanticType* registerType();
 
 private:
-    void resolve(LiteralExpr* literal, std::string& src);
+    SemanticType* resolve(Node* node);
 
     /**
      * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global
@@ -97,24 +140,6 @@ private:
      */
     void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
 
-    [[nodiscard]]
-    SemanticType* getDenotedType();
-
-    void setDenotedType();
-
-    [[nodiscard]]
-    SemanticType* getDeclaredType(Node* node) const;
-
-    /**
-     * Gets the type that the name declares in the global environment.
-     * @param name Name to get.
-     * @return Pointer to the `SemanticType` instance declared by the name, `nullptr` if not found.
-     */
-    [[nodiscard]]
-    SemanticType* getGlobalDeclaredType(std::string_view name) const;
-
-    void resolveType(Node* node, SemanticType* type);
-
     /**
      * Checks whether a var kind represents reassignable or not.
      * @param kind Kind to check.
@@ -136,11 +161,28 @@ private:
      */
     static bool isHoistedDeclarative(const Node* node) noexcept;
 
-    [[nodiscard]]
-    SemanticType* voidType() const noexcept;
+    /**
+     * Gets the special identifier string the overloadable binary operator corresponds to.
+     * @param op Binary operator kind.
+     * @return Identifier string the binary operator corresponds to or `std::nullopt`.
+     */
+    static std::optional<std::string_view> binaryOpToIdent(BinaryExpr::OpKind op) noexcept;
 
-    [[nodiscard]]
-    SemanticType* intType() const noexcept;
+    /**
+     * Gets the special identifier string the overloadable prefix operator corresponds to.
+     * @param op Prefix operator kind.
+     * @return Identifier string the prefix operator corresponds to or `std::nullopt`.
+     */
+    static std::optional<std::string_view> prefixOpToIdent(PrefixExpr::OpKind op) noexcept;
+
+    /**
+     * Adds an error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End of location of the error.
+     * @param message Error message.
+     * @param subs Sub diagnostics of the error (default to none).
+     */
+    void error(Location start, Location end, std::string message, std::vector<Diagnostic> subs = {});
 
     /**
      * Adds a "cannot find name" name resolution error to the diagnostics.
@@ -149,6 +191,31 @@ private:
      * @param name Name that couldn't be found.
      */
     void cannotFindError(Location start, Location end, std::string_view name);
+
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
+     * @param lhsType LHS type.
+     * @param rhsType RHS type.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const SemanticType* lhsType,
+                                 const SemanticType* rhsType);
+
+    void unexpectedTypeError(Location start, Location end, const SemanticType* expected, const SemanticType* actual);
+
+    void notCallableError(Location start,
+                          Location end,
+                          const SemanticType* type,
+                          const std::vector<SemanticType*>& paramTypes);
+
+    void invalidStrictEqError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
+
+    void invalidStrictNeError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
 };
 
 
@@ -159,7 +226,6 @@ private:
 class NameDeclarator : public NodeVisitor {
 private:
     SymbolTable& _symbolTable;
-    NodeSymbolMap& _nodeSymbolMap;
 
     Env& _env;
 
@@ -170,13 +236,12 @@ private:
 
 public:
     NameDeclarator(SymbolTable& symbolTable,
-                   NodeSymbolMap& nodeSymbolMap,
                    Env& env,
                    SymbolKind kind,
                    bool isReassignable,
                    Diagnostics& diagnostics) noexcept
-        : _symbolTable(symbolTable), _nodeSymbolMap(nodeSymbolMap), _env(env), _kind(kind),
-          _isReassignable(isReassignable), _diagnostics(diagnostics) { }
+        : _symbolTable(symbolTable), _env(env), _kind(kind), _isReassignable(isReassignable),
+          _diagnostics(diagnostics) { }
 
     void visit(Name* node) override;
     void visit(BindingPattern* pattern) override;
