@@ -11,6 +11,24 @@ struct LuaNode {
     virtual ~LuaNode() = default;
 
     virtual void accept(LuaNodeVisitor& visitor) = 0;
+
+    template <typename T>
+    [[nodiscard]]
+    bool is() const {
+        return dynamic_cast<const T*>(this) != nullptr;
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    T* as() {
+        return dynamic_cast<T*>(this);
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    const T* as() const {
+        return dynamic_cast<const T*>(this);
+    }
 };
 
 struct LuaExpr : LuaNode { };
