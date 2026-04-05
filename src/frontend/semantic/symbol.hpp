@@ -6,10 +6,11 @@
 #include <unordered_map>
 
 #include "frontend/ast/node.hpp"
-#include "semantic_type.hpp"
 #include "symbol.hpp"
 
 namespace Spark::FrontEnd {
+
+class SemanticType;
 
 /**
  * Represents the declaration kind of a symbol.
@@ -30,41 +31,24 @@ struct Symbol {
     bool isReassignable;
 
     /**
-     * Declaration `Name` node.
-     */
-    Name* node;
-
-    /**
      * Type of the symbol.
      */
     SemanticType* type;
 
     /**
-     * Retrieves the name string of the symbol.
-     * @return Name string of the symbol.
+     * Name the symbol bound to.
      */
-    [[nodiscard]]
-    std::string_view name() const noexcept {
-        return node->value.str();
-    }
+    std::string name;
 
     /**
-     * Retrieves the start location of the symbol name.
-     * @return Start location of the symbol name.
+     * Start location of the symbol's definition.
      */
-    [[nodiscard]]
-    Location start() const noexcept {
-        return node->start;
-    }
+    Location start;
 
     /**
-     * Retrieves the end location of the symbol name.
-     * @return End location of the symbol name.
+     * End location of the symbol's definition.
      */
-    [[nodiscard]]
-    Location end() const noexcept {
-        return node->end;
-    }
+    Location end;
 };
 
 /**
