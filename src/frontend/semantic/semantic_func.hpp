@@ -41,19 +41,16 @@ struct FuncSignatureHash {
  */
 class SemanticFunc {
 private:
-    std::vector<SemanticType*> _paramTypes;
-    SemanticType* _returnType;
+    FuncSignature _sig;
 
 public:
-    SemanticFunc(std::vector<SemanticType*> paramTypes,
-                 SemanticType* returnType) noexcept
-        : _paramTypes(std::move(paramTypes)), _returnType(returnType) { }
+    explicit SemanticFunc(FuncSignature sig) noexcept : _sig(std::move(sig)) { }
+
+    SemanticFunc(std::vector<SemanticType*> paramTypes, SemanticType* returnType) noexcept
+        : _sig(std::move(paramTypes), returnType) { }
 
     [[nodiscard]]
-    const std::vector<SemanticType*>& paramTypes() const noexcept { return _paramTypes; }
-
-    [[nodiscard]]
-    SemanticType* returnTypes() const noexcept { return _returnType; }
+    const FuncSignature& sig() const noexcept { return _sig; }
 };
 
 } // Spark::FrontEnd
