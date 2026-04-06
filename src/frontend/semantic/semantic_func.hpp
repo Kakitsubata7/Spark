@@ -51,6 +51,9 @@ public:
 
     [[nodiscard]]
     const FuncSignature& sig() const noexcept { return _sig; }
+
+    [[nodiscard]]
+    bool isCallableWith(const std::vector<SemanticType*>& paramTypes) const noexcept;
 };
 
 } // Spark::FrontEnd

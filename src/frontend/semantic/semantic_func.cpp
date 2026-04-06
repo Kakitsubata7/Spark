@@ -34,4 +34,18 @@ size_t FuncSignatureHash::operator()(const FuncSignature& sig) const {
     return seed;
 }
 
+bool SemanticFunc::isCallableWith(const std::vector<SemanticType*>& paramTypes) const noexcept {
+    if (_sig.paramTypes().size() != paramTypes.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < paramTypes.size(); ++i) {
+        SemanticType* expected = _sig.paramTypes()[i];
+        SemanticType* actual = paramTypes[i];
+        if (!expected->isIdentical(actual)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // Spark::FrontEnd
