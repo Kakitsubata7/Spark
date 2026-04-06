@@ -1,13 +1,20 @@
 #pragma once
 
-#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "semantic_func.hpp"
+#include "symbol.hpp"
 
 namespace Spark::FrontEnd {
 
 class SemanticFunc;
+
+using TypeId = uint64_t;
 
 /**
  * Represents a type during semantic passes.
@@ -15,9 +22,11 @@ class SemanticFunc;
 class SemanticType {
 private:
     std::string _name;
+    TypeId _id;
 
 protected:
-    explicit SemanticType(std::string name) noexcept : _name(std::move(name)) { }
+    explicit SemanticType(std::string name, TypeId id) noexcept
+        : _name(std::move(name)), _id(id) { }
 
 public:
     virtual ~SemanticType() = default;
@@ -25,161 +34,328 @@ public:
     [[nodiscard]]
     std::string_view name() const noexcept { return _name; }
 
+    [[nodiscard]]
+    TypeId id() const noexcept { return _id; }
+
     /**
-     * Checks whether two types are the same one.
+     * Checks whether two `SemanticType` instances describe the same type.
      * @param other Other type to check.
-     * @return `true` if the two types are the same one, `false` otherwise.
+     * @return `true` if the two instances describe the same type, `false` otherwise.
      */
     [[nodiscard]]
-    bool is(SemanticType* other);
+    bool isIdentical(const SemanticType& other) const noexcept {
+        return _id == other._id;
+    }
 
+    /**
+     * Checks whether two `SemanticType` instances describe the same type.
+     * @param other Pointer to the other type to check.
+     * @return `true` if the two instances describe the same type, `false` otherwise.
+     */
     [[nodiscard]]
-    virtual SemanticFunc* getCallable(const std::vector<SemanticFunc*>& paramTypes) const = 0;
+    bool isIdentical(const SemanticType* other) const noexcept {
+        assert(other != nullptr);
+        return isIdentical(*other);
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    bool is() const {
+        return dynamic_cast<const T*>(this) != nullptr;
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    T* as() {
+        return dynamic_cast<T*>(this);
+    }
+
+    template <typename T>
+    [[nodiscard]]
+    const T* as() const {
+        return dynamic_cast<const T*>(this);
+    }
+
+    /**
+     * Sorts and de-duplicates types based on their IDs.
+     * @tparam T `SemanticType` or its subtype.
+     * @param vec Vector of types to canonize.
+     */
+    template <typename T>
+    static void canonizeTypeVec(std::vector<T*>& vec) {
+        static_assert(std::is_base_of_v<SemanticType, T>);
+
+        std::sort(vec.begin(), vec.end(),
+            [](const T* a, const T* b) {
+                return a->id() < b->id();
+            }
+        );
+
+        vec.erase(std::unique(vec.begin(), vec.end(),
+            [](const T* a, const T* b) {
+                return a->isIdentical(b);
+            }),
+            vec.end()
+        );
+    }
 };
 
 /**
- * Represents a record type's field during semantic passes.
+ * Represents a semantic function type.
  */
-class RecordField {
-private:
-    std::string _name;
-    SemanticType* _type;
-
-public:
-    RecordField(std::string name, SemanticType* type) noexcept
-        : _name(std::move(name)), _type(type) { }
-
-    [[nodiscard]]
-    std::string_view name() const noexcept { return _name; }
-
-    [[nodiscard]]
-    SemanticType* type() const noexcept { return _type; }
-};
-
-class RecordMethod {
-private:
-    std::string _name;
-    SemanticFunc* _func;
-
-public:
-    RecordMethod(std::string name, SemanticFunc* func) noexcept
-        : _name(std::move(name)), _func(func) { }
-
-    [[nodiscard]]
-    std::string_view name() const noexcept { return _name; }
-
-    [[nodiscard]]
-    SemanticFunc* func() const noexcept { return _func; }
-};
-
-class RecordType : public SemanticType {
-private:
-    std::vector<SemanticType*> _traits;
-
-    std::vector<RecordField> _fields;
-    std::vector<RecordMethod> _methods;
-
-protected:
-    explicit RecordType(std::string name,
-                        std::vector<SemanticType*> traits = {},
-                        std::vector<RecordField> fields = {},
-                        std::vector<RecordMethod> methods = {}) noexcept
-        : SemanticType(std::move(name)), _traits(std::move(traits)), _fields(std::move(fields)),
-          _methods(std::move(methods)) { }
-
-public:
-    [[nodiscard]]
-    const std::vector<SemanticType*>& traits() const noexcept { return _traits; }
-
-    [[nodiscard]]
-    const std::vector<RecordField>& fields() const noexcept { return _fields; }
-
-    [[nodiscard]]
-    const std::vector<RecordMethod>& methods() const noexcept { return _methods; }
-
-    [[nodiscard]]
-    const RecordField* getField(std::string_view name) const noexcept {
-        auto it = std::find_if(_fields.begin(), _fields.end(),
-            [name](const RecordField& field) {
-                return field.name() == name;
-            }
-        );
-        return it == _fields.end() ? nullptr : &*it;
-    }
-
-    [[nodiscard]]
-    const RecordMethod* getMethod(std::string_view name) const noexcept {
-        auto it = std::find_if(_methods.begin(), _methods.end(),
-            [name](const RecordMethod& method) {
-                return method.name() == name;
-            }
-        );
-        return it == _methods.end() ? nullptr : &*it;
-    }
-
-    [[nodiscard]]
-    SemanticFunc* getCallable(const std::vector<SemanticFunc*>& paramTypes) const override {
-        if (const RecordMethod* method = getMethod("operator()"); method != nullptr) {
-            if (method->func()->isCallableWith()) {
-
-            }
-        }
-        return nullptr;
-    }
-};
-
-class StructType final : public RecordType {
-public:
-    explicit StructType(std::string name, std::vector<SemanticType*> traits = {}) noexcept
-        : RecordType(std::move(name), std::move(traits)) { }
-};
-
-class ClassType final : public RecordType {
-private:
-    SemanticType* _base;
-
-public:
-    explicit ClassType(std::string name, SemanticType* base = nullptr, std::vector<SemanticType*> traits = {}) noexcept
-        : RecordType(std::move(name), std::move(traits)), _base(base) { }
-
-    [[nodiscard]]
-    SemanticType* base() const noexcept { return _base; }
-};
-
 class FuncType final : public SemanticType {
+protected:
+    explicit FuncType(std::string name, TypeId id) noexcept
+        : SemanticType(std::move(name), id) { }
+};
+
+/**
+ * Represents a semantic function type without overloads.
+ */
+class MonoFuncType final : public SemanticType {
 private:
     SemanticFunc* _func;
 
 public:
-    FuncType(std::string name, SemanticFunc* func) noexcept
-        : SemanticType(std::move(name)), _func(func) { }
+    MonoFuncType(std::string name, TypeId id, SemanticFunc* func) noexcept
+        : SemanticType(std::move(name), id), _func(func) { }
 
     [[nodiscard]]
     SemanticFunc* func() const noexcept { return _func; }
 };
 
+/**
+ * Represents a semantic function type with overloads.
+ */
 class OverloadedFuncType final : public SemanticType {
 private:
-    std::vector<FuncType*> _funcTypes;
+    /**
+     * Invariant: types are sorted.
+     */
+    std::vector<MonoFuncType*> _funcTypes;
 
 public:
-    OverloadedFuncType(std::string name, std::vector<FuncType*> funcTypes) noexcept
-        : SemanticType(std::move(name)), _funcTypes(std::move(funcTypes)) { }
+    OverloadedFuncType(std::string name, TypeId id, std::vector<MonoFuncType*>&& funcTypes) noexcept
+        : SemanticType(std::move(name), id), _funcTypes(std::move(funcTypes)) { }
+
+    OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes);
 
     [[nodiscard]]
-    const std::vector<FuncType*>& funcTypes() const noexcept { return _funcTypes; }
+    const std::vector<MonoFuncType*>& funcTypes() const noexcept { return _funcTypes; }
 };
 
+/**
+ * Represents `Type`'s semantic type.
+ */
 class TypeType final : public SemanticType {
 private:
     SemanticType* _declaredType;
 
 public:
-    TypeType(std::string name, SemanticType* declaredType) noexcept
-        : SemanticType(std::move(name)), _declaredType(declaredType) { }
+    TypeType(std::string name, TypeId id, SemanticType* declaredType) noexcept
+        : SemanticType(std::move(name), id), _declaredType(declaredType) { }
 
     [[nodiscard]]
     SemanticType* declaredType() const noexcept { return _declaredType; }
+};
+
+/**
+ * Represents the method of a semantic type.
+ */
+class TypeMethod {
+private:
+    Symbol* _symbol;
+
+public:
+    explicit TypeMethod(Symbol* symbol) noexcept;
+
+    [[nodiscard]]
+    std::string_view name() const noexcept { return _symbol->name; }
+
+    [[nodiscard]]
+    FuncType* type() const noexcept {
+        assert(dynamic_cast<FuncType*>(_symbol->type) != nullptr);
+        return static_cast<FuncType*>(_symbol->type);
+    }
+};
+
+/**
+ * Represents a semantic trait type.
+ */
+class TraitType : public SemanticType {
+private:
+    std::vector<TraitType*> _traits;
+
+    std::vector<TypeMethod> _methods;
+
+public:
+    explicit TraitType(std::string name,
+                       TypeId id,
+                       std::vector<TraitType*> traits = {},
+                       std::vector<TypeMethod> methods = {}) noexcept
+        : SemanticType(std::move(name), id), _traits(std::move(traits)), _methods(std::move(methods)) { }
+
+    [[nodiscard]]
+    const std::vector<TraitType*>& traits() const noexcept { return _traits; }
+
+    [[nodiscard]]
+    const std::vector<TypeMethod>& methods() const noexcept { return _methods; }
+};
+
+/**
+ * Represents the field of a semantic record type.
+ */
+class RecordField {
+private:
+    Symbol* _symbol;
+
+public:
+    explicit RecordField(Symbol* symbol) noexcept : _symbol(symbol) { }
+
+    [[nodiscard]]
+    std::string_view name() const noexcept { return _symbol->name; }
+
+    [[nodiscard]]
+    SemanticType* type() const noexcept { return _symbol->type; }
+};
+
+/**
+ * Represents a semantic type with fields and methods.
+ */
+class RecordType : public SemanticType {
+private:
+    std::vector<TraitType*> _traits;
+
+    std::vector<RecordField> _fields;
+    std::vector<TypeMethod> _methods;
+
+protected:
+    explicit RecordType(std::string name,
+                        TypeId id,
+                        std::vector<TraitType*> traits = {},
+                        std::vector<RecordField> fields = {},
+                        std::vector<TypeMethod> methods = {}) noexcept
+        : SemanticType(std::move(name), id), _traits(std::move(traits)), _fields(std::move(fields)),
+          _methods(std::move(methods)) { }
+
+public:
+    [[nodiscard]]
+    const std::vector<TraitType*>& traits() const noexcept { return _traits; }
+
+    [[nodiscard]]
+    const std::vector<RecordField>& fields() const noexcept { return _fields; }
+
+    [[nodiscard]]
+    const std::vector<TypeMethod>& methods() const noexcept { return _methods; }
+};
+
+/**
+ * Represents a semantic struct type.
+ */
+class StructType final : public RecordType {
+public:
+    explicit StructType(std::string name,
+                        TypeId id,
+                        std::vector<TraitType*> traits = {},
+                        std::vector<RecordField> fields = {},
+                        std::vector<TypeMethod> methods = {}) noexcept
+        : RecordType(std::move(name), id, std::move(traits), std::move(fields), std::move(methods)) { }
+};
+
+/**
+ * Represents a semantic class type.
+ */
+class ClassType final : public RecordType {
+private:
+    ClassType* _base;
+
+public:
+    explicit ClassType(std::string name,
+                       TypeId id,
+                       ClassType* base = nullptr,
+                       std::vector<TraitType*> traits = {},
+                       std::vector<RecordField> fields = {},
+                       std::vector<TypeMethod> methods = {}) noexcept
+        : RecordType(std::move(name), id, std::move(traits), std::move(fields), std::move(methods)), _base(base) { }
+
+    [[nodiscard]]
+    ClassType* base() const noexcept { return _base; }
+};
+
+/**
+ * Represents a factory that manages `SemanticType` instances.
+ */
+class TypeTable {
+private:
+    std::vector<std::unique_ptr<SemanticType>> _types;
+
+    TypeId _nextId = 0;
+
+    // `Type` type specific
+    bool _hasTypeType = false;
+    TypeId _typeTypeId = 0;
+
+    // Function type specific
+    std::unordered_map<FuncSignature, MonoFuncType*> _funcTypeMap;
+
+    /**
+     * Represents the key for `OverloadedFuncType` instance caching map.
+     */
+    class OverloadedFuncKey {
+    private:
+        std::vector<MonoFuncType*> _funcTypes;
+
+    public:
+        explicit OverloadedFuncKey(std::vector<MonoFuncType*> funcTypes) noexcept
+            : _funcTypes(std::move(funcTypes)) { }
+
+        [[nodiscard]]
+        const std::vector<MonoFuncType*>& funcTypes() const noexcept { return _funcTypes; }
+
+        bool operator==(const OverloadedFuncKey& other) const noexcept;
+    };
+
+    /**
+     * Represents the hasher for `OverloadedFuncKey`.
+     */
+    struct OverloadedFuncKeyHash {
+        size_t operator()(const OverloadedFuncKey& key) const;
+    };
+
+    std::unordered_map<OverloadedFuncKey, OverloadedFuncType*, OverloadedFuncKeyHash> _overloadedFuncTypeMap;
+
+public:
+    MonoFuncType* makeMonoFuncType(std::string name, SemanticFunc* func);
+
+    OverloadedFuncType* makeOverloadedFuncType(std::string name, const std::vector<MonoFuncType*>& funcTypes);
+
+    TypeType* makeTypeType(std::string name, SemanticType* declaredType);
+
+    TraitType* makeTraitType(std::string name,
+                             std::vector<TraitType*> traits = {},
+                             std::vector<TypeMethod> methods = {});
+
+    StructType* makeStructType(std::string name,
+                               std::vector<TraitType*> traits = {},
+                               std::vector<RecordField> fields = {},
+                               std::vector<TypeMethod> methods = {});
+
+    ClassType* makeClassType(std::string name,
+                             ClassType* base = nullptr,
+                             std::vector<TraitType*> traits = {},
+                             std::vector<RecordField> fields = {},
+                             std::vector<TypeMethod> methods = {});
+
+private:
+    template <typename T, typename... Args>
+    T* makeType(std::string name, TypeId id, Args&&... args) {
+        std::unique_ptr<T> up = std::make_unique<T>(std::move(name), id, std::forward<Args>(args)...);
+        T* p = up.get();
+        _types.emplace_back(std::move(up));
+        return p;
+    }
+
+    TypeId getNextId() noexcept;
 };
 
 } // Spark::FrontEnd
