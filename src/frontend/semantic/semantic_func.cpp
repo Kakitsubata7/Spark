@@ -25,7 +25,7 @@ bool FuncSignature::operator==(const FuncSignature& other) const noexcept {
     return _returnType->isIdentical(other._returnType);
 }
 
-size_t FuncSignatureHash::operator()(const FuncSignature& sig) const noexcept {
+size_t FuncSignatureHash::operator()(const FuncSignature& sig) const {
     size_t seed = 0;
     for (auto* t : sig.paramTypes()) {
         boost::hash_combine(seed, t->id());

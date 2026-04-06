@@ -33,7 +33,7 @@ public:
  * Represents the hasher for `FuncSignature`.
  */
 struct FuncSignatureHash {
-    size_t operator()(const FuncSignature& sig) const noexcept;
+    size_t operator()(const FuncSignature& sig) const;
 };
 
 /**
