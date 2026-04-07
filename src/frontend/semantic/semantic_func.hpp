@@ -53,7 +53,30 @@ public:
     const FuncSignature& sig() const noexcept { return _sig; }
 
     [[nodiscard]]
+    const std::vector<SemanticType*>& paramTypes() const noexcept { return _sig.paramTypes(); }
+
+    [[nodiscard]]
+    SemanticType* returnType() const noexcept { return _sig.returnType(); }
+
+    [[nodiscard]]
     bool isCallableWith(const std::vector<SemanticType*>& paramTypes) const noexcept;
+};
+
+/**
+ * Represents a factory that manages `SemanticFunc` instances.
+ */
+class FuncTable {
+private:
+    std::vector<std::unique_ptr<SemanticFunc>> _funcs;
+
+public:
+    SemanticFunc* make(FuncSignature sig) {
+        return _funcs.emplace_back(std::make_unique<SemanticFunc>(std::move(sig))).get();
+    }
+
+    SemanticFunc* make(std::vector<SemanticType*> paramTypes, SemanticType* returnType) {
+        return _funcs.emplace_back(std::make_unique<SemanticFunc>(std::move(paramTypes), returnType)).get();
+    }
 };
 
 } // Spark::FrontEnd
