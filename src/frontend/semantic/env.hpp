@@ -59,7 +59,7 @@ public:
     }
 
     [[nodiscard]]
-    Symbol* lookup(std::string_view name) {
+    Symbol* lookup(std::string_view name) const {
         auto it = _map.find(name);
         return it != _map.end() ? it->second : (_parent != nullptr ? _parent->lookup(name) : nullptr);
     }
