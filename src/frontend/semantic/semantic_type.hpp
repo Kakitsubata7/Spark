@@ -21,8 +21,11 @@ using TypeId = uint64_t;
  */
 class SemanticType {
 private:
-    std::string _name;
     TypeId _id;
+
+    std::string _name;
+    Location _start;
+    Location _end;
 
 protected:
     explicit SemanticType(std::string name, TypeId id) noexcept
@@ -32,10 +35,16 @@ public:
     virtual ~SemanticType() = default;
 
     [[nodiscard]]
+    TypeId id() const noexcept { return _id; }
+
+    [[nodiscard]]
     std::string_view name() const noexcept { return _name; }
 
     [[nodiscard]]
-    TypeId id() const noexcept { return _id; }
+    Location start() const noexcept { return _start; }
+
+    [[nodiscard]]
+    Location end() const noexcept { return _end; }
 
     /**
      * Checks whether two `SemanticType` instances describe the same type.
@@ -103,7 +112,7 @@ public:
 /**
  * Represents a semantic function type.
  */
-class FuncType final : public SemanticType {
+class FuncType : public SemanticType {
 protected:
     explicit FuncType(std::string name, TypeId id) noexcept
         : SemanticType(std::move(name), id) { }
@@ -112,13 +121,13 @@ protected:
 /**
  * Represents a semantic function type without overloads.
  */
-class MonoFuncType final : public SemanticType {
+class MonoFuncType final : public FuncType {
 private:
     SemanticFunc* _func;
 
 public:
     MonoFuncType(std::string name, TypeId id, SemanticFunc* func) noexcept
-        : SemanticType(std::move(name), id), _func(func) { }
+        : FuncType(std::move(name), id), _func(func) { }
 
     [[nodiscard]]
     SemanticFunc* func() const noexcept { return _func; }
@@ -127,7 +136,7 @@ public:
 /**
  * Represents a semantic function type with overloads.
  */
-class OverloadedFuncType final : public SemanticType {
+class OverloadedFuncType final : public FuncType {
 private:
     /**
      * Invariant: types are sorted.
@@ -136,7 +145,7 @@ private:
 
 public:
     OverloadedFuncType(std::string name, TypeId id, std::vector<MonoFuncType*>&& funcTypes) noexcept
-        : SemanticType(std::move(name), id), _funcTypes(std::move(funcTypes)) { }
+        : FuncType(std::move(name), id), _funcTypes(std::move(funcTypes)) { }
 
     OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes);
 
