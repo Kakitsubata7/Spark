@@ -843,7 +843,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                 continue;
             }
 
-            //
+            // TODO: HERE!
             if (symbol->type->as<MonoFuncType>()) {
 
             }
