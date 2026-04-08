@@ -25,6 +25,7 @@ private:
 
     bool _inLoop = false;
     bool _inFunc = false;
+    bool _inType = false;
 
     SemanticType* _resultType = nullptr;
 
@@ -61,6 +62,13 @@ private:
     [[nodiscard]]
     TypeType* typeType() const noexcept { return _typeType; }
 
+    // Functions
+    std::unordered_map<FnDefStmt*, SemanticFunc*> _fndefMap;
+    SemanticType* _currentReturnType = nullptr;
+
+    // Types
+    std::unordered_map<TypeDefStmt*, TypeType*> _tdefMap;
+
 public:
     explicit SemanticResolver(Diagnostics& diagnostics);
 
@@ -88,6 +96,7 @@ public:
     void visit(TypeofExpr* t) override;
 
     void visit(VarDefStmt* vardef) override;
+    void visit(FnDefStmt* fndef) override;
     void visit(TypeDefStmt* tdef) override;
     void visit(AssignStmt* assign) override;
     void visit(IfStmt* ifstmt) override;
@@ -105,6 +114,8 @@ public:
 
 private:
     SemanticType* resolve(Node* node);
+
+    void resolveFuncBody(BlockExpr* body, SemanticType* returnType);
 
     /**
      * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global
@@ -148,6 +159,13 @@ private:
      * @param env Environment to declare into.
      */
     void declareFunctions(const std::vector<FnDefStmt*>& fndefs, Env& env);
+
+    /**
+     * Declares type definitions.
+     * @param tdefs Type definition statements.
+     * @param env Environment to declare into.
+     */
+    void declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env& env);
 
     /**
      * Finds the `SemanticFunc` pointer based on symbol name and parameter types starting from the given environment.
@@ -299,9 +317,13 @@ private:
     void redeclareOfFuncWithTheSameSigError(Location start,
                                             Location end,
                                             std::string_view name,
-                                            const std::vector<SemanticType*>& paramTypes);
+                                            const std::vector<SemanticType*>& paramTypes,
+                                            Location prevStart,
+                                            Location prevEnd);
 
     void notReassignableError(Location start, Location end, std::string_view name);
+
+    void exprNotReassignableError(Location start, Location end);
 };
 
 } // Spark::FrontEnd

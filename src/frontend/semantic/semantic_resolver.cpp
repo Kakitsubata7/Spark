@@ -51,19 +51,30 @@ void SemanticResolver::visit(BlockExpr* block) {
 
     SemanticType* resultType = voidType();
 
-    // Collect function definitions
+    // Collect function definitions and type definitions
     std::vector<FnDefStmt*> fndefs;
+    std::vector<TypeDefStmt*> tdefs;
     for (Node* node : block->nodes) {
         if (FnDefStmt* fndef = node->as<FnDefStmt>()) {
             fndefs.push_back(fndef);
+        } else if (TypeDefStmt* tdef = node->as<TypeDefStmt>()) {
+            tdefs.push_back(tdef);
         }
     }
 
     // Enters scope
     pushEnv();
 
-    // Resolves function definitions
+    // Declare functions
     declareFunctions(fndefs, currentEnv());
+
+    // Declare types
+    // declareTypes(tdefs, currentEnv());
+
+    // Resolve nodes
+    for (Node* node : block->nodes) {
+        resultType = resolve(node);
+    }
 
     // Exits scope
     popEnv();
@@ -121,6 +132,7 @@ void SemanticResolver::visit(BinaryExpr* binary) {
     switch (binary->op) {
         case BinaryExpr::OpKind::StrictEq: {
             error(binary->start, binary->end, "binary `===` operator is not supported");
+            _resultType = unknownType();
             break;
         }
 
@@ -163,6 +175,15 @@ void SemanticResolver::visit(PrefixExpr* prefix) {
 
         // Looks up for free operator overload
         if (SemanticFunc* func = findFunc(name, currentEnv(), {exprType})) {
+
+
+            // Sets result type
+            _resultType = func->sig().returnType();
+            return;
+        }
+
+        // If no free operator overload was found, looking up for instance operator overload in LHS type
+        if (SemanticFunc* func = findFunc(name, exprType, {})) {
 
 
             // Sets result type
@@ -243,6 +264,14 @@ void SemanticResolver::visit(MemberAccessExpr* maccess) {
             _resultType = targetMethod->type();
             return;
         }
+    } else if (MonoFuncType* mf = baseType->as<MonoFuncType>()) {
+        if (member == "operator()") {
+            _resultType = mf;
+        }
+    } else if (OverloadedFuncType* of = baseType->as<OverloadedFuncType>()) {
+        if (member == "operator()") {
+            _resultType = of;
+        }
     }
 
     // Member not found
@@ -271,7 +300,9 @@ void SemanticResolver::visit(CallExpr* call) {
     }
 
     // Gets the semantic function
-    if (SemanticFunc* func = findFunc("operator()", currentEnv(), argTypes)) {
+    std::vector<SemanticType*> freeArgTypes = argTypes;
+    freeArgTypes.insert(freeArgTypes.begin(), calleeType);
+    if (SemanticFunc* func = findFunc("operator()", currentEnv(), freeArgTypes)) {
         // Found free definition
 
         // Sets result type
@@ -283,7 +314,7 @@ void SemanticResolver::visit(CallExpr* call) {
         _resultType = func->returnType();
     } else {
         // Cannot find function
-        notIndexableError(call->start, call->end, calleeType, argTypes);
+        notCallableError(call->start, call->end, calleeType, argTypes);
         _resultType = unknownType();
     }
 }
@@ -304,7 +335,9 @@ void SemanticResolver::visit(SubscriptExpr* subscript) {
     }
 
     // Gets the semantic function
-    if (SemanticFunc* func = findFunc("operator[]", currentEnv(), indexTypes)) {
+    std::vector<SemanticType*> freeIndexTypes = indexTypes;
+    freeIndexTypes.insert(freeIndexTypes.begin(), baseType);
+    if (SemanticFunc* func = findFunc("operator[]", currentEnv(), freeIndexTypes)) {
         // Found free definition
 
         // Sets result type
@@ -428,15 +461,21 @@ void SemanticResolver::visit(VarDefStmt* vardef) {
     // Gets variable type
     SemanticType* varType;
     if (vardef->type != nullptr) {
-        if (TypeType* t = resolve(vardef->type)->as<TypeType>()) {
+        SemanticType* typeExprType = resolve(vardef->type);
+        if (TypeType* t = typeExprType->as<TypeType>()) {
             varType = t->declaredType();
         } else {
-            unexpectedTypeError(vardef->type->start, vardef->type->end, typeType(), t);
+            unexpectedTypeError(vardef->type->start, vardef->type->end, typeType(), typeExprType);
             varType = unknownType();
         }
     } else {
         // Infers type based on RHS type
         varType = rhsType;
+    }
+
+    // Makes sure LHS and RHS types match
+    if (vardef->rhs != nullptr && !varType->isIdentical(rhsType)) {
+        unexpectedTypeError(vardef->rhs->start, vardef->rhs->end, varType, rhsType);
     }
 
     // Declares name into the current environment
@@ -447,47 +486,67 @@ void SemanticResolver::visit(VarDefStmt* vardef) {
     _resultType = voidType();
 }
 
-void SemanticResolver::visit(TypeDefStmt* tdef) {
-    assert(tdef != nullptr);
+void SemanticResolver::visit(FnDefStmt* fndef) {
+    assert(fndef != nullptr);
 
-    // Gets name
-    std::string_view name = tdef->name->value.str();
-
-    // Makes sure declared type is a class
-    if (tdef->kind != TypeDefStmt::TypeKind::Class) {
-        error(tdef->start, tdef->end, "only `class` type declaration is supported");
+    // Non-block function body is not supported
+    BlockExpr* body = fndef->body->as<BlockExpr>();
+    if (body == nullptr) {
+        error(fndef->start, fndef->end, "non-block function body is not supported");
         _resultType = voidType();
         return;
     }
 
-    // Inheritance is not supported
-    if (!tdef->bases.empty()) {
-        error(tdef->start, tdef->end, "inheritance is not supported");
+    // Retrieves `SemanticFunc` pointer mapped during function declaration
+    SemanticFunc* func;
+    if (auto it = _fndefMap.find(fndef); it != _fndefMap.end()) {
+        func = it->second;
+    } else {
+        // Function was not declared properly, skip
         _resultType = voidType();
+        return;
     }
 
-    // Resolves type body
+    // Enters function scope
+    bool wasInFunc = _inFunc;
+    _inFunc = true;
     pushEnv();
-    for (Node* node : tdef->body->nodes) {
-        if (VarDefStmt* vardef = node->as<VarDefStmt>()) {
 
-        } else if (FnDefStmt* fndef = node->as<FnDefStmt>()) {
+    // Declare parameters
+    assert(fndef->params.size() == func->paramTypes().size());
+    for (size_t i = 0; i < func->paramTypes().size(); ++i) {
+        FnParam* param = fndef->params[i];
+        SemanticType* paramType = func->paramTypes()[i];
 
+        // Parameter default value is not supported
+        if (param->def != nullptr) {
+            error(param->def->start, param->def->end, "parameter default value is not supported");
+        }
+
+        // Declare the parameter
+        if (BindingPattern* bp = param->pattern->as<BindingPattern>()) {
+            declare(bp->name->value.str(), currentEnv(), SymbolKind::Var,
+                param->mod == nullptr ? false : isReassignable(param->mod), paramType, bp->start, bp->end);
         } else {
-            error(node->start, node->end, "invalid statement inside type declaration body");
+            error(param->pattern->start, param->pattern->end, "only binding pattern is supported");
         }
     }
+
+    // Resolves body
+    resolveFuncBody(body, func->returnType());
+
+    // Exits function scope
     popEnv();
+    _inFunc = wasInFunc;
 
-    // Constructs the declared type semantic type object
-    ClassType* ctype = _typeTable.makeClassType(std::string{name}, nullptr, {}, {}, {});
+    // Sets result type
+    _resultType = voidType();
+}
 
-    // Constructs the `Type` type semantic type object
-    TypeType* ttype = _typeTable.makeTypeType("Type", ctype);
+void SemanticResolver::visit(TypeDefStmt* tdef) {
+    assert(tdef != nullptr);
 
-    // Declares type name
-    declare(tdef->name->value.str(), currentEnv(), SymbolKind::Type, false, ttype,
-        tdef->name->start, tdef->name->end);
+    error(tdef->start, tdef->end, "type declaration is not supported");
 
     // Sets result type
     _resultType = voidType();
@@ -503,14 +562,6 @@ void SemanticResolver::visit(AssignStmt* assign) {
         return;
     }
 
-    // Makes sure LHS is an identifier
-    NameExpr* lhs = assign->lhs->as<NameExpr>();
-    if (lhs == nullptr) {
-        error(assign->lhs->start, assign->lhs->end, "invalid LHS of assignment statement");
-        _resultType = voidType();
-        return;
-    }
-
     // Makes sure RHS is an expression
     Expr* rhs = assign->rhs->as<Expr>();
     if (rhs == nullptr) {
@@ -522,19 +573,28 @@ void SemanticResolver::visit(AssignStmt* assign) {
     // Resolves RHS expression
     SemanticType* rhsType = resolve(rhs);
 
-    // Resolves LHS identifier
-    std::string_view name = lhs->name->value.str();
+    // Resolves LHS
     SemanticType* lhsType;
-    if (Symbol* symbol = currentEnv().lookup(name)) {
-        if (!symbol->isReassignable) {
-            error(lhs->start, lhs->end, "");
+    if (NameExpr* ident = assign->lhs->as<NameExpr>()) {
+        // Finds the symbol from the current environment
+        std::string_view lhsName = ident->name->value.str();
+        if (Symbol* symbol = currentEnv().lookup(lhsName)) {
+            if (!symbol->isReassignable) {
+                notReassignableError(ident->start, ident->end, lhsName);
+                _resultType = voidType();
+                return;
+            }
+            lhsType = symbol->type;
+        } else {
+            cannotFindError(ident->name->start, ident->name->end, lhsName);
             _resultType = voidType();
             return;
         }
-        lhsType = symbol->type;
-    } else {
-        cannotFindError(lhs->name->start, lhs->name->end, name);
-        _resultType = voidType();
+    }
+    // else if (MemberAccessExpr* maccess = assign->lhs->as<MemberAccessExpr>()) {
+    // }
+    else {
+        exprNotReassignableError(assign->start, assign->end);
         return;
     }
 
@@ -633,7 +693,14 @@ void SemanticResolver::visit(ReturnStmt* ret) {
 
     // Resolves returned expression
     if (ret->expr != nullptr) {
-        resolve(ret->expr);
+        SemanticType* retType = resolve(ret->expr);
+
+        // Checks whether the return type matches the current return type
+        if (_currentReturnType != nullptr) {
+            if (!retType->isIdentical(_currentReturnType)) {
+                unexpectedTypeError(ret->expr->start, ret->expr->end, _currentReturnType, retType);
+            }
+        }
     }
 
     // Sets type
@@ -715,6 +782,12 @@ void SemanticResolver::declare(std::string_view name,
     }
 }
 
+void SemanticResolver::resolveFuncBody(BlockExpr* body, SemanticType* returnType) {
+    _currentReturnType = returnType;
+    resolve(body);
+    _currentReturnType = nullptr;
+}
+
 void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, Env& env) {
     for (FnDefStmt* fndef : fndefs) {
         assert(fndef != nullptr);
@@ -724,7 +797,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
         // Gets function name
         std::string_view name = fndef->name->value.str();
 
-        // Resolves parameters
+        // Resolves parameter type expressions
         std::vector<SemanticType*> paramTypes{fndef->params.size()};
         for (size_t i = 0; i < fndef->params.size(); ++i) {
             FnParam* param = fndef->params[i];
@@ -789,7 +862,8 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
             if (MonoFuncType* mf = symbol->type->as<MonoFuncType>()) {
                 // Checks whether the two function has the same signature
                 if (mf->func()->isCallableWith(paramTypes)) {
-                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes, mf->start(),
+                        mf->end());
                     continue;
                 }
 
@@ -811,7 +885,8 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                     }
                 }
                 if (alreadyDefined) {
-                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes,
+                        mf->start(), mf->end());
                     continue;
                 }
 
@@ -832,6 +907,46 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
 
         // Declares function
         declare(name, env, SymbolKind::Func, false, type, fndef->name->start, fndef->name->end);
+
+        // Maps the `SemanticFunc` pointer to the `FnDefStmt`
+        _fndefMap.insert({fndef, func});
+    }
+}
+
+void SemanticResolver::declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env& env) {
+    for (TypeDefStmt* tdef : tdefs) {
+        assert(tdef != nullptr);
+    }
+
+    for (TypeDefStmt* tdef : tdefs) {
+        // Gets name
+        std::string_view name = tdef->name->value.str();
+
+        // Makes sure declared type is a class
+        if (tdef->kind != TypeDefStmt::TypeKind::Class) {
+            error(tdef->start, tdef->end, "only `class` type declaration is supported");
+            continue;
+        }
+
+        // Inheritance is not supported
+        if (!tdef->bases.empty()) {
+            error(tdef->start, tdef->end, "inheritance is not supported");
+            continue;
+        }
+
+        // Constructs declared semantic type
+        ClassType* ctype = _typeTable.makeClassType(std::string{name}, nullptr, {}, {},
+            {});
+
+        // Constructs `Type` semantic type
+        TypeType* ttype = _typeTable.makeTypeType("Type", ctype);
+
+        // Declares type
+        declare(tdef->name->value.str(), env, SymbolKind::Func, false, ttype, tdef->name->start,
+            tdef->name->end);
+
+        // Maps the `SemanticType` pointer to the `TypeDefStmt`
+        _tdefMap.insert({tdef, ttype});
     }
 }
 
@@ -855,7 +970,7 @@ SemanticFunc* SemanticResolver::findFunc(std::string_view name,
                                          const std::vector<SemanticType*>& paramTypes) {
     assert(type != nullptr);
 
-    // Handle `RecordType`s
+    // Handle `RecordType`
     if (const RecordType* r = type->as<RecordType>()) {
         for (const TypeMethod& method : r->methods()) {
             if (method.name() == name) {
@@ -863,7 +978,14 @@ SemanticFunc* SemanticResolver::findFunc(std::string_view name,
             }
         }
     }
-    // TODO: Handle other types
+    // Handle `MonoFuncType`
+    else if (const MonoFuncType* mf = type->as<MonoFuncType>()) {
+        return mf->getFunc(paramTypes);
+    }
+    // Handle `OverloadedFuncType`
+    else if (const OverloadedFuncType* of = type->as<OverloadedFuncType>()) {
+        return of->getFunc(paramTypes);
+    }
 
     return nullptr;
 }
@@ -1169,21 +1291,36 @@ void SemanticResolver::typeHasNoMemberError(Location start,
 void SemanticResolver::redeclareOfFuncWithTheSameSigError(Location start,
                                                           Location end,
                                                           std::string_view name,
-                                                          const std::vector<SemanticType*>& paramTypes) {
+                                                          const std::vector<SemanticType*>& paramTypes,
+                                                          Location prevStart,
+                                                          Location prevEnd) {
     for (SemanticType* paramType : paramTypes) {
         assert(paramType != nullptr);
     }
 
-    std::ostringstream oss;
-    oss << "redeclaration of function `" << name << "` with the same signature: (";
+    std::ostringstream msg;
+    msg << "redeclaration of function `" << name << "` with the same signature: (";
     for (size_t i = 0; i < paramTypes.size(); ++i) {
         SemanticType* paramType = paramTypes[i];
-        oss << paramType->name();
+        msg << paramType->name();
         if (i != paramTypes.size() - 1) {
-            oss << ", ";
+            msg << ", ";
         }
     }
-    oss << ")";
+    msg << ")";
+    error(start, end, msg.str(), {
+        Diagnostic::note(prevStart, prevEnd, "previously declared here")
+    });
+}
+
+void SemanticResolver::notReassignableError(Location start, Location end, std::string_view name) {
+    std::ostringstream msg;
+    msg << "`" << name << "` is not reassignable";
+    error(start, end, msg.str());
+}
+
+void SemanticResolver::exprNotReassignableError(Location start, Location end) {
+    error(start, end, "expression is not reassignable");
 }
 
 } // Spark::FrontEnd
