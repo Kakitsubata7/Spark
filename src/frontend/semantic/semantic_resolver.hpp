@@ -25,7 +25,6 @@ private:
 
     bool _inLoop = false;
     bool _inFunc = false;
-    bool _inType = false;
 
     SemanticType* _resultType = nullptr;
 
@@ -115,7 +114,7 @@ public:
 private:
     SemanticType* resolve(Node* node);
 
-    void resolveFuncBody(BlockExpr* body, SemanticType* returnType);
+    std::vector<SemanticType*> resolveNodes(const std::vector<Node*>& nodes);
 
     /**
      * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global

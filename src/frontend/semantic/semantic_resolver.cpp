@@ -49,38 +49,17 @@ void SemanticResolver::visit(ThrowExpr* t) {
 void SemanticResolver::visit(BlockExpr* block) {
     assert(block != nullptr);
 
-    SemanticType* resultType = voidType();
-
-    // Collect function definitions and type definitions
-    std::vector<FnDefStmt*> fndefs;
-    std::vector<TypeDefStmt*> tdefs;
-    for (Node* node : block->nodes) {
-        if (FnDefStmt* fndef = node->as<FnDefStmt>()) {
-            fndefs.push_back(fndef);
-        } else if (TypeDefStmt* tdef = node->as<TypeDefStmt>()) {
-            tdefs.push_back(tdef);
-        }
-    }
-
     // Enters scope
     pushEnv();
 
-    // Declare functions
-    declareFunctions(fndefs, currentEnv());
-
-    // Declare types
-    // declareTypes(tdefs, currentEnv());
-
-    // Resolve nodes
-    for (Node* node : block->nodes) {
-        resultType = resolve(node);
-    }
+    // Resolve nodes inside the scope
+    std::vector<SemanticType*> types = resolveNodes(block->nodes);
 
     // Exits scope
     popEnv();
 
     // Sets result type
-    _resultType = resultType;
+    _resultType = types.empty() ? voidType() : types.back();
 }
 
 void SemanticResolver::visit(IsExpr* is) {
@@ -535,7 +514,9 @@ void SemanticResolver::visit(FnDefStmt* fndef) {
     }
 
     // Resolves body
-    resolveFuncBody(body, func->returnType());
+    _currentReturnType = func->returnType();
+    resolveNodes(body->nodes);
+    _currentReturnType = nullptr;
 
     // Exits function scope
     popEnv();
@@ -741,6 +722,38 @@ SemanticType* SemanticResolver::resolve(Node* node) {
     return _resultType;
 }
 
+std::vector<SemanticType*> SemanticResolver::resolveNodes(const std::vector<Node*>& nodes) {
+    for (Node* node : nodes) {
+        assert(node != nullptr);
+    }
+
+    std::vector<SemanticType*> types;
+
+    // Collect function definitions and type definitions
+    std::vector<FnDefStmt*> fndefs;
+    std::vector<TypeDefStmt*> tdefs;
+    for (Node* node : nodes) {
+        if (FnDefStmt* fndef = node->as<FnDefStmt>()) {
+            fndefs.push_back(fndef);
+        } else if (TypeDefStmt* tdef = node->as<TypeDefStmt>()) {
+            tdefs.push_back(tdef);
+        }
+    }
+
+    // Declare functions
+    declareFunctions(fndefs, currentEnv());
+
+    // Declare types
+    // declareTypes(tdefs, currentEnv());
+
+    // Resolve nodes
+    for (Node* node : nodes) {
+        types.push_back(resolve(node));
+    }
+
+    return types;
+}
+
 Env& SemanticResolver::currentEnv() noexcept {
     return _envStack.empty() ? _globalEnv : _envStack.back();
 }
@@ -782,12 +795,6 @@ void SemanticResolver::declare(std::string_view name,
         // Redeclaration error
         redeclareError(start, end, name, symbol->start, symbol->end);
     }
-}
-
-void SemanticResolver::resolveFuncBody(BlockExpr* body, SemanticType* returnType) {
-    _currentReturnType = returnType;
-    resolve(body);
-    _currentReturnType = nullptr;
 }
 
 void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, Env& env) {
