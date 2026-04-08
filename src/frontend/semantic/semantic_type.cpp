@@ -21,8 +21,14 @@ SemanticFunc* OverloadedFuncType::getFunc(const std::vector<SemanticType*>& para
     return nullptr;
 }
 
-OverloadedFuncType::OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes)
-    : FuncType(std::move(name), id), _funcTypes(funcTypes) {
+FuncType* TypeMethod::type() const noexcept {
+    assert(dynamic_cast<FuncType*>(_symbol->type) != nullptr);
+    return static_cast<FuncType*>(_symbol->type);
+}
+
+OverloadedFuncType::OverloadedFuncType(TypeId id, std::string name, Location start, Location end,
+                                       const std::vector<MonoFuncType*>& funcTypes)
+    : FuncType(id, std::move(name), start, end), _funcTypes(funcTypes) {
     canonizeTypeVec(_funcTypes);
 }
 
@@ -51,19 +57,20 @@ size_t TypeTable::OverloadedFuncKeyHash::operator()(const OverloadedFuncKey& key
     return seed;
 }
 
-MonoFuncType* TypeTable::makeMonoFuncType(std::string name, SemanticFunc* func) {
+MonoFuncType* TypeTable::makeMonoFuncType(std::string name, Location start, Location end, SemanticFunc* func) {
     // Check for existing function type with the same signature
     if (auto it = _funcTypeMap.find(func->sig()); it != _funcTypeMap.end()) {
         return it->second;
     }
 
     // Create and store the function type
-    MonoFuncType* t = makeType<MonoFuncType>(std::move(name), getNextId(), func);
+    MonoFuncType* t = makeType<MonoFuncType>(getNextId(), std::move(name), start, end, func);
     _funcTypeMap.insert({func->sig(), t});
     return t;
 }
 
-OverloadedFuncType* TypeTable::makeOverloadedFuncType(std::string name, const std::vector<MonoFuncType*>& funcTypes) {
+OverloadedFuncType* TypeTable::makeOverloadedFuncType(std::string name, Location start, Location end,
+                                                      const std::vector<MonoFuncType*>& funcTypes) {
     // Canonize function types vector
     std::vector<MonoFuncType*> canonizedFuncs = funcTypes; // Copies
     SemanticType::canonizeTypeVec(canonizedFuncs);
@@ -77,12 +84,13 @@ OverloadedFuncType* TypeTable::makeOverloadedFuncType(std::string name, const st
     }
 
     // Create and store the overloaded function type
-    OverloadedFuncType* t = makeType<OverloadedFuncType>(std::move(name), getNextId(), std::move(canonizedFuncs));
+    OverloadedFuncType* t = makeType<OverloadedFuncType>(getNextId(), std::move(name), start, end,
+        std::move(canonizedFuncs));
     it->second = t;
     return t;
 }
 
-TypeType* TypeTable::makeTypeType(std::string name, SemanticType* declaredType) {
+TypeType* TypeTable::makeTypeType(std::string name, Location start, Location end, SemanticType* declaredType) {
     // Get `Type` type ID
     TypeId id;
     if (_hasTypeType) {
@@ -92,29 +100,30 @@ TypeType* TypeTable::makeTypeType(std::string name, SemanticType* declaredType) 
         _hasTypeType = true;
     }
 
-    return makeType<TypeType>(std::move(name), id, declaredType);
+    return makeType<TypeType>(id, std::move(name), start, end, declaredType);
 }
 
-TraitType* TypeTable::makeTraitType(std::string name,
+TraitType* TypeTable::makeTraitType(std::string name, Location start, Location end,
                                     std::vector<TraitType*> traits,
                                     std::vector<TypeMethod> methods) {
-    return makeType<TraitType>(std::move(name), getNextId(), std::move(traits), std::move(methods));
+    return makeType<TraitType>(getNextId(), std::move(name), start, end, std::move(traits), std::move(methods));
 }
 
-StructType* TypeTable::makeStructType(std::string name,
+StructType* TypeTable::makeStructType(std::string name, Location start, Location end,
                                       std::vector<TraitType*> traits,
                                       std::vector<RecordField> fields,
                                       std::vector<TypeMethod> methods) {
-    return makeType<StructType>(std::move(name), getNextId(), std::move(traits), std::move(fields), std::move(methods));
+    return makeType<StructType>(getNextId(), std::move(name), start, end, std::move(traits), std::move(fields),
+                                std::move(methods));
 }
 
-ClassType* TypeTable::makeClassType(std::string name,
+ClassType* TypeTable::makeClassType(std::string name, Location start, Location end,
                                     ClassType* base,
                                     std::vector<TraitType*> traits,
                                     std::vector<RecordField> fields,
                                     std::vector<TypeMethod> methods) {
-    return makeType<ClassType>(std::move(name), getNextId(), base, std::move(traits), std::move(fields),
-                               std::move(methods));
+    return makeType<ClassType>(getNextId(), std::move(name), start, end, base, std::move(traits),
+                               std::move(fields), std::move(methods));
 }
 
 TypeId TypeTable::getNextId() noexcept {

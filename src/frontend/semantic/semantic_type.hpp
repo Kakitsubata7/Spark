@@ -20,16 +20,15 @@ using TypeId = uint64_t;
  * Represents a type during semantic passes.
  */
 class SemanticType {
-private:
+protected:
     TypeId _id;
 
     std::string _name;
     Location _start;
     Location _end;
 
-protected:
-    explicit SemanticType(std::string name, TypeId id) noexcept
-        : _name(std::move(name)), _id(id) { }
+    explicit SemanticType(TypeId id, std::string name, Location start, Location end) noexcept
+        : _id(id), _name(std::move(name)), _start(start), _end(end) { }
 
 public:
     virtual ~SemanticType() = default;
@@ -109,13 +108,32 @@ public:
     }
 };
 
+class FuncType;
+
+/**
+ * Represents the method of a semantic type.
+ */
+class TypeMethod {
+private:
+    Symbol* _symbol;
+
+public:
+    explicit TypeMethod(Symbol* symbol) noexcept;
+
+    [[nodiscard]]
+    std::string_view name() const noexcept { return _symbol->name; }
+
+    [[nodiscard]]
+    FuncType* type() const noexcept;
+};
+
 /**
  * Represents a semantic function type.
  */
 class FuncType : public SemanticType {
 protected:
-    explicit FuncType(std::string name, TypeId id) noexcept
-        : SemanticType(std::move(name), id) { }
+    explicit FuncType(TypeId id, std::string name, Location start, Location end) noexcept
+        : SemanticType(id, std::move(name), start, end) { }
 
 public:
     [[nodiscard]]
@@ -130,8 +148,8 @@ private:
     SemanticFunc* _func;
 
 public:
-    MonoFuncType(std::string name, TypeId id, SemanticFunc* func) noexcept
-        : FuncType(std::move(name), id), _func(func) { }
+    MonoFuncType(TypeId id, std::string name, Location start, Location end, SemanticFunc* func) noexcept
+        : FuncType(id, std::move(name), start, end), _func(func) { }
 
     [[nodiscard]]
     SemanticFunc* func() const noexcept { return _func; }
@@ -151,10 +169,12 @@ private:
     std::vector<MonoFuncType*> _funcTypes;
 
 public:
-    OverloadedFuncType(std::string name, TypeId id, std::vector<MonoFuncType*>&& funcTypes) noexcept
-        : FuncType(std::move(name), id), _funcTypes(std::move(funcTypes)) { }
+    OverloadedFuncType(TypeId id, std::string name, Location start, Location end,
+                       std::vector<MonoFuncType*>&& funcTypes) noexcept
+        : FuncType(id, std::move(name), start, end), _funcTypes(std::move(funcTypes)) { }
 
-    OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes);
+    OverloadedFuncType(TypeId id, std::string name, Location start, Location end,
+                       const std::vector<MonoFuncType*>& funcTypes);
 
     [[nodiscard]]
     const std::vector<MonoFuncType*>& funcTypes() const noexcept { return _funcTypes; }
@@ -171,31 +191,11 @@ private:
     SemanticType* _declaredType;
 
 public:
-    TypeType(std::string name, TypeId id, SemanticType* declaredType) noexcept
-        : SemanticType(std::move(name), id), _declaredType(declaredType) { }
+    TypeType(TypeId id, std::string name, Location start, Location end, SemanticType* declaredType) noexcept
+        : SemanticType(id, std::move(name), start, end), _declaredType(declaredType) { }
 
     [[nodiscard]]
     SemanticType* declaredType() const noexcept { return _declaredType; }
-};
-
-/**
- * Represents the method of a semantic type.
- */
-class TypeMethod {
-private:
-    Symbol* _symbol;
-
-public:
-    explicit TypeMethod(Symbol* symbol) noexcept;
-
-    [[nodiscard]]
-    std::string_view name() const noexcept { return _symbol->name; }
-
-    [[nodiscard]]
-    FuncType* type() const noexcept {
-        assert(dynamic_cast<FuncType*>(_symbol->type) != nullptr);
-        return static_cast<FuncType*>(_symbol->type);
-    }
 };
 
 /**
@@ -208,11 +208,9 @@ private:
     std::vector<TypeMethod> _methods;
 
 public:
-    explicit TraitType(std::string name,
-                       TypeId id,
-                       std::vector<TraitType*> traits = {},
-                       std::vector<TypeMethod> methods = {}) noexcept
-        : SemanticType(std::move(name), id), _traits(std::move(traits)), _methods(std::move(methods)) { }
+    explicit TraitType(TypeId id, std::string name, Location start, Location end,
+                       std::vector<TraitType*> traits = {}, std::vector<TypeMethod> methods = {}) noexcept
+        : SemanticType(id, std::move(name), start, end), _traits(std::move(traits)), _methods(std::move(methods)) { }
 
     [[nodiscard]]
     const std::vector<TraitType*>& traits() const noexcept { return _traits; }
@@ -248,12 +246,11 @@ protected:
     std::vector<RecordField> _fields;
     std::vector<TypeMethod> _methods;
 
-    explicit RecordType(std::string name,
-                        TypeId id,
+    explicit RecordType(TypeId id, std::string name, Location start, Location end,
                         std::vector<TraitType*> traits = {},
                         std::vector<RecordField> fields = {},
                         std::vector<TypeMethod> methods = {}) noexcept
-        : SemanticType(std::move(name), id), _traits(std::move(traits)), _fields(std::move(fields)),
+        : SemanticType(id, std::move(name), start, end), _traits(std::move(traits)), _fields(std::move(fields)),
           _methods(std::move(methods)) { }
 
 public:
@@ -272,12 +269,11 @@ public:
  */
 class StructType final : public RecordType {
 public:
-    explicit StructType(std::string name,
-                        TypeId id,
+    explicit StructType(TypeId id, std::string name, Location start, Location end,
                         std::vector<TraitType*> traits = {},
                         std::vector<RecordField> fields = {},
                         std::vector<TypeMethod> methods = {}) noexcept
-        : RecordType(std::move(name), id, std::move(traits), std::move(fields), std::move(methods)) { }
+        : RecordType(id, std::move(name), start, end, std::move(traits), std::move(fields), std::move(methods)) { }
 };
 
 /**
@@ -288,13 +284,13 @@ private:
     ClassType* _base;
 
 public:
-    explicit ClassType(std::string name,
-                       TypeId id,
+    explicit ClassType(TypeId id, std::string name, Location start, Location end,
                        ClassType* base = nullptr,
                        std::vector<TraitType*> traits = {},
                        std::vector<RecordField> fields = {},
                        std::vector<TypeMethod> methods = {}) noexcept
-        : RecordType(std::move(name), id, std::move(traits), std::move(fields), std::move(methods)), _base(base) { }
+        : RecordType(id, std::move(name), start, end, std::move(traits), std::move(fields), std::move(methods)),
+          _base(base) { }
 
     [[nodiscard]]
     ClassType* base() const noexcept { return _base; }
@@ -343,22 +339,23 @@ private:
     std::unordered_map<OverloadedFuncKey, OverloadedFuncType*, OverloadedFuncKeyHash> _overloadedFuncTypeMap;
 
 public:
-    MonoFuncType* makeMonoFuncType(std::string name, SemanticFunc* func);
+    MonoFuncType* makeMonoFuncType(std::string name, Location start, Location end, SemanticFunc* func);
 
-    OverloadedFuncType* makeOverloadedFuncType(std::string name, const std::vector<MonoFuncType*>& funcTypes);
+    OverloadedFuncType* makeOverloadedFuncType(std::string name, Location start, Location end,
+                                               const std::vector<MonoFuncType*>& funcTypes);
 
-    TypeType* makeTypeType(std::string name, SemanticType* declaredType);
+    TypeType* makeTypeType(std::string name, Location start, Location end, SemanticType* declaredType);
 
-    TraitType* makeTraitType(std::string name,
+    TraitType* makeTraitType(std::string name, Location start, Location end,
                              std::vector<TraitType*> traits = {},
                              std::vector<TypeMethod> methods = {});
 
-    StructType* makeStructType(std::string name,
+    StructType* makeStructType(std::string name, Location start, Location end,
                                std::vector<TraitType*> traits = {},
                                std::vector<RecordField> fields = {},
                                std::vector<TypeMethod> methods = {});
 
-    ClassType* makeClassType(std::string name,
+    ClassType* makeClassType(std::string name, Location start, Location end,
                              ClassType* base = nullptr,
                              std::vector<TraitType*> traits = {},
                              std::vector<RecordField> fields = {},
@@ -366,8 +363,8 @@ public:
 
 private:
     template <typename T, typename... Args>
-    T* makeType(std::string name, TypeId id, Args&&... args) {
-        std::unique_ptr<T> up = std::make_unique<T>(std::move(name), id, std::forward<Args>(args)...);
+    T* makeType(TypeId id, std::string name, Location start, Location end, Args&&... args) {
+        std::unique_ptr<T> up = std::make_unique<T>(id, std::move(name), start, end, std::forward<Args>(args)...);
         T* p = up.get();
         _types.emplace_back(std::move(up));
         return p;
