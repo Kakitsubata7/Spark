@@ -25,6 +25,10 @@ bool FuncSignature::operator==(const FuncSignature& other) const noexcept {
     return _returnType->isIdentical(other._returnType);
 }
 
+bool FuncSignature::operator!=(const FuncSignature& other) const noexcept {
+    return !(*this == other);
+}
+
 size_t FuncSignatureHash::operator()(const FuncSignature& sig) const {
     size_t seed = 0;
     for (auto* t : sig.paramTypes()) {

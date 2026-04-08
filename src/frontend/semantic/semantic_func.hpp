@@ -27,6 +27,7 @@ public:
     SemanticType* returnType() const noexcept { return _returnType; }
 
     bool operator==(const FuncSignature& other) const noexcept;
+    bool operator!=(const FuncSignature& other) const noexcept;
 };
 
 /**
