@@ -5,6 +5,7 @@
 
 #include "env.hpp"
 #include "frontend/ast.hpp"
+#include "semantic_func.hpp"
 #include "semantic_type.hpp"
 #include "symbol.hpp"
 #include "utils/diagnostic.hpp"
@@ -87,7 +88,6 @@ public:
     void visit(TypeofExpr* t) override;
 
     void visit(VarDefStmt* vardef) override;
-    void visit(FnDefStmt* fndef) override;
     void visit(TypeDefStmt* tdef) override;
     void visit(AssignStmt* assign) override;
     void visit(IfStmt* ifstmt) override;
@@ -295,6 +295,13 @@ private:
     void invalidStructInheritanceError(Location start, Location end, const SemanticType* type);
 
     void typeHasNoMemberError(Location start, Location end, const SemanticType* type, std::string_view member);
+
+    void redeclareOfFuncWithTheSameSigError(Location start,
+                                            Location end,
+                                            std::string_view name,
+                                            const std::vector<SemanticType*>& paramTypes);
+
+    void notReassignableError(Location start, Location end, std::string_view name);
 };
 
 } // Spark::FrontEnd

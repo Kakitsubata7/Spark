@@ -9,7 +9,7 @@
 namespace Spark::FrontEnd {
 
 OverloadedFuncType::OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes)
-    : SemanticType(std::move(name), id), _funcTypes(funcTypes) {
+    : FuncType(std::move(name), id), _funcTypes(funcTypes) {
     canonizeTypeVec(_funcTypes);
 }
 

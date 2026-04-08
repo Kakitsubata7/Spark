@@ -59,11 +59,13 @@ void SemanticResolver::visit(BlockExpr* block) {
         }
     }
 
+    // Enters scope
     pushEnv();
 
     // Resolves function definitions
-    declareFunctions(fndefs);
+    declareFunctions(fndefs, currentEnv());
 
+    // Exits scope
     popEnv();
 
     // Sets result type
@@ -390,6 +392,16 @@ void SemanticResolver::visit(TypeofExpr* t) {
 void SemanticResolver::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
 
+    // Gets name
+    std::string_view name;
+    if (BindingPattern* bp = vardef->pattern->as<BindingPattern>()) {
+        name = bp->name->value.str();
+    } else {
+        error(vardef->pattern->start, vardef->pattern->end, "only binding pattern is supported");
+        _resultType = voidType();
+        return;
+    }
+
     // Checks whether the kind is valid
     if (vardef->mod->kind == VarModifier::VarKind::None) {
         error(vardef->mod->start, vardef->mod->end, "invalid variable declaration kind");
@@ -428,120 +440,33 @@ void SemanticResolver::visit(VarDefStmt* vardef) {
     }
 
     // Declares name into the current environment
-    declare(vardef->pattern, currentEnv(), SymbolKind::Var, isReassignable(vardef->mod));
+    declare(name, currentEnv(), SymbolKind::Var, isReassignable(vardef->mod), varType, vardef->pattern->start,
+        vardef->pattern->end);
 
     // Sets result type
-    _resultType = voidType();
-}
-
-void SemanticResolver::visit(FnDefStmt* fndef) {
-    assert(fndef != nullptr);
-
-    // Resolves parameters
-    std::vector<SemanticType*> paramTypes{fndef->params.size()};
-    for (size_t i = 0; i < fndef->params.size(); ++i) {
-        FnParam* param = fndef->params[i];
-
-        // Makes sure type expression produces a type
-        SemanticType* type = resolve(param->type);
-        if (const TypeType* t = type->as<TypeType>()) {
-            paramTypes[i] = t->declaredType();
-        } else {
-            unexpectedTypeError(param->type->start, param->type->end, typeType(), t);
-            paramTypes[i] = unknownType();
-        }
-    }
-
-    // Resolves return type expression
-    SemanticType* returnType;
-    if (fndef->returns.empty()) {
-        returnType = voidType();
-    } else {
-        FnReturn* front = fndef->returns.front();
-
-        // Multiple returns is not supported
-        if (fndef->returns.size() > 1) {
-            error(front->start, front->end, "function with multiple returns is not supported");
-        }
-
-        // Return by reference is not supported
-        if (front->kind == FnReturn::RetKind::ByRef || front->kind == FnReturn::RetKind::ByCref) {
-            error(front->start, front->end, "return by reference is not supported");
-            returnType = voidType();
-        }
-        // Return by value
-        else if (front->kind == FnReturn::RetKind::ByValue) {
-            // Makes sure type expression produces a type
-            SemanticType* t = resolve(front->type);
-            if (const TypeType* tt = t->as<TypeType>()) {
-                returnType = tt->declaredType();
-            } else {
-                unexpectedTypeError(front->type->start, front->type->end, typeType(), t);
-                returnType = unknownType();
-            }
-        } else {
-            assert(false && "invalid `FnReturn::RetKind` value");
-        }
-    }
-
-    // Constructs semantic function
-    SemanticFunc* func = _funcTable.make(std::move(paramTypes), returnType);
-
-    // Constructs semantic type
-    MonoFuncType* type = _typeTable.makeMonoFuncType(createMonoFuncTypeName(paramTypes, returnType), func);
-
-    // Declares function
-    declare(fndef->name, currentEnv(), SymbolKind::Func, false);
-
-    // Enter function scope
-    pushEnv();
-
-    // Declares parameters
-    for (size_t i = 0; i < fndef->params.size(); ++i) {
-        FnParam* param = fndef->params[i];
-        SemanticType* paramType = paramTypes[i];
-        declare(param->pattern, currentEnv(), SymbolKind::Var, isReassignable(param->mod));
-    }
-
-    // Exit function scope
-    popEnv();
-
-    // Sets type
     _resultType = voidType();
 }
 
 void SemanticResolver::visit(TypeDefStmt* tdef) {
     assert(tdef != nullptr);
 
-    // Makes sure declared type is a struct
-    if (tdef->kind != TypeDefStmt::TypeKind::Struct) {
-        error(tdef->start, tdef->end, "only `struct` type declaration is supported");
+    // Gets name
+    std::string_view name = tdef->name->value.str();
+
+    // Makes sure declared type is a class
+    if (tdef->kind != TypeDefStmt::TypeKind::Class) {
+        error(tdef->start, tdef->end, "only `class` type declaration is supported");
         _resultType = voidType();
         return;
     }
 
-    // Resolves base type list
-    std::vector<SemanticType*> baseTypes{tdef->bases.size()};
-    for (size_t i = 0; i < baseTypes.size(); ++i) {
-        baseTypes[i] = resolve(tdef->bases[i]);
+    // Inheritance is not supported
+    if (!tdef->bases.empty()) {
+        error(tdef->start, tdef->end, "inheritance is not supported");
+        _resultType = voidType();
     }
 
-    // Get traits
-    std::vector<TraitType*> traits;
-    traits.reserve(baseTypes.size());
-    for (SemanticType* baseType : baseTypes) {
-        if (TypeType* t = baseType->as<TypeType>()) {
-            if (TraitType* trait = t->declaredType()->as<TraitType>()) {
-                traits.push_back(trait);
-            } else {
-                invalidStructInheritanceError(t->start(), t->end(), t->declaredType());
-            }
-        } else {
-            unexpectedTypeError(baseType->start(), baseType->end(), typeType(), t);
-        }
-    }
-
-    // TODO: Resolves type body
+    // Resolves type body
     pushEnv();
     for (Node* node : tdef->body->nodes) {
         if (VarDefStmt* vardef = node->as<VarDefStmt>()) {
@@ -554,11 +479,15 @@ void SemanticResolver::visit(TypeDefStmt* tdef) {
     }
     popEnv();
 
-    // Constructs the semantic type object
-    SemanticType* type = _typeTable.makeStructType();
+    // Constructs the declared type semantic type object
+    ClassType* ctype = _typeTable.makeClassType(std::string{name}, nullptr, {}, {}, {});
+
+    // Constructs the `Type` type semantic type object
+    TypeType* ttype = _typeTable.makeTypeType("Type", ctype);
 
     // Declares type name
-    declare(tdef->name, currentEnv(), SymbolKind::Type, false);
+    declare(tdef->name->value.str(), currentEnv(), SymbolKind::Type, false, ttype,
+        tdef->name->start, tdef->name->end);
 
     // Sets result type
     _resultType = voidType();
@@ -590,11 +519,24 @@ void SemanticResolver::visit(AssignStmt* assign) {
         return;
     }
 
-    // Resolves LHS identifier
-    SemanticType* lhsType = resolve(lhs);
-
     // Resolves RHS expression
     SemanticType* rhsType = resolve(rhs);
+
+    // Resolves LHS identifier
+    std::string_view name = lhs->name->value.str();
+    SemanticType* lhsType;
+    if (Symbol* symbol = currentEnv().lookup(name)) {
+        if (!symbol->isReassignable) {
+            error(lhs->start, lhs->end, "");
+            _resultType = voidType();
+            return;
+        }
+        lhsType = symbol->type;
+    } else {
+        cannotFindError(lhs->name->start, lhs->name->end, name);
+        _resultType = voidType();
+        return;
+    }
 
     // Make sure LHS type and RHS type match
     if (!lhsType->isIdentical(rhsType)) {
@@ -792,7 +734,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
             if (const TypeType* t = type->as<TypeType>()) {
                 paramTypes[i] = t->declaredType();
             } else {
-                unexpectedTypeError(param->type->start, param->type->end, typeType(), t);
+                unexpectedTypeError(param->type->start, param->type->end, typeType(), type);
                 paramTypes[i] = unknownType();
             }
         }
@@ -822,7 +764,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                     returnType = tt->declaredType();
                 } else {
                     unexpectedTypeError(front->type->start, front->type->end, typeType(), t);
-                    returnType = unknownType();
+                    returnType = voidType();
                 }
             } else {
                 assert(false && "invalid `FnReturn::RetKind` value");
@@ -830,7 +772,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
         }
 
         // Constructs semantic function
-        SemanticFunc* func = _funcTable.make(std::move(paramTypes), returnType);
+        SemanticFunc* func = _funcTable.make(paramTypes, returnType);
 
         // Constructs semantic type
         MonoFuncType* type = _typeTable.makeMonoFuncType(createMonoFuncTypeName(paramTypes, returnType), func);
@@ -843,12 +785,46 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                 continue;
             }
 
-            // TODO: HERE!
-            if (symbol->type->as<MonoFuncType>()) {
+            // If the name was a mono function
+            if (MonoFuncType* mf = symbol->type->as<MonoFuncType>()) {
+                // Checks whether the two function has the same signature
+                if (mf->func()->isCallableWith(paramTypes)) {
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
+                    continue;
+                }
 
+                // Constructs overloaded function type
+                OverloadedFuncType* of = _typeTable.makeOverloadedFuncType("OverloadedFunc",
+                    {mf, type});
+
+                // Updates function symbol type to the overloaded function type
+                symbol->type = of;
             }
-            else if (symbol->type->as<OverloadedFuncType>()) {
+            // If the name was already an overloaded function
+            else if (OverloadedFuncType* of = symbol->type->as<OverloadedFuncType>()) {
+                // Checks whether the function of the same signature was already defined
+                bool alreadyDefined = false;
+                for (MonoFuncType* mf : of->funcTypes()) {
+                    if (mf->func()->isCallableWith(paramTypes)) {
+                        alreadyDefined = true;
+                        break;
+                    }
+                }
+                if (alreadyDefined) {
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
+                    continue;
+                }
 
+                // Constructs new overloaded function type
+                std::vector<MonoFuncType*> newFuncTypes = of->funcTypes();
+                newFuncTypes.push_back(type);
+                OverloadedFuncType* newOf = _typeTable.makeOverloadedFuncType("OverloadedFunc",
+                    std::move(newFuncTypes));
+
+                // Updates function symbol type to the new overloaded function type
+                symbol->type = newOf;
+            } else {
+                assert(false && "function symbol has non-function type");
             }
 
             continue;
@@ -1194,6 +1170,26 @@ void SemanticResolver::typeHasNoMemberError(Location start,
     std::ostringstream msg;
     msg << "type `" << type->name() << "` has no member `" << member << "`";
     error(start, end, msg.str());
+}
+
+void SemanticResolver::redeclareOfFuncWithTheSameSigError(Location start,
+                                                          Location end,
+                                                          std::string_view name,
+                                                          const std::vector<SemanticType*>& paramTypes) {
+    for (SemanticType* paramType : paramTypes) {
+        assert(paramType != nullptr);
+    }
+
+    std::ostringstream oss;
+    oss << "redeclaration of function `" << name << "` with the same signature: (";
+    for (size_t i = 0; i < paramTypes.size(); ++i) {
+        SemanticType* paramType = paramTypes[i];
+        oss << paramType->name();
+        if (i != paramTypes.size() - 1) {
+            oss << ", ";
+        }
+    }
+    oss << ")";
 }
 
 } // Spark::FrontEnd

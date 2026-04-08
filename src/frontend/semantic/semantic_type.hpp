@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
-#include "semantic_func.hpp"
 #include "symbol.hpp"
 
 namespace Spark::FrontEnd {
@@ -232,13 +232,12 @@ public:
  * Represents a semantic type with fields and methods.
  */
 class RecordType : public SemanticType {
-private:
+protected:
     std::vector<TraitType*> _traits;
 
     std::vector<RecordField> _fields;
     std::vector<TypeMethod> _methods;
 
-protected:
     explicit RecordType(std::string name,
                         TypeId id,
                         std::vector<TraitType*> traits = {},
