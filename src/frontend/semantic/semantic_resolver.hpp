@@ -317,9 +317,7 @@ private:
     void redeclareOfFuncWithTheSameSigError(Location start,
                                             Location end,
                                             std::string_view name,
-                                            const std::vector<SemanticType*>& paramTypes,
-                                            Location prevStart,
-                                            Location prevEnd);
+                                            const std::vector<SemanticType*>& paramTypes);
 
     void notReassignableError(Location start, Location end, std::string_view name);
 

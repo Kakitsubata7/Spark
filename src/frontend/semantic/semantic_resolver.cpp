@@ -862,8 +862,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
             if (MonoFuncType* mf = symbol->type->as<MonoFuncType>()) {
                 // Checks whether the two function has the same signature
                 if (mf->func()->isCallableWith(paramTypes)) {
-                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes, mf->start(),
-                        mf->end());
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
                     continue;
                 }
 
@@ -885,8 +884,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                     }
                 }
                 if (alreadyDefined) {
-                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes,
-                        mf->start(), mf->end());
+                    redeclareOfFuncWithTheSameSigError(fndef->start, fndef->end, name, paramTypes);
                     continue;
                 }
 
@@ -1291,9 +1289,7 @@ void SemanticResolver::typeHasNoMemberError(Location start,
 void SemanticResolver::redeclareOfFuncWithTheSameSigError(Location start,
                                                           Location end,
                                                           std::string_view name,
-                                                          const std::vector<SemanticType*>& paramTypes,
-                                                          Location prevStart,
-                                                          Location prevEnd) {
+                                                          const std::vector<SemanticType*>& paramTypes) {
     for (SemanticType* paramType : paramTypes) {
         assert(paramType != nullptr);
     }
@@ -1308,9 +1304,7 @@ void SemanticResolver::redeclareOfFuncWithTheSameSigError(Location start,
         }
     }
     msg << ")";
-    error(start, end, msg.str(), {
-        Diagnostic::note(prevStart, prevEnd, "previously declared here")
-    });
+    error(start, end, msg.str());
 }
 
 void SemanticResolver::notReassignableError(Location start, Location end, std::string_view name) {
