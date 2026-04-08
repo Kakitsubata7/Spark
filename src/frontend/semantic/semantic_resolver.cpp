@@ -841,19 +841,11 @@ SemanticFunc* SemanticResolver::findFunc(std::string_view name,
     if (Symbol* opSymbol = currentEnv.lookup(name); opSymbol != nullptr) {
         assert(opSymbol->kind == SymbolKind::Func);
 
-        if (const MonoFuncType* t = opSymbol->type->as<MonoFuncType>()) {
-            if (t->func()->isCallableWith(paramTypes)) {
-                return t->func();
-            }
-        } else if (const OverloadedFuncType* t = opSymbol->type->as<OverloadedFuncType>()) {
-            for (MonoFuncType* funcType : t->funcTypes()) {
-                if (funcType->func()->isCallableWith(paramTypes)) {
-                    return funcType->func();
-                }
-            }
-        } else {
-            assert(false && "function symbol found with non-function type");
+        if (FuncType* ft = opSymbol->type->as<FuncType>()) {
+            return ft->getFunc(paramTypes);
         }
+
+        assert(false && "function symbol found with non-function type");
     }
     return nullptr;
 }
@@ -863,13 +855,15 @@ SemanticFunc* SemanticResolver::findFunc(std::string_view name,
                                          const std::vector<SemanticType*>& paramTypes) {
     assert(type != nullptr);
 
+    // Handle `RecordType`s
     if (const RecordType* r = type->as<RecordType>()) {
         for (const TypeMethod& method : r->methods()) {
             if (method.name() == name) {
-                method.type()->as<>()
+                return method.type()->getFunc(paramTypes);
             }
         }
     }
+    // TODO: Handle other types
 
     return nullptr;
 }
