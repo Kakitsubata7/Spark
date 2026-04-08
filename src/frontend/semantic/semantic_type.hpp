@@ -116,6 +116,10 @@ class FuncType : public SemanticType {
 protected:
     explicit FuncType(std::string name, TypeId id) noexcept
         : SemanticType(std::move(name), id) { }
+
+public:
+    [[nodiscard]]
+    virtual SemanticFunc* getFunc(const std::vector<SemanticType*>& paramTypes) const noexcept = 0;
 };
 
 /**
@@ -131,6 +135,9 @@ public:
 
     [[nodiscard]]
     SemanticFunc* func() const noexcept { return _func; }
+
+    [[nodiscard]]
+    SemanticFunc* getFunc(const std::vector<SemanticType*>& paramTypes) const noexcept override;
 };
 
 /**
@@ -151,6 +158,9 @@ public:
 
     [[nodiscard]]
     const std::vector<MonoFuncType*>& funcTypes() const noexcept { return _funcTypes; }
+
+    [[nodiscard]]
+    SemanticFunc* getFunc(const std::vector<SemanticType*>& paramTypes) const noexcept override;
 };
 
 /**

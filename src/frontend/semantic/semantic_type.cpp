@@ -8,6 +8,19 @@
 
 namespace Spark::FrontEnd {
 
+SemanticFunc* MonoFuncType::getFunc(const std::vector<SemanticType*>& paramTypes) const noexcept {
+    return _func->isCallableWith(paramTypes) ? _func : nullptr;
+}
+
+SemanticFunc* OverloadedFuncType::getFunc(const std::vector<SemanticType*>& paramTypes) const noexcept {
+    for (MonoFuncType* mf : _funcTypes) {
+        if (mf->func()->isCallableWith(paramTypes)) {
+            return mf->func();
+        }
+    }
+    return nullptr;
+}
+
 OverloadedFuncType::OverloadedFuncType(std::string name, TypeId id, const std::vector<MonoFuncType*>& funcTypes)
     : FuncType(std::move(name), id), _funcTypes(funcTypes) {
     canonizeTypeVec(_funcTypes);
