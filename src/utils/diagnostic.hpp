@@ -90,42 +90,6 @@ struct Diagnostic {
     }
 
     /**
-     * Constructs an error for name resolution redeclaration error.
-     * @param start Start location in source.
-     * @param end End location in source.
-     * @param sym Symbol that causes the redeclaration.
-     * @return Constructed error diagnostic.
-     */
-    static Diagnostic redeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
-
-    /**
-     * Constructs an error for name resolution conflicting redeclaration error.
-     * @param start Start location in source.
-     * @param end End location in source.
-     * @param sym Symbol that causes the redeclaration.
-     * @return Constructed error diagnostic.
-     */
-    static Diagnostic conflictingRedeclareError(Location start, Location end, const FrontEnd::Symbol* sym);
-
-    /**
-     * Constructs an error for name resolution use before declaration error.
-     * @param start Start location in source.
-     * @param end End location in source.
-     * @param sym Symbol that causes the error.
-     * @return Constructed error diagnostic.
-     */
-    static Diagnostic useBeforeDeclError(Location start, Location end, const FrontEnd::Symbol* sym);
-
-    /**
-     * Constructs an error for name resolution cannot find error.
-     * @param start Start location in source.
-     * @param end End location in source.
-     * @param name Name that couldn't be found.
-     * @return Constructed error diagnostic.
-     */
-    static Diagnostic cannotFindError(Location start, Location end, std::string_view name);
-
-    /**
      * Renders the diagnostic into the output stream.
      * @param os Output stream.
      * @param filename File name (optional).
