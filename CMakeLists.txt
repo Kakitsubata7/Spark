@@ -76,11 +76,6 @@ add_library(sparklib
         src/frontend/ast/node_visitor.cpp
         src/frontend/ast/node_visitor.hpp
 
-        src/frontend/ir/lua_ir.hpp
-        src/frontend/ir/lua_ir_emitter.cpp
-        src/frontend/ir/lua_ir_emitter.hpp
-        src/frontend/ir/lua_ir_visitor.hpp
-
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
         src/frontend/lexer/lexer_state.hpp
