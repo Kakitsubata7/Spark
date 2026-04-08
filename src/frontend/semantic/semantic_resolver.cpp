@@ -819,7 +819,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                 std::vector<MonoFuncType*> newFuncTypes = of->funcTypes();
                 newFuncTypes.push_back(type);
                 OverloadedFuncType* newOf = _typeTable.makeOverloadedFuncType("OverloadedFunc",
-                    std::move(newFuncTypes));
+                    newFuncTypes);
 
                 // Updates function symbol type to the new overloaded function type
                 symbol->type = newOf;
