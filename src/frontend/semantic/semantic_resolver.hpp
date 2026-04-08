@@ -14,6 +14,7 @@ namespace Spark::FrontEnd {
 class SemanticResolver : public NodeVisitor {
 private:
     SymbolTable _symbolTable;
+    FuncTable _funcTable;
     TypeTable _typeTable;
 
     Env _globalEnv;
@@ -21,41 +22,46 @@ private:
 
     Diagnostics& _diagnostics;
 
-    SemanticType* _currentType = nullptr;
+    bool _inLoop = false;
+    bool _inFunc = false;
+
+    SemanticType* _resultType = nullptr;
 
     SemanticType* _unknownType;
-    SemanticType* _voidType;
-    SemanticType* _intType;
-    SemanticType* _realType;
-    SemanticType* _boolType;
-    SemanticType* _stringType;
-    SemanticType* _nilType;
+    StructType* _voidType;
+    StructType* _intType;
+    StructType* _realType;
+    StructType* _boolType;
+    ClassType* _stringType;
+    StructType* _nilType;
+    TypeType* _typeType;
 
     [[nodiscard]]
     SemanticType* unknownType() const noexcept { return _unknownType; }
 
     [[nodiscard]]
-    SemanticType* voidType() const noexcept { return _voidType; }
+    StructType* voidType() const noexcept { return _voidType; }
 
     [[nodiscard]]
-    SemanticType* intType() const noexcept { return _intType; }
+    StructType* intType() const noexcept { return _intType; }
 
     [[nodiscard]]
-    SemanticType* realType() const noexcept { return _realType; }
+    StructType* realType() const noexcept { return _realType; }
 
     [[nodiscard]]
-    SemanticType* boolType() const noexcept { return _boolType; }
+    StructType* boolType() const noexcept { return _boolType; }
 
     [[nodiscard]]
-    SemanticType* stringType() const noexcept { return _stringType; }
+    ClassType* stringType() const noexcept { return _stringType; }
 
     [[nodiscard]]
-    SemanticType* nilType() const noexcept { return _nilType; }
+    StructType* nilType() const noexcept { return _nilType; }
+
+    [[nodiscard]]
+    TypeType* typeType() const noexcept { return _typeType; }
 
 public:
     explicit SemanticResolver(Diagnostics& diagnostics);
-
-    void visit(FnParam* param) override;
 
     void visit(LambdaExpr* lambda) override;
     void visit(IfThenExpr* ifthen) override;
@@ -97,8 +103,6 @@ public:
     void visit(ImportAllStmt* i) override;
     void visit(UndefineStmt* undef) override;
 
-    SemanticType* registerType();
-
 private:
     SemanticType* resolve(Node* node);
 
@@ -122,23 +126,50 @@ private:
     /**
      * Creates symbol and declares a name to the given environment by specifying its symbol kind and reassignability.
      * If the name already exists, no new symbol will be created, but the name will be mapped to the existing symbol.
-     * @param node `Name` node to declare.
+     * @param name Name to declare.
      * @param env Environment to declare the name in.
-     * @param kind Symbol kind of the symbol to declare.
-     * @param isReassignable Whether the symbol to declare is reassignable or not.
+     * @param kind Kind of the declared symbol.
+     * @param isReassignable Reassignability.
+     * @param type Type of the symbol
+     * @param start Start location of the name.
+     * @param end End location of the name.
      */
-    void declare(Name* node, Env& env, SymbolKind kind, bool isReassignable);
+    void declare(std::string_view name,
+                 Env& env,
+                 SymbolKind kind,
+                 bool isReassignable,
+                 SemanticType* type,
+                 Location start,
+                 Location end);
 
     /**
-     * Creates symbol(s) and declares name(s) to the given environment by specifying their symbol kind(s) and
-     * reassignability.
-     * If a name already exists, no new symbol will be created, but the name will be mapped to the existing symbol.
-     * @param pattern `Pattern` node containing names to declare.
-     * @param env Environment to declare the name(s) in.
-     * @param kind Symbol kind of the symbol(s) to declare.
-     * @param isReassignable Whether the symbol(s) to declare are reassignable or not.
+     * Declares function definitions.
+     * @param fndefs Function definition statements.
+     * @param env Environment to declare into.
      */
-    void declare(Pattern* pattern, Env& env, SymbolKind kind, bool isReassignable);
+    void declareFunctions(const std::vector<FnDefStmt*>& fndefs, Env& env);
+
+    /**
+     * Finds the `SemanticFunc` pointer based on symbol name and parameter types starting from the given environment.
+     * @param name Symbol name to look for.
+     * @param currentEnv Environment to start finding.
+     * @param paramTypes Parameter types
+     * @return `SemanticFunc` pointer or `nullptr` if not found.
+     */
+    static SemanticFunc* findFunc(std::string_view name,
+                                  const Env& currentEnv,
+                                  const std::vector<SemanticType*>& paramTypes);
+
+    /**
+     * Finds the `SemanticFunc` pointer of a type's method based on its name.
+     * @param name Method name to look for.
+     * @param type Type to look the method for.
+     * @param paramTypes Parameter types.
+     * @return `SemanticFunc` pointer or `nullptr` if not found.
+     */
+    static SemanticFunc* findFunc(std::string_view name,
+                                  const SemanticType* type,
+                                  const std::vector<SemanticType*>& paramTypes);
 
     /**
      * Checks whether a var kind represents reassignable or not.
@@ -176,6 +207,15 @@ private:
     static std::optional<std::string_view> prefixOpToIdent(PrefixExpr::OpKind op) noexcept;
 
     /**
+     * Constructs a `std::string` for the name of a `MonoFuncType` instance.
+     * @param paramTypes Parameter types.
+     * @param returnType Return type.
+     * @return Constructed name.
+     */
+    static std::string createMonoFuncTypeName(const std::vector<SemanticType*>& paramTypes,
+                                              const SemanticType* returnType);
+
+    /**
      * Adds an error to the diagnostics.
      * @param start Start location of the error.
      * @param end End of location of the error.
@@ -197,6 +237,18 @@ private:
      * @param start Start location of the error.
      * @param end End location of the error.
      * @param opName Operator name that couldn't be found.
+     * @param type Type.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const SemanticType* type);
+
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
      * @param lhsType LHS type.
      * @param rhsType RHS type.
      */
@@ -206,6 +258,24 @@ private:
                                  const SemanticType* lhsType,
                                  const SemanticType* rhsType);
 
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
+     * @param types Types.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const std::vector<SemanticType*>& types);
+
+    void redeclareError(Location start,
+                        Location end,
+                        std::string_view name,
+                        Location prevStart,
+                        Location prevEnd);
+
     void unexpectedTypeError(Location start, Location end, const SemanticType* expected, const SemanticType* actual);
 
     void notCallableError(Location start,
@@ -213,48 +283,18 @@ private:
                           const SemanticType* type,
                           const std::vector<SemanticType*>& paramTypes);
 
+    void notIndexableError(Location start,
+                           Location end,
+                           const SemanticType* type,
+                           const std::vector<SemanticType*>& paramTypes);
+
     void invalidStrictEqError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
 
     void invalidStrictNeError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
-};
 
+    void invalidStructInheritanceError(Location start, Location end, const SemanticType* type);
 
-
-/**
- * Represents a visitor that creates symbol(s) for a name or a pattern and binds them to the given environment.
- */
-class NameDeclarator : public NodeVisitor {
-private:
-    SymbolTable& _symbolTable;
-
-    Env& _env;
-
-    SymbolKind _kind;
-    bool _isReassignable;
-
-    Diagnostics& _diagnostics;
-
-public:
-    NameDeclarator(SymbolTable& symbolTable,
-                   Env& env,
-                   SymbolKind kind,
-                   bool isReassignable,
-                   Diagnostics& diagnostics) noexcept
-        : _symbolTable(symbolTable), _env(env), _kind(kind), _isReassignable(isReassignable),
-          _diagnostics(diagnostics) { }
-
-    void visit(Name* node) override;
-    void visit(BindingPattern* pattern) override;
-    void visit(TuplePattern* pattern) override;
-    void visit(CollectionPattern* pattern) override;
-    void visit(RecordPattern* pattern) override;
-
-private:
-    void redeclareError(Location start,
-                        Location end,
-                        std::string_view name,
-                        Location prevStart,
-                        Location prevEnd) noexcept;
+    void typeHasNoMemberError(Location start, Location end, const SemanticType* type, std::string_view member);
 };
 
 } // Spark::FrontEnd
