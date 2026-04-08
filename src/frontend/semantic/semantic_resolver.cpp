@@ -267,10 +267,12 @@ void SemanticResolver::visit(MemberAccessExpr* maccess) {
     } else if (MonoFuncType* mf = baseType->as<MonoFuncType>()) {
         if (member == "operator()") {
             _resultType = mf;
+            return;
         }
     } else if (OverloadedFuncType* of = baseType->as<OverloadedFuncType>()) {
         if (member == "operator()") {
             _resultType = of;
+            return;
         }
     }
 
@@ -1197,7 +1199,7 @@ void SemanticResolver::unexpectedTypeError(Location start,
     assert(actual != nullptr);
 
     std::ostringstream msg;
-    msg << "unexpected type: `" << expected->name() << "`, expecting `" << actual->name() << "`";
+    msg << "unexpected type: `" << actual->name() << "`, expecting `" << expected->name() << "`";
     error(start, end, msg.str());
 }
 
@@ -1215,7 +1217,7 @@ void SemanticResolver::notCallableError(Location start,
     for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it) {
         msg << "`" << (*it)->name() << "`";
         if (std::next(it) != paramTypes.end()) {
-            msg << ", " << *it;
+            msg << ", " << (*it)->name();
         }
     }
     error(start, end, msg.str());
