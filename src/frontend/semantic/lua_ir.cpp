@@ -17,7 +17,7 @@ const std::string& LuaNameMangler::mangle(const Symbol* symbol) {
     // Mangle new name
     std::string name;
     name += "v_";
-    name += getNextSymbolId();
+    name += std::to_string(getNextSymbolId());
     return add(symbol, std::move(name));
 }
 
@@ -32,7 +32,7 @@ const std::string& LuaNameMangler::mangle(const SemanticFunc* func) {
     // Mangle new name
     std::string name;
     name += "f_";
-    name += getNextFuncId();
+    name += std::to_string(getNextFuncId());
     return add(func, std::move(name));
 }
 
