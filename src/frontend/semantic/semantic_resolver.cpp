@@ -802,11 +802,11 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
             FnParam* param = fndef->params[i];
 
             // Makes sure type expression produces a type
-            SemanticType* type = resolve(param->type);
+            SemanticType* type = param->type == nullptr ? unknownType() : resolve(param->type);
             if (const TypeType* t = type->as<TypeType>()) {
                 paramTypes[i] = t->declaredType();
             } else {
-                unexpectedTypeError(param->type->start, param->type->end, typeType(), type);
+                unexpectedTypeError(param->start, param->end, typeType(), type);
                 paramTypes[i] = unknownType();
             }
         }
@@ -899,6 +899,8 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
                 assert(false && "function symbol has non-function type");
             }
 
+            // Maps the `SemanticFunc` pointer to the `FnDefStmt`
+            _fndefMap.insert({fndef, func});
             continue;
         }
 
@@ -939,7 +941,7 @@ void SemanticResolver::declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env&
         TypeType* ttype = _typeTable.makeTypeType("Type", ctype);
 
         // Declares type
-        declare(tdef->name->value.str(), env, SymbolKind::Func, false, ttype, tdef->name->start,
+        declare(tdef->name->value.str(), env, SymbolKind::Type, false, ttype, tdef->name->start,
             tdef->name->end);
 
         // Maps the `SemanticType` pointer to the `TypeDefStmt`
