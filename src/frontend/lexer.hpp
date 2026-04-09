@@ -59,6 +59,9 @@ public:
     [[nodiscard]]
     constexpr const SourceBuffer& srcbuf() const noexcept { return _srcbuf; }
 
+    [[nodiscard]]
+    yyscan_t scanner() const noexcept { return _scanner; }
+
     /**
      * Clears the lexer.
      */
