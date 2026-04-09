@@ -21,8 +21,11 @@ private:
     uint64_t _funcId = 0;
 
 public:
-    const std::string& mangle(const Symbol* symbol);
-    const std::string& mangle(const SemanticFunc* func);
+    const std::string& get(const Symbol* symbol);
+    const std::string& get(const SemanticFunc* func);
+
+    void set(const Symbol* symbol, std::string name);
+    void set(const SemanticFunc* func, std::string name);
 
 private:
     std::string* find(const void* p);
@@ -33,6 +36,8 @@ private:
 
     [[nodiscard]]
     uint64_t getNextFuncId() noexcept;
+
+    void set(const void* p, std::string name);
 };
 
 
@@ -334,15 +339,17 @@ public:
 class LuaEmitter {
 private:
     LuaNameMangler& _mangler;
-    LuaNodeTable& _table;
 
-    LuaBody* _top;
+    std::vector<std::string> _sources;
 
 public:
-    explicit LuaEmitter(LuaNameMangler& mangler, LuaNodeTable& table) noexcept;
+    explicit LuaEmitter(LuaNameMangler& mangler) noexcept
+        : _mangler(mangler) { }
+
+    void registerSource(std::string source);
 
     [[nodiscard]]
-    std::string emit() const;
+    std::string emit(LuaNode* top) const;
 };
 
 } // Spark::FrontEnd

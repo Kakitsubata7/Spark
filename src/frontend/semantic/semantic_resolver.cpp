@@ -14,16 +14,18 @@
 
 namespace Spark::FrontEnd {
 
-SemanticResolver::SemanticResolver(Diagnostics& diagnostics) : _diagnostics(diagnostics) {
+SemanticResolver::SemanticResolver(Diagnostics& diagnostics)
+    : _diagnostics(diagnostics), _emitter(_mangler) {
     // Creates built-in types
-    _unknownType = _typeTable.makeStructType("<unknown>");
-    _voidType = _typeTable.makeStructType("Void");
-    _intType = _typeTable.makeStructType("Int");
-    _realType = _typeTable.makeStructType("Real");
-    _boolType = _typeTable.makeStructType("Bool");
-    _stringType = _typeTable.makeClassType("String");
-    _nilType = _typeTable.makeStructType("Nil");
-    _typeType = _typeTable.makeTypeType("Type", _unknownType);
+    _unknownType = registerBuiltinType("<unknown>", _typeTable.makeStructType("<unknown>"));
+    _voidType    = registerBuiltinType("Void",      _typeTable.makeStructType("Void"));
+    _intType     = registerBuiltinType("Int",       _typeTable.makeStructType("Int"));
+    _realType    = registerBuiltinType("Real",      _typeTable.makeStructType("Real"));
+    _boolType    = registerBuiltinType("Bool",      _typeTable.makeStructType("Bool"));
+    _stringType  = registerBuiltinType("String",    _typeTable.makeClassType("String"));
+    _nilType     = registerBuiltinType("Nil",       _typeTable.makeStructType("Nil"));
+    _typeType    = _typeTable.makeTypeType("Type", _unknownType);
+    registerBuiltinType("Type", _typeType);
 
     // Creates IR node caches
     _voidIR = _irTable.make<LuaVoid>();
@@ -31,6 +33,56 @@ SemanticResolver::SemanticResolver(Diagnostics& diagnostics) : _diagnostics(diag
     _noneIR = _irTable.make<LuaNone>();
     _breakIR = _irTable.make<LuaBreak>();
     _continueIR = _irTable.make<LuaContinue>();
+
+    // `print`
+    registerBuiltinOverloadedFunc(
+        "print",
+        {
+            {stringType()},
+            {intType()}
+        },
+        {
+            voidType(),
+            voidType()
+        },
+        {
+            "print_str",
+            "print_int"
+        },
+        {
+            R"(function print_str(s) print(s) end)",
+            R"(function print_int(i) print(i) end)"
+        }
+    );
+
+    // `input`
+    registerBuiltinFunc(
+        "input",
+        "my_input",
+        {},
+        stringType(),
+        R"(function my_input() return io.read() end)"
+    );
+
+    // `strToInt`
+    registerBuiltinFunc(
+            "strToInt",
+            "strToInt",
+            {stringType()},
+            intType(),
+            R"(function strToInt(s)
+        local num = tonumber(s)
+        if num then return num else return 0 end
+    end)");
+
+    // operator+
+    registerBuiltinFunc(
+        "operator+",
+        "int_add",
+        {intType(), intType()},
+        intType(),
+        R"(function int_add(a, b) return a + b end)"
+    );
 }
 
 void SemanticResolver::visit(LambdaExpr* lambda) {
@@ -121,7 +173,7 @@ void SemanticResolver::visit(BinaryExpr* binary) {
 
     // If the operator is overloadable
     if (auto r = binaryOpToIdent(binary->op)) {
-        std::string_view name = r.value();
+        std::string name = std::string{r.value()};
 
         // Looks up for free operator overload
         if (SemanticFunc* func = findFunc(name, currentEnv(), {lhsType, rhsType})) {
@@ -184,7 +236,7 @@ void SemanticResolver::visit(PrefixExpr* prefix) {
 
     // If the operator is overloadable
     if (auto r = prefixOpToIdent(prefix->op)) {
-        std::string_view name = r.value();
+        std::string name = std::string{r.value()};
 
         // Looks up for free operator overload
         if (SemanticFunc* func = findFunc(name, currentEnv(), {exprType})) {
@@ -305,19 +357,18 @@ void SemanticResolver::visit(CallExpr* call) {
         }
     }
 
-    // Gets the semantic function
+    // Handles operator() fallback
     std::vector<SemanticType*> freeArgTypes = argTypes;
     freeArgTypes.insert(freeArgTypes.begin(), calleeType);
+
     std::vector<LuaNode*> freeIRs = argIRs;
     freeIRs.insert(freeIRs.begin(), calleeIR);
+
     if (SemanticFunc* func = findFunc("operator()", currentEnv(), freeArgTypes)) {
-        // Found free definition
         END_VISIT(func->returnType(), callIR(fnRefIR(func), freeIRs));
     } else if (SemanticFunc* func = findFunc("operator()", calleeType, argTypes)) {
-        // Found instance definition
         END_VISIT(func->returnType(), callIR(fnRefIR(func), argIRs));
     } else {
-        // Cannot find function
         notCallableError(call->start, call->end, calleeType, argTypes);
         END_VISIT(unknownType(), noneIR());
     }
@@ -405,7 +456,7 @@ void SemanticResolver::visit(NameExpr* ident) {
     assert(ident != nullptr);
 
     // Gets the symbol of the name
-    std::string_view name = ident->name->value.str();
+    std::string name = std::string{ident->name->value.str()};
 
     // Resolves name and type
     if (Symbol* symbol = currentEnv().lookup(name); symbol != nullptr) {
@@ -445,7 +496,7 @@ void SemanticResolver::visit(VarDefStmt* vardef) {
     assert(vardef != nullptr);
 
     // Gets name
-    std::string_view name;
+    std::string name;
     if (BindingPattern* bp = vardef->pattern->as<BindingPattern>()) {
         name = bp->name->value.str();
     } else {
@@ -545,10 +596,13 @@ void SemanticResolver::visit(FnDefStmt* fndef) {
 
         // Declare the parameter
         if (BindingPattern* bp = param->pattern->as<BindingPattern>()) {
-            params[i] = declare(bp->name->value.str(), currentEnv(), SymbolKind::Var,
+            params[i] = declare(std::string{bp->name->value.str()}, currentEnv(), SymbolKind::Var,
                 param->mod == nullptr ? false : isReassignable(param->mod), paramType, bp->start, bp->end);
         } else {
             error(param->pattern->start, param->pattern->end, "only binding pattern is supported");
+            popEnv();
+            _inFunc = wasInFunc;
+            _inLoop = wasInLoop;
             END_VISIT(voidType(), noneIR());
             return;
         }
@@ -604,7 +658,7 @@ void SemanticResolver::visit(AssignStmt* assign) {
     LuaNode* lhsIR;
     if (NameExpr* ident = assign->lhs->as<NameExpr>()) {
         // Finds the symbol from the current environment
-        std::string_view lhsName = ident->name->value.str();
+        std::string lhsName = std::string{ident->name->value.str()};
         if (Symbol* symbol = currentEnv().lookup(lhsName)) {
             if (!symbol->isReassignable) {
                 notReassignableError(ident->start, ident->end, lhsName);
@@ -812,7 +866,7 @@ void SemanticResolver::popEnv() {
     _envStack.pop_back();
 }
 
-Symbol* SemanticResolver::declare(std::string_view name,
+Symbol* SemanticResolver::declare(const std::string& name,
                                   Env& env,
                                   SymbolKind kind,
                                   bool isReassignable,
@@ -851,7 +905,7 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
 
     for (FnDefStmt* fndef : fndefs) {
         // Gets function name
-        std::string_view name = fndef->name->value.str();
+        std::string name = std::string{fndef->name->value.str()};
 
         // Resolves parameter type expressions
         std::vector<SemanticType*> paramTypes{fndef->params.size()};
@@ -859,7 +913,12 @@ void SemanticResolver::declareFunctions(const std::vector<FnDefStmt*>& fndefs, E
             FnParam* param = fndef->params[i];
 
             // Makes sure type expression produces a type
-            SemanticType* type = param->type == nullptr ? unknownType() : resolve(param->type).first;
+            SemanticType* type =
+            param->type == nullptr ? unknownType() : resolve(param->type).first;
+
+            if (const TypeType* t = type->as<TypeType>()) {
+                paramTypes[i] = t->declaredType();
+            }
             if (const TypeType* t = type->as<TypeType>()) {
                 paramTypes[i] = t->declaredType();
             } else {
@@ -998,7 +1057,7 @@ void SemanticResolver::declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env&
         TypeType* ttype = _typeTable.makeTypeType("Type", ctype);
 
         // Declares type
-        declare(tdef->name->value.str(), env, SymbolKind::Type, false, ttype, tdef->name->start,
+        declare(std::string{tdef->name->value.str()}, env, SymbolKind::Type, false, ttype, tdef->name->start,
             tdef->name->end);
 
         // Maps the `SemanticType` pointer to the `TypeDefStmt`
@@ -1006,7 +1065,7 @@ void SemanticResolver::declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env&
     }
 }
 
-SemanticFunc* SemanticResolver::findFunc(std::string_view name,
+SemanticFunc* SemanticResolver::findFunc(const std::string& name,
                                          const Env& currentEnv,
                                          const std::vector<SemanticType*>& paramTypes) {
     if (Symbol* opSymbol = currentEnv.lookup(name); opSymbol != nullptr) {
@@ -1373,6 +1432,107 @@ void SemanticResolver::notReassignableError(Location start, Location end, std::s
 
 void SemanticResolver::exprNotReassignableError(Location start, Location end) {
     error(start, end, "expression is not reassignable");
+}
+
+SemanticFunc* SemanticResolver::registerBuiltinFunc(
+    std::string_view sparkName,
+    std::string_view luaName,
+    std::vector<SemanticType*> paramTypes,
+    SemanticType* returnType,
+    std::string_view luaSource
+) {
+    // Create function
+    SemanticFunc* func = _funcTable.make(paramTypes, returnType);
+
+    // Create function type
+    MonoFuncType* type = _typeTable.makeMonoFuncType(std::string{sparkName}, func);
+
+    // Create symbol
+    Symbol* symbol = _symbolTable.make(Symbol{
+        .kind = SymbolKind::Func,
+        .isReassignable = false,
+        .type = type,
+        .name = std::string{sparkName},
+        .start = Location{0, 0},
+        .end = Location{0, 0}
+    });
+
+    // Register mangling + source
+    _mangler.set(func, std::string{luaName});
+    _emitter.registerSource(std::string{luaSource});
+
+    // Bind into global env
+    _globalEnv.set(std::string{sparkName}, symbol);
+
+    return func;
+}
+
+SemanticType* SemanticResolver::registerBuiltinType(std::string_view name, SemanticType* type) {
+    // Wrap as Type (the type of types)
+    TypeType* typeType = _typeTable.makeTypeType(std::string{name}, type);
+
+    // Create symbol
+    Symbol* symbol = _symbolTable.make(Symbol{
+        .kind = SymbolKind::Type,
+        .isReassignable = false,
+        .type = typeType,
+        .name = std::string{name},
+        .start = Location{0, 0},
+        .end = Location{0, 0}
+    });
+
+    // Bind into global env
+    _globalEnv.set(std::string{name}, symbol);
+
+    return type;
+}
+
+Symbol* SemanticResolver::registerBuiltinOverloadedFunc(
+    std::string_view sparkName,
+    const std::vector<std::vector<SemanticType*>>& paramLists,
+    const std::vector<SemanticType*>& returnTypes,
+    const std::vector<std::string_view>& luaNames,
+    const std::vector<std::string_view>& luaSources
+) {
+    assert(paramLists.size() == returnTypes.size());
+    assert(paramLists.size() == luaNames.size());
+    assert(paramLists.size() == luaSources.size());
+
+    std::string name{sparkName};
+
+    // Create all overload entries
+    std::vector<MonoFuncType*> monoTypes;
+    monoTypes.reserve(paramLists.size());
+
+    for (size_t i = 0; i < paramLists.size(); ++i) {
+        SemanticFunc* func = _funcTable.make(paramLists[i], returnTypes[i]);
+
+        // Name is debug-only, so anything readable is fine.
+        MonoFuncType* mono = _typeTable.makeMonoFuncType(
+            createMonoFuncTypeName(paramLists[i], returnTypes[i]),
+            func
+        );
+
+        monoTypes.push_back(mono);
+
+        _mangler.set(func, std::string{luaNames[i]});
+        _emitter.registerSource(std::string{luaSources[i]});
+    }
+
+    OverloadedFuncType* overloaded =
+        _typeTable.makeOverloadedFuncType(name, monoTypes);
+
+    Symbol* symbol = _symbolTable.make(Symbol{
+        .kind = SymbolKind::Func,
+        .isReassignable = false,
+        .type = overloaded,
+        .name = name,
+        .start = Location{0, 0},
+        .end = Location{0, 0}
+    });
+
+    _globalEnv.set(name, symbol);
+    return symbol;
 }
 
 } // Spark::FrontEnd

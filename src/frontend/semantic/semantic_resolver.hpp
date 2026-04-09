@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <deque>
 #include <optional>
 #include <string_view>
 
@@ -21,7 +22,7 @@ private:
     LuaNodeTable _irTable;
 
     Env _globalEnv;
-    std::vector<Env> _envStack;
+    std::deque<Env> _envStack;
 
     Diagnostics& _diagnostics;
 
@@ -31,37 +32,37 @@ private:
     SemanticType* _resultType = nullptr;
 
     SemanticType* _unknownType;
-    StructType* _voidType;
-    StructType* _intType;
-    StructType* _realType;
-    StructType* _boolType;
-    ClassType* _stringType;
-    StructType* _nilType;
-    TypeType* _typeType;
+    SemanticType* _voidType;
+    SemanticType* _intType;
+    SemanticType* _realType;
+    SemanticType* _boolType;
+    SemanticType* _stringType;
+    SemanticType* _nilType;
+    SemanticType* _typeType;
 
     [[nodiscard]]
     SemanticType* unknownType() const noexcept { return _unknownType; }
 
     [[nodiscard]]
-    StructType* voidType() const noexcept { return _voidType; }
+    SemanticType* voidType() const noexcept { return _voidType; }
 
     [[nodiscard]]
-    StructType* intType() const noexcept { return _intType; }
+    SemanticType* intType() const noexcept { return _intType; }
 
     [[nodiscard]]
-    StructType* realType() const noexcept { return _realType; }
+    SemanticType* realType() const noexcept { return _realType; }
 
     [[nodiscard]]
-    StructType* boolType() const noexcept { return _boolType; }
+    SemanticType* boolType() const noexcept { return _boolType; }
 
     [[nodiscard]]
-    ClassType* stringType() const noexcept { return _stringType; }
+    SemanticType* stringType() const noexcept { return _stringType; }
 
     [[nodiscard]]
-    StructType* nilType() const noexcept { return _nilType; }
+    SemanticType* nilType() const noexcept { return _nilType; }
 
     [[nodiscard]]
-    TypeType* typeType() const noexcept { return _typeType; }
+    SemanticType* typeType() const noexcept { return _typeType; }
 
     // Functions
     std::unordered_map<FnDefStmt*, SemanticFunc*> _fndefMap;
@@ -71,6 +72,9 @@ private:
     std::unordered_map<TypeDefStmt*, TypeType*> _tdefMap;
 
     // Lua IR
+    LuaNameMangler _mangler;
+    LuaEmitter _emitter;
+
     LuaNode* _resultIR = nullptr;
 
     LuaNone* _noneIR;
@@ -197,8 +201,8 @@ public:
     void visit(ImportAllStmt* i) override;
     void visit(UndefineStmt* undef) override;
 
-    LuaNode* run(Node* node) {
-        return resolve(node).second;
+    std::string emit(Node* node) {
+        return _emitter.emit(resolve(node).second);
     }
 
 private:
@@ -237,7 +241,7 @@ private:
      * @param end End location of the name.
      * @return Created symbol.
      */
-    Symbol* declare(std::string_view name,
+    Symbol* declare(const std::string& name,
                     Env& env,
                     SymbolKind kind,
                     bool isReassignable,
@@ -266,7 +270,7 @@ private:
      * @param paramTypes Parameter types
      * @return `SemanticFunc` pointer or `nullptr` if not found.
      */
-    static SemanticFunc* findFunc(std::string_view name,
+    static SemanticFunc* findFunc(const std::string& name,
                                   const Env& currentEnv,
                                   const std::vector<SemanticType*>& paramTypes);
 
@@ -414,6 +418,24 @@ private:
     void notReassignableError(Location start, Location end, std::string_view name);
 
     void exprNotReassignableError(Location start, Location end);
+
+    SemanticFunc* registerBuiltinFunc(
+        std::string_view sparkName,
+        std::string_view luaName,
+        std::vector<SemanticType*> paramTypes,
+        SemanticType* returnType,
+        std::string_view luaSource
+    );
+
+    SemanticType* registerBuiltinType(std::string_view name, SemanticType* type);
+
+    Symbol* registerBuiltinOverloadedFunc(
+        std::string_view sparkName,
+        const std::vector<std::vector<SemanticType*>>& paramLists,
+        const std::vector<SemanticType*>& returnTypes,
+        const std::vector<std::string_view>& luaNames,
+        const std::vector<std::string_view>& luaSources
+    );
 };
 
 } // Spark::FrontEnd

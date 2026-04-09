@@ -14,7 +14,7 @@ namespace Spark::FrontEnd {
 class Env {
 private:
     Env* _parent;
-    std::unordered_map<std::string_view, Symbol*> _map;
+    std::unordered_map<std::string, Symbol*> _map;
 
 public:
     Env() : _parent(nullptr) { }
@@ -44,22 +44,22 @@ public:
     }
 
     [[nodiscard]]
-    Symbol* get(std::string_view name) {
+    Symbol* get(const std::string& name) {
         auto it = _map.find(name);
         return it != _map.end() ? it->second : nullptr;
     }
 
-    void set(std::string_view name, Symbol* symbol) {
+    void set(const std::string& name, Symbol* symbol) {
         assert(symbol != nullptr);
         _map[name] = symbol;
     }
 
-    void erase(std::string_view name) {
+    void erase(const std::string& name) {
         _map.erase(name);
     }
 
     [[nodiscard]]
-    Symbol* lookup(std::string_view name) const {
+    Symbol* lookup(const std::string& name) const {
         auto it = _map.find(name);
         return it != _map.end() ? it->second : (_parent != nullptr ? _parent->lookup(name) : nullptr);
     }

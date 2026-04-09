@@ -6,7 +6,7 @@
 
 namespace Spark::FrontEnd {
 
-const std::string& LuaNameMangler::mangle(const Symbol* symbol) {
+const std::string& LuaNameMangler::get(const Symbol* symbol) {
     assert(symbol != nullptr);
 
     // Check cached name
@@ -21,7 +21,7 @@ const std::string& LuaNameMangler::mangle(const Symbol* symbol) {
     return add(symbol, std::move(name));
 }
 
-const std::string& LuaNameMangler::mangle(const SemanticFunc* func) {
+const std::string& LuaNameMangler::get(const SemanticFunc* func) {
     assert(func != nullptr);
 
     // Check cached name
@@ -34,6 +34,14 @@ const std::string& LuaNameMangler::mangle(const SemanticFunc* func) {
     name += "f_";
     name += std::to_string(getNextFuncId());
     return add(func, std::move(name));
+}
+
+void LuaNameMangler::set(const Symbol* symbol, std::string name) {
+    set(static_cast<const void*>(symbol), std::move(name));
+}
+
+void LuaNameMangler::set(const SemanticFunc* func, std::string name) {
+    set(static_cast<const void*>(func), std::move(name));
 }
 
 std::string* LuaNameMangler::find(const void* p) {
@@ -61,6 +69,9 @@ uint64_t LuaNameMangler::getNextFuncId() noexcept {
     return current;
 }
 
+void LuaNameMangler::set(const void* p, std::string name) {
+    _map[p] = std::move(name);
+}
 
 
 std::string LuaNone::emit(LuaNameMangler& mangler) const {
@@ -69,9 +80,9 @@ std::string LuaNone::emit(LuaNameMangler& mangler) const {
 
 std::string LuaFuncDef::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
-    oss << mangler.mangle(_func) << " = function(";
+    oss << mangler.get(_func) << " = function(";
     for (size_t i = 0; i < _params.size(); ++i) {
-        oss << mangler.mangle(_params[i]);
+        oss << mangler.get(_params[i]);
         if (i != _params.size() - 1) {
             oss << ", ";
         }
@@ -106,7 +117,7 @@ void LuaBody::emitLocalVarDecls(std::ostringstream& oss,
                                  LuaNameMangler& mangler,
                                  const std::vector<Symbol*>& locals) {
     for (size_t i = 0; i < locals.size(); ++i) {
-        oss << "local " << mangler.mangle(locals[i]);
+        oss << "local " << mangler.get(locals[i]);
         if (i != locals.size() - 1) {
             oss << '\n';
         }
@@ -118,7 +129,7 @@ void LuaBody::emitFuncDecls(std::ostringstream& oss,
                              const std::vector<std::pair<SemanticFunc*, LuaFuncDef*>>& fndefs) {
     for (size_t i = 0; i < fndefs.size(); ++i) {
         auto [func, _] = fndefs[i];
-        oss << "local " << mangler.mangle(func);
+        oss << "local " << mangler.get(func);
         if (i != fndefs.size() - 1) {
             oss << '\n';
         }
@@ -130,7 +141,7 @@ void LuaBody::emitFuncImpls(std::ostringstream& oss,
                              const std::vector<std::pair<SemanticFunc*, LuaFuncDef*>>& fndefs) {
     for (size_t i = 0; i < fndefs.size(); ++i) {
         auto [func, fndef] = fndefs[i];
-        oss << mangler.mangle(func) << " = " << fndef->emit(mangler);
+        oss << mangler.get(func) << " = " << fndef->emit(mangler);
         if (i != fndefs.size() - 1) {
             oss << '\n';
         }
@@ -200,11 +211,11 @@ std::string LuaNil::emit(LuaNameMangler& mangler) const {
 }
 
 std::string LuaVarRef::emit(LuaNameMangler& mangler) const {
-    return mangler.mangle(_symbol);
+    return mangler.get(_symbol);
 }
 
 std::string LuaFuncRef::emit(LuaNameMangler& mangler) const {
-    return mangler.mangle(_func);
+    return mangler.get(_func);
 }
 
 std::string LuaCall::emit(LuaNameMangler& mangler) const {
@@ -224,10 +235,10 @@ std::string LuaMemberAccess::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     std::string base = _base->emit(mangler);
     if (auto* symbol = std::get_if<Symbol*>(&_member)) {
-        oss << base << '.' << mangler.mangle(*symbol);
+        oss << base << '.' << mangler.get(*symbol);
     } else if (auto* func = std::get_if<SemanticFunc*>(&_member)) {
         oss << "(function(...) "
-                << "return " << mangler.mangle(*func) << '(' << base << ", ...)"
+                << "return " << mangler.get(*func) << '(' << base << ", ...)"
             << " end)";
     } else {
         assert(false && "invalid `std::variant<Symbol*, SemanticFunc*>` value");
@@ -311,13 +322,18 @@ std::string LuaContinue::emit(LuaNameMangler& mangler) const {
 }
 
 
-LuaEmitter::LuaEmitter(LuaNameMangler& mangler, LuaNodeTable& table) noexcept
-    : _mangler(mangler), _table(table) {
-    // TODO: _top = _table.make<LuaBlock>();
+
+std::string LuaEmitter::emit(LuaNode* top) const {
+    std::ostringstream oss;
+    for (const std::string& source : _sources) {
+        oss << source << '\n';
+    }
+    oss << '\n' << top->emit(_mangler);
+    return oss.str();
 }
 
-std::string LuaEmitter::emit() const {
-    return _top->emit(_mangler);
+void LuaEmitter::registerSource(std::string source) {
+    _sources.emplace_back(std::move(source));
 }
 
 } // Spark::FrontEnd
