@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "semantic_func.hpp"
 #include "symbol.hpp"
 
 namespace Spark::FrontEnd {
