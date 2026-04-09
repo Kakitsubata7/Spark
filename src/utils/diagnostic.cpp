@@ -107,7 +107,7 @@ void Diagnostics::render(std::ostream& os,
                          const std::optional<std::string>& filename) const {
     for (const Diagnostic& d : _diagnostics) {
         d.render(os, filename);
-        os << "\n\n";
+        os << "\n";
     }
 }
 
