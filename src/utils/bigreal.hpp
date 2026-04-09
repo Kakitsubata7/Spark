@@ -42,6 +42,11 @@ public:
         os << r.str();
         return os;
     }
+
+    [[nodiscard]]
+    double toDouble() const {
+        return static_cast<double>(_value);
+    }
 };
 
 } // Spark

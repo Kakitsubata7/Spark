@@ -131,14 +131,17 @@ int main(int argc, char* argv[]) {
     // Semantic pass
     Diagnostics semanticDiags;
     SemanticResolver resolver{semanticDiags};
-    ast.root->accept(resolver);
+    LuaNode* ir = resolver.run(ast.root);
     if (semanticDiags.hasError()) {
         semanticDiags.render(std::cout, filePath);
         return EXIT_FAILURE;
     }
 
     // Codegen
-    std::string luaSource;
+    LuaNameMangler mangler;
+    std::string luaSource = ir->emit(mangler);
+
+    // std::cout << luaSource << std::endl;
 
     // Execution
     return run(luaPath, luaSource);

@@ -63,9 +63,13 @@ uint64_t LuaNameMangler::getNextFuncId() noexcept {
 
 
 
+std::string LuaNone::emit(LuaNameMangler& mangler) const {
+    return "_";
+}
+
 std::string LuaFuncDef::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
-    oss << "function(";
+    oss << mangler.mangle(_func) << " = function(";
     for (size_t i = 0; i < _params.size(); ++i) {
         oss << mangler.mangle(_params[i]);
         if (i != _params.size() - 1) {
@@ -78,22 +82,12 @@ std::string LuaFuncDef::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-std::string LuaBlock::emit(LuaNameMangler& mangler) const {
+std::string LuaBody::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
 
     if (!_locals.empty()) {
         // Local variable declarations
         emitLocalVarDecls(oss, mangler, _locals);
-        oss << '\n';
-    }
-
-    if (!_fndefs.empty()) {
-        // Function declarations
-        emitFuncDecls(oss, mangler, _fndefs);
-        oss << '\n';
-
-        // Function implementations
-        emitFuncImpls(oss, mangler, _fndefs);
         oss << '\n';
     }
 
@@ -108,7 +102,7 @@ std::string LuaBlock::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-void LuaBlock::emitLocalVarDecls(std::ostringstream& oss,
+void LuaBody::emitLocalVarDecls(std::ostringstream& oss,
                                  LuaNameMangler& mangler,
                                  const std::vector<Symbol*>& locals) {
     for (size_t i = 0; i < locals.size(); ++i) {
@@ -119,7 +113,7 @@ void LuaBlock::emitLocalVarDecls(std::ostringstream& oss,
     }
 }
 
-void LuaBlock::emitFuncDecls(std::ostringstream& oss,
+void LuaBody::emitFuncDecls(std::ostringstream& oss,
                              LuaNameMangler& mangler,
                              const std::vector<std::pair<SemanticFunc*, LuaFuncDef*>>& fndefs) {
     for (size_t i = 0; i < fndefs.size(); ++i) {
@@ -131,7 +125,7 @@ void LuaBlock::emitFuncDecls(std::ostringstream& oss,
     }
 }
 
-void LuaBlock::emitFuncImpls(std::ostringstream& oss,
+void LuaBody::emitFuncImpls(std::ostringstream& oss,
                              LuaNameMangler& mangler,
                              const std::vector<std::pair<SemanticFunc*, LuaFuncDef*>>& fndefs) {
     for (size_t i = 0; i < fndefs.size(); ++i) {
@@ -143,30 +137,29 @@ void LuaBlock::emitFuncImpls(std::ostringstream& oss,
     }
 }
 
-void LuaBlock::emitStmt(std::ostringstream& oss, LuaNameMangler& mangler, LuaNode* node) {
+void LuaBody::emitStmt(std::ostringstream& oss, LuaNameMangler& mangler, LuaNode* node) {
     if (LuaExpr* expr = node->as<LuaExpr>()) {
         oss << "_ = " << expr->emit(mangler);
-    } else if (LuaStmt* stmt = node->as<LuaStmt>()) {
-        oss << stmt->emit(mangler);
+    } else {
+        oss << node->emit(mangler);
     }
-    // Ignores other types of nodes
 }
 
-std::string LuaIntExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaInt::emit(LuaNameMangler& mangler) const {
     return std::to_string(_value);
 }
 
-std::string LuaRealExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaReal::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     oss << std::setprecision(17) << _value;
     return oss.str();
 }
 
-std::string LuaBoolExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaBool::emit(LuaNameMangler& mangler) const {
     return _value ? "true" : "false";
 }
 
-std::string LuaStringExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaString::emit(LuaNameMangler& mangler) const {
     std::string s;
     s += '"';
     for (char c : _value) {
@@ -198,23 +191,23 @@ std::string LuaStringExpr::emit(LuaNameMangler& mangler) const {
     return s;
 }
 
-std::string LuaVoidExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaVoid::emit(LuaNameMangler& mangler) const {
+    return "_";
+}
+
+std::string LuaNil::emit(LuaNameMangler& mangler) const {
     return "nil";
 }
 
-std::string LuaNilExpr::emit(LuaNameMangler& mangler) const {
-    return "nil";
-}
-
-std::string LuaVarExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaVarRef::emit(LuaNameMangler& mangler) const {
     return mangler.mangle(_symbol);
 }
 
-std::string LuaFuncRefExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaFuncRef::emit(LuaNameMangler& mangler) const {
     return mangler.mangle(_func);
 }
 
-std::string LuaCallExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaCall::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     oss << _callee->emit(mangler) << '(';
     for (size_t i = 0; i < _args.size(); ++i) {
@@ -227,7 +220,7 @@ std::string LuaCallExpr::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-std::string LuaMemberAccessExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaMemberAccess::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     std::string base = _base->emit(mangler);
     if (auto* symbol = std::get_if<Symbol*>(&_member)) {
@@ -242,24 +235,14 @@ std::string LuaMemberAccessExpr::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-std::string LuaBlockExpr::emit(LuaNameMangler& mangler) const {
+std::string LuaBlock::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
 
     oss << "(function()\n";
 
     if (!_body->_locals.empty()) {
         // Local variable declarations
-        LuaBlock::emitLocalVarDecls(oss, mangler, _body->_locals);
-        oss << '\n';
-    }
-
-    if (!_body->_fndefs.empty()) {
-        // Function declarations
-        LuaBlock::emitFuncDecls(oss, mangler, _body->_fndefs);
-        oss << '\n';
-
-        // Function implementations
-        LuaBlock::emitFuncImpls(oss, mangler, _body->_fndefs);
+        LuaBody::emitLocalVarDecls(oss, mangler, _body->_locals);
         oss << '\n';
     }
 
@@ -268,14 +251,16 @@ std::string LuaBlockExpr::emit(LuaNameMangler& mangler) const {
         oss << "return nil";
     } else {
         for (size_t i = 0; i < _body->_nodes.size() - 1; ++i) {
-            LuaBlock::emitStmt(oss, mangler, _body->_nodes[i]);
+            LuaBody::emitStmt(oss, mangler, _body->_nodes[i]);
             oss << '\n';
         }
-        if (LuaExpr* lastExpr = _body->_nodes.back()->as<LuaExpr>()) {
-            oss << "return " << lastExpr->emit(mangler);
-        } else if (LuaStmt* lastStmt = _body->_nodes.back()->as<LuaStmt>()) {
-            oss << lastStmt->emit(mangler) << '\n'
-                << "return " << LuaVoidExpr().emit(mangler);
+
+        LuaNode* last = _body->_nodes.back();
+        if (last->is<LuaExpr>()) {
+            oss << "return " << last->emit(mangler);
+        } else {
+            oss << last->emit(mangler) << '\n'
+                << "return " << LuaVoid().emit(mangler);
         }
     }
 
@@ -284,27 +269,31 @@ std::string LuaBlockExpr::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-std::string LuaAssignStmt::emit(LuaNameMangler& mangler) const {
+std::string LuaAssign::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     oss << _lhs->emit(mangler) << " = " << _rhs->emit(mangler);
     return oss.str();
 }
 
-std::string LuaIfStmt::emit(LuaNameMangler& mangler) const {
+std::string LuaIf::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     oss << "if " << _cond->emit(mangler) << " then\n"
-            << _thenBody->emit(mangler) << '\n'
-        << "else\n"
-            << _elseBody->emit(mangler) << '\n'
-        << "end";
+            << _thenBody->emit(mangler) << '\n';
+    if (_elseBody == nullptr) {
+        oss << "end";
+    } else {
+        oss << "else\n"
+                << _elseBody->emit(mangler) << '\n'
+            << "end";
+    }
     return oss.str();
 }
 
-std::string LuaReturnStmt::emit(LuaNameMangler& mangler) const {
-    return "return " + _expr->emit(mangler);
+std::string LuaReturn::emit(LuaNameMangler& mangler) const {
+    return "return " + _ret->emit(mangler);
 }
 
-std::string LuaWhileStmt::emit(LuaNameMangler& mangler) const {
+std::string LuaWhile::emit(LuaNameMangler& mangler) const {
     std::ostringstream oss;
     oss << "while " << _cond->emit(mangler) << " do\n"
             << _body->emit(mangler) << '\n'
@@ -313,12 +302,22 @@ std::string LuaWhileStmt::emit(LuaNameMangler& mangler) const {
     return oss.str();
 }
 
-std::string LuaBreakStmt::emit(LuaNameMangler& mangler) const {
+std::string LuaBreak::emit(LuaNameMangler& mangler) const {
     return "break";
 }
 
-std::string LuaContinueStmt::emit(LuaNameMangler& mangler) const {
+std::string LuaContinue::emit(LuaNameMangler& mangler) const {
     return "goto continue";
+}
+
+
+LuaEmitter::LuaEmitter(LuaNameMangler& mangler, LuaNodeTable& table) noexcept
+    : _mangler(mangler), _table(table) {
+    // TODO: _top = _table.make<LuaBlock>();
+}
+
+std::string LuaEmitter::emit() const {
+    return _top->emit(_mangler);
 }
 
 } // Spark::FrontEnd

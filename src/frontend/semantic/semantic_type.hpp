@@ -220,6 +220,9 @@ public:
     explicit RecordField(Symbol* symbol) noexcept : _symbol(symbol) { }
 
     [[nodiscard]]
+    Symbol* symbol() const noexcept { return _symbol; }
+
+    [[nodiscard]]
     std::string_view name() const noexcept { return _symbol->name; }
 
     [[nodiscard]]

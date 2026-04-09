@@ -63,6 +63,18 @@ public:
         auto it = _map.find(name);
         return it != _map.end() ? it->second : (_parent != nullptr ? _parent->lookup(name) : nullptr);
     }
+
+    [[nodiscard]]
+    std::vector<Symbol*> getSymbols() const {
+        std::vector<Symbol*> symbols;
+        symbols.reserve(_map.size());
+
+        for (const auto& pair : _map) {
+            symbols.push_back(pair.second);
+        }
+
+        return symbols;
+    }
 };
 
 } // Spark::FrontEnd

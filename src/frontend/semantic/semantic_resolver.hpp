@@ -5,6 +5,7 @@
 
 #include "env.hpp"
 #include "frontend/ast.hpp"
+#include "lua_ir.hpp"
 #include "semantic_func.hpp"
 #include "semantic_type.hpp"
 #include "symbol.hpp"
@@ -17,6 +18,7 @@ private:
     SymbolTable _symbolTable;
     FuncTable _funcTable;
     TypeTable _typeTable;
+    LuaNodeTable _irTable;
 
     Env _globalEnv;
     std::vector<Env> _envStack;
@@ -68,6 +70,90 @@ private:
     // Types
     std::unordered_map<TypeDefStmt*, TypeType*> _tdefMap;
 
+    // Lua IR
+    LuaNode* _resultIR = nullptr;
+
+    LuaNone* _noneIR;
+    LuaVoid* _voidIR;
+    LuaNil* _nilIR;
+    LuaBreak* _breakIR;
+    LuaContinue* _continueIR;
+
+    [[nodiscard]]
+    LuaNone* noneIR() const noexcept { return _noneIR; }
+
+    [[nodiscard]]
+    LuaInt* intIR(int64_t i) { return _irTable.make<LuaInt>(i); }
+
+    [[nodiscard]]
+    LuaReal* realIR(double d) { return _irTable.make<LuaReal>(d); }
+
+    [[nodiscard]]
+    LuaBool* boolIR(bool b) { return _irTable.make<LuaBool>(b); }
+
+    [[nodiscard]]
+    LuaString* stringIR(std::string s) { return _irTable.make<LuaString>(std::move(s)); }
+
+    [[nodiscard]]
+    LuaVoid* voidIR() const noexcept { return _voidIR; }
+
+    [[nodiscard]]
+    LuaNil* nilIR() const noexcept { return _nilIR; }
+
+    [[nodiscard]]
+    LuaVarRef* varRefIR(Symbol* symbol) { return _irTable.make<LuaVarRef>(symbol); }
+
+    [[nodiscard]]
+    LuaFuncRef* fnRefIR(SemanticFunc* func) { return _irTable.make<LuaFuncRef>(func); }
+
+    [[nodiscard]]
+    LuaCall* callIR(LuaNode* callee, std::vector<LuaNode*> args) {
+        return _irTable.make<LuaCall>(callee, std::move(args));
+    }
+
+    [[nodiscard]]
+    LuaMemberAccess* maccessIR(LuaNode* base, Symbol* member) {
+        return _irTable.make<LuaMemberAccess>(base, member);
+    }
+
+    [[nodiscard]]
+    LuaMemberAccess* maccessIR(LuaNode* base, SemanticFunc* member) {
+        return _irTable.make<LuaMemberAccess>(base, member);
+    }
+
+    [[nodiscard]]
+    LuaAssign* assignIR(LuaNode* lhs, LuaNode* rhs) { return _irTable.make<LuaAssign>(lhs, rhs); }
+
+    [[nodiscard]]
+    LuaReturn* returnIR(LuaNode* ret) { return _irTable.make<LuaReturn>(ret); }
+
+    [[nodiscard]]
+    LuaWhile* whileIR(LuaNode* cond, LuaBody* body) { return _irTable.make<LuaWhile>(cond, body); }
+
+    [[nodiscard]]
+    LuaBreak* breakIR() const noexcept { return _breakIR; }
+
+    [[nodiscard]]
+    LuaContinue* continueIR() const noexcept { return _continueIR; }
+
+    [[nodiscard]]
+    LuaBody* bodyIR(std::vector<Symbol*> locals, std::vector<LuaNode*> nodes) {
+        return _irTable.make<LuaBody>(std::move(locals), std::move(nodes));
+    }
+
+    [[nodiscard]]
+    LuaBlock* blockIR(LuaBody* body) { return _irTable.make<LuaBlock>(body); }
+
+    [[nodiscard]]
+    LuaIf* ifIR(LuaNode* cond, LuaBody* thenBody, LuaBody* elseBody = nullptr) {
+        return _irTable.make<LuaIf>(cond, thenBody, elseBody);
+    }
+
+    [[nodiscard]]
+    LuaFuncDef* fndefIR(SemanticFunc* func, std::vector<Symbol*> params, LuaBody* body) {
+        return _irTable.make<LuaFuncDef>(func, std::move(params), body);
+    }
+
 public:
     explicit SemanticResolver(Diagnostics& diagnostics);
 
@@ -111,10 +197,16 @@ public:
     void visit(ImportAllStmt* i) override;
     void visit(UndefineStmt* undef) override;
 
-private:
-    SemanticType* resolve(Node* node);
+    LuaNode* run(Node* node) {
+        return resolve(node).second;
+    }
 
-    std::vector<SemanticType*> resolveNodes(const std::vector<Node*>& nodes);
+private:
+    std::pair<SemanticType*, LuaNode*> resolve(Node* node);
+
+    std::vector<std::pair<SemanticType*, LuaNode*>> resolveNodes(const std::vector<Node*>& nodes);
+
+    std::pair<SemanticType*, LuaBody*> resolveBody(BlockExpr* body);
 
     /**
      * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global
@@ -143,14 +235,15 @@ private:
      * @param type Type of the symbol
      * @param start Start location of the name.
      * @param end End location of the name.
+     * @return Created symbol.
      */
-    void declare(std::string_view name,
-                 Env& env,
-                 SymbolKind kind,
-                 bool isReassignable,
-                 SemanticType* type,
-                 Location start,
-                 Location end);
+    Symbol* declare(std::string_view name,
+                    Env& env,
+                    SymbolKind kind,
+                    bool isReassignable,
+                    SemanticType* type,
+                    Location start,
+                    Location end);
 
     /**
      * Declares function definitions.

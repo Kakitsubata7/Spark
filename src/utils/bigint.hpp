@@ -53,6 +53,11 @@ public:
         os << i.str();
         return os;
     }
+
+    [[nodiscard]]
+    int64_t toInt64() const {
+        return static_cast<int64_t>(_value);
+    }
 };
 
 } // Spark

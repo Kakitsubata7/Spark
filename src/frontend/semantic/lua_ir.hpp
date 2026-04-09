@@ -63,35 +63,41 @@ public:
     }
 };
 
-class LuaBlock;
+class LuaExpr : public LuaNode { };
+
+class LuaNone : public LuaExpr {
+public:
+    explicit LuaNone() noexcept = default;
+
+    [[nodiscard]]
+    std::string emit(LuaNameMangler& mangler) const override;
+};
+
+class LuaBody;
 
 class LuaFuncDef : public LuaNode {
 private:
     SemanticFunc* _func;
     std::vector<Symbol*> _params;
-    LuaBlock* _body;
+    LuaBody* _body;
 
 public:
-    LuaFuncDef(SemanticFunc* func, std::vector<Symbol*> params, LuaBlock* body) noexcept
+    LuaFuncDef(SemanticFunc* func, std::vector<Symbol*> params, LuaBody* body) noexcept
         : _func(func), _params(std::move(params)), _body(body) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaBlock : public LuaNode {
+class LuaBody : public LuaNode {
 private:
     std::vector<Symbol*> _locals;
-
-    std::vector<std::pair<SemanticFunc*, LuaFuncDef*>> _fndefs;
-
     std::vector<LuaNode*> _nodes;
 
 public:
-    LuaBlock(std::vector<Symbol*> locals,
-             std::vector<std::pair<SemanticFunc*, LuaFuncDef*>> funcDefs,
-             std::vector<LuaNode*> nodes) noexcept
-        : _locals(std::move(locals)), _fndefs(std::move(funcDefs)), _nodes(std::move(nodes)) { }
+    LuaBody(std::vector<Symbol*> locals,
+            std::vector<LuaNode*> nodes) noexcept
+        : _locals(std::move(locals)), _nodes(std::move(nodes)) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
@@ -111,201 +117,197 @@ private:
 
     static void emitStmt(std::ostringstream& oss, LuaNameMangler& mangler, LuaNode* node);
 
-    friend class LuaBlockExpr;
+    friend class LuaBlock;
 };
 
-class LuaExpr : public LuaNode { };
-
-class LuaStmt : public LuaNode { };
-
-class LuaIntExpr : public LuaExpr {
+class LuaInt : public LuaExpr {
 private:
     int64_t _value;
 
 public:
-    explicit LuaIntExpr(int64_t value) noexcept
+    explicit LuaInt(int64_t value) noexcept
         : _value(value) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaRealExpr : public LuaExpr {
+class LuaReal : public LuaExpr {
 private:
     double _value;
 
 public:
-    explicit LuaRealExpr(double value) noexcept
+    explicit LuaReal(double value) noexcept
         : _value(value) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaBoolExpr : public LuaExpr {
+class LuaBool : public LuaExpr {
 private:
     bool _value;
 
 public:
-    explicit LuaBoolExpr(bool value) noexcept
+    explicit LuaBool(bool value) noexcept
         : _value(value) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaStringExpr : public LuaExpr {
+class LuaString : public LuaExpr {
 private:
     std::string _value;
 
 public:
-    explicit LuaStringExpr(std::string value) noexcept
+    explicit LuaString(std::string value) noexcept
         : _value(std::move(value)) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaVoidExpr : public LuaExpr {
+class LuaVoid : public LuaExpr {
 public:
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaNilExpr : public LuaExpr {
+class LuaNil : public LuaExpr {
 public:
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaVarExpr : public LuaExpr {
+class LuaVarRef : public LuaExpr {
 private:
     Symbol* _symbol;
 
 public:
-    explicit LuaVarExpr(Symbol* symbol) noexcept
+    explicit LuaVarRef(Symbol* symbol) noexcept
         : _symbol(symbol) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaFuncRefExpr : public LuaExpr {
+class LuaFuncRef : public LuaExpr {
 private:
     SemanticFunc* _func;
 
 public:
-    explicit LuaFuncRefExpr(SemanticFunc* func) noexcept
+    explicit LuaFuncRef(SemanticFunc* func) noexcept
         : _func(func) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaCallExpr : public LuaExpr {
+class LuaCall : public LuaExpr {
 private:
-    LuaExpr* _callee;
-    std::vector<LuaExpr*> _args;
+    LuaNode* _callee;
+    std::vector<LuaNode*> _args;
 
 public:
-    LuaCallExpr(LuaExpr* callee, std::vector<LuaExpr*> args) noexcept
+    LuaCall(LuaNode* callee, std::vector<LuaNode*> args) noexcept
         : _callee(callee), _args(std::move(args)) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaMemberAccessExpr : public LuaExpr {
+class LuaMemberAccess : public LuaExpr {
 private:
-    LuaExpr* _base;
+    LuaNode* _base;
     std::variant<Symbol*, SemanticFunc*> _member;
 
 public:
-    LuaMemberAccessExpr(LuaExpr* base, Symbol* member) noexcept
+    LuaMemberAccess(LuaNode* base, Symbol* member) noexcept
         : _base(base), _member(member) { }
 
-    LuaMemberAccessExpr(LuaExpr* base, SemanticFunc* member) noexcept
+    LuaMemberAccess(LuaNode* base, SemanticFunc* member) noexcept
         : _base(base), _member(member) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaBlockExpr : public LuaExpr {
+class LuaBlock : public LuaExpr {
 private:
-    LuaBlock* _body;
+    LuaBody* _body;
 
 public:
-    explicit LuaBlockExpr(LuaBlock* body) noexcept :
+    explicit LuaBlock(LuaBody* body) noexcept :
         _body(body) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaAssignStmt : public LuaStmt {
+class LuaAssign : public LuaNode {
 private:
-    LuaExpr* _lhs;
-    LuaExpr* _rhs;
+    LuaNode* _lhs;
+    LuaNode* _rhs;
 
 public:
-    LuaAssignStmt(LuaExpr* lhs, LuaExpr* rhs) noexcept
+    LuaAssign(LuaNode* lhs, LuaNode* rhs) noexcept
         : _lhs(lhs), _rhs(rhs) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaIfStmt : public LuaStmt {
+class LuaIf : public LuaNode {
 private:
-    LuaExpr* _cond;
-    LuaBlock* _thenBody;
-    LuaBlock* _elseBody;
+    LuaNode* _cond;
+    LuaBody* _thenBody;
+    /* nullable */ LuaBody* _elseBody;
 
 public:
-    LuaIfStmt(LuaExpr* cond, LuaBlock* thenBody, LuaBlock* elseBody) noexcept
+    LuaIf(LuaNode* cond, LuaBody* thenBody, LuaBody* elseBody = nullptr) noexcept
         : _cond(cond), _thenBody(thenBody), _elseBody(elseBody) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaReturnStmt : public LuaStmt {
+class LuaReturn : public LuaNode {
 private:
-    LuaExpr* _expr;
+    LuaNode* _ret;
 
 public:
-    explicit LuaReturnStmt(LuaExpr* expr) noexcept
-        : _expr(expr) { }
+    explicit LuaReturn(LuaNode* ret) noexcept
+        : _ret(ret) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaWhileStmt : public LuaStmt {
+class LuaWhile : public LuaNode {
 private:
-    LuaExpr* _cond;
-    LuaBlock* _body;
+    LuaNode* _cond;
+    LuaBody* _body;
 
 public:
-    LuaWhileStmt(LuaExpr* cond, LuaBlock* body) noexcept
+    LuaWhile(LuaNode* cond, LuaBody* body) noexcept
         : _cond(cond), _body(body) { }
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaBreakStmt : public LuaStmt {
+class LuaBreak : public LuaNode {
 public:
-    LuaBreakStmt() noexcept = default;
+    LuaBreak() noexcept = default;
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
 };
 
-class LuaContinueStmt : public LuaStmt {
+class LuaContinue : public LuaNode {
 public:
-    LuaContinueStmt() noexcept = default;
+    LuaContinue() noexcept = default;
 
     [[nodiscard]]
     std::string emit(LuaNameMangler& mangler) const override;
@@ -319,12 +321,28 @@ private:
 
 public:
     template <typename T, typename... Args>
-    T* makeType(Args&&... args) {
+    T* make(Args&&... args) {
         std::unique_ptr<T> up = std::make_unique<T>(std::forward<Args>(args)...);
         T* p = up.get();
         _nodes.emplace_back(std::move(up));
         return p;
     }
+};
+
+
+
+class LuaEmitter {
+private:
+    LuaNameMangler& _mangler;
+    LuaNodeTable& _table;
+
+    LuaBody* _top;
+
+public:
+    explicit LuaEmitter(LuaNameMangler& mangler, LuaNodeTable& table) noexcept;
+
+    [[nodiscard]]
+    std::string emit() const;
 };
 
 } // Spark::FrontEnd
