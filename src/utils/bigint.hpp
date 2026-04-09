@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <cstdint>
 #include <string_view>
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -35,6 +36,13 @@ public:
     bool operator<=(const BigInt& rhs) const { return _value <= rhs._value; }
     bool operator>(const BigInt& rhs)  const { return _value >  rhs._value; }
     bool operator>=(const BigInt& rhs) const { return _value >= rhs._value; }
+    
+    bool operator==(int64_t rhs) const { return _value == rhs; }
+    bool operator!=(int64_t rhs) const { return _value != rhs; }
+    bool operator<(int64_t rhs)  const { return _value <  rhs; }
+    bool operator<=(int64_t rhs) const { return _value <= rhs; }
+    bool operator>(int64_t rhs)  const { return _value >  rhs; }
+    bool operator>=(int64_t rhs) const { return _value >= rhs; }
 
     [[nodiscard]]
     std::string str() const {
