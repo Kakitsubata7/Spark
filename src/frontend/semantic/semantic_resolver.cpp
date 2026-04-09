@@ -243,16 +243,6 @@ void SemanticResolver::visit(MemberAccessExpr* maccess) {
             _resultType = targetMethod->type();
             return;
         }
-    } else if (MonoFuncType* mf = baseType->as<MonoFuncType>()) {
-        if (member == "operator()") {
-            _resultType = mf;
-            return;
-        }
-    } else if (OverloadedFuncType* of = baseType->as<OverloadedFuncType>()) {
-        if (member == "operator()") {
-            _resultType = of;
-            return;
-        }
     }
 
     // Member not found
