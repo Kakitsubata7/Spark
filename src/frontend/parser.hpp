@@ -1,20 +1,24 @@
 ﻿#pragma once
 
-#include <optional>
-#include <string_view>
-#include <vector>
-
 #include "ast.hpp"
-#include "utils/error.hpp"
+#include "utils/diagnostic.hpp"
 
 namespace Spark::FrontEnd {
+
+struct ParseResult {
+    AST ast;
+    Diagnostics diagnostics;
+
+    ParseResult() noexcept = default;
+    ParseResult(AST ast, Diagnostics diagnostics) noexcept
+        : ast{std::move(ast)}, diagnostics{std::move(diagnostics)} {}
+};
 
 class Parser {
 public:
     Parser() = default;
 
-    static std::pair<AST, std::vector<Error>> parse(std::istream& stream,
-                                                    std::optional<std::string_view> filename = std::nullopt);
+    static ParseResult parse(std::istream& stream);
 };
 
 } // Spark::FrontEnd

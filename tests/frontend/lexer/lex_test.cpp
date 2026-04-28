@@ -4,26 +4,36 @@
 
 #include "frontend/lexer.hpp"
 
+using namespace Spark;
 using namespace Spark::FrontEnd;
+
 using TT = TokenType;
 
-static Lexer testLexAll(std::string_view source, const std::vector<TT>& expected) {
-    std::istringstream iss{std::string(source)};
-    Lexer lexer(iss);
-    const std::vector<Token>& actual = lexer.lexAll();
+static void lexTest(std::string_view source, const std::vector<TT>& expectedTypes) {
+    std::string s = std::string{source};
+    s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+    std::istringstream iss{s};
+    auto [actualToks, _, diagnostics] = Lexer::lexAll(iss);
 
-    EXPECT_EQ(actual.size(), expected.size()) << "Number of tokens mismatched\n";
-    for (size_t i = 0; i < actual.size(); ++i) {
-        if (actual[i].type != expected[i]) {
+    EXPECT_EQ(actualToks.size(), expectedTypes.size()) << "Number of tokens mismatched\n";
+    for (size_t i = 0; i < actualToks.size(); ++i) {
+        if (actualToks[i].type != expectedTypes[i]) {
             std::ostringstream oss;
             oss << "Token type mismatch at index " << i << "\n"
-                << "Expected: " << expected[i] << "\n"
-                << "Actual:   " << actual[i].type << "\n";
-            ADD_FAILURE() << oss.str();
+                << "Expected: " << expectedTypes[i] << "\n"
+                << "Actual:   " << actualToks[i].type << "\n\n";
+            FAIL() << oss.str();
         }
     }
 
-    return lexer;
+    if (diagnostics.hasError()) {
+        std::ostringstream oss;
+        oss << "\nErrors: \n";
+        for (const Diagnostic& d : diagnostics.diagnostics()) {
+            oss << d << "\n";
+        }
+        FAIL() << oss.str();
+    }
 }
 
 TEST(LexTest, Example1) {
@@ -71,7 +81,7 @@ end
 
 print(potsOfGold({10, 5, 15, 20}))
 )";
-    Lexer lexer = testLexAll(source, {
+    std::vector<TokenType> expectedTypes = {
         TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
             TT::Fn, TT::Identifier, TT::LParen, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Comma, TT::Identifier, TT::Colon, TT::Identifier, TT::Lt, TT::Identifier, TT::Lt, TT::Identifier, TT::Gt, TT::Caret, TT::Gt, TT::Caret, TT::RParen, TT::Arrow, TT::Identifier, TT::Do,
                 TT::If, TT::Identifier, TT::Gt, TT::Identifier, TT::Do,
@@ -108,6 +118,6 @@ print(potsOfGold({10, 5, 15, 20}))
         TT::End,
 
         TT::Identifier, TT::LParen, TT::Identifier, TT::LParen, TT::LBrace, TT::Integer, TT::Comma, TT::Integer, TT::Comma, TT::Integer, TT::Comma, TT::Integer, TT::RBrace, TT::RParen, TT::RParen
-    });
-    EXPECT_FALSE(lexer.hasError());;
+    };
+    lexTest(source, expectedTypes);
 }

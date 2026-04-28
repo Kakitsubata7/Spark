@@ -4,13 +4,22 @@
 
 namespace Spark::FrontEnd {
 
-std::string_view SourceBuffer::get(Location start, Location end) const {
+bool SourceBuffer::tryGet(Location start, Location end, std::string_view& out) const noexcept {
     std::optional<size_t> s = locToIndex(start);
     std::optional<size_t> e = locToIndex(end);
     if (!s || !e || *e < *s) {
-        throw std::out_of_range("invalid source range");
+        return false;
     }
-    return std::string_view(_src.data() + *s, (*e - *s) + 1);
+    out = std::string_view(_src.data() + *s, (*e - *s) + 1);
+    return true;
+}
+
+std::string_view SourceBuffer::get(Location start, Location end) const {
+    std::string_view sv;
+    if (tryGet(start, end, sv)) {
+        return std::move(sv);
+    }
+    throw std::out_of_range("invalid source range");
 }
 
 void SourceBuffer::load(std::istream& stream) {

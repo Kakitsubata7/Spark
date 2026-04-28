@@ -66,8 +66,14 @@ add_library(sparklib
         src/core/type.hpp
 
         src/frontend/ast.hpp
+        src/frontend/ast/child_visitor.cpp
+        src/frontend/ast/child_visitor.hpp
+        src/frontend/ast/literal.hpp
+        src/frontend/ast/name.cpp
+        src/frontend/ast/name.hpp
         src/frontend/ast/node.cpp
         src/frontend/ast/node.hpp
+        src/frontend/ast/node_visitor.cpp
         src/frontend/ast/node_visitor.hpp
 
         src/frontend/lexer.cpp
@@ -84,7 +90,17 @@ add_library(sparklib
         src/frontend/parser.cpp
         src/frontend/parser.hpp
 
-        src/frontend/semantic_type.hpp
+        src/frontend/semantic/env.hpp
+        src/frontend/semantic/lua_ir.cpp
+        src/frontend/semantic/lua_ir.hpp
+        src/frontend/semantic/semantic_func.cpp
+        src/frontend/semantic/semantic_func.hpp
+        src/frontend/semantic/semantic_resolver.cpp
+        src/frontend/semantic/semantic_resolver.hpp
+        src/frontend/semantic/semantic_type.cpp
+        src/frontend/semantic/semantic_type.hpp
+        src/frontend/semantic/symbol.hpp
+
         src/frontend/source_buffer.cpp
         src/frontend/source_buffer.hpp
         src/frontend/source_reader.cpp
@@ -99,6 +115,8 @@ add_library(sparklib
 
         src/utils/bigint.hpp
         src/utils/bigreal.hpp
+        src/utils/diagnostic.cpp
+        src/utils/diagnostic.hpp
         src/utils/error.cpp
         src/utils/error.hpp
         src/utils/location.hpp
@@ -121,6 +139,8 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
+        tests/frontend/ast/name_value_test.cpp
+
         tests/frontend/lexer/lex_test.cpp
         tests/frontend/lexer/lexer_test.cpp
         tests/frontend/lexer/token_buffer_test.cpp

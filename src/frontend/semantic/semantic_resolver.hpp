@@ -1,0 +1,441 @@
+﻿#pragma once
+
+#include <deque>
+#include <optional>
+#include <string_view>
+
+#include "env.hpp"
+#include "frontend/ast.hpp"
+#include "lua_ir.hpp"
+#include "semantic_func.hpp"
+#include "semantic_type.hpp"
+#include "symbol.hpp"
+#include "utils/diagnostic.hpp"
+
+namespace Spark::FrontEnd {
+
+class SemanticResolver : public NodeVisitor {
+private:
+    SymbolTable _symbolTable;
+    FuncTable _funcTable;
+    TypeTable _typeTable;
+    LuaNodeTable _irTable;
+
+    Env _globalEnv;
+    std::deque<Env> _envStack;
+
+    Diagnostics& _diagnostics;
+
+    bool _inLoop = false;
+    bool _inFunc = false;
+
+    SemanticType* _resultType = nullptr;
+
+    SemanticType* _unknownType;
+    SemanticType* _voidType;
+    SemanticType* _intType;
+    SemanticType* _realType;
+    SemanticType* _boolType;
+    SemanticType* _stringType;
+    SemanticType* _nilType;
+    SemanticType* _typeType;
+
+    [[nodiscard]]
+    SemanticType* unknownType() const noexcept { return _unknownType; }
+
+    [[nodiscard]]
+    SemanticType* voidType() const noexcept { return _voidType; }
+
+    [[nodiscard]]
+    SemanticType* intType() const noexcept { return _intType; }
+
+    [[nodiscard]]
+    SemanticType* realType() const noexcept { return _realType; }
+
+    [[nodiscard]]
+    SemanticType* boolType() const noexcept { return _boolType; }
+
+    [[nodiscard]]
+    SemanticType* stringType() const noexcept { return _stringType; }
+
+    [[nodiscard]]
+    SemanticType* nilType() const noexcept { return _nilType; }
+
+    [[nodiscard]]
+    SemanticType* typeType() const noexcept { return _typeType; }
+
+    // Functions
+    std::unordered_map<FnDefStmt*, SemanticFunc*> _fndefMap;
+    SemanticType* _currentReturnType = nullptr;
+
+    // Types
+    std::unordered_map<TypeDefStmt*, TypeType*> _tdefMap;
+
+    // Lua IR
+    LuaNameMangler _mangler;
+    LuaEmitter _emitter;
+
+    LuaNode* _resultIR = nullptr;
+
+    LuaNone* _noneIR;
+    LuaVoid* _voidIR;
+    LuaNil* _nilIR;
+    LuaBreak* _breakIR;
+    LuaContinue* _continueIR;
+
+    [[nodiscard]]
+    LuaNone* noneIR() const noexcept { return _noneIR; }
+
+    [[nodiscard]]
+    LuaInt* intIR(int64_t i) { return _irTable.make<LuaInt>(i); }
+
+    [[nodiscard]]
+    LuaReal* realIR(double d) { return _irTable.make<LuaReal>(d); }
+
+    [[nodiscard]]
+    LuaBool* boolIR(bool b) { return _irTable.make<LuaBool>(b); }
+
+    [[nodiscard]]
+    LuaString* stringIR(std::string s) { return _irTable.make<LuaString>(std::move(s)); }
+
+    [[nodiscard]]
+    LuaVoid* voidIR() const noexcept { return _voidIR; }
+
+    [[nodiscard]]
+    LuaNil* nilIR() const noexcept { return _nilIR; }
+
+    [[nodiscard]]
+    LuaVarRef* varRefIR(Symbol* symbol) { return _irTable.make<LuaVarRef>(symbol); }
+
+    [[nodiscard]]
+    LuaFuncRef* fnRefIR(SemanticFunc* func) { return _irTable.make<LuaFuncRef>(func); }
+
+    [[nodiscard]]
+    LuaCall* callIR(LuaNode* callee, std::vector<LuaNode*> args) {
+        return _irTable.make<LuaCall>(callee, std::move(args));
+    }
+
+    [[nodiscard]]
+    LuaMemberAccess* maccessIR(LuaNode* base, Symbol* member) {
+        return _irTable.make<LuaMemberAccess>(base, member);
+    }
+
+    [[nodiscard]]
+    LuaMemberAccess* maccessIR(LuaNode* base, SemanticFunc* member) {
+        return _irTable.make<LuaMemberAccess>(base, member);
+    }
+
+    [[nodiscard]]
+    LuaAssign* assignIR(LuaNode* lhs, LuaNode* rhs) { return _irTable.make<LuaAssign>(lhs, rhs); }
+
+    [[nodiscard]]
+    LuaReturn* returnIR(LuaNode* ret) { return _irTable.make<LuaReturn>(ret); }
+
+    [[nodiscard]]
+    LuaWhile* whileIR(LuaNode* cond, LuaBody* body) { return _irTable.make<LuaWhile>(cond, body); }
+
+    [[nodiscard]]
+    LuaBreak* breakIR() const noexcept { return _breakIR; }
+
+    [[nodiscard]]
+    LuaContinue* continueIR() const noexcept { return _continueIR; }
+
+    [[nodiscard]]
+    LuaBody* bodyIR(std::vector<Symbol*> locals, std::vector<LuaNode*> nodes) {
+        return _irTable.make<LuaBody>(std::move(locals), std::move(nodes));
+    }
+
+    [[nodiscard]]
+    LuaBlock* blockIR(LuaBody* body) { return _irTable.make<LuaBlock>(body); }
+
+    [[nodiscard]]
+    LuaIf* ifIR(LuaNode* cond, LuaBody* thenBody, LuaBody* elseBody = nullptr) {
+        return _irTable.make<LuaIf>(cond, thenBody, elseBody);
+    }
+
+    [[nodiscard]]
+    LuaFuncDef* fndefIR(SemanticFunc* func, std::vector<Symbol*> params, LuaBody* body) {
+        return _irTable.make<LuaFuncDef>(func, std::move(params), body);
+    }
+
+public:
+    explicit SemanticResolver(Diagnostics& diagnostics);
+
+    void visit(LambdaExpr* lambda) override;
+    void visit(IfThenExpr* ifthen) override;
+    void visit(TryElseExpr* tryelse) override;
+    void visit(MatchExpr* match) override;
+    void visit(TryCatchExpr* trycatch) override;
+    void visit(ThrowExpr* t) override;
+    void visit(BlockExpr* block) override;
+    void visit(IsExpr* is) override;
+    void visit(AsExpr* as) override;
+    void visit(BinaryExpr* binary) override;
+    void visit(PrefixExpr* prefix) override;
+    void visit(PostfixExpr* postfix) override;
+    void visit(MemberAccessExpr* maccess) override;
+    void visit(CallExpr* call) override;
+    void visit(SubscriptExpr* subscript) override;
+    void visit(LiteralExpr* literal) override;
+    void visit(NameExpr* ident) override;
+    void visit(GlobalAccessExpr* gaccess) override;
+    void visit(UpvalueExpr* upvalue) override;
+    void visit(TupleExpr* tuple) override;
+    void visit(CollectionExpr* collection) override;
+    void visit(TypeofExpr* t) override;
+
+    void visit(VarDefStmt* vardef) override;
+    void visit(FnDefStmt* fndef) override;
+    void visit(TypeDefStmt* tdef) override;
+    void visit(AssignStmt* assign) override;
+    void visit(IfStmt* ifstmt) override;
+    void visit(WhileStmt* w) override;
+    void visit(DoWhileStmt* dw) override;
+    void visit(ForStmt* f) override;
+    void visit(BreakStmt* b) override;
+    void visit(ContinueStmt* c) override;
+    void visit(ReturnStmt* ret) override;
+    void visit(ModuleStmt* moddef) override;
+    void visit(ExportStmt* e) override;
+    void visit(ImportStmt* i) override;
+    void visit(ImportAllStmt* i) override;
+    void visit(UndefineStmt* undef) override;
+
+    std::string emit(Node* node) {
+        return _emitter.emit(resolve(node).second);
+    }
+
+private:
+    std::pair<SemanticType*, LuaNode*> resolve(Node* node);
+
+    std::vector<std::pair<SemanticType*, LuaNode*>> resolveNodes(const std::vector<Node*>& nodes);
+
+    std::pair<SemanticType*, LuaBody*> resolveBody(BlockExpr* body);
+
+    /**
+     * Gets the reference to the current environment. If no lexical environment is pushed, this will be the global
+     * environment.
+     * @return Reference to the current environment.
+     */
+    Env& currentEnv() noexcept;
+
+    /**
+     * Creates and pushes a new lexical environment. It will be the new current environment.
+     */
+    void pushEnv();
+
+    /**
+     * Pops the current environment. The global environment cannot be popped.
+     */
+    void popEnv();
+
+    /**
+     * Creates symbol and declares a name to the given environment by specifying its symbol kind and reassignability.
+     * If the name already exists, no new symbol will be created, but the name will be mapped to the existing symbol.
+     * @param name Name to declare.
+     * @param env Environment to declare the name in.
+     * @param kind Kind of the declared symbol.
+     * @param isReassignable Reassignability.
+     * @param type Type of the symbol
+     * @param start Start location of the name.
+     * @param end End location of the name.
+     * @return Created symbol.
+     */
+    Symbol* declare(const std::string& name,
+                    Env& env,
+                    SymbolKind kind,
+                    bool isReassignable,
+                    SemanticType* type,
+                    Location start,
+                    Location end);
+
+    /**
+     * Declares function definitions.
+     * @param fndefs Function definition statements.
+     * @param env Environment to declare into.
+     */
+    void declareFunctions(const std::vector<FnDefStmt*>& fndefs, Env& env);
+
+    /**
+     * Declares type definitions.
+     * @param tdefs Type definition statements.
+     * @param env Environment to declare into.
+     */
+    void declareTypes(const std::vector<TypeDefStmt*>& tdefs, Env& env);
+
+    /**
+     * Finds the `SemanticFunc` pointer based on symbol name and parameter types starting from the given environment.
+     * @param name Symbol name to look for.
+     * @param currentEnv Environment to start finding.
+     * @param paramTypes Parameter types
+     * @return `SemanticFunc` pointer or `nullptr` if not found.
+     */
+    static SemanticFunc* findFunc(const std::string& name,
+                                  const Env& currentEnv,
+                                  const std::vector<SemanticType*>& paramTypes);
+
+    /**
+     * Finds the `SemanticFunc` pointer of a type's method based on its name.
+     * @param name Method name to look for.
+     * @param type Type to look the method for.
+     * @param paramTypes Parameter types.
+     * @return `SemanticFunc` pointer or `nullptr` if not found.
+     */
+    static SemanticFunc* findFunc(std::string_view name,
+                                  const SemanticType* type,
+                                  const std::vector<SemanticType*>& paramTypes);
+
+    /**
+     * Checks whether a var kind represents reassignable or not.
+     * @param kind Kind to check.
+     * @return `true` if represents reassignable, `false` otherwise.
+     */
+    static bool isReassignable(VarModifier::VarKind kind) noexcept;
+
+    /**
+     * Checks whether a `VarModifier` node represents reassignable or not.
+     * @param varmod `VarModifier` node to check.
+     * @return `true` if represents reassignable, `false` otherwise.
+     */
+    static bool isReassignable(const VarModifier* varmod) noexcept;
+
+    /**
+     * Checks whether an AST node is a hoisted declarative node.
+     * @param node Node to check.
+     * @return `true` if the node is a hoisted declarative node, `false` otherwise.
+     */
+    static bool isHoistedDeclarative(const Node* node) noexcept;
+
+    /**
+     * Gets the special identifier string the overloadable binary operator corresponds to.
+     * @param op Binary operator kind.
+     * @return Identifier string the binary operator corresponds to or `std::nullopt`.
+     */
+    static std::optional<std::string_view> binaryOpToIdent(BinaryExpr::OpKind op) noexcept;
+
+    /**
+     * Gets the special identifier string the overloadable prefix operator corresponds to.
+     * @param op Prefix operator kind.
+     * @return Identifier string the prefix operator corresponds to or `std::nullopt`.
+     */
+    static std::optional<std::string_view> prefixOpToIdent(PrefixExpr::OpKind op) noexcept;
+
+    /**
+     * Constructs a `std::string` for the name of a `MonoFuncType` instance.
+     * @param paramTypes Parameter types.
+     * @param returnType Return type.
+     * @return Constructed name.
+     */
+    static std::string createMonoFuncTypeName(const std::vector<SemanticType*>& paramTypes,
+                                              const SemanticType* returnType);
+
+    /**
+     * Adds an error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End of location of the error.
+     * @param message Error message.
+     * @param subs Sub diagnostics of the error (default to none).
+     */
+    void error(Location start, Location end, std::string message, std::vector<Diagnostic> subs = {});
+
+    /**
+     * Adds a "cannot find name" name resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param name Name that couldn't be found.
+     */
+    void cannotFindError(Location start, Location end, std::string_view name);
+
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
+     * @param type Type.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const SemanticType* type);
+
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
+     * @param lhsType LHS type.
+     * @param rhsType RHS type.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const SemanticType* lhsType,
+                                 const SemanticType* rhsType);
+
+    /**
+     * Adds a "cannot find operator" operator resolution error to the diagnostics.
+     * @param start Start location of the error.
+     * @param end End location of the error.
+     * @param opName Operator name that couldn't be found.
+     * @param types Types.
+     */
+    void cannotFindOperatorError(Location start,
+                                 Location end,
+                                 std::string_view opName,
+                                 const std::vector<SemanticType*>& types);
+
+    void redeclareError(Location start,
+                        Location end,
+                        std::string_view name,
+                        Location prevStart,
+                        Location prevEnd);
+
+    void unexpectedTypeError(Location start, Location end, const SemanticType* expected, const SemanticType* actual);
+
+    void notCallableError(Location start,
+                          Location end,
+                          const SemanticType* type,
+                          const std::vector<SemanticType*>& paramTypes);
+
+    void notIndexableError(Location start,
+                           Location end,
+                           const SemanticType* type,
+                           const std::vector<SemanticType*>& paramTypes);
+
+    void invalidStrictEqError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
+
+    void invalidStrictNeError(Location start, Location end, const SemanticType* lhsType, const SemanticType* rhsType);
+
+    void invalidStructInheritanceError(Location start, Location end, const SemanticType* type);
+
+    void typeHasNoMemberError(Location start, Location end, const SemanticType* type, std::string_view member);
+
+    void redeclareOfFuncWithTheSameSigError(Location start,
+                                            Location end,
+                                            std::string_view name,
+                                            const std::vector<SemanticType*>& paramTypes);
+
+    void notReassignableError(Location start, Location end, std::string_view name);
+
+    void exprNotReassignableError(Location start, Location end);
+
+    SemanticFunc* registerBuiltinFunc(
+        std::string_view sparkName,
+        std::string_view luaName,
+        std::vector<SemanticType*> paramTypes,
+        SemanticType* returnType,
+        std::string_view luaSource
+    );
+
+    SemanticType* registerBuiltinType(std::string_view name, SemanticType* type);
+
+    Symbol* registerBuiltinOverloadedFunc(
+        std::string_view sparkName,
+        const std::vector<std::vector<SemanticType*>>& paramLists,
+        const std::vector<SemanticType*>& returnTypes,
+        const std::vector<std::string_view>& luaNames,
+        const std::vector<std::string_view>& luaSources
+    );
+};
+
+} // Spark::FrontEnd

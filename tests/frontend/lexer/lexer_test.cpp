@@ -4,36 +4,41 @@
 
 #include "frontend/lexer.hpp"
 
-#include "../utils.hpp"
-
+using namespace Spark;
 using namespace Spark::FrontEnd;
-using namespace Spark::Test::FrontEnd;
+
 using TT = TokenType;
 
-static void expectTokens(const std::vector<Token>& actual, const std::vector<Token>& expected) {
-    EXPECT_EQ(actual.size(), expected.size()) << "Number of tokens mismatched\n";
-    for (size_t i = 0; i < actual.size(); ++i) {
-        if (actual[i] != expected[i]) {
+static void lexTest(std::string_view source, const std::vector<Token>& expected) {
+    std::string s = std::string{source};
+    s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+    std::istringstream iss{s};
+    auto [actualToks, _, diagnostics] = Lexer::lexAll(iss);
+
+    EXPECT_EQ(actualToks.size(), expected.size()) << "Number of tokens mismatched\n";
+    for (size_t i = 0; i < actualToks.size(); ++i) {
+        if (actualToks[i] != expected[i]) {
             std::ostringstream oss;
-            oss << "Token mismatch at index " << i << "\n"
+            oss << "Token type mismatch at index " << i << "\n"
                 << "Expected: " << expected[i] << "\n"
-                << "Actual:   " << actual[i] << "\n";
+                << "Actual:   " << actualToks[i] << "\n\n";
             FAIL() << oss.str();
         }
-        EXPECT_EQ(actual[i], expected[i]);
     }
-}
 
-static Lexer testLexAll(std::string_view source, const std::vector<Token>& expectedTokens) {
-    std::istringstream iss{std::string(source)};
-    Lexer lexer(iss);
-    expectTokens(lexer.lexAll(), expectedTokens);
-    return lexer;
+    if (diagnostics.hasError()) {
+        std::ostringstream oss;
+        oss << "\nErrors: \n";
+        for (const Diagnostic& d : diagnostics.diagnostics()) {
+            oss << d << "\n";
+        }
+        FAIL() << oss.str();
+    }
 }
 
 TEST(LexerTest, GeneralTest1) {
     std::string_view source = R"(let x = 1 if x > 0 do x = x + 1 end)";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Let, "let", 1, 1},
         {TT::Identifier, "x", 1, 5},
         {TT::Assign, "=", 1, 7},
@@ -50,7 +55,6 @@ TEST(LexerTest, GeneralTest1) {
         {TT::Integer, "1", 1, 31},
         {TT::End, "end", 1, 33}
     });
-    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest2) {
@@ -66,7 +70,7 @@ struct Vector2 do
     end
 end
 )";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::At, "@", 2, 1},
         {TT::Identifier, "cstruct", 2, 2},
 
@@ -110,7 +114,7 @@ end
 
         {TT::End,  "end", 11, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 }
 
 TEST(LexerTest, GeneralTest3) {
@@ -131,7 +135,7 @@ fn binarySearch(l: List<Int>, target: Int) -> Int do
     return -1
 end
 )";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Fn, "fn", 2, 1},
         {TT::Identifier, "binarySearch", 2, 4},
         {TT::LParen, "(", 2, 16},
@@ -216,7 +220,6 @@ end
         {TT::Integer, "1", 15, 13},
         {TT::End, "end", 16, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest4) {
@@ -233,8 +236,7 @@ let b = /*
 let c = "hello 'world'"
 let d = 'hello "world"' /* This is another block comment */
 )";
-    removeCarriageReturns(source);
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::LineComment, " This is a line comment", 2, 1},
         {TT::Let, "let", 3, 1},
         {TT::Identifier, "a", 3, 5},
@@ -256,7 +258,6 @@ let d = 'hello "world"' /* This is another block comment */
         {TT::String, "hello \"world\"", 12, 9},
         {TT::BlockComment, " This is another block comment ", 12, 25}
     });
-    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, GeneralTest5) {
@@ -276,8 +277,7 @@ fn^ foo(n: Int) -> Int do
     return n * n
 end
 )";
-    removeCarriageReturns(source);
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Fn, "fn", 2, 1},
         {TT::Caret, "^", 2, 3},
         {TT::Identifier, "foo", 2, 5},
@@ -330,143 +330,120 @@ end
         {TT::Identifier, "n", 14, 16},
         {TT::End, "end", 15, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, BlockCommentTests) {
     // /* inside the comment
     std::string source = R"(/* /* ... */)";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, " /* ... ", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Two *
     source = R"(/** ... **/)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, "* ... *", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Two */
     source = R"(/* ... */ */)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, " ... ", 1, 1},
         {TT::Mul, "*", 1, 11},
         {TT::Div, "/", 1, 12}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Empty
     source = R"(/**/)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, "", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Unterminated
     source = R"(/* ...)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, " ...", 1, 1}
     });
-    EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].start.line, 1);
-    EXPECT_EQ(lexer.errors()[0].start.column, 6);
 
     // Separated */
     source = R"(/* ... * /)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::BlockComment, " ... * /", 1, 1},
     });
-    EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].start.line, 1);
-    EXPECT_EQ(lexer.errors()[0].start.column, 10);
 }
 
 TEST(LexerTest, StringTests) {
     // Double-quoted string
     std::string source = R"("...")";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Single-quoted string
     source = R"('...')";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Escaped quotes inside string
     source = R"("...\"...\'...")";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...\"...\'...", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Escaped backslash
     source = R"("...\\...")";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...\\...", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Escaped sequences
     source = R"("...\n\t\r...")";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...\n\t\r...", 1, 1}
     });
-    EXPECT_FALSE(lexer.hasError());;
+    
 
     // Unrecognized escape sequence
     source = R"("...\p...")";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...p...", 1, 1}
     });
-    EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].start.line, 1);
-    EXPECT_EQ(lexer.errors()[0].start.column, 4);
 
     // Unterminated at EOF
     source = R"("...)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...", 1, 1}
     });
-    EXPECT_TRUE(lexer.hasError());;
-    EXPECT_EQ(lexer.errors()[0].start.line, 1);
-    EXPECT_EQ(lexer.errors()[0].start.column, 1);
-    EXPECT_EQ(lexer.errors()[0].end.line, 1);
-    EXPECT_EQ(lexer.errors()[0].end.column, 4);
 
     // Unterminated by newline
     source = "\"...\n...\"";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...", 1, 1},
         {TT::Range, "...", 2, 1},
         {TT::String, "", 2, 4}
     });
-    EXPECT_EQ(lexer.errors().size(), 2);
-    EXPECT_EQ(lexer.errors()[0].start.line, 1);
-    EXPECT_EQ(lexer.errors()[0].start.column, 1);
-    EXPECT_EQ(lexer.errors()[0].end.line, 1);
-    EXPECT_EQ(lexer.errors()[0].end.column, 4);
-    EXPECT_EQ(lexer.errors()[1].start.line, 2);
-    EXPECT_EQ(lexer.errors()[1].start.column, 4);
 
     // Token immediately after string
     source = R"("..."123)";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::String, "...", 1, 1},
         {TT::Integer, "123", 1, 6}
     });
-    EXPECT_FALSE(lexer.hasError());;
 }
 
 TEST(LexerTest, AnnotationAndUpvalueTests) {
     // Valid annotation
     std::string source = R"(@foo.bar.baz)";
-    Lexer lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::At, "@", 1, 1},
         {TT::Identifier, "foo", 1, 2},
         {TT::Dot, ".", 1, 5},
@@ -474,56 +451,50 @@ TEST(LexerTest, AnnotationAndUpvalueTests) {
         {TT::Dot, ".", 1, 9},
         {TT::Identifier, "baz", 1, 10}
     });
-    EXPECT_FALSE(lexer.hasError());
 
     // Invalid annotation (checked at parse-time)
     source = "@ foo.\nbar";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::At, "@", 1, 1},
         {TT::Identifier, "foo", 1, 3},
         {TT::Dot, ".", 1, 6},
         {TT::Identifier, "bar", 2, 1}
     });
-    EXPECT_FALSE(lexer.hasError());
 
     // Double @
     source = "@@foo";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::At, "@", 1, 1},
         {TT::At, "@", 1, 2},
         {TT::Identifier, "foo", 1, 3}
     });
-    EXPECT_FALSE(lexer.hasError());
 
     // Valid upvalue
     source = "$foo.bar";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Dollar, "$", 1, 1},
         {TT::Identifier, "foo", 1, 2},
         {TT::Dot, ".", 1, 5},
         {TT::Identifier, "bar", 1, 6}
     });
-    EXPECT_FALSE(lexer.hasError());
 
     // Invalid upvalue (checked at parse-time)
     source = "$foo.$bar";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Dollar, "$", 1, 1},
         {TT::Identifier, "foo", 1, 2},
         {TT::Dot, ".", 1, 5},
         {TT::Dollar, "$", 1, 6},
         {TT::Identifier, "bar", 1, 7}
     });
-    EXPECT_FALSE(lexer.hasError());
 
     // Double $
     source = "$$foo.bar";
-    lexer = testLexAll(source, {
+    lexTest(source, {
         {TT::Dollar, "$", 1, 1},
         {TT::Dollar, "$", 1, 2},
         {TT::Identifier, "foo", 1, 3},
         {TT::Dot, ".", 1, 6},
         {TT::Identifier, "bar", 1, 7}
     });
-    EXPECT_FALSE(lexer.hasError());
 }

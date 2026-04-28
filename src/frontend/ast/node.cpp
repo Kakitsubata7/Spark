@@ -2,6 +2,8 @@
 
 #include <typeinfo>
 
+#include "child_visitor.hpp"
+
 /**
  * Checks if `node` is type `type`. If so, return the down-casted reference, otherwise,
  * return false in the scope of the macro usage.
@@ -29,7 +31,7 @@ bool ptrEq(const Spark::FrontEnd::Node* lhs, const Spark::FrontEnd::Node* rhs) {
     if (lhs == nullptr || rhs == nullptr) {
         return false;
     }
-    return *lhs == *rhs;
+    return lhs->equalsStructurally(*rhs);
 }
 
 /**
@@ -46,7 +48,7 @@ bool ptrVecEq(const std::vector<T*>& lhs, const std::vector<T*>& rhs) {
         return false;
     }
     for (size_t i = 0; i < lhs.size(); ++i) {
-        if (*lhs[i] != *rhs[i]) {
+        if (!lhs[i]->equalsStructurally(*rhs[i])) {
             return false;
         }
     }
@@ -55,21 +57,30 @@ bool ptrVecEq(const std::vector<T*>& lhs, const std::vector<T*>& rhs) {
 
 namespace Spark::FrontEnd {
 
-bool Node::operator==(const Node& rhs) const noexcept {
+bool Node::equalsStructurally(const Node& rhs) const noexcept {
     if (this == &rhs) {
         return true;
-    }
-    if constexpr (false /* TODO: || start != rhs.start || end != rhs.end */) {
-        return false;
     }
     return equalsImpl(rhs);
 }
 
-bool Node::operator!=(const Node& rhs) const noexcept {
-    return !(*this == rhs);
+void Node::getChildren(std::vector<Node*>& out) {
+    ChildVisitor visitor(out);
+    accept(visitor);
+}
+
+std::vector<Node*> Node::getChildren() {
+    std::vector<Node*> children;
+    getChildren(children);
+    return children;
 }
 
 
+
+bool Name::equalsImpl(const Node& rhs) const noexcept {
+    const Name& o = ASSERT_NODE(rhs, Name);
+    return value.value() == o.value.value();
+}
 
 bool VarModifier::equalsImpl(const Node& rhs) const noexcept {
     const VarModifier& o = ASSERT_NODE(rhs, VarModifier);
@@ -100,7 +111,7 @@ bool FnReturn::equalsImpl(const Node& rhs) const noexcept {
 
 bool PathSeg::equalsImpl(const Node& rhs) const noexcept {
     const PathSeg& o = ASSERT_NODE(rhs, PathSeg);
-    return name == o.name && ptrVecEq(generics, o.generics);
+    return ptrEq(name, o.name) && ptrVecEq(generics, o.generics);
 }
 
 bool Path::equalsImpl(const Node& rhs) const noexcept {
@@ -189,12 +200,12 @@ bool PostfixExpr::equalsImpl(const Node& rhs) const noexcept {
 
 bool MemberAccessExpr::equalsImpl(const Node& rhs) const noexcept {
     const MemberAccessExpr& o = ASSERT_NODE(rhs, MemberAccessExpr);
-    return ptrEq(base, o.base) && member == o.member;
+    return ptrEq(base, o.base) && ptrEq(member, o.member);
 }
 
 bool CallArg::equalsImpl(const Node& rhs) const noexcept {
     const CallArg& o = ASSERT_NODE(rhs, CallArg);
-    return name == o.name && ptrEq(expr, o.expr);
+    return ptrEq(name, o.name) && ptrEq(expr, o.expr);
 }
 
 bool CallExpr::equalsImpl(const Node& rhs) const noexcept {
@@ -214,17 +225,17 @@ bool LiteralExpr::equalsImpl(const Node& rhs) const noexcept {
 
 bool NameExpr::equalsImpl(const Node& rhs) const noexcept {
     const NameExpr& o = ASSERT_NODE(rhs, NameExpr);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool GlobalAccessExpr::equalsImpl(const Node& rhs) const noexcept {
     const GlobalAccessExpr& o = ASSERT_NODE(rhs, GlobalAccessExpr);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool UpvalueExpr::equalsImpl(const Node& rhs) const noexcept {
     const UpvalueExpr& o = ASSERT_NODE(rhs, UpvalueExpr);
-    return level == o.level && name == o.name;
+    return level == o.level && ptrEq(name, o.name);
 }
 
 bool TupleExpr::equalsImpl(const Node& rhs) const noexcept {
@@ -252,8 +263,8 @@ bool VarDefStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const FnDefStmt& o = ASSERT_NODE(rhs, FnDefStmt);
-    return isImmutable == o.isImmutable && name == o.name &&
-           generics == o.generics && ptrVecEq(params, o.params) &&
+    return isImmutable == o.isImmutable && ptrEq(name, o.name) &&
+           ptrVecEq(generics, o.generics) && ptrVecEq(params, o.params) &&
            ptrEq(captureClause, o.captureClause) &&
            ptrVecEq(returns, o.returns) && isThrowing == o.isThrowing &&
            ptrEq(throwExpr, o.throwExpr) && ptrEq(body, o.body);
@@ -261,14 +272,14 @@ bool FnDefStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool TypeDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const TypeDefStmt& o = ASSERT_NODE(rhs, TypeDefStmt);
-    return kind == o.kind && isImmutable == o.isImmutable && name == o.name &&
-           generics == o.generics && ptrVecEq(bases, o.bases) &&
+    return kind == o.kind && isImmutable == o.isImmutable && ptrEq(name, o.name) &&
+           ptrVecEq(generics, o.generics) && ptrVecEq(bases, o.bases) &&
            ptrEq(body, o.body);
 }
 
 bool CaseDefStmt::equalsImpl(const Node& rhs) const noexcept {
     const CaseDefStmt& o = ASSERT_NODE(rhs, CaseDefStmt);
-    return name == o.name && ptrEq(val, o.val);
+    return ptrEq(name, o.name) && ptrEq(val, o.val);
 }
 
 bool AssignStmt::equalsImpl(const Node& rhs) const noexcept {
@@ -325,7 +336,7 @@ bool ExportStmt::equalsImpl(const Node& rhs) const noexcept {
 
 bool ImportItem::equalsImpl(const Node& rhs) const noexcept {
     const ImportItem& o = ASSERT_NODE(rhs, ImportItem);
-    return ptrEq(path, o.path) && as == o.as;
+    return ptrEq(path, o.path) && ptrEq(as, o.as);
 }
 
 bool ImportStmt::equalsImpl(const Node& rhs) const noexcept {
@@ -352,7 +363,7 @@ bool LiteralPattern::equalsImpl(const Node& rhs) const noexcept {
 
 bool BindingPattern::equalsImpl(const Node& rhs) const noexcept {
     const BindingPattern& o = ASSERT_NODE(rhs, BindingPattern);
-    return name == o.name;
+    return ptrEq(name, o.name);
 }
 
 bool TuplePattern::equalsImpl(const Node& rhs) const noexcept {
@@ -368,7 +379,7 @@ bool CollectionPattern::equalsImpl(const Node& rhs) const noexcept {
 
 bool RecordPatternField::equalsImpl(const Node& rhs) const noexcept {
     const RecordPatternField& o = ASSERT_NODE(rhs, RecordPatternField);
-    return label == o.label && ptrEq(pattern, o.pattern);
+    return ptrEq(label, o.label) && ptrEq(pattern, o.pattern);
 }
 
 bool RecordPattern::equalsImpl(const Node& rhs) const noexcept {

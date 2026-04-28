@@ -4,21 +4,20 @@
 
 namespace Spark::FrontEnd {
 
-std::pair<AST, std::vector<Error>> Parser::parse(std::istream& stream,
-                                                 std::optional<std::string_view> filename) {
+ParseResult Parser::parse(std::istream& stream) {
     // Set up
-    Lexer lexer(stream, filename);
-    AST ast;
-    std::vector<Error> errors;
+    Lexer lexer(stream);
     yy::parser::location_type loc;
-    yy::parser parser(lexer._scanner, &loc, ast, errors);
+    AST ast;
+    Diagnostics diagnostics;
+    yy::parser parser(lexer._scanner, &loc, ast, diagnostics);
 
     // Parse
     int result = parser.parse();
     if (result == 2) {
         throw std::bad_alloc();
     }
-    return std::make_pair(std::move(ast), std::move(errors));
+    return ParseResult{std::move(ast), std::move(diagnostics)};
 }
 
 } // Spark::FrontEnd
