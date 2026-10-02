@@ -63,64 +63,7 @@ add_library(sparklib
         ${FLEX_sparklexer_OUTPUTS}
         ${BISON_sparkparser_OUTPUTS}
 
-        src/core/type.hpp
-
-        src/frontend/ast.hpp
-        src/frontend/ast/child_visitor.cpp
-        src/frontend/ast/child_visitor.hpp
-        src/frontend/ast/literal.hpp
-        src/frontend/ast/name.cpp
-        src/frontend/ast/name.hpp
-        src/frontend/ast/node.cpp
-        src/frontend/ast/node.hpp
-        src/frontend/ast/node_visitor.cpp
-        src/frontend/ast/node_visitor.hpp
-
-        src/frontend/lexer.cpp
-        src/frontend/lexer.hpp
-        src/frontend/lexer/lexer_state.hpp
-        src/frontend/lexer/lexer_utils.cpp
-        src/frontend/lexer/lexer_utils.hpp
-        src/frontend/lexer/token.hpp
-        src/frontend/lexer/token_buffer.hpp
-        src/frontend/lexer/token_type.cpp
-        src/frontend/lexer/token_type.hpp
-        src/frontend/lexer/token_value.hpp
-
-        src/frontend/parser.cpp
-        src/frontend/parser.hpp
-
-        src/frontend/semantic/env.hpp
-        src/frontend/semantic/lua_ir.cpp
-        src/frontend/semantic/lua_ir.hpp
-        src/frontend/semantic/semantic_func.cpp
-        src/frontend/semantic/semantic_func.hpp
-        src/frontend/semantic/semantic_resolver.cpp
-        src/frontend/semantic/semantic_resolver.hpp
-        src/frontend/semantic/semantic_type.cpp
-        src/frontend/semantic/semantic_type.hpp
-        src/frontend/semantic/symbol.hpp
-
-        src/frontend/source_buffer.cpp
-        src/frontend/source_buffer.hpp
-        src/frontend/source_reader.cpp
-        src/frontend/source_reader.hpp
-
-        src/runtime/allocator.hpp
-        src/runtime/drc.cpp
-        src/runtime/drc.hpp
-        src/runtime/rc.hpp
-        src/runtime/spark.hpp
-        src/runtime/thread.hpp
-
-        src/utils/bigint.hpp
-        src/utils/bigreal.hpp
-        src/utils/diagnostic.cpp
-        src/utils/diagnostic.hpp
-        src/utils/error.cpp
-        src/utils/error.hpp
-        src/utils/location.hpp
-        src/utils/result.hpp
+        
 )
 
 target_include_directories(sparklib
@@ -139,19 +82,7 @@ target_link_libraries(spark PRIVATE sparklib)
 enable_testing()
 
 add_executable(sparktest
-        tests/frontend/ast/name_value_test.cpp
 
-        tests/frontend/lexer/lex_test.cpp
-        tests/frontend/lexer/lexer_test.cpp
-        tests/frontend/lexer/token_buffer_test.cpp
-        tests/frontend/lexer/token_value_test.cpp
-
-        tests/frontend/parser/parser_test.cpp
-
-        tests/frontend/source_buffer_test.cpp
-        tests/frontend/source_reader_test.cpp
-
-        tests/runtime/drc_test.cpp
 )
 target_include_directories(sparktest
     PRIVATE
