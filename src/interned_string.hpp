@@ -13,7 +13,7 @@ public:
     [[nodiscard]]
     constexpr std::string_view view() const noexcept { return _view; }
 
-    constexpr explicit InternedString(std::string_view view) noexcept : _view(view) { }
+    constexpr explicit InternedString(std::string_view view) noexcept : _view{view} { }
     constexpr InternedString() noexcept : InternedString{""} { }
 
     constexpr bool operator==(InternedString other) const {
