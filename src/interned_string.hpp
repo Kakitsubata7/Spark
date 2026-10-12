@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string_view>
 
 namespace Spark {
@@ -27,5 +28,10 @@ public:
 };
 
 inline constexpr InternedString InternedString::empty{};
+
+inline std::ostream& operator<<(std::ostream& os, InternedString is) {
+    os << is.view();
+    return os;
+}
 
 } // Spark
