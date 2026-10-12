@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace Spark {
@@ -91,7 +92,9 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os, const BigReal& value) {
-    os << value._value;
+    os << value._value
+              .convert_to<boost::multiprecision::cpp_dec_float_50>()
+              .str(5, std::ios_base::fixed);
     return os;
 }
 
